@@ -1346,10 +1346,17 @@ static bool co_issue(Optimizer *o, bool *changed)
 	if (!flatten(o))
 		return false;
 	// An op joins a later one only where none joins an earlier one, so the pairs found before stay as they were.
-	for (int later = 0; later <= 1 && !*changed; later++) {
-		for (size_t j = 0; j < o->count && !*changed; j++) {
+	for (int later = 0; later <= 1; later++) {
+		for (size_t j = 0; j < o->count;) {
 			const XscOp *const x = o->ops[j];
-			*changed = (vector_only(x) || scalar_only(x)) && join(o, j, later);
+			if (!(vector_only(x) || scalar_only(x)) || !join(o, j, later)) {
+				j++;
+				continue;
+			}
+			// The scan goes on past a pair rather than starting over; the next round takes any join the pair opened.
+			*changed = true;
+			o->count--;
+			memmove(&o->ops[j], &o->ops[j + 1], (o->count - j) * sizeof *o->ops);
 		}
 	}
 	return true;
