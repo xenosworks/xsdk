@@ -292,7 +292,16 @@ fixed here.
 80.2 ms before and 77.5 to 81.1 ms after. Placed before `fuse_multiply_adds`, the pass cost about 5%, a flow built in
 every round that reached it; after it, only the rounds that reach `compute_in_place` pay for one.
 
-**On the console,** still to run: xsdk_test with its compiler check; vulkan4xenon_test twice with its bundle rebuilt;
-`probe_shader_cost` with Dusklight's pack rebuilt, its pictures against the baseline's (63 pixel programs change: the
-same picture, or within one step of a channel where a weight of 1 or a newly fused mad rounds differently), and the
-time; `probe_xsc` for the compile time, at most 1.42 s; Dusklight's title scene.
+**On the console,** built clean from the M48 pair rebased on main `ddf4569`, Dusklight's pack and vulkan4xenon's
+bundles rebuilt with this xost (local/m48/step2_build.sh):
+- **`probe_step2.log`:** Dusklight's pixel shaders take 56,384 us for a draw of each, 10.6% under the baseline's
+  63,053; its vertex shaders 13,375 us, as before. All 103 pictures hash as the baseline's, bit for bit, the 63
+  changed programs among them.
+- **`probe_xsc_step2.log`:** 150 of 150 programs compile on the console as the pack holds them, and the 150 take
+  1.336 s, within 1.42. It needed `tools/gen_xsc_probe.py` to read a pack's seven-field resource lines (milestone 46's
+  start and step), which it had read as none, failing every program on its resource count.
+- **`step2_xsdk_test.log`:** 461 passed, 2 failed, the controller's checks with no pad.
+- **`step2_vulkan4xenon_test_1.log`, `_2.log`:** 492 of 492 each, the test bundle rebuilt (14 programs change).
+- **`step2_dusklight.log`:** Dusklight's title scene with the rebuilt pack, at 26 to 30 fps as before.
+- **Breaks:** `tests/test_identities.py` failed against the code before the step (above). No console break was built,
+  as the probe compares every picture with the baseline's bit for bit.
