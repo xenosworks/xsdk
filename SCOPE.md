@@ -977,6 +977,13 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
 47. **Instancing.** Agreed on 2026-10-17 and done on 2026-10-19: docs/scope/47-instancing.md, after 46 (HARDWARE.md,
     from "Instancing on the console, milestone 47 step 1" to "Instancing measured, milestone 47 step 5").
 
+48. **xost's code quality, second part.** Agreed on 2026-10-19: docs/scope/48-xost-code-quality-2.md, alongside
+    vulkan4xenon's milestone 29, then 49, then 44's second part.
+
+49. **The pass after a depth clear.** Agreed on 2026-10-19: docs/scope/49-hiz-clear-pass.md, worth
+    about 29 us a frame. vulkan4xenon's submit, the third cost measured that day, is vulkan4xenon's milestone 29
+    (vulkan4xenon:docs/ROADMAP.md).
+
 **Networking**, a scope of its own rather than a numbered milestone: sockets, and TLS 1.2 in the title's own code.
 Agreed and done on 2026-10-14: docs/scope/networking.md.
 
