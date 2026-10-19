@@ -305,3 +305,85 @@ bundles rebuilt with this xost (local/m48/step2_build.sh):
 - **`step2_dusklight.log`:** Dusklight's title scene with the rebuilt pack, at 26 to 30 fps as before.
 - **Breaks:** `tests/test_identities.py` failed against the code before the step (above). No console break was built,
   as the probe compares every picture with the baseline's bit for bit.
+
+## Step 3: division
+
+Built on 2026-10-19 at `d6d89e2` (docs/scope/48-xost-code-quality-2.md, step 3).
+
+- **By a constant** (src/xsc_lower.c, `constant_reciprocals` and `fdiv`): a divisor whose every lane is a constant,
+  one number or one a lane, is one `mul` by a literal of the reciprocals, where it took an `rcp` and a one-lane `mul`
+  a lane. Each reciprocal is 1 / c worked out in doubles and rounded to a float once, the float nearest it: 53 bits are
+  more than 2 x 24 + 2, so rounding twice gives what rounding once would. Where a lane or its reciprocal isn't a
+  normal float, a 0, an infinity, a NaN or a denormal, the whole division keeps the GPU's `rcp`s, as before, as the
+  console hasn't said what its `rcp` gives there.
+- **By one scalar:** a vector divided by one float that isn't a constant, which glslang builds as a vector of that
+  float, was already one `rcp` and one vector `mul` (`scalar_construct`), and stays so. No division in the corpus reads
+  one value in every lane another way (a swizzle like `u.ww`, or a vector of one lane read twice), so the step adds
+  nothing there. The 13 *by one scalar* lanes the counts still find aren't `fdiv`'s: `fs_minv.frag`'s 9 are
+  `inverse`'s cofactors transposed, each lane times 1 / det (src/xsc_lower_matrix.c, `inverse3`), and
+  `vk_many_fetches.frag`'s 4 are two divisions by the same uniform's two lanes, which only an `rcp` shared between
+  divisions would save.
+- **Exact:** the reciprocal's rounding is the only change. The simulator's `rcp` gives the float nearest 1 / c, as
+  Xenia's does (xenia:src/xenia/gpu/shader_interpreter.cc:786-788), so there every export is what it was, bit for bit.
+  The console's `rcp` lands a hair under a third and a fifth (docs/HARDWARE.md), so on it a quotient by a constant
+  whose `rcp` isn't the nearest float moves by up to an ulp, and `mod(x, 3.0)` and `mod(x, 5.0)` at a multiple of 3
+  or 5 should now give 0, where they gave 3 or 5. a times the nearest reciprocal is within 1.5 ulp of a / c, inside
+  the 2.5 ulp the Vulkan specification allows `OpFDiv`.
+
+**xost's tests:** every one passes. `tests/test_division.py` runs `xsc/testdata/vk_division.frag` on the simulator,
+the optimiser off and on: a vec3 and a float divided by constants (255 and 7), a vector by a constant a lane (3, -5,
+0.1 and 256), a vector by one varying float, and lanes by varying floats and by a constant vector with a 0. Every
+export must be a times the float nearest 1 / c, or a times `rcp(b)`, exactly; the lanes by constants within an ulp of
+a / c, and not all equal to it, so the test can tell the two apart; needless.py must find 2 divided lanes and 2 rcps of
+constants, those of the divisor with a 0; and the ALU instructions must be 21 off and 13 on. Against 1d14f53's compiler
+it failed on its counts: 9 divided lanes, 10 rcps of constants and 34 ALU instructions with the optimiser off; on, the
+program took 26. Its exports were exact there too, the simulator's `rcp` being the nearest float.
+
+**The counts,** `step3.txt` and `step3.json`, the baseline's command over its 441 files with `--baseline`; 0 shaders
+differ off against on, 50 not simulated and 15 not compiled, as at step 2. The table is over the 290 pixel shaders the
+baseline compiled, as step 2's is; `vk_many_fetches.frag`, which compiles since step 2, takes 133 instructions there
+and 128 now. Optimiser on, baseline -> step 2 -> step 3:
+
+| | Corpus vertex, 135 | Corpus pixel, 290 | Dusklight vertex, 47 | Dusklight pixel, 103 | Costliest vertex, 10 | Costliest pixel, 15 |
+|---|---|---|---|---|---|---|
+| ALU | 4518 -> 4515 -> 4515 | 4225 -> 4001 -> 3970 | 3257 -> 3257 -> 3257 | 1342 -> 1134 -> 1116 | 1473 -> 1473 -> 1473 | 546 -> 457 -> 439 |
+| Copies | 636 -> 636 -> 636 | 1032 -> 1052 -> 1053 | 305 -> 305 -> 305 | 118 -> 138 -> 139 | 170 -> 170 -> 170 | 37 -> 41 -> 42 |
+| Co-issued | 528 -> 528 -> 527 | 199 -> 198 -> 131 | 471 -> 471 -> 471 | 159 -> 158 -> 96 | 222 -> 222 -> 222 | 96 -> 95 -> 45 |
+| Registers | 720 -> 720 -> 720 | 1403 -> 1394 -> 1382 | 300 -> 300 -> 300 | 466 -> 457 -> 448 | 94 -> 94 -> 94 | 124 -> 121 -> 120 |
+| Divided lanes | 0 -> 0 -> 0 | 60 -> 60 -> 9 | 0 -> 0 -> 0 | 48 -> 48 -> 0 | 0 -> 0 -> 0 | 44 -> 44 -> 0 |
+| Rcps of constants | 5 -> 5 -> 4 | 87 -> 87 -> 7 | 0 -> 0 -> 0 | 62 -> 62 -> 0 | 0 -> 0 -> 0 | 50 -> 50 -> 0 |
+| Single-lane | 1921 -> 1921 -> 1921 | 578 -> 513 -> 533 | 1623 -> 1623 -> 1623 | 383 -> 320 -> 336 | 602 -> 602 -> 602 | 186 -> 157 -> 169 |
+
+- **This step's own effect:** Dusklight's pixel shaders take 1.6% fewer ALU instructions than at step 2, its 15
+  costliest 3.9%; against the baseline, 16.8% and 19.6%. No shader takes more ALU instructions than at step 2, off or
+  on.
+- Every lane divided by a constant is gone, and every rcp of a constant in Dusklight. The corpus's 11 rcps of
+  constants left aren't `fdiv`'s: integer division's (`fs_intdiv.frag`, `vk_dynamic_rows.vert`,
+  `vk_instance_index.vert`, vulkan4xenon's `matrix_index.vert`) and `smoothstep`'s 1 / (edge1 - edge0)
+  (`stepsmooth.frag`, `verify_smooth.frag`).
+- Co-issued slots fell, 158 to 96 in Dusklight's pixel shaders: each of the 62 `rcp`s that went sat beside a vector
+  operation, so the ALU count fell by 18. Single-lane rose, 320 to 336: a one-lane division by a constant is now a
+  one-lane `mul` with no `rcp` beside it, which step 5's scalar unit is for.
+
+**Containers that change,** compiled by 1d14f53 and by this step, per program in `step3_containers.txt`:
+- **Dusklight:** 19 of its 150 programs, all pixel shaders, off and on; optimiser on 4391 ALU instructions to 4373,
+  off 8108 to 8016. 18 of them divide by 255 or 15, whose `rcp` on the console may not be the nearest float;
+  `2eefbbd89e53921c.frag` divides by 2 alone. Its pack must be rebuilt.
+- **vulkan4xenon:** `tests/shaders` 3 of 80, off and on, on 1298 to 1296: `instance_grid.vert` divides by 40,
+  `lod_gradients.frag` by 256 and `loop_sample.frag` by 64; `src/shaders` and `bench/shaders` none.
+- **xsdk_test's 46:** `vk_loop_sample_grid.frag`, 171 to 160; `tests/xsc_shaders.h` regenerated. Its other divisions
+  are by powers of two, and its mods by 3 and 5 are of values half past a whole, so the raster grid should draw as
+  before.
+
+**Compile time:** compiling Dusklight's 150 programs on the PC, best of 25 runs in two sets of three alternations, took
+75.1 to 77.3 ms before and 73.3 to 76.0 ms after, about 1.4 ms less in each pair: the check for a constant divisor is a
+lookup, and the programs have fewer instructions to optimise.
+
+**Left for the console,** as step 2, with Dusklight's pack and vulkan4xenon's test bundle rebuilt with this xost:
+- `probe_shader_cost`: the pixel shaders' time against step 2's 56,384 us. The 18 Dusklight programs dividing by 255
+  or 15 may differ from the baseline's pictures by one step of a channel, where the console's `rcp` of 255 or 15 isn't
+  the nearest float; every other picture must hash as the baseline's.
+- `probe_xsc`: 150 of 150 programs compile as the pack holds them, the 150 within 1.42 s.
+- xsdk_test, with its compiler check and the raster grid's 0 wrong pixels; vulkan4xenon_test twice; Dusklight's title
+  scene as a smoke run.
+- **Breaks:** `tests/test_division.py` failed against the code before the step (above).

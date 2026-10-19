@@ -1,0 +1,66 @@
+Milestone 48 step 3: the programs whose container changed, compiled by xsdk 1d14f53 (step 2) and by step 3 at
+xsdk's register split, the optimiser off and on, with their ALU instructions; each list ends with its totals.
+
+== Dusklight's GX shaders, as at dusklight-xenon bf5a13e557 and 07a5f7aa69, 150 programs
+017c19da20649fa0.frag off: ALU 9 -> 8, literals changed
+1510c05add37f2b3.frag off: ALU 125 -> 110, literals changed
+2eefbbd89e53921c.frag off: ALU 69 -> 64, literals changed
+46d1eea9e1360669.frag off: ALU 39 -> 29, literals changed
+4ee5b3c093bea8ab.frag off: ALU 93 -> 81, literals changed
+4f41862f49358139.frag off: ALU 15 -> 13, literals changed
+5264b90e6f50c901.frag off: ALU 7 -> 6, literals changed
+61cdb76b69b6489b.frag off: ALU 14 -> 12, literals changed
+66457dda201609ed.frag off: ALU 60 -> 58, literals changed
+6dd3a70373df59bf.frag off: ALU 56 -> 54, literals changed
+75422301f0e22829.frag off: ALU 73 -> 69, literals changed
+820f98f280587ea8.frag off: ALU 56 -> 46, literals changed
+85c8b022385334bf.frag off: ALU 69 -> 57, literals changed
+8ecfa22174a91d18.frag off: ALU 12 -> 10, literals changed
+b331aaa6bee56ee9.frag off: ALU 80 -> 76, literals changed
+b624738d17bc5ca0.frag off: ALU 13 -> 11, literals changed
+b72c3e79097987b4.frag off: ALU 6 -> 5, literals changed
+cbed2c9db6f723a5.frag off: ALU 8 -> 7, literals changed
+e2cfed9f9f80cbf0.frag off: ALU 82 -> 78, literals changed
+optimiser off: 19 of 150 changed, ALU 8108 -> 8016
+017c19da20649fa0.frag on: ALU 5 -> 5, literals changed
+1510c05add37f2b3.frag on: ALU 57 -> 57, literals changed
+2eefbbd89e53921c.frag on: ALU 29 -> 27, literals changed
+46d1eea9e1360669.frag on: ALU 18 -> 14, literals changed
+4ee5b3c093bea8ab.frag on: ALU 48 -> 44, literals changed
+4f41862f49358139.frag on: ALU 8 -> 8, literals changed
+5264b90e6f50c901.frag on: ALU 5 -> 5, literals changed
+61cdb76b69b6489b.frag on: ALU 6 -> 6, literals changed
+66457dda201609ed.frag on: ALU 31 -> 31, literals changed
+6dd3a70373df59bf.frag on: ALU 25 -> 25, literals changed
+75422301f0e22829.frag on: ALU 36 -> 36, literals changed
+820f98f280587ea8.frag on: ALU 27 -> 23, literals changed
+85c8b022385334bf.frag on: ALU 34 -> 30, literals changed
+8ecfa22174a91d18.frag on: ALU 6 -> 6, literals changed
+b331aaa6bee56ee9.frag on: ALU 43 -> 43, literals changed
+b624738d17bc5ca0.frag on: ALU 8 -> 8, literals changed
+b72c3e79097987b4.frag on: ALU 3 -> 3, literals changed
+cbed2c9db6f723a5.frag on: ALU 3 -> 3, literals changed
+e2cfed9f9f80cbf0.frag on: ALU 43 -> 43, literals changed
+optimiser on: 19 of 150 changed, ALU 4391 -> 4373
+
+== vulkan4xenon's tests/shaders at 5408cb6
+instance_grid.vert off: ALU 21 -> 20, literals changed
+lod_gradients.frag off: ALU 11 -> 10, literals changed
+loop_sample.frag off: ALU 71 -> 69, literals changed
+optimiser off: 3 of 80 changed, ALU 2128 -> 2124
+instance_grid.vert on: ALU 14 -> 14, literals changed
+lod_gradients.frag on: ALU 8 -> 8, literals changed
+loop_sample.frag on: ALU 71 -> 69, literals changed
+optimiser on: 3 of 80 changed, ALU 1298 -> 1296
+
+== vulkan4xenon's src/shaders at 5408cb6
+optimiser off: 0 of 7 changed, ALU 19 -> 19
+optimiser on: 0 of 7 changed, ALU 16 -> 16
+
+== vulkan4xenon's bench/shaders at 5408cb6
+optimiser off: 0 of 8 changed, ALU 39 -> 39
+optimiser on: 0 of 8 changed, ALU 27 -> 27
+
+== xsdk_test's compiler check, tests/xsc_shaders.h (tools/gen_xsc_shaders.py), optimiser on as it compiles them
+vk_loop_sample_grid.frag on: ALU 171 -> 160, literals changed
+optimiser on: 1 of 46 changed, ALU 1700 -> 1689
