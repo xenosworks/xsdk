@@ -3195,9 +3195,9 @@
     }
    },
    "on": {
-    "alu": 24,
+    "alu": 25,
     "copies": 0,
-    "co_issued": 6,
+    "co_issued": 5,
     "fetches": 2,
     "control_flow": 7,
     "registers": 6,
@@ -3205,15 +3205,15 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 9,
+    "single_lane": 10,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
      "single-lane: add": 1,
      "single-lane: mad": 3,
+     "single-lane: mul": 3,
      "single-lane: max": 1,
      "single-lane: min": 1,
-     "single-lane: mul": 2,
      "single-lane: floor": 1
     }
    },
@@ -5212,20 +5212,21 @@
     "kinds": {}
    },
    "on": {
-    "alu": 6,
+    "alu": 7,
     "copies": 1,
-    "co_issued": 1,
+    "co_issued": 0,
     "fetches": 2,
-    "control_flow": 3,
+    "control_flow": 4,
     "registers": 4,
     "identities": 0,
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 1,
+    "single_lane": 2,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
+     "single-lane: mul": 1,
      "single-lane: mad": 1,
      "copy: a clamp into a temp": 1
     }
@@ -10870,9 +10871,9 @@
     }
    },
    "on": {
-    "alu": 8,
-    "copies": 1,
-    "co_issued": 1,
+    "alu": 9,
+    "copies": 2,
+    "co_issued": 0,
     "fetches": 0,
     "control_flow": 3,
     "registers": 2,
@@ -10880,11 +10881,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 3,
+    "single_lane": 4,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: add": 3,
+     "single-lane: add": 4,
+     "copy: a constant into a temp": 1,
      "copy: a computed value step 2 can't move": 1
     }
    },
@@ -10911,9 +10913,9 @@
     }
    },
    "on": {
-    "alu": 4,
-    "copies": 0,
-    "co_issued": 1,
+    "alu": 5,
+    "copies": 1,
+    "co_issued": 0,
     "fetches": 0,
     "control_flow": 2,
     "registers": 2,
@@ -10921,11 +10923,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 1,
+    "single_lane": 2,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: add": 1
+     "single-lane: add": 2,
+     "copy: a constant into a temp": 1
     }
    },
    "result": "ok"
@@ -10995,9 +10998,9 @@
     "kinds": {}
    },
    "on": {
-    "alu": 25,
+    "alu": 26,
     "copies": 0,
-    "co_issued": 1,
+    "co_issued": 0,
     "fetches": 0,
     "control_flow": 6,
     "registers": 7,
@@ -11663,21 +11666,21 @@
     }
    },
    "on": {
-    "alu": 101,
-    "copies": 2,
-    "co_issued": 31,
+    "alu": 102,
+    "copies": 3,
+    "co_issued": 30,
     "fetches": 7,
-    "control_flow": 21,
+    "control_flow": 22,
     "registers": 10,
     "identities": 4,
     "mix_pairs": 0,
     "divided_lanes": 4,
     "constant_rcps": 0,
-    "single_lane": 48,
+    "single_lane": 49,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: mul": 5,
+     "single-lane: mul": 6,
      "single-lane: max": 5,
      "single-lane: dp3": 4,
      "single-lane: mad": 10,
@@ -11687,7 +11690,7 @@
      "single-lane: dp2add": 2,
      "identity: on constants alone": 4,
      "divided lane: by one scalar": 4,
-     "copy: a constant into a temp": 2
+     "copy: a constant into a temp": 3
     }
    },
    "result": "ok"
@@ -12668,9 +12671,9 @@
     }
    },
    "on": {
-    "alu": 12,
-    "copies": 0,
-    "co_issued": 3,
+    "alu": 14,
+    "copies": 2,
+    "co_issued": 1,
     "fetches": 2,
     "control_flow": 6,
     "registers": 6,
@@ -12678,10 +12681,13 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 0,
+    "single_lane": 2,
     "range_useless": 0,
     "without_flow": 0,
-    "kinds": {}
+    "kinds": {
+     "single-lane: add": 2,
+     "copy: anything else": 2
+    }
    },
    "result": "ok"
   },
@@ -13449,9 +13455,9 @@
     }
    },
    "on": {
-    "alu": 24,
+    "alu": 26,
     "copies": 5,
-    "co_issued": 7,
+    "co_issued": 5,
     "fetches": 1,
     "control_flow": 8,
     "registers": 4,
@@ -13459,12 +13465,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 7,
+    "single_lane": 11,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 5,
-     "single-lane: mul": 2,
+     "single-lane: dp4": 7,
+     "single-lane: mul": 4,
      "copy: a constant into a temp": 3,
      "copy: a constant into an export": 2
     }
@@ -13531,9 +13537,9 @@
     }
    },
    "on": {
-    "alu": 33,
+    "alu": 35,
     "copies": 3,
-    "co_issued": 10,
+    "co_issued": 8,
     "fetches": 5,
     "control_flow": 10,
     "registers": 8,
@@ -13541,12 +13547,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 12,
+    "single_lane": 16,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 7,
-     "single-lane: mul": 2,
+     "single-lane: dp4": 9,
+     "single-lane: mul": 4,
      "single-lane: dp3": 3,
      "copy: a constant into an export": 2,
      "copy: a computed value step 2 can't move": 1
@@ -13613,9 +13619,9 @@
     }
    },
    "on": {
-    "alu": 21,
+    "alu": 23,
     "copies": 2,
-    "co_issued": 10,
+    "co_issued": 8,
     "fetches": 3,
     "control_flow": 8,
     "registers": 5,
@@ -13623,12 +13629,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 4,
+    "single_lane": 8,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 2,
-     "single-lane: mul": 2,
+     "single-lane: dp4": 4,
+     "single-lane: mul": 4,
      "copy: a constant into an export": 2
     }
    },
@@ -13694,9 +13700,9 @@
     }
    },
    "on": {
-    "alu": 26,
+    "alu": 28,
     "copies": 2,
-    "co_issued": 12,
+    "co_issued": 10,
     "fetches": 3,
     "control_flow": 8,
     "registers": 5,
@@ -13704,12 +13710,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 6,
+    "single_lane": 10,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 3,
-     "single-lane: mul": 3,
+     "single-lane: dp4": 5,
+     "single-lane: mul": 5,
      "copy: a constant into an export": 2
     }
    },
@@ -13774,9 +13780,9 @@
     }
    },
    "on": {
-    "alu": 21,
+    "alu": 23,
     "copies": 2,
-    "co_issued": 10,
+    "co_issued": 8,
     "fetches": 3,
     "control_flow": 8,
     "registers": 5,
@@ -13784,12 +13790,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 4,
+    "single_lane": 8,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 2,
-     "single-lane: mul": 2,
+     "single-lane: dp4": 4,
+     "single-lane: mul": 4,
      "copy: a constant into an export": 2
     }
    },
@@ -13858,9 +13864,9 @@
     }
    },
    "on": {
-    "alu": 29,
+    "alu": 31,
     "copies": 2,
-    "co_issued": 10,
+    "co_issued": 8,
     "fetches": 3,
     "control_flow": 9,
     "registers": 5,
@@ -13868,12 +13874,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 7,
+    "single_lane": 11,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 5,
-     "single-lane: mul": 2,
+     "single-lane: dp4": 7,
+     "single-lane: mul": 4,
      "copy: a constant into an export": 2
     }
    },
@@ -13938,9 +13944,9 @@
     }
    },
    "on": {
-    "alu": 21,
+    "alu": 23,
     "copies": 2,
-    "co_issued": 10,
+    "co_issued": 8,
     "fetches": 3,
     "control_flow": 8,
     "registers": 5,
@@ -13948,12 +13954,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 4,
+    "single_lane": 8,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 2,
-     "single-lane: mul": 2,
+     "single-lane: dp4": 4,
+     "single-lane: mul": 4,
      "copy: a constant into an export": 2
     }
    },
@@ -14023,9 +14029,9 @@
     }
    },
    "on": {
-    "alu": 32,
+    "alu": 34,
     "copies": 2,
-    "co_issued": 11,
+    "co_issued": 9,
     "fetches": 2,
     "control_flow": 9,
     "registers": 6,
@@ -14033,12 +14039,12 @@
     "mix_pairs": 1,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 7,
+    "single_lane": 11,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 2,
-     "single-lane: mul": 2,
+     "single-lane: dp4": 4,
+     "single-lane: mul": 4,
      "single-lane: max": 1,
      "single-lane: add": 1,
      "mix pair: x 0 or 1": 1,
@@ -14111,22 +14117,22 @@
     }
    },
    "on": {
-    "alu": 22,
+    "alu": 23,
     "copies": 4,
-    "co_issued": 9,
+    "co_issued": 8,
     "fetches": 3,
     "control_flow": 8,
-    "registers": 6,
+    "registers": 5,
     "identities": 0,
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 4,
+    "single_lane": 6,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 3,
-     "single-lane: mul": 1,
+     "single-lane: dp4": 4,
+     "single-lane: mul": 2,
      "copy: a constant into an export": 2,
      "copy: a constant into a temp": 1,
      "copy: a computed value step 2 can't move": 1
@@ -14197,22 +14203,22 @@
     }
    },
    "on": {
-    "alu": 22,
+    "alu": 23,
     "copies": 4,
-    "co_issued": 9,
+    "co_issued": 8,
     "fetches": 3,
     "control_flow": 8,
-    "registers": 6,
+    "registers": 5,
     "identities": 0,
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 4,
+    "single_lane": 6,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 3,
-     "single-lane: mul": 1,
+     "single-lane: dp4": 4,
+     "single-lane: mul": 2,
      "copy: a constant into an export": 2,
      "copy: a constant into a temp": 1,
      "copy: a computed value step 2 can't move": 1
@@ -14283,9 +14289,9 @@
     }
    },
    "on": {
-    "alu": 20,
+    "alu": 22,
     "copies": 3,
-    "co_issued": 8,
+    "co_issued": 6,
     "fetches": 3,
     "control_flow": 7,
     "registers": 5,
@@ -14293,12 +14299,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 4,
+    "single_lane": 8,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 2,
-     "single-lane: mul": 2,
+     "single-lane: dp4": 4,
+     "single-lane: mul": 4,
      "copy: a constant into an export": 2,
      "copy: a constant into a temp": 1
     }
@@ -14367,9 +14373,9 @@
     }
    },
    "on": {
-    "alu": 20,
+    "alu": 22,
     "copies": 3,
-    "co_issued": 8,
+    "co_issued": 6,
     "fetches": 3,
     "control_flow": 7,
     "registers": 5,
@@ -14377,12 +14383,12 @@
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 4,
+    "single_lane": 8,
     "range_useless": 0,
     "without_flow": 0,
     "kinds": {
-     "single-lane: dp4": 2,
-     "single-lane: mul": 2,
+     "single-lane: dp4": 4,
+     "single-lane: mul": 4,
      "copy: a constant into an export": 2,
      "copy: a constant into a temp": 1
     }
@@ -15402,26 +15408,27 @@
     }
    },
    "on": {
-    "alu": 208,
-    "copies": 9,
-    "co_issued": 15,
+    "alu": 223,
+    "copies": 24,
+    "co_issued": 0,
     "fetches": 0,
-    "control_flow": 37,
+    "control_flow": 39,
     "registers": 36,
     "identities": 2,
     "mix_pairs": 0,
     "divided_lanes": 0,
     "constant_rcps": 0,
-    "single_lane": 9,
-    "range_useless": 0,
+    "single_lane": 24,
+    "range_useless": 1,
     "without_flow": 0,
     "kinds": {
      "identity: x + 0": 2,
-     "single-lane: add": 2,
+     "single-lane: add": 17,
      "single-lane: mad": 7,
+     "range: an identity with a number its range fixes": 1,
      "copy: a constant into a temp": 1,
      "copy: anything else": 1,
-     "copy: a computed value step 2 can't move": 7
+     "copy: a computed value step 2 can't move": 22
     }
    },
    "result": "ok"
@@ -17130,17 +17137,17 @@
     }
    },
    "on": {
-    "alu": 4132,
-    "copies": 415,
-    "co_issued": 910,
+    "alu": 4156,
+    "copies": 417,
+    "co_issued": 886,
     "fetches": 373,
     "control_flow": 1273,
-    "registers": 723,
+    "registers": 721,
     "identities": 3,
     "mix_pairs": 3,
     "divided_lanes": 0,
     "constant_rcps": 4,
-    "single_lane": 1474,
+    "single_lane": 1520,
     "range_useless": 0,
     "without_flow": 7,
     "registers_most": 21,
@@ -17149,18 +17156,18 @@
      "copy: a constant into a temp": 8,
      "copy: a constant into an export": 95,
      "copy: a fetched value into an export": 120,
-     "copy: anything else": 1,
+     "copy: anything else": 3,
      "copy: in a program the optimiser leaves alone": 157,
      "identity: on constants alone": 3,
      "mix pair: x 0 or 1": 3,
-     "single-lane: add": 91,
+     "single-lane: add": 93,
      "single-lane: cndgt": 1,
      "single-lane: dp3": 413,
-     "single-lane: dp4": 349,
+     "single-lane: dp4": 371,
      "single-lane: frc": 2,
      "single-lane: mad": 30,
      "single-lane: max": 290,
-     "single-lane: mul": 298
+     "single-lane: mul": 320
     }
    }
   },
@@ -17210,24 +17217,24 @@
     }
    },
    "on": {
-    "alu": 3964,
-    "copies": 953,
-    "co_issued": 342,
+    "alu": 3985,
+    "copies": 971,
+    "co_issued": 321,
     "fetches": 328,
-    "control_flow": 1508,
+    "control_flow": 1512,
     "registers": 1409,
     "identities": 34,
     "mix_pairs": 2,
     "divided_lanes": 15,
     "constant_rcps": 9,
-    "single_lane": 388,
-    "range_useless": 1,
+    "single_lane": 408,
+    "range_useless": 2,
     "without_flow": 40,
     "registers_most": 36,
     "kinds": {
      "copy: a clamp into a temp": 17,
-     "copy: a computed value step 2 can't move": 35,
-     "copy: a constant into a temp": 43,
+     "copy: a computed value step 2 can't move": 50,
+     "copy: a constant into a temp": 46,
      "copy: a constant into an export": 78,
      "copy: a fetched value into an export": 56,
      "copy: an input into an export": 32,
@@ -17241,7 +17248,8 @@
      "mix pair: x 0 or 1": 1,
      "mix pair: y 0 or 1": 1,
      "range: a max that can't change its value": 1,
-     "single-lane: add": 105,
+     "range: an identity with a number its range fixes": 1,
+     "single-lane: add": 122,
      "single-lane: dp2add": 2,
      "single-lane: dp3": 14,
      "single-lane: dp4": 2,
@@ -17249,7 +17257,7 @@
      "single-lane: mad": 136,
      "single-lane: max": 17,
      "single-lane: min": 8,
-     "single-lane: mul": 68,
+     "single-lane: mul": 71,
      "single-lane: seq": 2,
      "single-lane: sge": 6,
      "single-lane: sgt": 5,
@@ -17342,17 +17350,17 @@
      }
     },
     "on": {
-     "alu": 998,
+     "alu": 1000,
      "copies": 94,
-     "co_issued": 184,
+     "co_issued": 182,
      "fetches": 165,
-     "control_flow": 426,
+     "control_flow": 427,
      "registers": 440,
      "identities": 8,
      "mix_pairs": 0,
      "divided_lanes": 0,
      "constant_rcps": 0,
-     "single_lane": 200,
+     "single_lane": 202,
      "range_useless": 0,
      "without_flow": 0,
      "registers_most": 16,
@@ -17372,7 +17380,7 @@
       "single-lane: mad": 77,
       "single-lane: max": 6,
       "single-lane: min": 8,
-      "single-lane: mul": 37,
+      "single-lane: mul": 39,
       "single-lane: sge": 1
      }
     }
@@ -17457,9 +17465,9 @@
      }
     },
     "on": {
-     "alu": 368,
+     "alu": 369,
      "copies": 17,
-     "co_issued": 86,
+     "co_issued": 85,
      "fetches": 48,
      "control_flow": 105,
      "registers": 113,
@@ -17467,7 +17475,7 @@
      "mix_pairs": 0,
      "divided_lanes": 0,
      "constant_rcps": 0,
-     "single_lane": 100,
+     "single_lane": 101,
      "range_useless": 0,
      "without_flow": 0,
      "registers_most": 10,
@@ -17482,7 +17490,7 @@
       "single-lane: mad": 31,
       "single-lane: max": 6,
       "single-lane: min": 7,
-      "single-lane: mul": 27,
+      "single-lane: mul": 28,
       "single-lane: sge": 1
      }
     }

@@ -75,7 +75,7 @@
 8586b077d3e63bc1.frag: ALU 47 -> 22, copies 19 -> 1, co-issued 0 -> 4, fetches 2 -> 2, control flow 11 -> 6, registers 14 -> 7, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 4, range-useless 1 -> 0, walked without flow 0 -> 0; ok
 858b7f6b67e42fd6.frag: ALU 29 -> 8, copies 16 -> 0, co-issued 0 -> 3, fetches 1 -> 1, control flow 7 -> 4, registers 12 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 2, range-useless 1 -> 0, walked without flow 0 -> 0; ok
 85ae52ee303f618c.frag: ALU 7 -> 2, copies 6 -> 1, co-issued 0 -> 0, fetches 1 -> 1, control flow 4 -> 3, registers 4 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-85c8b022385334bf.frag: ALU 57 -> 24, copies 20 -> 0, co-issued 0 -> 6, fetches 2 -> 2, control flow 13 -> 7, registers 14 -> 6, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 9, range-useless 1 -> 0, walked without flow 0 -> 0; ok
+85c8b022385334bf.frag: ALU 57 -> 25, copies 20 -> 0, co-issued 0 -> 5, fetches 2 -> 2, control flow 13 -> 7, registers 14 -> 6, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 10, range-useless 1 -> 0, walked without flow 0 -> 0; ok
 88a3de8e328f385a.vert: ALU 19 -> 8, copies 11 -> 0, co-issued 0 -> 1, fetches 1 -> 1, control flow 7 -> 5, registers 6 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 6, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 8b4ce5184129a25a.frag: ALU 8 -> 4, copies 3 -> 1, co-issued 0 -> 0, fetches 2 -> 2, control flow 4 -> 3, registers 4 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 8e555ecc28e3d240.vert: ALU 26 -> 10, copies 18 -> 2, co-issued 0 -> 1, fetches 3 -> 3, control flow 9 -> 6, registers 8 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 6, range-useless 0 -> 0, walked without flow 0 -> 0; ok
@@ -126,7 +126,7 @@ da2593920df168c8.vert: ALU 22 -> 10, copies 14 -> 2, co-issued 0 -> 1, fetches 1
 dae9addf7280e276.frag: ALU 10 -> 3, copies 7 -> 0, co-issued 0 -> 0, fetches 1 -> 1, control flow 4 -> 3, registers 5 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 dee3af7655c47a63.frag: ALU 47 -> 22, copies 19 -> 1, co-issued 0 -> 4, fetches 2 -> 2, control flow 11 -> 6, registers 14 -> 7, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 4, range-useless 1 -> 0, walked without flow 0 -> 0; ok
 e09e6878603dc742.frag: ALU 2 -> 1, copies 2 -> 1, co-issued 0 -> 0, fetches 1 -> 1, control flow 3 -> 3, registers 3 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-e19f86ee747cb140.frag: ALU 21 -> 6, copies 14 -> 1, co-issued 0 -> 1, fetches 2 -> 2, control flow 6 -> 3, registers 8 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 1, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+e19f86ee747cb140.frag: ALU 21 -> 7, copies 14 -> 1, co-issued 0 -> 0, fetches 2 -> 2, control flow 6 -> 4, registers 8 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 2, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 e2cfed9f9f80cbf0.frag: ALU 78 -> 30, copies 25 -> 0, co-issued 0 -> 7, fetches 4 -> 4, control flow 16 -> 8, registers 16 -> 10, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 10, range-useless 12 -> 0, walked without flow 0 -> 0; ok
 e2f1c3a692fdfb84.frag: ALU 7 -> 2, copies 6 -> 1, co-issued 0 -> 0, fetches 0 -> 0, control flow 3 -> 2, registers 4 -> 1, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 e3fba406929fde97.frag: ALU 28 -> 9, copies 13 -> 1, co-issued 0 -> 0, fetches 8 -> 8, control flow 8 -> 5, registers 18 -> 16, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
@@ -279,10 +279,10 @@ vk_loop_data_count.frag.spv: ALU 26 -> 26, copies 10 -> 10, co-issued 0 -> 0, fe
 vk_loop_data_grid.frag.spv: ALU 77 -> 77, copies 25 -> 25, co-issued 0 -> 0, fetches 0 -> 0, control flow 24 -> 24, registers 12 -> 12, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i16, L9'
 vk_loop_derivative.frag.spv: ALU 29 -> 29, copies 12 -> 12, co-issued 0 -> 0, fetches 2 -> 2, control flow 11 -> 11, registers 11 -> 11, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 4, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i16, L10'
 vk_loop_float_count.frag.spv: ALU 28 -> 28, copies 11 -> 11, co-issued 0 -> 0, fetches 0 -> 0, control flow 9 -> 9, registers 8 -> 8, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i16, L8'
-vk_loop_folded_break.frag.spv: ALU 18 -> 8, copies 11 -> 1, co-issued 0 -> 1, fetches 0 -> 0, control flow 4 -> 3, registers 4 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 2 -> 3, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-vk_loop_folded_continue.frag.spv: ALU 10 -> 4, copies 4 -> 0, co-issued 0 -> 1, fetches 0 -> 0, control flow 3 -> 2, registers 4 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 2 -> 1, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+vk_loop_folded_break.frag.spv: ALU 18 -> 9, copies 11 -> 2, co-issued 0 -> 0, fetches 0 -> 0, control flow 4 -> 3, registers 4 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 2 -> 4, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+vk_loop_folded_continue.frag.spv: ALU 10 -> 5, copies 4 -> 1, co-issued 0 -> 0, fetches 0 -> 0, control flow 3 -> 2, registers 4 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 2 -> 2, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vk_loop_grid.frag.spv: ALU 249 -> 145, copies 79 -> 2, co-issued 0 -> 16, fetches 0 -> 0, control flow 44 -> 26, registers 36 -> 31, identities 3 -> 2, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 2, range-useless 2 -> 0, walked without flow 0 -> 0; ok
-vk_loop_if_break.frag.spv: ALU 35 -> 25, copies 9 -> 0, co-issued 0 -> 1, fetches 0 -> 0, control flow 7 -> 6, registers 7 -> 7, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+vk_loop_if_break.frag.spv: ALU 35 -> 26, copies 9 -> 0, co-issued 0 -> 0, fetches 0 -> 0, control flow 7 -> 6, registers 7 -> 7, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vk_loop_if.frag.spv: ALU 29 -> 15, copies 14 -> 1, co-issued 0 -> 3, fetches 0 -> 0, control flow 6 -> 4, registers 9 -> 6, identities 2 -> 1, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 1, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vk_loop_in_data_if.frag.spv: ALU 47 -> 47, copies 18 -> 18, co-issued 0 -> 0, fetches 0 -> 0, control flow 14 -> 14, registers 12 -> 12, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i16, L6'
 vk_loop_in_uniform_if.frag.spv: ALU 18 -> 18, copies 7 -> 7, co-issued 0 -> 0, fetches 0 -> 0, control flow 7 -> 7, registers 8 -> 8, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i16, L6'
@@ -300,7 +300,7 @@ vk_loop_step_grid.frag.spv: ALU 20 -> 20, copies 13 -> 13, co-issued 0 -> 0, fet
 vk_loop_swap.frag.spv: ALU 8 -> 8, copies 5 -> 5, co-issued 0 -> 0, fetches 0 -> 0, control flow 6 -> 6, registers 5 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i16, L5'
 vk_loop_uniform_if.frag.spv: ALU 34 -> 34, copies 19 -> 19, co-issued 0 -> 0, fetches 0 -> 0, control flow 11 -> 11, registers 5 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: scalar kSetpGt
 vk_loop_while.frag.spv: ALU 62 -> 62, copies 29 -> 29, co-issued 0 -> 0, fetches 0 -> 0, control flow 17 -> 17, registers 12 -> 12, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i16, L8'
-vk_many_fetches.frag.spv: ALU 388 -> 101, copies 89 -> 2, co-issued 0 -> 31, fetches 11 -> 7, control flow 69 -> 21, registers 54 -> 10, identities 8 -> 4, mix pairs 1 -> 0, divided lanes 10 -> 4, rcps of constants 0 -> 0, single-lane 35 -> 48, range-useless 15 -> 0, walked without flow 0 -> 0; ok
+vk_many_fetches.frag.spv: ALU 388 -> 102, copies 89 -> 3, co-issued 0 -> 30, fetches 11 -> 7, control flow 69 -> 22, registers 54 -> 10, identities 8 -> 4, mix pairs 1 -> 0, divided lanes 10 -> 4, rcps of constants 0 -> 0, single-lane 35 -> 49, range-useless 15 -> 0, walked without flow 0 -> 0; ok
 vk_many_live.vert.spv: ALU 148 -> 122, copies 8 -> 2, co-issued 0 -> 0, fetches 2 -> 2, control flow 29 -> 25, registers 45 -> 16, identities 20 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 81, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vk_matrices.vert.spv: ALU 30 -> 24, copies 6 -> 0, co-issued 0 -> 0, fetches 1 -> 1, control flow 9 -> 8, registers 6 -> 6, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vk_output_location_4.frag.spv: not compiled: a colour output at location 4, past oC3
@@ -329,7 +329,7 @@ vk_triangle.vert.gl.spv: ALU 2 -> 2, copies 2 -> 2, co-issued 0 -> 0, fetches 2 
 vk_triangle.vert.spv: ALU 2 -> 2, copies 2 -> 2, co-issued 0 -> 0, fetches 2 -> 2, control flow 5 -> 5, registers 2 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vk_unused_sample.frag.spv: ALU 5 -> 3, copies 5 -> 3, co-issued 0 -> 0, fetches 1 -> 0, control flow 3 -> 2, registers 3 -> 1, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vk_vertex_branch.vert.spv: ALU 7 -> 5, copies 2 -> 1, co-issued 0 -> 1, fetches 1 -> 1, control flow 5 -> 5, registers 4 -> 2, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 1, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-vk_vertex_if.vert.spv: ALU 26 -> 12, copies 14 -> 0, co-issued 0 -> 3, fetches 2 -> 2, control flow 8 -> 6, registers 9 -> 6, identities 1 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+vk_vertex_if.vert.spv: ALU 26 -> 14, copies 14 -> 2, co-issued 0 -> 1, fetches 2 -> 2, control flow 8 -> 6, registers 9 -> 6, identities 1 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 2, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vk_vertex_index.vert.spv: not compiled: integer Load must be a foldable local
 vk_vertex_loop_break.vert.spv: ALU 134 -> 79, copies 58 -> 4, co-issued 0 -> 12, fetches 2 -> 2, control flow 27 -> 17, registers 22 -> 21, identities 4 -> 3, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 3, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vk_vertex_loop_count_break.vert.spv: ALU 36 -> 36, copies 16 -> 16, co-issued 0 -> 0, fetches 2 -> 2, control flow 13 -> 13, registers 13 -> 13, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i0, L12'
@@ -350,29 +350,29 @@ vs_vecmat.vert.spv: ALU 7 -> 6, copies 3 -> 2, co-issued 0 -> 0, fetches 3 -> 3,
 vs_wave.vert.spv: ALU 11 -> 9, copies 4 -> 2, co-issued 0 -> 1, fetches 3 -> 3, control flow 6 -> 6, registers 6 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 1 -> 1, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 vtx_arith.vert.spv: ALU 8 -> 7, copies 2 -> 1, co-issued 0 -> 0, fetches 3 -> 3, control flow 5 -> 5, registers 4 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_attr_defaults.frag: ALU 6 -> 2, copies 5 -> 1, co-issued 0 -> 0, fetches 1 -> 1, control flow 3 -> 3, registers 5 -> 3, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_attr_defaults.vert: ALU 67 -> 24, copies 37 -> 5, co-issued 0 -> 7, fetches 2 -> 1, control flow 15 -> 8, registers 7 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 7, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_attr_defaults.vert: ALU 67 -> 26, copies 37 -> 5, co-issued 0 -> 5, fetches 2 -> 1, control flow 15 -> 8, registers 7 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 11, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_emboss.frag: ALU 6 -> 2, copies 5 -> 1, co-issued 0 -> 0, fetches 1 -> 1, control flow 3 -> 3, registers 6 -> 3, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_emboss.vert: ALU 84 -> 33, copies 43 -> 3, co-issued 0 -> 10, fetches 5 -> 5, control flow 17 -> 10, registers 11 -> 8, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 6 -> 12, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_emboss.vert: ALU 84 -> 35, copies 43 -> 3, co-issued 0 -> 8, fetches 5 -> 5, control flow 17 -> 10, registers 11 -> 8, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 6 -> 16, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_texgen_binormal.frag: ALU 6 -> 2, copies 5 -> 1, co-issued 0 -> 0, fetches 1 -> 1, control flow 3 -> 3, registers 5 -> 3, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_texgen_binormal.vert: ALU 65 -> 21, copies 35 -> 2, co-issued 0 -> 10, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 4, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_texgen_binormal.vert: ALU 65 -> 23, copies 35 -> 2, co-issued 0 -> 8, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 8, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_texgen_prior.frag: ALU 7 -> 3, copies 6 -> 2, co-issued 0 -> 0, fetches 2 -> 2, control flow 4 -> 3, registers 6 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_texgen_prior.vert: ALU 83 -> 26, copies 45 -> 2, co-issued 0 -> 12, fetches 3 -> 3, control flow 17 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 6, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_texgen_prior.vert: ALU 83 -> 28, copies 45 -> 2, co-issued 0 -> 10, fetches 3 -> 3, control flow 17 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 10, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_texgen_prior_inline.frag: ALU 6 -> 2, copies 5 -> 1, co-issued 0 -> 0, fetches 1 -> 1, control flow 3 -> 3, registers 5 -> 3, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_texgen_prior_inline.vert: ALU 65 -> 21, copies 35 -> 2, co-issued 0 -> 10, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 4, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_texgen_prior_inline.vert: ALU 65 -> 23, copies 35 -> 2, co-issued 0 -> 8, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 8, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_texgen_q_zero.frag: ALU 15 -> 7, copies 8 -> 1, co-issued 0 -> 1, fetches 1 -> 1, control flow 4 -> 3, registers 6 -> 4, identities 0 -> 0, mix pairs 1 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 2, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_texgen_q_zero.vert: ALU 76 -> 29, copies 39 -> 2, co-issued 0 -> 10, fetches 3 -> 3, control flow 16 -> 9, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 7, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_texgen_q_zero.vert: ALU 76 -> 31, copies 39 -> 2, co-issued 0 -> 8, fetches 3 -> 3, control flow 16 -> 9, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 11, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_texgen_tangent.frag: ALU 6 -> 2, copies 5 -> 1, co-issued 0 -> 0, fetches 1 -> 1, control flow 3 -> 3, registers 5 -> 3, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_texgen_tangent.vert: ALU 65 -> 21, copies 35 -> 2, co-issued 0 -> 10, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 4, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_texgen_tangent.vert: ALU 65 -> 23, copies 35 -> 2, co-issued 0 -> 8, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 8, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_texgen_zero.frag: ALU 15 -> 7, copies 8 -> 1, co-issued 0 -> 1, fetches 1 -> 1, control flow 4 -> 3, registers 6 -> 4, identities 0 -> 0, mix pairs 1 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 2, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_texgen_zero.vert: ALU 75 -> 32, copies 34 -> 2, co-issued 0 -> 11, fetches 2 -> 2, control flow 16 -> 9, registers 7 -> 6, identities 0 -> 0, mix pairs 1 -> 1, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 7, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_texgen_zero.vert: ALU 75 -> 34, copies 34 -> 2, co-issued 0 -> 9, fetches 2 -> 2, control flow 16 -> 9, registers 7 -> 6, identities 0 -> 0, mix pairs 1 -> 1, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 11, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_ztex_add_u24.frag: ALU 39 -> 17, copies 15 -> 1, co-issued 0 -> 2, fetches 1 -> 1, control flow 9 -> 5, registers 9 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 11, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_ztex_add_u24.vert: ALU 61 -> 22, copies 34 -> 4, co-issued 0 -> 9, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 6, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 4, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_ztex_add_u24.vert: ALU 61 -> 23, copies 34 -> 4, co-issued 0 -> 8, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 6, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_ztex_add_u8.frag: ALU 34 -> 14, copies 13 -> 1, co-issued 0 -> 2, fetches 1 -> 1, control flow 8 -> 5, registers 9 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 9, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_ztex_add_u8.vert: ALU 61 -> 22, copies 34 -> 4, co-issued 0 -> 9, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 6, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 4, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_ztex_add_u8.vert: ALU 61 -> 23, copies 34 -> 4, co-issued 0 -> 8, fetches 3 -> 3, control flow 14 -> 8, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 6, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_ztex_replace_u24.frag: ALU 24 -> 12, copies 9 -> 1, co-issued 0 -> 0, fetches 1 -> 1, control flow 6 -> 4, registers 6 -> 3, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 7, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_ztex_replace_u24.vert: ALU 59 -> 20, copies 32 -> 3, co-issued 0 -> 8, fetches 3 -> 3, control flow 13 -> 7, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 4, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_ztex_replace_u24.vert: ALU 59 -> 22, copies 32 -> 3, co-issued 0 -> 6, fetches 3 -> 3, control flow 13 -> 7, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 8, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 aurora_ztex_replace_u8.frag: ALU 19 -> 9, copies 7 -> 1, co-issued 0 -> 0, fetches 1 -> 1, control flow 6 -> 4, registers 6 -> 3, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 6, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-aurora_ztex_replace_u8.vert: ALU 59 -> 20, copies 32 -> 3, co-issued 0 -> 8, fetches 3 -> 3, control flow 13 -> 7, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 4, range-useless 0 -> 0, walked without flow 0 -> 0; ok
+aurora_ztex_replace_u8.vert: ALU 59 -> 22, copies 32 -> 3, co-issued 0 -> 6, fetches 3 -> 3, control flow 13 -> 7, registers 8 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 4 -> 8, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 band.frag: ALU 6 -> 6, copies 2 -> 2, co-issued 0 -> 0, fetches 0 -> 0, control flow 3 -> 3, registers 4 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 branch_data.vert: ALU 29 -> 15, copies 15 -> 0, co-issued 0 -> 5, fetches 2 -> 2, control flow 9 -> 6, registers 7 -> 6, identities 1 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 branch_uniform.vert: ALU 16 -> 6, copies 9 -> 0, co-issued 0 -> 2, fetches 1 -> 1, control flow 7 -> 5, registers 6 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
@@ -399,7 +399,7 @@ lod_bias.frag: ALU 4 -> 3, copies 2 -> 1, co-issued 0 -> 0, fetches 2 -> 2, cont
 lod_computed.frag: ALU 4 -> 3, copies 2 -> 1, co-issued 0 -> 0, fetches 2 -> 2, control flow 4 -> 4, registers 4 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 lod_constant.frag: ALU 6 -> 4, copies 3 -> 1, co-issued 0 -> 0, fetches 3 -> 3, control flow 4 -> 4, registers 7 -> 5, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 lod_gradients.frag: ALU 10 -> 7, copies 6 -> 2, co-issued 0 -> 2, fetches 3 -> 3, control flow 5 -> 4, registers 5 -> 6, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 2, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-loop_break.frag: ALU 387 -> 208, copies 130 -> 9, co-issued 0 -> 15, fetches 0 -> 0, control flow 67 -> 37, registers 38 -> 36, identities 2 -> 2, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 9, range-useless 2 -> 0, walked without flow 0 -> 0; ok
+loop_break.frag: ALU 387 -> 223, copies 130 -> 24, co-issued 0 -> 0, fetches 0 -> 0, control flow 67 -> 39, registers 38 -> 36, identities 2 -> 2, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 24, range-useless 2 -> 1, walked without flow 0 -> 0; ok
 loop_count.frag: ALU 10 -> 10, copies 9 -> 9, co-issued 0 -> 0, fetches 0 -> 0, control flow 7 -> 7, registers 4 -> 4, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i16, L6'
 loop_count.vert: ALU 19 -> 19, copies 15 -> 15, co-issued 0 -> 0, fetches 1 -> 1, control flow 11 -> 11, registers 7 -> 7, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i0, L8'
 loop_count_break.frag: ALU 62 -> 62, copies 22 -> 22, co-issued 0 -> 0, fetches 0 -> 0, control flow 15 -> 15, registers 17 -> 17, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 1 -> 1; not simulated: control flow '      loop i16, L14'
@@ -444,13 +444,13 @@ mesh_uniform.frag: ALU 1 -> 1, copies 0 -> 0, co-issued 0 -> 0, fetches 1 -> 1, 
 mesh_uniform.vert: ALU 8 -> 5, copies 4 -> 1, co-issued 0 -> 0, fetches 2 -> 2, control flow 6 -> 5, registers 4 -> 3, identities 1 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 sprite.frag: ALU 1 -> 1, copies 0 -> 0, co-issued 0 -> 0, fetches 1 -> 1, control flow 3 -> 3, registers 3 -> 3, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
 sprite.vert: ALU 5 -> 5, copies 5 -> 5, co-issued 0 -> 0, fetches 3 -> 3, control flow 5 -> 5, registers 3 -> 3, identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0; ok
-vertex, 135 shaders: ALU 7618 -> 4132 (45.8% fewer); copies 3249 (42.6% of ALU) -> 415 (10.0%); co-issued 0 (0.0%) -> 910 (22.0%); fetches 376 -> 373; control flow 1848 -> 1273; registers 7.3 -> 5.4 a shader, most 45 -> 21
-vertex, needless work: identities 28 -> 3, mix pairs 22 -> 3, divided lanes 0 -> 0, rcps of constants 4 -> 4, single-lane 85 -> 1474, range-useless 0 -> 0, walked without flow 7 -> 7
+vertex, 135 shaders: ALU 7618 -> 4156 (45.4% fewer); copies 3249 (42.6% of ALU) -> 417 (10.0%); co-issued 0 (0.0%) -> 886 (21.3%); fetches 376 -> 373; control flow 1848 -> 1273; registers 7.3 -> 5.3 a shader, most 45 -> 21
+vertex, needless work: identities 28 -> 3, mix pairs 22 -> 3, divided lanes 0 -> 0, rcps of constants 4 -> 4, single-lane 85 -> 1520, range-useless 0 -> 0, walked without flow 7 -> 7
     copy: a computed value step 2 can't move: 0 -> 34
     copy: a constant into a temp: 0 -> 8
     copy: a constant into an export: 0 -> 95
     copy: a fetched value into an export: 0 -> 120
-    copy: anything else: 0 -> 1
+    copy: anything else: 0 -> 3
     copy: in a program the optimiser leaves alone: 0 -> 157
     identity: 0 - x, a negation: 1 -> 0
     identity: mad by 1, an add: 2 -> 0
@@ -458,20 +458,20 @@ vertex, needless work: identities 28 -> 3, mix pairs 22 -> 3, divided lanes 0 ->
     identity: x * -1, a negation: 20 -> 0
     identity: x + 0: 2 -> 0
     mix pair: x 0 or 1: 22 -> 3
-    single-lane: add: 17 -> 91
+    single-lane: add: 17 -> 93
     single-lane: cndgt: 0 -> 1
     single-lane: dp2add: 2 -> 0
     single-lane: dp3: 3 -> 413
-    single-lane: dp4: 8 -> 349
+    single-lane: dp4: 8 -> 371
     single-lane: frc: 0 -> 2
     single-lane: mad: 7 -> 30
     single-lane: max: 0 -> 290
-    single-lane: mul: 48 -> 298
-pixel, 296 shaders: ALU 6651 -> 3964 (40.4% fewer); copies 2750 (41.3% of ALU) -> 953 (24.0%); co-issued 3 (0.0%) -> 342 (8.6%); fetches 334 -> 328; control flow 1947 -> 1508; registers 6.8 -> 4.8 a shader, most 54 -> 36
-pixel, needless work: identities 64 -> 34, mix pairs 13 -> 2, divided lanes 21 -> 15, rcps of constants 9 -> 9, single-lane 105 -> 388, range-useless 106 -> 1, walked without flow 40 -> 40
+    single-lane: mul: 48 -> 320
+pixel, 296 shaders: ALU 6651 -> 3985 (40.1% fewer); copies 2750 (41.3% of ALU) -> 971 (24.4%); co-issued 3 (0.0%) -> 321 (8.1%); fetches 334 -> 328; control flow 1947 -> 1512; registers 6.8 -> 4.8 a shader, most 54 -> 36
+pixel, needless work: identities 64 -> 34, mix pairs 13 -> 2, divided lanes 21 -> 15, rcps of constants 9 -> 9, single-lane 105 -> 408, range-useless 106 -> 2, walked without flow 40 -> 40
     copy: a clamp into a temp: 0 -> 17
-    copy: a computed value step 2 can't move: 0 -> 35
-    copy: a constant into a temp: 0 -> 43
+    copy: a computed value step 2 can't move: 0 -> 50
+    copy: a constant into a temp: 0 -> 46
     copy: a constant into an export: 0 -> 78
     copy: a fetched value into an export: 0 -> 56
     copy: an input into an export: 0 -> 32
@@ -495,9 +495,9 @@ pixel, needless work: identities 64 -> 34, mix pairs 13 -> 2, divided lanes 21 -
     range: a max that can't change its value: 12 -> 1
     range: a min that can't change its value: 12 -> 0
     range: a value its range fixes: 13 -> 0
-    range: an identity with a number its range fixes: 11 -> 0
+    range: an identity with a number its range fixes: 11 -> 1
     range: code only those read: 18 -> 0
-    single-lane: add: 32 -> 105
+    single-lane: add: 32 -> 122
     single-lane: dp2add: 0 -> 2
     single-lane: dp3: 6 -> 14
     single-lane: dp4: 0 -> 2
@@ -505,7 +505,7 @@ pixel, needless work: identities 64 -> 34, mix pairs 13 -> 2, divided lanes 21 -
     single-lane: mad: 0 -> 136
     single-lane: max: 0 -> 17
     single-lane: min: 0 -> 8
-    single-lane: mul: 61 -> 68
+    single-lane: mul: 61 -> 71
     single-lane: seq: 2 -> 2
     single-lane: sge: 0 -> 6
     single-lane: sgt: 4 -> 5
@@ -522,8 +522,8 @@ Dusklight, vertex, needless work: identities 0 -> 0, mix pairs 21 -> 2, divided 
     single-lane: mad: 0 -> 19
     single-lane: max: 0 -> 288
     single-lane: mul: 0 -> 270
-Dusklight, pixel, 103 shaders: ALU 2351 -> 998 (57.5% fewer); copies 1073 (45.6% of ALU) -> 94 (9.4%); co-issued 0 (0.0%) -> 184 (18.4%); fetches 166 -> 165; control flow 653 -> 426; registers 7.7 -> 4.3 a shader, most 22 -> 16
-Dusklight, pixel, needless work: identities 12 -> 8, mix pairs 3 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 22 -> 200, range-useless 73 -> 0, walked without flow 0 -> 0
+Dusklight, pixel, 103 shaders: ALU 2351 -> 1000 (57.5% fewer); copies 1073 (45.6% of ALU) -> 94 (9.4%); co-issued 0 (0.0%) -> 182 (18.2%); fetches 166 -> 165; control flow 653 -> 427; registers 7.7 -> 4.3 a shader, most 22 -> 16
+Dusklight, pixel, needless work: identities 12 -> 8, mix pairs 3 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 22 -> 202, range-useless 73 -> 0, walked without flow 0 -> 0
     copy: a clamp into a temp: 0 -> 13
     copy: a computed value step 2 can't move: 0 -> 18
     copy: a constant into a temp: 0 -> 12
@@ -547,7 +547,7 @@ Dusklight, pixel, needless work: identities 12 -> 8, mix pairs 3 -> 0, divided l
     single-lane: mad: 0 -> 77
     single-lane: max: 0 -> 6
     single-lane: min: 0 -> 8
-    single-lane: mul: 22 -> 37
+    single-lane: mul: 22 -> 39
     single-lane: sge: 0 -> 1
 Dusklight costliest, vertex, 10 shaders: ALU 2400 -> 1313 (45.3% fewer); copies 944 (39.3% of ALU) -> 55 (4.2%); co-issued 0 (0.0%) -> 382 (29.1%); fetches 33 -> 33; control flow 443 -> 258; registers 11.7 -> 9.2 a shader, most 13 -> 13
 Dusklight costliest, vertex, needless work: identities 0 -> 0, mix pairs 9 -> 2, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 475, range-useless 0 -> 0, walked without flow 0 -> 0
@@ -561,8 +561,8 @@ Dusklight costliest, vertex, needless work: identities 0 -> 0, mix pairs 9 -> 2,
     single-lane: mad: 0 -> 7
     single-lane: max: 0 -> 119
     single-lane: mul: 0 -> 112
-Dusklight costliest, pixel, 15 shaders: ALU 864 -> 368 (57.4% fewer); copies 326 (37.7% of ALU) -> 17 (4.6%); co-issued 0 (0.0%) -> 86 (23.4%); fetches 48 -> 48; control flow 190 -> 105; registers 14.1 -> 7.5 a shader, most 22 -> 10
-Dusklight costliest, pixel, needless work: identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 18 -> 100, range-useless 47 -> 0, walked without flow 0 -> 0
+Dusklight costliest, pixel, 15 shaders: ALU 864 -> 369 (57.3% fewer); copies 326 (37.7% of ALU) -> 17 (4.6%); co-issued 0 (0.0%) -> 85 (23.0%); fetches 48 -> 48; control flow 190 -> 105; registers 14.1 -> 7.5 a shader, most 22 -> 10
+Dusklight costliest, pixel, needless work: identities 0 -> 0, mix pairs 0 -> 0, divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 18 -> 101, range-useless 47 -> 0, walked without flow 0 -> 0
     copy: a clamp into a temp: 0 -> 4
     copy: a computed value step 2 can't move: 0 -> 2
     copy: a constant into a temp: 0 -> 10
@@ -579,18 +579,18 @@ Dusklight costliest, pixel, needless work: identities 0 -> 0, mix pairs 0 -> 0, 
     single-lane: mad: 0 -> 31
     single-lane: max: 0 -> 6
     single-lane: min: 0 -> 7
-    single-lane: mul: 18 -> 27
+    single-lane: mul: 18 -> 28
     single-lane: sge: 0 -> 1
 446 shaders, 0 differ, 50 not simulated, 15 not compiled
 against the baseline, vertex, optimiser off: ALU 7619 -> 7618 (-0.0%), copies 3249 -> 3249 (+0.0%), co-issued 0 -> 0, fetches 376 -> 376 (+0.0%), control flow 1848 -> 1848 (+0.0%), registers 987 -> 987 (+0.0%), identities 28 -> 28 (+0.0%), mix pairs 22 -> 22 (+0.0%), divided lanes 0 -> 0, rcps of constants 5 -> 4 (-20.0%), single-lane 85 -> 85 (+0.0%), range-useless 0 -> 0, walked without flow 7 -> 7 (+0.0%), most registers 45 -> 45 (+0.0%)
-against the baseline, vertex, optimiser on: ALU 4518 -> 4132 (-8.5%), copies 636 -> 415 (-34.7%), co-issued 528 -> 910 (+72.3%), fetches 373 -> 373 (+0.0%), control flow 1330 -> 1273 (-4.3%), registers 720 -> 723 (+0.4%), identities 28 -> 3 (-89.3%), mix pairs 22 -> 3 (-86.4%), divided lanes 0 -> 0, rcps of constants 5 -> 4 (-20.0%), single-lane 1921 -> 1474 (-23.3%), range-useless 0 -> 0, walked without flow 7 -> 7 (+0.0%), most registers 21 -> 21 (+0.0%)
+against the baseline, vertex, optimiser on: ALU 4518 -> 4156 (-8.0%), copies 636 -> 417 (-34.4%), co-issued 528 -> 886 (+67.8%), fetches 373 -> 373 (+0.0%), control flow 1330 -> 1273 (-4.3%), registers 720 -> 721 (+0.1%), identities 28 -> 3 (-89.3%), mix pairs 22 -> 3 (-86.4%), divided lanes 0 -> 0, rcps of constants 5 -> 4 (-20.0%), single-lane 1921 -> 1520 (-20.9%), range-useless 0 -> 0, walked without flow 7 -> 7 (+0.0%), most registers 21 -> 21 (+0.0%)
 against the baseline, pixel, optimiser off: ALU 6315 -> 6651 (+5.3%), copies 2528 -> 2750 (+8.8%), co-issued 3 -> 3 (+0.0%), fetches 323 -> 334 (+3.4%), control flow 1883 -> 1947 (+3.4%), registers 1944 -> 2016 (+3.7%), identities 386 -> 64 (-83.4%), mix pairs 184 -> 13 (-92.9%), divided lanes 45 -> 21 (-53.3%), rcps of constants 93 -> 9 (-90.3%), single-lane 98 -> 105 (+7.1%), range-useless 72 -> 106 (+47.2%), walked without flow 40 -> 40 (+0.0%), most registers 38 -> 54 (+42.1%)
-against the baseline, pixel, optimiser on: ALU 4225 -> 3964 (-6.2%), copies 1032 -> 953 (-7.7%), co-issued 199 -> 342 (+71.9%), fetches 321 -> 328 (+2.2%), control flow 1542 -> 1508 (-2.2%), registers 1403 -> 1409 (+0.4%), identities 389 -> 34 (-91.3%), mix pairs 183 -> 2 (-98.9%), divided lanes 60 -> 15 (-75.0%), rcps of constants 87 -> 9 (-89.7%), single-lane 578 -> 388 (-32.9%), range-useless 34 -> 1 (-97.1%), walked without flow 40 -> 40 (+0.0%), most registers 36 -> 36 (+0.0%)
+against the baseline, pixel, optimiser on: ALU 4225 -> 3985 (-5.7%), copies 1032 -> 971 (-5.9%), co-issued 199 -> 321 (+61.3%), fetches 321 -> 328 (+2.2%), control flow 1542 -> 1512 (-1.9%), registers 1403 -> 1409 (+0.4%), identities 389 -> 34 (-91.3%), mix pairs 183 -> 2 (-98.9%), divided lanes 60 -> 15 (-75.0%), rcps of constants 87 -> 9 (-89.7%), single-lane 578 -> 408 (-29.4%), range-useless 34 -> 2 (-94.1%), walked without flow 40 -> 40 (+0.0%), most registers 36 -> 36 (+0.0%)
 against the baseline, Dusklight, vertex, optimiser off: ALU 5665 -> 5665 (+0.0%), copies 2376 -> 2376 (+0.0%), co-issued 0 -> 0, fetches 136 -> 136 (+0.0%), control flow 1142 -> 1142 (+0.0%), registers 441 -> 441 (+0.0%), identities 0 -> 0, mix pairs 21 -> 21 (+0.0%), divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0, most registers 14 -> 14 (+0.0%)
 against the baseline, Dusklight, vertex, optimiser on: ALU 3257 -> 2965 (-9.0%), copies 305 -> 147 (-51.8%), co-issued 471 -> 763 (+62.0%), fetches 136 -> 136 (+0.0%), control flow 730 -> 685 (-6.2%), registers 300 -> 299 (-0.3%), identities 0 -> 0, mix pairs 21 -> 2 (-90.5%), divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 1623 -> 1289 (-20.6%), range-useless 0 -> 0, walked without flow 0 -> 0, most registers 14 -> 13 (-7.1%)
 against the baseline, Dusklight, pixel, optimiser off: ALU 2633 -> 2351 (-10.7%), copies 1068 -> 1073 (+0.5%), co-issued 0 -> 0, fetches 166 -> 166 (+0.0%), control flow 697 -> 653 (-6.3%), registers 810 -> 795 (-1.9%), identities 330 -> 12 (-96.4%), mix pairs 165 -> 3 (-98.2%), divided lanes 36 -> 0 (-100.0%), rcps of constants 68 -> 0 (-100.0%), single-lane 58 -> 22 (-62.1%), range-useless 68 -> 73 (+7.4%), walked without flow 0 -> 0, most registers 22 -> 22 (+0.0%)
-against the baseline, Dusklight, pixel, optimiser on: ALU 1342 -> 998 (-25.6%), copies 118 -> 94 (-20.3%), co-issued 159 -> 184 (+15.7%), fetches 165 -> 165 (+0.0%), control flow 482 -> 426 (-11.6%), registers 466 -> 440 (-5.6%), identities 332 -> 8 (-97.6%), mix pairs 164 -> 0 (-100.0%), divided lanes 48 -> 0 (-100.0%), rcps of constants 62 -> 0 (-100.0%), single-lane 383 -> 200 (-47.8%), range-useless 32 -> 0 (-100.0%), walked without flow 0 -> 0, most registers 16 -> 16 (+0.0%)
+against the baseline, Dusklight, pixel, optimiser on: ALU 1342 -> 1000 (-25.5%), copies 118 -> 94 (-20.3%), co-issued 159 -> 182 (+14.5%), fetches 165 -> 165 (+0.0%), control flow 482 -> 427 (-11.4%), registers 466 -> 440 (-5.6%), identities 332 -> 8 (-97.6%), mix pairs 164 -> 0 (-100.0%), divided lanes 48 -> 0 (-100.0%), rcps of constants 62 -> 0 (-100.0%), single-lane 383 -> 202 (-47.3%), range-useless 32 -> 0 (-100.0%), walked without flow 0 -> 0, most registers 16 -> 16 (+0.0%)
 against the baseline, Dusklight costliest, vertex, optimiser off: ALU 2400 -> 2400 (+0.0%), copies 944 -> 944 (+0.0%), co-issued 0 -> 0, fetches 33 -> 33 (+0.0%), control flow 443 -> 443 (+0.0%), registers 117 -> 117 (+0.0%), identities 0 -> 0, mix pairs 9 -> 9 (+0.0%), divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 0 -> 0, range-useless 0 -> 0, walked without flow 0 -> 0, most registers 13 -> 13 (+0.0%)
 against the baseline, Dusklight costliest, vertex, optimiser on: ALU 1473 -> 1313 (-10.9%), copies 170 -> 55 (-67.6%), co-issued 222 -> 382 (+72.1%), fetches 33 -> 33 (+0.0%), control flow 285 -> 258 (-9.5%), registers 94 -> 92 (-2.1%), identities 0 -> 0, mix pairs 9 -> 2 (-77.8%), divided lanes 0 -> 0, rcps of constants 0 -> 0, single-lane 602 -> 475 (-21.1%), range-useless 0 -> 0, walked without flow 0 -> 0, most registers 14 -> 13 (-7.1%)
 against the baseline, Dusklight costliest, pixel, optimiser off: ALU 1020 -> 864 (-15.3%), copies 326 -> 326 (+0.0%), co-issued 0 -> 0, fetches 48 -> 48 (+0.0%), control flow 216 -> 190 (-12.0%), registers 213 -> 211 (-0.9%), identities 122 -> 0 (-100.0%), mix pairs 62 -> 0 (-100.0%), divided lanes 36 -> 0 (-100.0%), rcps of constants 56 -> 0 (-100.0%), single-lane 54 -> 18 (-66.7%), range-useless 42 -> 47 (+11.9%), walked without flow 0 -> 0, most registers 22 -> 22 (+0.0%)
-against the baseline, Dusklight costliest, pixel, optimiser on: ALU 546 -> 368 (-32.6%), copies 37 -> 17 (-54.1%), co-issued 96 -> 86 (-10.4%), fetches 48 -> 48 (+0.0%), control flow 134 -> 105 (-21.6%), registers 124 -> 113 (-8.9%), identities 124 -> 0 (-100.0%), mix pairs 61 -> 0 (-100.0%), divided lanes 44 -> 0 (-100.0%), rcps of constants 50 -> 0 (-100.0%), single-lane 186 -> 100 (-46.2%), range-useless 32 -> 0 (-100.0%), walked without flow 0 -> 0, most registers 12 -> 10 (-16.7%)
+against the baseline, Dusklight costliest, pixel, optimiser on: ALU 546 -> 369 (-32.4%), copies 37 -> 17 (-54.1%), co-issued 96 -> 85 (-11.5%), fetches 48 -> 48 (+0.0%), control flow 134 -> 105 (-21.6%), registers 124 -> 113 (-8.9%), identities 124 -> 0 (-100.0%), mix pairs 61 -> 0 (-100.0%), divided lanes 44 -> 0 (-100.0%), rcps of constants 50 -> 0 (-100.0%), single-lane 186 -> 101 (-45.7%), range-useless 32 -> 0 (-100.0%), walked without flow 0 -> 0, most registers 12 -> 10 (-16.7%)

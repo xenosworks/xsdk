@@ -51,7 +51,7 @@ optimiser off: 0 of 150 changed, ALU 8016 -> 8016
 820f98f280587ea8.frag on: ALU 23 -> 21
 8586b077d3e63bc1.frag on: ALU 24 -> 22
 858b7f6b67e42fd6.frag on: ALU 9 -> 8
-85c8b022385334bf.frag on: ALU 28 -> 24
+85c8b022385334bf.frag on: ALU 28 -> 25
 88a3de8e328f385a.vert on: ALU 9 -> 8
 8e555ecc28e3d240.vert on: ALU 11 -> 10
 8ecfa22174a91d18.frag on: ALU 6 -> 5
@@ -79,7 +79,6 @@ d8d724f61446ecbb.vert on: ALU 15 -> 14
 d90889c31c82dbe8.vert on: ALU 115 -> 107
 da2593920df168c8.vert on: ALU 11 -> 10
 dee3af7655c47a63.frag on: ALU 24 -> 22
-e19f86ee747cb140.frag on: ALU 7 -> 6
 e2cfed9f9f80cbf0.frag on: ALU 34 -> 30
 e4c0798e6cc9e4ba.frag on: ALU 9 -> 8
 e5ea8b62e2ebf4ac.vert on: ALU 147 -> 137
@@ -92,33 +91,32 @@ f1f88472976e4bfb.vert on: ALU 127 -> 118
 f2f1d4cd60de5251.frag on: ALU 12 -> 10
 f3825523049d31cf.frag on: ALU 25 -> 23
 f5cb41c6eaf01a5f.frag on: ALU 16 -> 15
-optimiser on: 89 of 150 changed, ALU 4343 -> 3963
+optimiser on: 88 of 150 changed, ALU 4343 -> 3965
 
 == vulkan4xenon's tests/shaders at 1cb5ac4, the same as at e251f8b
 optimiser off: 0 of 80 changed, ALU 2124 -> 2124
-aurora_attr_defaults.vert on: ALU 27 -> 24
-aurora_emboss.vert on: ALU 38 -> 33
-aurora_texgen_binormal.vert on: ALU 27 -> 21
-aurora_texgen_prior.vert on: ALU 34 -> 26
-aurora_texgen_prior_inline.vert on: ALU 27 -> 21
+aurora_attr_defaults.vert on: ALU 27 -> 26
+aurora_emboss.vert on: ALU 38 -> 35
+aurora_texgen_binormal.vert on: ALU 27 -> 23
+aurora_texgen_prior.vert on: ALU 34 -> 28
+aurora_texgen_prior_inline.vert on: ALU 27 -> 23
 aurora_texgen_q_zero.frag on: ALU 8 -> 7
-aurora_texgen_q_zero.vert on: ALU 35 -> 29
-aurora_texgen_tangent.vert on: ALU 27 -> 21
+aurora_texgen_q_zero.vert on: ALU 35 -> 31
+aurora_texgen_tangent.vert on: ALU 27 -> 23
 aurora_texgen_zero.frag on: ALU 8 -> 7
-aurora_texgen_zero.vert on: ALU 38 -> 32
+aurora_texgen_zero.vert on: ALU 38 -> 34
 aurora_ztex_add_u24.frag on: ALU 18 -> 17
-aurora_ztex_add_u24.vert on: ALU 27 -> 22
+aurora_ztex_add_u24.vert on: ALU 27 -> 23
 aurora_ztex_add_u8.frag on: ALU 15 -> 14
-aurora_ztex_add_u8.vert on: ALU 27 -> 22
-aurora_ztex_replace_u24.vert on: ALU 24 -> 20
-aurora_ztex_replace_u8.vert on: ALU 24 -> 20
+aurora_ztex_add_u8.vert on: ALU 27 -> 23
+aurora_ztex_replace_u24.vert on: ALU 24 -> 22
+aurora_ztex_replace_u8.vert on: ALU 24 -> 22
 branch_data.vert on: ALU 20 -> 15
 branch_uniform.vert on: ALU 8 -> 6
 instanced.vert on: ALU 11 -> 10
 lod_gradients.frag on: ALU 8 -> 7
-loop_break.frag on: ALU 223 -> 208
 loop_if.frag on: ALU 23 -> 16
-optimiser on: 22 of 80 changed, ALU 1296 -> 1197
+optimiser on: 21 of 80 changed, ALU 1296 -> 1234
 
 == vulkan4xenon's src/shaders at 1cb5ac4
 optimiser off: 0 of 7 changed, ALU 19 -> 19
@@ -130,11 +128,11 @@ mesh_gray.frag on: ALU 3 -> 2
 optimiser on: 1 of 8 changed, ALU 27 -> 26
 
 == xsdk_test's compiler check, tests/xsc_shaders.h (tools/gen_xsc_shaders.py), optimiser on as it compiles them
-vk_vertex_if.vert.spv: ALU 15 -> 12
+vk_vertex_if.vert.spv: ALU 15 -> 14
 vk_dynamic_interpolator.vert.spv: ALU 12 -> 10
 vk_slow_fetch.frag.spv: ALU 12 -> 9
-vk_loop_if_break.frag.spv: ALU 26 -> 25
 vk_loop_grid.frag.spv: ALU 161 -> 145
 vk_vertex_loop_break.vert.spv: ALU 91 -> 79
 vk_scalar_input.frag.spv: ALU 31 -> 30
-optimiser on: 7 of 46 changed, ALU 1689 -> 1651
+optimiser on: 6 of 46 changed, ALU 1689 -> 1654
+
