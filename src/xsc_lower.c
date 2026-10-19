@@ -425,15 +425,15 @@ int64_t xsdk_xsc_bsw(int64_t c)
 	return out;
 }
 
-// A register holding value4, pooled by its components to 9 places (lower.py literal_reg).
+// A register holding value4, pooled by the 32-bit floats the register holds, bit for bit: values folding in doubles
+// left a hair apart share one, and values the register tells apart, 1e-10 and 0 or -0 and 0, don't.
 int64_t xsdk_xsc_literal_reg(XscLower *l, const double value[4])
 {
 	double key[4];
 	for (int i = 0; i < 4; i++)
-		key[i] = xsdk_xsc_round9(value[i]);
+		key[i] = (float)value[i];
 	for (size_t i = 0; i < l->pool_count; i++) {
-		const double *const k = &l->pool_keys[4 * i];
-		if (k[0] == key[0] && k[1] == key[1] && k[2] == key[2] && k[3] == key[3])
+		if (!memcmp(&l->pool_keys[4 * i], key, sizeof key))
 			return l->pool[i].reg;
 	}
 	size_t capacity = l->pool_capacity;

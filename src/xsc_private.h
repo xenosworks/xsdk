@@ -29,7 +29,6 @@ char *xsdk_xsc_copy_text(Xsc *x, const char *text, size_t length_bytes);
 void xsdk_xsc_release(Xsc *x);
 // Python's repr of a float, and its round(value, 9).
 void xsdk_xsc_float_repr(double value, char *text, size_t text_bytes);
-double xsdk_xsc_round9(double value);
 // A float32's value, from its bits.
 double xsdk_xsc_float_bits(uint32_t bits);
 uint32_t xsdk_xsc_bits_of_float(double value);

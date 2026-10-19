@@ -11,8 +11,6 @@ enum {
 	ALIGN_BYTES = 16,
 	// Python's repr gives no float more digits than these (float.__repr__, 'r').
 	REPR_DIGITS = 17,
-	// "%.9f" of the largest double.
-	ROUND_TEXT_BYTES = 400,
 };
 
 struct XscChunk {
@@ -180,15 +178,6 @@ void xsdk_xsc_float_repr(double value, char *text, size_t text_bytes)
 	append(text, text_bytes, &length, digits, count);
 	append_zeros(text, text_bytes, &length, point - count);
 	append(text, text_bytes, &length, ".0", 2);
-}
-
-double xsdk_xsc_round9(double value)
-{
-	if (!isfinite(value))
-		return value;
-	char text[ROUND_TEXT_BYTES];
-	(void)snprintf(text, sizeof text, "%.9f", value);
-	return strtod(text, NULL);
 }
 
 double xsdk_xsc_float_bits(uint32_t bits)
