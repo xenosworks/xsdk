@@ -26,7 +26,8 @@ class Alu(ctypes.Structure):
                 ("is_export", BOOL), ("abs_constants", BOOL), ("is_predicated", BOOL), ("predicate_condition", BOOL),
                 ("is_const_0_addressed", BOOL), ("is_const_1_addressed", BOOL),
                 ("is_const_address_register_relative", BOOL), ("src_const_rel", BOOL * 3), ("src_reg", I64 * 3),
-                ("src_is_temp", BOOL * 3), ("src_swizzle", I64 * 3), ("src_negate", BOOL * 3)]
+                ("src_is_temp", BOOL * 3), ("src_swizzle", I64 * 3), ("src_negate", BOOL * 3),
+                ("scalar_constant", I64)]
 
 
 FETCH_FIELDS = [("opcode", I64), ("src", I64), ("src_swizzle", I64), ("is_src_relative", BOOL), ("dest", I64),

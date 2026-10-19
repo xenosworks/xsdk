@@ -121,8 +121,20 @@ static int64_t tracked(const XscProgram *p, const XscOp *op, int64_t most)
 
 static bool encode(Xsc *x, const XscOp *op, uint32_t triple[3])
 {
-	if (op->kind == XSC_OP_ALU)
-		return xsdk_xsc_build_alu(x, &op->alu, triple);
+	if (op->kind == XSC_OP_ALU) {
+		XscAlu f = op->alu;
+		const int64_t sop = f.scalar_opcode;
+		// mulsc names its constant in src3 and spreads its temp over the opcode's bit 0, src3_sel and src3's swizzle
+		// (xenia:src/xenia/gpu/ucode.h:1992-1995).
+		if (sop == XSC_SCALAR_MULSC || sop == XSC_SCALAR_ADDSC || sop == XSC_SCALAR_SUBSC) {
+			const int64_t temp = f.src_reg[2] & 0x3F;
+			f.scalar_opcode |= temp & 1;
+			f.src_is_temp[2] = temp >> 1 & 1;
+			f.src_swizzle[2] = (f.src_swizzle[2] & 0xC3) | (temp & 0x3C);
+			f.src_reg[2] = f.scalar_constant;
+		}
+		return xsdk_xsc_build_alu(x, &f, triple);
+	}
 	if (op->kind == XSC_OP_TFETCH)
 		return xsdk_xsc_build_tfetch(x, &op->fetch, triple);
 	return xsdk_xsc_build_vfetch(x, &op->fetch, triple);

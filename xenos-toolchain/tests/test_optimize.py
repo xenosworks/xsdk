@@ -6,7 +6,8 @@ Each case builds a program twice, without and with the pass, and checks:
   - the two microcodes compute the same exports, run on random inputs and constants by xdis/equivalence.py, on the
     components the first defines;
   - the pass left the number of ALU instructions the case expects: what it may remove it does, and what it mustn't
-    touch (a move other values share a register with, a source changed in between, a third constant) it keeps.
+    touch (a move other values share a register with, a source changed in between, a third constant) it keeps, an
+    op that writes one value co-issued as a scalar op beside a vector one where it can.
 The fetch cases check fetches the same way, and two testdata shaders what a dropped fetch leaves: a vertex shader's
 elements, one for each fetch left, and a pixel shader's sampler. A last case hands the comparison a wrong rewrite, to
 show it would see one. Runs in WSL, where make builds build/host/libxsc.so.
@@ -140,7 +141,7 @@ CASES = [
      [export(r(3))], 3),
     ("a vector assembled by two moves stays, as no one source holds it",
      [move(2, r(0), 0x3), move(2, c(0, "xyzz"), 0x4), alu(V.kDp3, 3, 0xF, r(2), r(1))],
-     [export(r(3))], 4),
+     [export(r(3))], 3),
     ("a move whose source changes before its reader stays",
      [move(2, r(0)), alu(V.kAdd, 0, 0xF, r(1), c(0)), alu(V.kMul, 3, 0xF, r(2), r(0))],
      [export(r(3))], 4),
@@ -196,7 +197,7 @@ CASES = [
     ("components computed apart and copied into one vector are computed there, a sum swizzled to its lane",
      [alu(V.kDp4, 2, 0x1, r(0), c(0)), alu(V.kAdd, 3, 0x1, r(0, "zzzz"), c(1)), move(4, r(2), 0x1),
       move(4, r(3, "xxxx"), 0x2), alu(V.kMul, 5, 0xF, r(4, "xyxy"), r(1))],
-     [export(r(5))], 4),
+     [export(r(5))], 3),
     ("a copy clamped to 0 to 1 becomes its writer's clamp",
      [alu(V.kMad, 2, 0xF, r(0), c(0), r(1)), alu(V.kMax, 3, 0xF, r(2), r(2), clamp=True),
       alu(V.kMul, 4, 0xF, r(3), c(1))],
@@ -212,11 +213,11 @@ CASES = [
     ("a product whose other lane is read elsewhere stays in its temp",
      [alu(V.kMul, 2, 0x3, r(0), c(0)), move(3, r(2), 0x1), move(3, r(1), 0x2),
       alu(V.kAdd, 4, 0xF, r(3, "xyxy"), r(2, "yyyy"))],
-     [export(r(4))], 5),
+     [export(r(4))], 4),
     ("a component whose place is read before the copy stays in its temp",
      [move(3, r(1), 0x7), alu(V.kAdd, 3, 0x8, r(0), c(2)), alu(V.kAdd, 2, 0x1, r(0), c(0)),
       alu(V.kMul, 4, 0xF, r(3), c(1)), move(3, r(2, "xxxx"), 0x1), alu(V.kAdd, 5, 0xF, r(3), r(4))],
-     [export(r(5))], 7),
+     [export(r(5))], 5),
     ("an export assembled from parts takes each part, its lanes nothing writes filled by one",
      [],
      [alu(V.kDp4, 2, 0x1, r(0), c(0)), alu(V.kMul, 3, 0x1, r(1, "yyyy"), c(1)), move(4, r(2), 0x1),
@@ -233,15 +234,15 @@ CASES = [
      [alu(V.kDp4, 2, 0x1, r(0), c(0)), alu(V.kDp4, 2, 0x2, r(0), c(1)), alu(V.kDp4, 2, 0x4, r(0), c(2)),
       move(3, r(2), 0x7), move(3, c(3), 0x8), alu(V.kDp4, 4, 0x1, r(3), c(4)),
       alu(V.kAdd, 5, 0xF, c(5), r(2, "yzxy", negate=True)), alu(V.kMul, 6, 0xF, r(5), r(4, "xxxx"))],
-     [export(r(6))], 8),
+     [export(r(6))], 7),
     ("an add's lanes copied one at a time into one vector are computed there, swizzled to their lanes",
      [move(3, c(3), 0x8), alu(V.kAdd, 2, 0x7, r(0), c(0)), move(3, r(2, "zzzz"), 0x1), move(3, r(2, "xxxx"), 0x2),
       move(3, r(2, "yyyy"), 0x4), alu(V.kMul, 4, 0xF, r(3), r(1))],
-     [export(r(4))], 4),
+     [export(r(4))], 3),
     ("an add's lanes copied one at a time stay where one's place is read before its copy",
      [move(3, c(3)), alu(V.kAdd, 2, 0x3, r(0), c(0)), move(3, r(2), 0x1), alu(V.kMul, 4, 0xF, r(3), r(1)),
       move(3, r(2), 0x2), alu(V.kAdd, 5, 0xF, r(3), r(4))],
-     [export(r(5))], 7),
+     [export(r(5))], 5),
 ]
 
 

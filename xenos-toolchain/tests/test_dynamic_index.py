@@ -50,6 +50,10 @@ OPOS = int(xu.ExportRegister.kVSPosition)
 PARAM_GEN = 1 << 18          # SQ_PROGRAM_CNTL (xenia:src/xenia/gpu/registers.h:140)
 PARAM_GEN_POS_SHIFT = 8      # SQ_CONTEXT_MISC (registers.h:234)
 SC_OUTPUT_SCREEN_XY = 1 << 1  # SQ_CONTEXT_MISC (registers.h:156), which the console needs with PARAM_GEN
+# The scalar ops the optimiser makes of one-lane vector ops (xsdk:src/xsc_optimize.c, scalar_form).
+SCALAR = {S.kAdds: lambda a, b: a + b, S.kSubs: lambda a, b: a - b, S.kMuls: lambda a, b: a * b, S.kMaxs: max,
+          S.kMins: min, S.kFloors: lambda a, b: float(math.floor(a)), S.kFrcs: lambda a, b: a - math.floor(a),
+          S.kTruncs: lambda a, b: float(math.trunc(a))}
 
 
 def lowered(name):
@@ -118,6 +122,8 @@ def run(blob, inputs, consts):
                 result = max(a, b)
             elif so == S.kRcp:
                 result = 1.0 / a
+            elif so in SCALAR:
+                result = SCALAR[so](a, b)
             else:
                 raise SystemExit(f"test_dynamic_index: unhandled scalar op {so}")
             smask = op.GetScalarOpResultWriteMask()

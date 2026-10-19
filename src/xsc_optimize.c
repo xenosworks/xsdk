@@ -6,8 +6,8 @@
 
 // The optimiser, as xenos-toolchain/xasm/optimize.py rewrites a program's instructions before allocation: common
 // subexpressions, copies propagated, identities with a known 0 or 1 and clamps a value's range makes useless folded,
-// multiply-adds fused, values computed into their copies' places, dead code and unused fetches removed, and scalar ops
-// co-issued.
+// multiply-adds fused, values computed into their copies' places, dead code and unused fetches removed, and scalar ops,
+// and ops that write one value in their scalar forms, co-issued.
 
 enum {
 	ALL = 0xF,
@@ -124,12 +124,19 @@ static bool vector_state(int64_t op)
 	return (op >= XSC_VECTOR_SETP_EQ_PUSH && op <= XSC_VECTOR_KILL_NE) || op == XSC_VECTOR_MAX_A;
 }
 
-// Scalar ops with one operand: 2 for a and b, 1 for a alone, 0 for any other op.
+static bool with_constant(int64_t op)
+{
+	return op == XSC_SCALAR_MULSC || op == XSC_SCALAR_ADDSC || op == XSC_SCALAR_SUBSC;
+}
+
+// Scalar ops with one operand: 2 for a and b, 1 for a alone, 3 for b alone beside a constant, 0 for any other op.
 static int scalar_one(int64_t op)
 {
 	if (op == XSC_SCALAR_ADDS || op == XSC_SCALAR_MULS || op == XSC_SCALAR_MAXS || op == XSC_SCALAR_MINS ||
 		op == XSC_SCALAR_SUBS)
 		return 2;
+	if (with_constant(op))
+		return 3;
 	if ((op >= XSC_SCALAR_SEQS && op <= XSC_SCALAR_RSQ) || op == XSC_SCALAR_SQRT || op == XSC_SCALAR_SIN ||
 		op == XSC_SCALAR_COS)
 		return 1;
@@ -236,8 +243,8 @@ static void reads(const XscOp *op, int64_t lanes[4], bool named[4])
 			named[i] = true;
 	}
 	if (scalar_active(op)) {
-		const int one = scalar_one(op->alu.scalar_opcode);
-		lanes[3] |= one == 0 ? ALL : one == 2 ? 0x9 : 0x8;
+		static const int64_t read_lanes[4] = { ALL, 0x8, 0x9, 0x1 };
+		lanes[3] |= read_lanes[scalar_one(op->alu.scalar_opcode)];
 		named[3] = true;
 	}
 }
@@ -333,16 +340,19 @@ static bool constants_fit(const XscOp *op)
 	int count = 0;
 	for (int n = 1; n <= 3; n++) {
 		const Source s = source(op, n);
-		if (!named[n] || s.temp)
+		// mulsc's constant is operand 3's (xenia:src/xenia/gpu/shader_interpreter.cc:655-670).
+		const bool constant = n == 3 && with_constant(op->alu.scalar_opcode);
+		if (!named[n] || (s.temp && !constant))
 			continue;
-		consts[n] = s.reg;
+		const int64_t reg = constant ? op->alu.scalar_constant : s.reg;
+		consts[n] = reg;
 		has[n] = true;
 		count++;
 		bool seen = false;
 		for (int i = 0; i < distinct_count; i++)
-			seen = seen || distinct[i] == s.reg;
+			seen = seen || distinct[i] == reg;
 		if (!seen)
-			distinct[distinct_count++] = s.reg;
+			distinct[distinct_count++] = reg;
 	}
 	if (distinct_count > MAX_CONSTANTS)
 		return false;
@@ -1257,25 +1267,132 @@ static bool scalar_only(const XscOp *op)
 		op->alu.scalar_write_mask != 0;
 }
 
-// Puts x's working pipe into y, which keeps its own (optimize.py merge).
-static bool merge(XscOp *y, const XscOp *x)
+// Whether source s reads one component, c, in every lane given.
+static bool one_component(const Source *s, int64_t lanes, int *c)
 {
-	const bool x_vector = vector_only(x);
+	*c = -1;
+	for (int lane = 0; lane < 4; lane++) {
+		if (!(lanes >> lane & 1))
+			continue;
+		if (*c >= 0 && s->components[lane] != *c)
+			return false;
+		*c = s->components[lane];
+	}
+	return true;
+}
+
+// The scalar op that computes what a vector op does in a lane, or -1.
+static int64_t scalar_twin(int64_t opcode)
+{
+	switch (opcode) {
+	case XSC_VECTOR_ADD:
+		return XSC_SCALAR_ADDS;
+	case XSC_VECTOR_MUL:
+		return XSC_SCALAR_MULS;
+	case XSC_VECTOR_MAX:
+		return XSC_SCALAR_MAXS;
+	case XSC_VECTOR_MIN:
+		return XSC_SCALAR_MINS;
+	case XSC_VECTOR_FLOOR:
+		return XSC_SCALAR_FLOORS;
+	case XSC_VECTOR_FRC:
+		return XSC_SCALAR_FRCS;
+	case XSC_VECTOR_TRUNC:
+		return XSC_SCALAR_TRUNCS;
+	default:
+		return -1;
+	}
+}
+
+// Whether vector op op, writing one value, has a scalar form that computes it bit for bit, then form: adds to truncs,
+// mulsc, addsc and subsc run as their vector ops do (xenia:src/xenia/gpu/shader_interpreter.cc:334-401, 655-761,
+// 824-829) on a and b, read with one negation, so x + -y is x - y and -x + y is -x - -y.
+static bool scalar_form(const XscOp *op, XscOp *form)
+{
+	int64_t opcode = scalar_twin(op->alu.vector_opcode);
+	const int64_t mask = op->alu.vector_write_mask;
+	if (opcode < 0 || !plain_vector(op) || addresses_constants(&op->alu))
+		return false;
+	const bool unary = opcode == XSC_SCALAR_FLOORS || opcode == XSC_SCALAR_FRCS || opcode == XSC_SCALAR_TRUNCS;
+	Source a = source(op, 1);
+	Source b = unary ? a : source(op, 2);
+	int ca, cb;
+	if (!one_component(&a, mask, &ca) || !one_component(&b, mask, &cb))
+		return false;
+	// The forms with a constant take it as a, which add and mul allow.
+	if (a.temp && !b.temp) {
+		const Source s = a;
+		a = b;
+		b = s;
+		const int c = ca;
+		ca = cb;
+		cb = c;
+	}
+	const bool constant = !a.temp && b.temp;
+	const bool sub = opcode == XSC_SCALAR_ADDS && a.negate != b.negate;
+	if ((constant && opcode != XSC_SCALAR_ADDS && opcode != XSC_SCALAR_MULS) || (a.negate != b.negate && !sub))
+		return false;
+	// Else a and b are one register's, which src3 is.
+	if (constant ? b.absolute : (a.temp != b.temp || a.reg != b.reg || a.absolute != b.absolute))
+		return false;
+	if (sub)
+		opcode = constant ? XSC_SCALAR_SUBSC : XSC_SCALAR_SUBS;
+	else if (constant)
+		opcode = opcode == XSC_SCALAR_MULS ? XSC_SCALAR_MULSC : XSC_SCALAR_ADDSC;
+	*form = *op;
+	XscAlu *const f = &form->alu;
+	f->scalar_opcode = opcode;
+	if (constant)
+		f->scalar_constant = a.reg;
+	// src3's a is its lane w's component and b its lane x's (xenia:src/xenia/gpu/ucode.h:952-953).
+	Source s = constant ? b : a;
+	s.negate = a.negate;
+	for (int lane = 0; lane < 4; lane++)
+		s.components[lane] = lane == 3 ? ca : cb;
+	set_source(form, 3, &s);
+	f->scalar_dest = f->vector_dest;
+	f->scalar_write_mask = mask;
+	f->scalar_clamp = f->vector_clamp;
+	f->vector_write_mask = 0;
+	f->vector_clamp = false;
+	return true;
+}
+
+// Whether op works in the scalar pipe alone, or, if convert, can, as form does.
+static bool scalar_ready(const XscOp *op, bool convert, XscOp *form)
+{
+	if (scalar_only(op)) {
+		*form = *op;
+		return true;
+	}
+	return convert && scalar_form(op, form);
+}
+
+// Puts x's working pipe into y, which keeps its own, one of them taking the scalar pipe as its scalar form if convert
+// where it works in the vector one (optimize.py merge).
+static bool merge(XscOp *y, const XscOp *x, bool convert)
+{
+	XscOp form;
+	const bool x_vector = vector_only(x) && scalar_ready(y, convert, &form);
+	if (!x_vector && !(vector_only(y) && scalar_ready(x, convert, &form)))
+		return false;
 	const XscOp *const vec = x_vector ? x : y;
-	const XscOp *const sca = x_vector ? y : x;
+	const XscAlu *const sca = &form.alu;
 	// A scalar op's constant could take the vector op's index (xenia:src/xenia/gpu/ucode.h:1945-1964).
-	if (addresses_constants(&sca->alu) || (!sca->alu.src_is_temp[2] && addresses_constants(&vec->alu)))
+	const bool reads_constant = !sca->src_is_temp[2] || with_constant(sca->scalar_opcode);
+	if (addresses_constants(sca) || (reads_constant && addresses_constants(&vec->alu)))
 		return false;
 	XscAlu merged = vec->alu;
-	merged.scalar_opcode = sca->alu.scalar_opcode;
-	merged.scalar_dest = sca->alu.scalar_dest;
-	merged.scalar_write_mask = sca->alu.scalar_write_mask;
-	merged.scalar_clamp = sca->alu.scalar_clamp;
-	merged.is_scalar_dest_relative = sca->alu.is_scalar_dest_relative;
-	merged.src_reg[2] = sca->alu.src_reg[2];
-	merged.src_is_temp[2] = sca->alu.src_is_temp[2];
-	merged.src_swizzle[2] = sca->alu.src_swizzle[2];
-	merged.src_negate[2] = sca->alu.src_negate[2];
+	merged.scalar_opcode = sca->scalar_opcode;
+	merged.scalar_dest = sca->scalar_dest;
+	merged.scalar_write_mask = sca->scalar_write_mask;
+	merged.scalar_clamp = sca->scalar_clamp;
+	merged.is_scalar_dest_relative = sca->is_scalar_dest_relative;
+	merged.src_reg[2] = sca->src_reg[2];
+	merged.src_is_temp[2] = sca->src_is_temp[2];
+	merged.src_swizzle[2] = sca->src_swizzle[2];
+	merged.src_negate[2] = sca->src_negate[2];
+	merged.scalar_constant = sca->scalar_constant;
 	const XscAlu saved = y->alu;
 	y->alu = merged;
 	if (!constants_fit(y)) {
@@ -1307,40 +1424,48 @@ static void stage_bounds(const XscProgram *p, size_t j, size_t *first, size_t *e
 	}
 }
 
-// Whether op j joined an op before or after it in its stage (optimize.py co_issue's inner loop, both ways).
-static bool join(Optimizer *o, size_t j, bool later)
+// Whether op j joined an op before or after it in its stage (optimize.py co_issue's inner loop, both ways): the nearest
+// it can, or one that needn't take its scalar form before one that must.
+static bool join(Optimizer *o, size_t j, bool later, bool nearest)
 {
 	XscOp *const x = o->ops[j];
-	const bool vector = vector_only(x);
 	KeySet x_reads, x_defs;
 	temp_reads(x, &x_reads);
 	defs(x, &x_defs);
 	size_t first, end;
 	stage_bounds(o->p, j, &first, &end);
 	const size_t reach = later ? end - 1 - j : j - first;
-	for (size_t n = 1; n <= reach; n++) {
+	XscOp *converting = NULL;
+	bool merged = false;
+	for (size_t n = 1; n <= reach && !merged; n++) {
 		XscOp *const y = o->ops[later ? j + n : j - n];
 		KeySet y_defs, y_reads;
 		defs(y, &y_defs);
 		temp_reads(y, &y_reads);
 		// Joined, both pipes read before either writes: the later mustn't read what the earlier writes.
 		if (later ? intersects(&y_reads, &x_defs) : intersects(&x_reads, &y_defs))
-			return false;
-		const bool partner = vector ? scalar_only(y) : vector_only(y);
-		if (partner && !intersects(&x_defs, &y_defs) && merge(y, x)) {
-			XscOp *doomed = x;
-			remove_ops(o, &doomed, 1);
-			return true;
+			break;
+		if (!intersects(&x_defs, &y_defs)) {
+			merged = merge(y, x, nearest);
+			const XscAlu saved = y->alu;
+			if (!merged && !nearest && !converting && merge(y, x, true)) {
+				y->alu = saved;
+				converting = y;
+			}
 		}
 		// Moving x past y: neither may read or write what the other writes, nor y change state.
 		if (intersects(&x_reads, &y_defs) || intersects(&x_defs, &y_reads) || intersects(&x_defs, &y_defs) ||
 			(is_alu(y) && fixed(y)))
-			return false;
+			break;
 	}
-	return false;
+	if (!merged && !(converting && merge(converting, x, true)))
+		return false;
+	XscOp *doomed = x;
+	remove_ops(o, &doomed, 1);
+	return true;
 }
 
-static bool co_issue(Optimizer *o, bool *changed)
+static bool co_issue(Optimizer *o, bool nearest, bool *changed)
 {
 	*changed = false;
 	if (!flatten(o))
@@ -1349,7 +1474,7 @@ static bool co_issue(Optimizer *o, bool *changed)
 	for (int later = 0; later <= 1; later++) {
 		for (size_t j = 0; j < o->count;) {
 			const XscOp *const x = o->ops[j];
-			if (!(vector_only(x) || scalar_only(x)) || !join(o, j, later)) {
+			if (!(vector_only(x) || scalar_only(x)) || !join(o, j, later, nearest)) {
 				j++;
 				continue;
 			}
@@ -1359,6 +1484,74 @@ static bool co_issue(Optimizer *o, bool *changed)
 			memmove(&o->ops[j], &o->ops[j + 1], (o->count - j) * sizeof *o->ops);
 		}
 	}
+	return true;
+}
+
+// The ops in order, each one's ALU fields and each stage's count: all co_issue changes.
+typedef struct {
+	XscOp **order;
+	XscAlu *alus;
+	size_t *counts;
+	size_t count;
+} Pairing;
+
+// Keeps what co_issue changes of the ops flatten laid out, to bring it back.
+static bool keep(Optimizer *o, Pairing *kept)
+{
+	kept->count = o->count;
+	kept->order = xsdk_xsc_alloc(o->x, (o->count + 1) * sizeof *kept->order);
+	kept->alus = xsdk_xsc_alloc(o->x, (o->count + 1) * sizeof *kept->alus);
+	kept->counts = xsdk_xsc_alloc(o->x, (o->p->stage_count + 1) * sizeof *kept->counts);
+	if (!kept->order || !kept->alus || !kept->counts)
+		return false;
+	for (size_t i = 0; i < o->count; i++) {
+		kept->order[i] = o->ops[i];
+		kept->alus[i] = o->ops[i]->alu;
+	}
+	for (size_t si = 0; si < o->p->stage_count; si++)
+		kept->counts[si] = o->p->stages[si].count;
+	return true;
+}
+
+static void bring_back(Optimizer *o, const Pairing *kept)
+{
+	size_t at = 0;
+	for (size_t si = 0; si < o->p->stage_count; si++) {
+		XscStage *const stage = &o->p->stages[si];
+		stage->count = kept->counts[si];
+		for (size_t i = 0; i < stage->count; i++, at++) {
+			stage->ops[i] = kept->order[at];
+			stage->ops[i]->alu = kept->alus[at];
+		}
+	}
+	memcpy(o->ops, kept->order, kept->count * sizeof *o->ops);
+	o->count = kept->count;
+}
+
+// Pairs one way till no pair is left.
+static bool pair_all(Optimizer *o, bool nearest)
+{
+	bool changed = true;
+	while (changed) {
+		if (!co_issue(o, nearest, &changed))
+			return false;
+	}
+	return flatten(o);
+}
+
+// Pairing is greedy, so it runs twice from one start, each op taking its nearest partner, then a scalar op before one
+// it converts, and keeps the run with fewer instructions, the second on a tie, which leaves registers as they were
+// more.
+static bool pair_ops(Optimizer *o)
+{
+	Pairing start, nearest;
+	if (!flatten(o) || !keep(o, &start) || !pair_all(o, true) || !keep(o, &nearest))
+		return false;
+	bring_back(o, &start);
+	if (!pair_all(o, false))
+		return false;
+	if (nearest.count < o->count)
+		bring_back(o, &nearest);
 	return true;
 }
 
@@ -1862,11 +2055,8 @@ bool xsdk_xsc_optimize(Xsc *x, XscProgram *p, bool *ran)
 		if (!first_round(&o, &changed))
 			return false;
 	}
-	changed = true;
-	while (changed) {
-		if (!co_issue(&o, &changed))
-			return false;
-	}
+	if (!pair_ops(&o))
+		return false;
 	*ran = !indexed;
 	return indexed || remove_dead(&o, &changed);
 }
@@ -1925,7 +2115,9 @@ void xsdk_xsc_move_lanes(XscOp *op, const uint8_t (*lanes)[4], int64_t count)
 		// An elementwise result's lane takes its operands' same lane.
 		for (int lane = 0; n <= operands && lane < 4; lane++)
 			moved.components[to[lane]] = s.components[lane];
-		for (int lane = 0; moved.temp && moved.reg < count && lane < 4; lane++)
+		// mulsc's src3 reads its temp in lane x alone; lane w names its constant's component.
+		const int temp_lanes = n == 3 && with_constant(f->scalar_opcode) ? 1 : 4;
+		for (int lane = 0; moved.temp && moved.reg < count && lane < temp_lanes; lane++)
 			moved.components[lane] = lanes[moved.reg][moved.components[lane]];
 		set_source(op, n, &moved);
 	}

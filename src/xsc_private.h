@@ -488,6 +488,11 @@ enum {
 	XSC_SCALAR_SETP_CLR = 33,
 	XSC_SCALAR_SETP_RSTR = 34,
 	XSC_SCALAR_SQRT = 40,
+	// c.w times, plus or minus r.x, r's index in the opcode's bit 0, src3_sel and src3's swizzle
+	// (xenia:src/xenia/gpu/ucode.h:954-960); bit 0 clear here.
+	XSC_SCALAR_MULSC = 42,
+	XSC_SCALAR_ADDSC = 44,
+	XSC_SCALAR_SUBSC = 46,
 	XSC_SCALAR_SIN = 48,
 	XSC_SCALAR_COS = 49,
 	XSC_SCALAR_RETAIN_PREV = 50,
@@ -543,6 +548,8 @@ typedef struct {
 	bool src_is_temp[3];
 	int64_t src_swizzle[3];
 	bool src_negate[3];
+	// mulsc's, addsc's and subsc's constant, src3 their temp until it's encoded (xsc_program.c, encode).
+	int64_t scalar_constant;
 } XscAlu;
 
 // A texture or vertex fetch's fields, as build_tfetch and build_vfetch_full name them.

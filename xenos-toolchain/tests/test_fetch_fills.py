@@ -9,7 +9,7 @@ the app's layout keeps (xsdk:src/shader.c, picked_swizzle, rewrites only the sel
   a vec4, .xyzw, as vec4(in_color.rgb, 1.0) fills a component it has. Fetches go in reverse Location order.
 - Optimiser off, every fetch is .xyzw, as before.
 - Both programs give the same exports on random inputs and constants (xdis/equivalence.py, as tools/check_optimize.py
-  compares them), the optimised one in 11 ALU instructions against 17 without the fills from the fetches.
+  compares them), the optimised one in 10 ALU instructions, where it took 17 without the fills from the fetches.
 - A fill turned to the other constant, in_pos's w made 0, shows as a difference.
 """
 import struct
@@ -32,8 +32,8 @@ from test_xsc_lower import TD  # noqa: E402
 NAME = "vk_fetch_fills.vert"
 # in_nrm, in_uv, in_color, in_pos: the fetches in program order.
 WANT = ["xyz0", "xy01", "xyzw", "xyz1"]
-# Without fills from the fetches the optimiser leaves 17 (a copy of the fetched part and one of the constant each).
-WANT_ALU = 11
+# Without fills from the fetches the optimiser left 17 (a copy of the fetched part and one of the constant each).
+WANT_ALU = 10
 SELECTORS = "xyzw01?_"
 
 

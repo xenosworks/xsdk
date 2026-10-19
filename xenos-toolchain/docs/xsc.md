@@ -675,9 +675,13 @@ console now.
 ## Still to do
 
 Measured on the console through the SDK: two kinds of code xsc writes run
-slower than they need to. A scalar chain lowers as `.xxxx` vector ops rather
-than scalar ops co-issued beside vector ones, and a vec4 plus a float lowers
-as four adds, a component each.
+slower than they need to. A scalar chain lowers as `.xxxx` vector ops, and a
+vec4 plus a float lowers as four adds, a component each. With the optimiser
+on, an op that writes one value takes its scalar form beside a vector op
+where its operands are one register's, or a constant and a temp for an add or
+a multiply (`mulsc`, `addsc`, `subsc`; xsdk:src/xsc_optimize.c, scalar_form);
+not where they are two registers' or a max or min takes a constant, which
+needs the allocator to put both in one register (`tests/test_scalar_unit.py`).
 
 Loops, left out of milestone 46 (xsdk:docs/scope/46-loops.md, "Not in it"):
 - a constant count with a break on data unrolls and runs every pass, gated,
