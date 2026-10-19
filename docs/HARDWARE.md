@@ -2144,6 +2144,19 @@ of Xenos's tiled layout (xsdk_tiled_2d), or a linear row. `xsdk_texture_swizzle`
 With that, milestone 29 is done: textures upload in runs, a title can pick a texture's channels, and every title built
 with it passes on the console.
 
+**Whole tiles at once, vulkan4xenon milestone 29 step 6 (2026-10-19).** Dusklight's attract movie spent about 2.35 ms
+of every frame uploading its video planes, R8, through `xsdk_texture_upload`. `copy_rows` now puts a row's whole
+32-block tiles in one call (`put_tiles`, src/texture.c): each tile's offset steps from the last, the carry skipping the
+bank and pipe bits between (`xsdk_tiled_tile_bits`, src/tiled.c), and a tile's runs go at offsets fixed for its block
+size. R8 writes 32-bit stores; wider blocks write VMX stores to 16-byte aligned runs. Rows that aren't word-aligned, the
+blocks before a row's first whole tile and after its last, downloads and linear textures take the old path. Logs:
+`results/2026-10-19-tiled-uploads/`.
+- **A 512x512 R8 tiled upload took 461 us, 568 MB/s,** from 2226; a 512x512 A8R8G8B8 one 948 us, 1106 MB/s.
+- **Byte for byte as before:** 11 textures of every block size, 2D, cube and 3D, every level of four, rows split in
+  two and at varying alignment, widths past whole tiles, each uploaded both ways over a sentinel.
+- **Broken on purpose,** the step between tiles not carrying across the bank and pipe bits, that check failed alone.
+- **Dusklight's movie** uploaded its frames in 460 to 544 us a frame, and its scene's whole submit took 0.61 to 0.69 ms.
+
 ## Multisampled targets, milestone 32 (2026-10-13)
 
 `xsdk_gpu_set_target_samples` and `xsdk_gpu_set_target_samples_at` take 1, 2 or 4 samples a pixel, and
