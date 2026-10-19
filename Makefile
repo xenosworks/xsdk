@@ -204,6 +204,14 @@ $(BUILD)/probe/probe_a0_predicated_cases.h: tools/gen_a0_predicated_probe.py too
 $(BUILD)/tests/probe_a0_predicated.o: CFLAGS += -I$(BUILD)/probe
 $(BUILD)/tests/probe_a0_predicated.o: $(BUILD)/probe/probe_a0_predicated_cases.h
 
+# Milestone 48 step 5's probe of what the scalar unit does with mulsc and the other scalar forms; outside all too.
+$(BUILD)/probe/probe_scalar_forms_cases.h: tools/gen_scalar_forms_probe.py tools/gen_xsc_probe.py \
+	tools/gen_triangle_shaders.py
+	$(PYTHON) tools/gen_scalar_forms_probe.py $@
+
+$(BUILD)/tests/probe_scalar_forms.o: CFLAGS += -I$(BUILD)/probe
+$(BUILD)/tests/probe_scalar_forms.o: $(BUILD)/probe/probe_scalar_forms_cases.h
+
 # Milestone 46 step 1's probe of hardware loops, and its break builds, a probe_loop_break_<break>.xex each; outside all.
 LOOP_BREAKS := nogate invert swap hoist noa0
 
