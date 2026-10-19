@@ -209,4 +209,15 @@ each a vertex shader normalising a normal, compile it as 0.
 
 ## On the console
 
-Step 1's two baseline runs of `probe_shader_cost` on the console aren't in this folder yet.
+Two runs of `probe_shader_cost`, built clean from main at `eda49f9` against Dusklight's committed pack, through the
+console agent (`probe_baseline_1.log`, `probe_baseline_2.log`):
+
+| | Run 1 | Run 2 |
+|---|---|---|
+| Pixel shaders, 103, a draw of each | 63,027 us | 63,078 us |
+| Vertex shaders, 47, a draw of each | 13,369 us | 13,338 us |
+
+- **Pictures:** each of the 103 pixel shaders' picture hashes the same in both runs, so a step that keeps results bit
+  for bit must keep every hash.
+- **The milestone's targets, from the runs' means:** pixel shaders at most 55,486 us, 12% under 63,053; vertex shaders
+  at most 12,686 us, 5% under 13,354.
