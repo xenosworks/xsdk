@@ -69,6 +69,11 @@ def _trunc(x):
     return float(math.trunc(x)) if math.isfinite(x) else x
 
 
+def _saturate(x):
+    """x clamped to 0 to 1; NaN and -0 give +0 (xenia:src/xenia/base/math.h:64-79)."""
+    return min(x, 1.0) if x > 0.0 else 0.0
+
+
 def _cube(s1):
     """The cube op's T, S, twice the major axis and the face, from src1 read .z_xy, as Xenia runs it
     (xenia:src/xenia/gpu/spirv_shader_translator_alu.cc:521-686)."""
@@ -288,9 +293,9 @@ def _execute(rec, regs, consts, exports, state, vertex_fetch, texture_fetch, tex
     state["killed"] = state["killed"] or kill
     scalar = _scalar(op, s[3], state["ps"], state)
     if op.vector_clamp():
-        vector = [min(max(x, 0.0), 1.0) if not math.isnan(x) else 0.0 for x in vector]
+        vector = [_saturate(x) for x in vector]
     if op.scalar_clamp():
-        scalar = min(max(scalar, 0.0), 1.0) if not math.isnan(scalar) else 0.0
+        scalar = _saturate(scalar)
     vector = [single(x) for x in vector]
     scalar = single(scalar)
     if op.is_export():

@@ -81,7 +81,8 @@ def _mul(a, b):
 
 
 def _saturate(x):
-    return x if x != x else min(max(x, 0.0), 1.0)
+    # NaN and -0 give +0 (xenia:src/xenia/base/math.h:64-79).
+    return min(x, 1.0) if x > 0.0 else 0.0
 
 
 def _texel(constant, coords):
