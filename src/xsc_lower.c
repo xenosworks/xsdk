@@ -95,6 +95,7 @@ bool xsdk_xsc_lower_init(Xsc *x, XscLower *l, const XscModule *m, const XscInter
 	l->vertex = vertex;
 	l->next_reg = first_reg;
 	l->lit_base = literal_base;
+	p->literal_base = literal_base;
 	const uint32_t n = m->id_limit;
 	l->matrix_cache = xsdk_xsc_alloc(x, (size_t)n * sizeof *l->matrix_cache);
 	l->col_major = xsdk_xsc_alloc(x, n);
@@ -382,6 +383,22 @@ enum {
 	CONST_VECTOR_CAPACITY = 16,
 };
 
+bool xsdk_xsc_splat_const(XscLower *l, uint32_t ssa, double *value)
+{
+	if (xsdk_xsc_vec_size(l, ssa) == 1)
+		return xsdk_xsc_float_const(l, ssa, value);
+	double vals[CONST_VECTOR_CAPACITY];
+	const int count = const_vector(l, ssa, vals, CONST_VECTOR_CAPACITY);
+	if (count < 1 || count > CONST_VECTOR_CAPACITY)
+		return false;
+	for (int i = 1; i < count; i++) {
+		if (vals[i] != vals[0])
+			return false;
+	}
+	*value = vals[0];
+	return true;
+}
+
 // The component a constant one-hot vector picks (lower.py axis_component), or -1.
 static int64_t axis_component(XscLower *l, uint32_t ssa)
 {
@@ -447,6 +464,8 @@ int64_t xsdk_xsc_literal_reg(XscLower *l, const double value[4])
 	l->pool[l->pool_count].reg = reg;
 	memcpy(l->pool[l->pool_count].value, value, sizeof l->pool[l->pool_count].value);
 	l->pool_count++;
+	l->p->literals = l->pool_keys;
+	l->p->literal_count = l->pool_count;
 	return reg;
 }
 

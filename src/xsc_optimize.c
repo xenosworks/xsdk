@@ -3,8 +3,8 @@
 #include "xsc_private.h"
 
 // The optimiser, as xenos-toolchain/xasm/optimize.py rewrites a program's instructions before allocation: common
-// subexpressions, copies propagated, multiply-adds fused, values computed into their copies' places, dead code and
-// unused fetches removed, and scalar ops co-issued.
+// subexpressions, copies propagated, identities with a known 0 or 1 folded, multiply-adds fused, values computed into
+// their copies' places, dead code and unused fetches removed, and scalar ops co-issued.
 
 enum {
 	ALL = 0xF,
@@ -160,6 +160,13 @@ static bool same_value(const Source *a, const Source *b)
 static bool is_alu(const XscOp *op)
 {
 	return op->kind == XSC_OP_ALU;
+}
+
+// Whether an op reads a constant at a run-time index, a0 past its register.
+static bool addresses_constants(const XscAlu *f)
+{
+	return f->is_const_0_addressed || f->is_const_1_addressed || f->is_const_address_register_relative ||
+		f->src_const_rel[0] || f->src_const_rel[1] || f->src_const_rel[2];
 }
 
 static int64_t vector_mask(const XscOp *op)
@@ -773,6 +780,147 @@ static bool propagate_copies(Optimizer *o, bool *changed)
 	return true;
 }
 
+// The number lane of source s holds at op i where the compiler knows it: a literal's, or a fetch's 0 or 1
+// (xenia:src/xenia/gpu/ucode.h:677-688).
+static bool lane_known(const Optimizer *o, size_t i, const Source *s, int lane, double *value)
+{
+	const int c = s->components[lane];
+	if (!s->temp) {
+		const int64_t at = s->reg - o->p->literal_base;
+		if (at < 0 || (size_t)at >= o->p->literal_count)
+			return false;
+		*value = o->p->literals[4 * at + c];
+	} else {
+		const int64_t w = flow_at(o, i, key(s->reg, c));
+		if (w == OUTSIDE || is_alu(o->ops[w]))
+			return false;
+		const int64_t pick = o->ops[w]->fetch.dest_swizzle >> (3 * c) & 7;
+		if (pick != 4 && pick != 5)
+			return false;
+		*value = (double)(pick - 4);
+	}
+	if (s->absolute && *value < 0.0)
+		*value = -*value;
+	if (s->negate)
+		*value = -*value;
+	return true;
+}
+
+// Whether operand n of op i holds one number the compiler knows in every lane given, which value takes.
+static bool known(const Optimizer *o, size_t i, int n, int64_t lanes, double *value)
+{
+	const XscOp *const op = o->ops[i];
+	const Source s = source(op, n);
+	if (!s.temp && addresses_constants(&op->alu))
+		return false;
+	int seen = 0;
+	for (int lane = 0; lane < 4; lane++) {
+		double v;
+		if (!(lanes >> lane & 1))
+			continue;
+		if (!lane_known(o, i, &s, lane, &v) || (seen++ && v != *value))
+			return false;
+		*value = v;
+	}
+	return seen > 0;
+}
+
+// Operand 3 as an op that doesn't read it holds it (xsc_encode.c, alu_template).
+static void drop_third(XscOp *op)
+{
+	const Source none = { .temp = true, .components = { 0, 1, 2, 3 } };
+	set_source(op, 3, &none);
+}
+
+// The op becomes a copy of operand n, negated if negate.
+static void become_copy(XscOp *op, int n, bool negate)
+{
+	Source s = source(op, n);
+	s.negate = s.negate != negate;
+	op->alu.vector_opcode = XSC_VECTOR_MAX;
+	set_source(op, 1, &s);
+	set_source(op, 2, &s);
+	drop_third(op);
+}
+
+// Whether a mad with a known 1 or -1 multiplicand became an add of the other and the addend.
+static bool mad_by_one(XscOp *op, const bool k[4], const double v[4])
+{
+	for (int n = 1; n <= 2; n++) {
+		if (!k[n] || (v[n] != 1.0 && v[n] != -1.0))
+			continue;
+		Source other = source(op, 3 - n);
+		other.negate = other.negate != (v[n] < 0.0);
+		const Source addend = source(op, 3);
+		op->alu.vector_opcode = XSC_VECTOR_ADD;
+		set_source(op, 1, &other);
+		set_source(op, 2, &addend);
+		drop_third(op);
+		return true;
+	}
+	return false;
+}
+
+// Whether op i, an add, mul or mad with a known 0, 1 or -1, became what remains. Each keeps the result but for a
+// zero's sign, as the GPU's 0 times anything is +0 (xenia:src/xenia/gpu/ucode.h:976-990).
+static bool fold(Optimizer *o, size_t i)
+{
+	XscOp *const op = o->ops[i];
+	if (!is_alu(op) || fixed(op) || scalar_active(op))
+		return false;
+	const int64_t opcode = op->alu.vector_opcode;
+	if (opcode != XSC_VECTOR_ADD && opcode != XSC_VECTOR_MUL && opcode != XSC_VECTOR_MAD)
+		return false;
+	int64_t lanes[4];
+	vector_reads(op, lanes);
+	bool k[4];
+	double v[4];
+	bool temps = false;
+	for (int n = 1; n <= 3; n++) {
+		k[n] = known(o, i, n, lanes[n], &v[n]);
+		temps = temps || (lanes[n] && source(op, n).temp);
+	}
+	// An op on constants alone stays: compute_in_place can put it where it's copied a lane at a time, not a constant.
+	if (!temps)
+		return false;
+	for (int n = 1; n <= 2; n++) {
+		if (!k[n])
+			continue;
+		if (opcode == XSC_VECTOR_ADD && v[n] == 0.0)
+			become_copy(op, 3 - n, false);
+		else if (opcode == XSC_VECTOR_MUL && v[n] == 0.0)
+			become_copy(op, n, false);
+		else if (opcode == XSC_VECTOR_MUL && (v[n] == 1.0 || v[n] == -1.0))
+			become_copy(op, 3 - n, v[n] < 0.0);
+		else if (opcode == XSC_VECTOR_MAD && v[n] == 0.0)
+			become_copy(op, 3, false);
+		else
+			continue;
+		return true;
+	}
+	if (opcode != XSC_VECTOR_MAD)
+		return false;
+	if (k[3] && v[3] == 0.0) {
+		op->alu.vector_opcode = XSC_VECTOR_MUL;
+		drop_third(op);
+		return true;
+	}
+	return mad_by_one(op, k, v);
+}
+
+// Folds every identity at once: a fold changes no op's writes, so the flow holds for the next.
+static bool fold_identities(Optimizer *o, bool *changed)
+{
+	*changed = false;
+	if (!build_flow(o))
+		return false;
+	for (size_t i = 0; i < o->count; i++) {
+		while (fold(o, i))
+			*changed = true;
+	}
+	return true;
+}
+
 // The mul's sources for the add's lanes, through the product's components (optimize.py fuse_multiply_adds).
 static void fused_sources(const XscOp *mul, const Source *tsrc, int64_t lanes, Source fused[2])
 {
@@ -887,13 +1035,6 @@ static bool scalar_only(const XscOp *op)
 {
 	return !fixed(op) && !op->alu.is_export && scalar_active(op) && !vector_active(op) &&
 		op->alu.scalar_write_mask != 0;
-}
-
-// Whether an op reads a constant at a run-time index, a0 past its register.
-static bool addresses_constants(const XscAlu *f)
-{
-	return f->is_const_0_addressed || f->is_const_1_addressed || f->is_const_address_register_relative ||
-		f->src_const_rel[0] || f->src_const_rel[1] || f->src_const_rel[2];
 }
 
 // Puts x's working pipe into y, which keeps its own (optimize.py merge).
@@ -1472,6 +1613,8 @@ static bool first_round(Optimizer *o, bool *changed)
 	if (!propagate_copies(o, changed) || *changed)
 		return o->x->status == XSDK_XSC_OK;
 	if (!fuse_multiply_adds(o, changed) || *changed)
+		return o->x->status == XSDK_XSC_OK;
+	if (!fold_identities(o, changed) || *changed)
 		return o->x->status == XSDK_XSC_OK;
 	return compute_in_place(o, changed);
 }

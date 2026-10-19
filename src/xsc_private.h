@@ -754,6 +754,10 @@ typedef struct {
 	bool optimized;
 	// The allocs so far: a0 doesn't survive one (docs/HARDWARE.md, "a0 doesn't survive an alloc").
 	size_t alloc_count;
+	// The literal pool's floats, 4 a register from literal_base on, for the optimiser's identities.
+	const double *literals;
+	size_t literal_count;
+	int64_t literal_base;
 } XscProgram;
 
 bool xsdk_xsc_program_init(Xsc *x, XscProgram *p, bool pixel, uint32_t registers);

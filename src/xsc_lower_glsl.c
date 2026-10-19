@@ -179,10 +179,27 @@ static int64_t atan_reg(XscLower *l, uint32_t ssa)
 	return done(xsc_emit2(l, XSC_VECTOR_MUL, xsc_temp(xr), xsc_temp(p), out, false, 0xF), out);
 }
 
-// x + (y - x) * a.
+// x + (y - x) * a, or what remains where x, y or a is a constant 0 or 1 in every lane: a weight of 1 gives y exactly,
+// where the sum can round, and a weight of 0 gives x, as the GPU's 0 times anything is +0 (xenia:src/xenia/gpu/ucode.h:
+// 976-990).
 static int64_t mix(XscLower *l, const XscInstr *ins, int64_t dst, bool export_)
 {
+	double cx, cy, ca;
+	if (xsdk_xsc_splat_const(l, arg(ins, 2), &ca) && (ca == 0.0 || ca == 1.0)) {
+		XscOperand kept;
+		if (!arg_operand(l, ins, ca == 0.0 ? 0 : 1, &kept))
+			return XSC_NONE;
+		return xsdk_xsc_emit_copy(l, kept, dst, export_, false, 0, 0xF, false);
+	}
+	if (xsdk_xsc_splat_const(l, arg(ins, 0), &cx) && cx == 0.0)
+		return xsdk_xsc_binop(l, SPV_F_MUL, arg(ins, 1), arg(ins, 2), dst, export_, false);
 	XscOperand ox, oy, oa;
+	if (xsdk_xsc_splat_const(l, arg(ins, 1), &cy) && cy == 0.0) {
+		if (!arg_operand(l, ins, 0, &ox) || !arg_operand(l, ins, 2, &oa))
+			return XSC_NONE;
+		return done(
+			xsc_emit3(l, XSC_VECTOR_MAD, xsc_negated(ox), xsc_plain(oa), xsc_plain(ox), dst, export_, 0xF), dst);
+	}
 	if (!arg_operand(l, ins, 0, &ox) || !arg_operand(l, ins, 1, &oy) || !arg_operand(l, ins, 2, &oa))
 		return XSC_NONE;
 	const int64_t tmp = xsdk_xsc_fresh(l);

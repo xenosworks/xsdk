@@ -223,6 +223,8 @@ int64_t xsdk_xsc_bsw(int64_t c);
 double xsdk_xsc_scalar_const(XscLower *l, uint32_t ssa);
 bool xsdk_xsc_float_const(XscLower *l, uint32_t ssa, double *value);
 bool xsdk_xsc_float_const01(XscLower *l, uint32_t ssa, double *value);
+// Whether a float or float vector is a constant whose every component is one number, which value takes.
+bool xsdk_xsc_splat_const(XscLower *l, uint32_t ssa, double *value);
 bool xsdk_xsc_int_const(XscLower *l, uint32_t ssa, int64_t *value);
 bool xsdk_xsc_const_scalar(XscLower *l, uint32_t ssa, double *value);
 int64_t xsdk_xsc_literal_reg(XscLower *l, const double value[4]);
