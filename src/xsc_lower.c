@@ -1126,11 +1126,43 @@ static bool scalar_construct(XscLower *l, uint32_t b)
 	return part && part->opcode != SPV_CONSTANT;
 }
 
+// A constant divisor's reciprocals, a lane each the float nearest 1 / c, which the GPU's rcp is no nearer to
+// (docs/HARDWARE.md, "rcp lands a hair under a third and a fifth"); false unless every lane and its reciprocal are
+// normal floats, so a 0, an infinity, a NaN or a denormal keeps the GPU's rcp.
+static bool constant_reciprocals(XscLower *l, uint32_t b, double recip[4])
+{
+	double vals[CONST_VECTOR_CAPACITY];
+	int count = const_vector(l, b, vals, CONST_VECTOR_CAPACITY);
+	if (count < 0 && xsdk_xsc_vec_size(l, b) == 1 && xsdk_xsc_float_const(l, b, vals))
+		count = 1;
+	if (count < 1 || count > 4)
+		return false;
+	for (int i = 0; i < 4; i++) {
+		const float c = (float)vals[i < count ? i : count - 1];
+		const float r = (float)(1.0 / c);
+		if (!isnormal(c) || !isnormal(r))
+			return false;
+		recip[i] = r;
+	}
+	return true;
+}
+
 static int64_t fdiv(XscLower *l, uint32_t a, uint32_t b, int64_t dst, bool export_)
 {
 	double one;
 	if (xsdk_xsc_float_const01(l, b, &one) && one == 1.0)
 		return copy_of(l, a, dst, export_, false, false);
+	double recip[4];
+	if (constant_reciprocals(l, b, recip)) {
+		const XscOperand oa = xsdk_xsc_lower_operand(l, a);
+		const int64_t rb = xsc_failed(l) ? XSC_NONE : xsdk_xsc_literal_reg(l, recip);
+		if (rb == XSC_NONE)
+			return XSC_NONE;
+		if (dst == XSC_NONE)
+			dst = xsdk_xsc_fresh(l);
+		const XscSrc ops[2] = { xsc_src(oa, false, 0), xsc_src(xsc_const(rb), false, 0) };
+		return xsdk_xsc_emit(l, XSC_VECTOR_MUL, ops, 2, dst, export_, 0xF, false) ? dst : XSC_NONE;
+	}
 	const XscOperand oa = xsdk_xsc_lower_operand(l, a);
 	if (xsc_failed(l))
 		return XSC_NONE;

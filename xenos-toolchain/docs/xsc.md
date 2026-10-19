@@ -42,7 +42,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | sampler3D `texture()` | `tfetch3D` at the coordinate's `.xyz` |
 | sampler2DShadow `texture()` (OpImageSampleDref) | `tfetch2D`, then the reference clamped to 0-1 (`max_sat`), `sgt`/`seq`/`sgt` for the reference below, equal to and above the depth, and `dp3` with the comparison's register (see Interface conventions; `tests/test_shadow_compare.py`); samplerCubeShadow refused, and textureProj's comparison not lowered |
 | `*` `+` `-` (FMul/FAdd/FSub) | mul / add / add-neg |
-| `/` (FDiv) | `a · rcp(b)`; scalar-pipe `rcp` per component (scalar divisor: once + broadcast) |
+| `/` (FDiv) | constant divisor: `a · (1/b)`, the float nearest the reciprocal, worked out by the compiler (a lane of 0, infinity, NaN or a denormal keeps `rcp`); otherwise `a · rcp(b)`, scalar-pipe `rcp` per component (scalar divisor: once + broadcast) (`tests/test_division.py`) |
 | `mod()` (OpFMod) | `a − b·floor(a/b)` |
 | `vec * float` (VectorTimesScalar) | mul, scalar `.xxxx` broadcast |
 | scalar int -> float | folded literals or float-backed `trunc` + add/mul |
