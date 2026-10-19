@@ -105,8 +105,8 @@ enum {
 	QUAD_BYTES = 16,
 	RUN_PAIR_BYTES = 32,
 	RUN_PAIRS_BYTES = 256,
-	// A line's worth of 16-byte runs loaded before they're stored.
-	CHUNK_QUADS = 8,
+	// 16-byte runs loaded before they're stored; 4 fit in v0-v13, which a call needn't save.
+	CHUNK_QUADS = 4,
 	// The CPU's cache line (libxenon:drivers/ppc/cache.S:1); uploads ask for their bytes 8 lines ahead, as memcpy does.
 	LINE_BYTES = 128,
 	PREFETCH_BYTES = 8 * LINE_BYTES,
@@ -480,7 +480,7 @@ static inline void put_tile_bytes(volatile uint32_t *image, uint32_t offset, con
 
 // A tile's row of larger blocks, each pipe's group of 8 in 16-byte runs from the tile's offset with its pipe bits
 // flipped, as VMX stores, which land in write-combined memory as the runs start on 16 bytes (docs/HARDWARE.md,
-// "Copies into write-combined and cached memory"). Up to 8 runs' loads go first, so they overlap.
+// "Copies into write-combined and cached memory"). Each 4 runs' loads go first, so they overlap.
 static inline __attribute__((always_inline)) void put_tile_quads(
 	volatile uint32_t *image, uint32_t offset, const uint8_t *bytes, Quad shift, uint32_t bytes_log2)
 {
@@ -488,13 +488,13 @@ static inline __attribute__((always_inline)) void put_tile_quads(
 	const uint32_t group_quads = (GROUP_BLOCKS << bytes_log2) / QUAD_BYTES;
 	const uint32_t tile_quads = PIPES * group_quads;
 	const uint32_t chunk = tile_quads < CHUNK_QUADS ? tile_quads : CHUNK_QUADS;
-#pragma GCC unroll 4
+#pragma GCC unroll 8
 	for (uint32_t first = 0; first < tile_quads; first += chunk) {
 		Quad quads[CHUNK_QUADS];
-#pragma GCC unroll 8
+#pragma GCC unroll 4
 		for (uint32_t i = 0; i < chunk; i++)
 			quads[i] = load_quad(bytes + (first + i) * QUAD_BYTES, shift);
-#pragma GCC unroll 8
+#pragma GCC unroll 4
 		for (uint32_t i = 0; i < chunk; i++) {
 			const uint32_t pipe = (first + i) / group_quads;
 			const uint32_t run = (first + i) % group_quads;
@@ -525,8 +525,9 @@ static inline __attribute__((always_inline)) void put_tiles_sized(volatile uint3
 	}
 }
 
-static void put_tiles(volatile uint32_t *image, uint32_t offset, uint32_t tiles, const uint8_t *bytes,
-	uint32_t tile_bits, uint32_t bytes_log2)
+// Out of line, so copy_rows saves no vector registers for downloads and unaligned rows.
+static __attribute__((noinline)) void put_tiles(volatile uint32_t *image, uint32_t offset, uint32_t tiles,
+	const uint8_t *bytes, uint32_t tile_bits, uint32_t bytes_log2)
 {
 	switch (bytes_log2) {
 	case 0:
