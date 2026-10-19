@@ -136,6 +136,9 @@ void test_anisotropy(void);
 // Texture formats (milestone 16).
 void test_formats(void);
 
+// Tiled uploads, exact and timed (vulkan4xenon milestone 29 step 6).
+void test_upload(void);
+
 // Multisampled targets (milestone 32).
 void test_multisample(void);
 

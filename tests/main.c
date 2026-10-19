@@ -72,6 +72,7 @@ int main(int argc, char **argv)
 	test_cube_volume();
 	test_anisotropy();
 	test_formats();
+	test_upload();
 	test_multisample();
 	test_targets();
 	test_tiles();

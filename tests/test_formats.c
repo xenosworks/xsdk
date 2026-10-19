@@ -2,9 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #include "tests.h"
 #include "texture_shaders.h"
@@ -53,9 +51,6 @@ enum {
 	DXT_BLEND_TOLERANCE = 12,
 	MAX_CELLS = 100,
 	SWIZZLE_ROW_Y = 600,
-	// The upload timed: an R8 tiled texture this many texels on a side, in under this long.
-	TIMED_SIZE = 512,
-	TIMED_LIMIT_US = 4000,
 	POINTS_PER_CELL = 10,
 	// The largest level: 32x32 texels of 8 bytes.
 	MAX_LEVEL_BYTES = TEXTURE_SIZE * TEXTURE_SIZE * 8,
@@ -893,39 +888,6 @@ static void draw_frames(const Scene *scene)
 	}
 }
 
-static int64_t now_us(void)
-{
-	struct timespec time;
-	(void)clock_gettime(CLOCK_MONOTONIC, &time);
-	return (int64_t)time.tv_sec * 1000000 + time.tv_nsec / 1000;
-}
-
-// An R8 tiled upload from cached memory, timed. Written a byte at a time, each merged into its word read back from
-// write-combined memory, it took an uncached read a texel; in runs of whole words it takes far less.
-static void check_upload_time(void)
-{
-	XsdkTexture texture;
-	const NTSTATUS status = xsdk_texture_create(&texture, XSDK_FORMAT_R8, TIMED_SIZE, TIMED_SIZE, 1, true);
-	uint8_t *const data = malloc(TIMED_SIZE * TIMED_SIZE);
-	if (!NT_SUCCESS(status) || !data) {
-		check("formats: a 512x512 R8 tiled upload takes under 4 ms", false);
-		free(data);
-		if (NT_SUCCESS(status))
-			xsdk_texture_free(&texture);
-		return;
-	}
-	for (uint32_t i = 0; i < TIMED_SIZE * TIMED_SIZE; i++)
-		data[i] = (uint8_t)(i * 7);
-	const int64_t start = now_us();
-	xsdk_texture_upload(&texture, 0, data, TIMED_SIZE);
-	const int64_t elapsed = now_us() - start;
-	xsdk_log_write("formats: a 512x512 R8 tiled upload took %u us, %u MB/s", (unsigned)elapsed,
-		(unsigned)(elapsed > 0 ? (int64_t)TIMED_SIZE * TIMED_SIZE / elapsed : 0));
-	check("formats: a 512x512 R8 tiled upload takes under 4 ms", elapsed < TIMED_LIMIT_US);
-	free(data);
-	xsdk_texture_free(&texture);
-}
-
 void test_formats(void)
 {
 	const NTSTATUS status = xsdk_gpu_open();
@@ -951,7 +913,6 @@ void test_formats(void)
 	for (uint32_t i = 0; i < TEXTURES; i++)
 		made = make_texture(&textures[i], i) && made;
 	check("formats: textures made in every format", made);
-	check_upload_time();
 	static Cell cells[MAX_CELLS];
 	const uint32_t cell_count = make_cells(cells);
 	const XsdkSampler point_clamped = { XSDK_FILTER_POINT, XSDK_FILTER_POINT, XSDK_FILTER_POINT, XSDK_ADDRESS_CLAMP,
