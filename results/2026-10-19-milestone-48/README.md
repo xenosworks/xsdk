@@ -379,11 +379,15 @@ and 128 now. Optimiser on, baseline -> step 2 -> step 3:
 75.1 to 77.3 ms before and 73.3 to 76.0 ms after, about 1.4 ms less in each pair: the check for a constant divisor is a
 lookup, and the programs have fewer instructions to optimise.
 
-**Left for the console,** as step 2, with Dusklight's pack and vulkan4xenon's test bundle rebuilt with this xost:
-- `probe_shader_cost`: the pixel shaders' time against step 2's 56,384 us. The 18 Dusklight programs dividing by 255
-  or 15 may differ from the baseline's pictures by one step of a channel, where the console's `rcp` of 255 or 15 isn't
-  the nearest float; every other picture must hash as the baseline's.
-- `probe_xsc`: 150 of 150 programs compile as the pack holds them, the 150 within 1.42 s.
-- xsdk_test, with its compiler check and the raster grid's 0 wrong pixels; vulkan4xenon_test twice; Dusklight's title
-  scene as a smoke run.
-- **Breaks:** `tests/test_division.py` failed against the code before the step (above).
+**On the console,** built clean from the M48 pair, Dusklight's pack and vulkan4xenon's test bundle rebuilt with this
+xost (local/m48/step3_build.sh):
+- **`probe_step3.log`:** Dusklight's pixel shaders take 55,545 us for a draw of each, 11.9% under the baseline's
+  63,053 and 1.5% under step 2's; its vertex shaders 13,364 us, as before. All 103 pictures hash as the baseline's, bit
+  for bit, the 18 dividing by 255 or 15 among them: whatever the quotients' rounding changed reached no 8-bit output
+  in the probe's pictures.
+- **`probe_xsc_step3.log`:** 150 of 150 programs compile on the console as the pack holds them, the 150 in 1.320 s.
+- **`step3_xsdk_test.log`:** 461 passed, 2 failed, the controller's checks with no pad.
+- **`step3_vulkan4xenon_test_1.log`, `_2.log`:** 492 of 492 each, the test bundle rebuilt (3 programs change).
+- **`step3_dusklight.log`:** Dusklight's title scene with the rebuilt pack, at 26 to 30 fps as before.
+- **Breaks:** `tests/test_division.py` failed against the code before the step (above). No console break was built,
+  as the probe compares every picture with the baseline's bit for bit.
