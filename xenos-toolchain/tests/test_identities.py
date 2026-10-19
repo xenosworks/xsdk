@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """mix with a constant 0 or 1, and adds, muls and mads with a known 0 or 1, folded to what remains (xsdk:
-src/xsc_lower_glsl.c, mix; src/xsc_optimize.c, fold_identities).
+src/xsc_lower_glsl.c, mix; src/xsc_optimize.c, fold_by_ranges).
 
 vk_identities.frag mixes with a weight of 1, a weight of 0, an x of 0 and a y of 0, takes x * 1, 0 - y and a * 0 of
 vectors, and mixes with a 0 and multiplies by a 1 that only the optimiser sees, through the vector they're built into.

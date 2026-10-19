@@ -1,10 +1,13 @@
+#include <float.h>
+#include <math.h>
 #include <string.h>
 
 #include "xsc_private.h"
 
 // The optimiser, as xenos-toolchain/xasm/optimize.py rewrites a program's instructions before allocation: common
-// subexpressions, copies propagated, identities with a known 0 or 1 folded, multiply-adds fused, values computed into
-// their copies' places, dead code and unused fetches removed, and scalar ops co-issued.
+// subexpressions, copies propagated, identities with a known 0 or 1 and clamps a value's range makes useless folded,
+// multiply-adds fused, values computed into their copies' places, dead code and unused fetches removed, and scalar ops
+// co-issued.
 
 enum {
 	ALL = 0xF,
@@ -13,6 +16,9 @@ enum {
 	MAX_CONSTANTS = 2,
 	MAX_READ_KEYS = XSC_MAX_KEYS,
 	MAX_DEF_KEYS = 8,
+	// An op's ranges: its vector op's four lanes, then its scalar op's result.
+	RANGE_SLOTS = 5,
+	SCALAR_SLOT = 4,
 };
 
 typedef struct {
@@ -22,6 +28,14 @@ typedef struct {
 	int components[4];
 	bool negate;
 } Source;
+
+// What a value may be: a number from lo to hi, NaN where nan says, and -0 where negative_zero says.
+typedef struct {
+	double lo;
+	double hi;
+	bool nan;
+	bool negative_zero;
+} Range;
 
 // An instruction's reads and writes as (register, component) keys, register * 4 + component.
 typedef struct {
@@ -50,6 +64,9 @@ typedef struct {
 	size_t write_capacity;
 	size_t reader_capacity;
 	uint8_t *live;
+	// Each op's results' ranges, RANGE_SLOTS an op, as fold_by_ranges finds them.
+	Range *ranges;
+	size_t range_capacity;
 } Optimizer;
 
 // ---- the tables (optimize.py, from xenia:src/xenia/gpu/ucode.cc:16-117) ----
@@ -780,47 +797,196 @@ static bool propagate_copies(Optimizer *o, bool *changed)
 	return true;
 }
 
-// The number lane of source s holds at op i where the compiler knows it: a literal's, or a fetch's 0 or 1
-// (xenia:src/xenia/gpu/ucode.h:677-688).
-static bool lane_known(const Optimizer *o, size_t i, const Source *s, int lane, double *value)
+// ---- ranges, as Xenia's interpreter computes each op (xenia:src/xenia/gpu/shader_interpreter.cc:287-956) ----
+
+static const Range ANY = { -INFINITY, INFINITY, true, true };
+
+// A range, which may hold -0 wherever it reaches below 0, as a tiny negative result may become -0.
+static Range range(double lo, double hi, bool nan, bool negative_zero)
 {
-	const int c = s->components[lane];
-	if (!s->temp) {
-		const int64_t at = s->reg - o->p->literal_base;
-		if (at < 0 || (size_t)at >= o->p->literal_count)
-			return false;
-		*value = o->p->literals[4 * at + c];
-	} else {
-		const int64_t w = flow_at(o, i, key(s->reg, c));
-		if (w == OUTSIDE || is_alu(o->ops[w]))
-			return false;
-		const int64_t pick = o->ops[w]->fetch.dest_swizzle >> (3 * c) & 7;
-		if (pick != 4 && pick != 5)
-			return false;
-		*value = (double)(pick - 4);
-	}
-	if (s->absolute && *value < 0.0)
-		*value = -*value;
-	if (s->negate)
-		*value = -*value;
-	return true;
+	return (Range){ lo, hi, nan, negative_zero || lo < 0.0 };
 }
 
-// Whether operand n of op i holds one number the compiler knows in every lane given, which value takes.
-static bool known(const Optimizer *o, size_t i, int n, int64_t lanes, double *value)
+static Range exactly(double value)
+{
+	return isnan(value) ? ANY : range(value, value, false, signbit(value) != 0);
+}
+
+// The float at or past d on the bound's side, up for an upper bound, a step further where d isn't the exact result:
+// any rounding of the exact result lies within.
+static double outward(double d, bool exact, bool up)
+{
+	if (isnan(d))
+		return up ? INFINITY : -INFINITY;
+	const float toward = up ? INFINITY : -INFINITY;
+	float f = (float)d;
+	if (up ? f < d : f > d)
+		f = nextafterf(f, toward);
+	return exact ? f : nextafterf(f, toward);
+}
+
+// A bound of a + b; a sum doubles round, which a fast two-sum's error term shows, isn't exact.
+static double sum_bound(double a, double b, bool up)
+{
+	const double s = a + b;
+	const bool a_bigger = fabs(a) >= fabs(b);
+	const double error = (a_bigger ? b : a) - (s - (a_bigger ? a : b));
+	return outward(s, !isfinite(s) || error == 0.0, up);
+}
+
+// x + y: infinities of opposite signs give NaN, and the sum is -0 only where both are.
+static Range sum_range(Range x, Range y)
+{
+	const bool opposite = (x.hi == INFINITY && y.lo == -INFINITY) || (x.lo == -INFINITY && y.hi == INFINITY);
+	return range(sum_bound(x.lo, y.lo, false), sum_bound(x.hi, y.hi, true), x.nan || y.nan || opposite,
+		x.negative_zero && y.negative_zero);
+}
+
+// 0 times anything is +0 (xenia:src/xenia/gpu/shader_interpreter.cc:339-346).
+static double times(double a, double b)
+{
+	return a == 0.0 || b == 0.0 ? 0.0 : a * b;
+}
+
+// x * y, whose ends are among its operands' ends' products, each exact in doubles.
+static Range product_range(Range x, Range y)
+{
+	const double ends[4] = { times(x.lo, y.lo), times(x.lo, y.hi), times(x.hi, y.lo), times(x.hi, y.hi) };
+	double lo = ends[0], hi = ends[0];
+	for (int k = 1; k < 4; k++) {
+		lo = fmin(lo, ends[k]);
+		hi = fmax(hi, ends[k]);
+	}
+	return range(outward(lo, true, false), outward(hi, true, true), x.nan || y.nan, false);
+}
+
+// max is x >= y ? x : y, so a NaN gives y (xenia:src/xenia/gpu/shader_interpreter.cc:347-354).
+static Range max_range(Range x, Range y)
+{
+	return range(x.nan ? y.lo : fmax(x.lo, y.lo), fmax(x.hi, y.hi), y.nan, x.negative_zero || y.negative_zero);
+}
+
+// min is x < y ? x : y (xenia:src/xenia/gpu/shader_interpreter.cc:355-361).
+static Range min_range(Range x, Range y)
+{
+	return range(fmin(x.lo, y.lo), x.nan ? y.hi : fmin(x.hi, y.hi), y.nan, x.negative_zero || y.negative_zero);
+}
+
+// A clamp to 0 to 1 gives +0 for NaN and -0 (xenia:src/xenia/base/math.h:64-79).
+static Range saturated(Range r)
+{
+	return range(r.nan || r.lo < 0.0 ? 0.0 : fmin(r.lo, 1.0), fmax(fmin(r.hi, 1.0), 0.0), false, false);
+}
+
+// r as a source reads it: a denormal as 0 (xenia:src/xenia/gpu/shader_interpreter.h:108-112), then its absolute
+// value and negation.
+static Range as_read(Range r, const Source *s)
+{
+	if (r.lo > 0.0 && r.lo < FLT_MIN)
+		r.lo = 0.0;
+	if (r.hi < 0.0 && r.hi > -FLT_MIN)
+		r.hi = -0.0;
+	if (s->absolute)
+		r = range(r.lo >= 0.0 ? r.lo : r.hi <= 0.0 ? -r.hi : 0.0, fmax(-r.lo, r.hi), r.nan, false);
+	if (s->negate)
+		r = range(-r.hi, -r.lo, r.nan, r.lo <= 0.0 && r.hi >= 0.0);
+	return r;
+}
+
+// Where op w keeps the range of its write of component c of reg: the scalar op's writes come after the vector op's
+// (xenia:src/xenia/gpu/shader_interpreter.cc:938-956).
+static size_t slot_of(const XscOp *w, int64_t reg, int c)
+{
+	const bool scalar = is_alu(w) && w->alu.scalar_dest == reg && (w->alu.scalar_write_mask >> c & 1);
+	return scalar ? SCALAR_SLOT : (size_t)c;
+}
+
+// What source s of op i reads in a lane: a literal's number, or what an earlier op's range says. An input, a uniform
+// or a texel may be any number or NaN.
+static Range operand_range(const Optimizer *o, size_t i, const Source *s, int lane)
+{
+	const int c = s->components[lane];
+	Range r = ANY;
+	if (!s->temp) {
+		const int64_t at = s->reg - o->p->literal_base;
+		if (!addresses_constants(&o->ops[i]->alu) && at >= 0 && (size_t)at < o->p->literal_count)
+			r = exactly(o->p->literals[4 * at + c]);
+	} else {
+		const int64_t w = flow_at(o, i, key(s->reg, c));
+		if (w != OUTSIDE)
+			r = o->ranges[RANGE_SLOTS * (size_t)w + slot_of(o->ops[w], s->reg, c)];
+	}
+	return as_read(r, s);
+}
+
+static Range read_range(const Optimizer *o, size_t i, int n, int lane)
+{
+	const Source s = source(o->ops[i], n);
+	return operand_range(o, i, &s, lane);
+}
+
+// The vector op's result in a lane, before its clamp; an op the ranges don't follow may give anything.
+static Range vector_range(const Optimizer *o, size_t i, int lane)
+{
+	switch (o->ops[i]->alu.vector_opcode) {
+	case XSC_VECTOR_ADD:
+		return sum_range(read_range(o, i, 1, lane), read_range(o, i, 2, lane));
+	case XSC_VECTOR_MUL:
+		return product_range(read_range(o, i, 1, lane), read_range(o, i, 2, lane));
+	case XSC_VECTOR_MAD:
+		return sum_range(
+			product_range(read_range(o, i, 1, lane), read_range(o, i, 2, lane)), read_range(o, i, 3, lane));
+	case XSC_VECTOR_MAX:
+		return max_range(read_range(o, i, 1, lane), read_range(o, i, 2, lane));
+	case XSC_VECTOR_MIN:
+		return min_range(read_range(o, i, 1, lane), read_range(o, i, 2, lane));
+	case XSC_VECTOR_FLOOR: {
+		const Range x = read_range(o, i, 1, lane);
+		return range(floor(x.lo), floor(x.hi), x.nan, x.negative_zero);
+	}
+	default:
+		return ANY;
+	}
+}
+
+// The ranges of what op i writes, its clamps applied.
+static void find_ranges(Optimizer *o, size_t i)
 {
 	const XscOp *const op = o->ops[i];
-	const Source s = source(op, n);
-	if (!s.temp && addresses_constants(&op->alu))
-		return false;
+	Range *const slots = &o->ranges[RANGE_SLOTS * i];
+	for (int slot = 0; slot < RANGE_SLOTS; slot++)
+		slots[slot] = ANY;
+	if (!is_alu(op)) {
+		// A fetch's 4 and 5 are 0 and 1 (xenia:src/xenia/gpu/ucode.h:677-688).
+		for (int c = 0; c < 4; c++) {
+			const int64_t pick = op->fetch.dest_swizzle >> (3 * c) & 7;
+			if (pick == 4 || pick == 5)
+				slots[c] = exactly((double)(pick - 4));
+		}
+		return;
+	}
+	if (op->alu.scalar_clamp)
+		slots[SCALAR_SLOT] = saturated(ANY);
+	for (int lane = 0; lane < 4 && !op->alu.is_export; lane++) {
+		if (!(op->alu.vector_write_mask >> lane & 1))
+			continue;
+		slots[lane] = vector_range(o, i, lane);
+		if (op->alu.vector_clamp)
+			slots[lane] = saturated(slots[lane]);
+	}
+}
+
+// Whether operand n of op i holds one number in every lane given, the ranges say, which value takes.
+static bool known(const Optimizer *o, size_t i, int n, int64_t lanes, double *value)
+{
 	int seen = 0;
 	for (int lane = 0; lane < 4; lane++) {
-		double v;
 		if (!(lanes >> lane & 1))
 			continue;
-		if (!lane_known(o, i, &s, lane, &v) || (seen++ && v != *value))
+		const Range r = read_range(o, i, n, lane);
+		if (r.nan || r.lo != r.hi || (seen++ && r.lo != *value))
 			return false;
-		*value = v;
+		*value = r.lo;
 	}
 	return seen > 0;
 }
@@ -908,15 +1074,69 @@ static bool fold(Optimizer *o, size_t i)
 	return mad_by_one(op, k, v);
 }
 
-// Folds every identity at once: a fold changes no op's writes, so the flow holds for the next.
-static bool fold_identities(Optimizer *o, bool *changed)
+// Whether a clamp keeps a value as it is: in 0 to 1, and neither NaN nor -0.
+static bool in_unit(Range r)
+{
+	return !r.nan && !r.negative_zero && r.lo >= 0.0 && r.hi <= 1.0;
+}
+
+// Whether a max or min of x and y gives operand n, bit for bit, whatever they hold. Equal, max gives x and min y,
+// which differ for -0 and +0.
+static bool keeps(int64_t opcode, int n, Range x, Range y)
+{
+	const bool below = x.hi < y.lo || (x.hi == y.lo && y.lo != 0.0);
+	const bool max = opcode == XSC_VECTOR_MAX;
+	if (n == 1)
+		return !x.nan && !y.nan && (max ? x.lo >= y.hi : below);
+	return max ? below : x.lo >= y.hi;
+}
+
+// Whether op i, a max or min that gives one operand whatever the ranges hold, became a copy of it, or a clamped copy
+// of a value a clamp keeps lost its clamp.
+static bool drop_clamp(Optimizer *o, size_t i)
+{
+	XscOp *const op = o->ops[i];
+	if (!is_alu(op) || fixed(op) || scalar_active(op) || !op->alu.vector_write_mask)
+		return false;
+	const int64_t opcode = op->alu.vector_opcode;
+	if (opcode != XSC_VECTOR_MAX && opcode != XSC_VECTOR_MIN)
+		return false;
+	const Source a = source(op, 1);
+	const Source b = source(op, 2);
+	const bool copy = opcode == XSC_VECTOR_MAX && same_value(&a, &b);
+	const int64_t lanes = vector_mask(op);
+	bool first = !copy, second = !copy, unit = op->alu.vector_clamp;
+	for (int lane = 0; lane < 4; lane++) {
+		if (!(lanes >> lane & 1))
+			continue;
+		const Range x = operand_range(o, i, &a, lane);
+		const Range y = operand_range(o, i, &b, lane);
+		first = first && keeps(opcode, 1, x, y);
+		second = second && keeps(opcode, 2, x, y);
+		unit = unit && in_unit(x);
+	}
+	if (copy && unit)
+		op->alu.vector_clamp = false;
+	else if (first || second)
+		become_copy(op, first ? 1 : 2, false);
+	return (copy && unit) || first || second;
+}
+
+// Folds, in the order the ops run, each op the ranges of what it reads make simpler: an identity with a known 0 or 1,
+// or a clamp that can't change its value. A fold changes no op's writes, so the flow holds for the next.
+static bool fold_by_ranges(Optimizer *o, bool *changed)
 {
 	*changed = false;
 	if (!build_flow(o))
 		return false;
+	size_t capacity = o->range_capacity;
+	if (!grow(o->x, &o->ranges, &capacity, RANGE_SLOTS * o->count + 1, sizeof *o->ranges))
+		return false;
+	o->range_capacity = capacity;
 	for (size_t i = 0; i < o->count; i++) {
-		while (fold(o, i))
+		while (fold(o, i) || drop_clamp(o, i))
 			*changed = true;
+		find_ranges(o, i);
 	}
 	return true;
 }
@@ -1614,7 +1834,7 @@ static bool first_round(Optimizer *o, bool *changed)
 		return o->x->status == XSDK_XSC_OK;
 	if (!fuse_multiply_adds(o, changed) || *changed)
 		return o->x->status == XSDK_XSC_OK;
-	if (!fold_identities(o, changed) || *changed)
+	if (!fold_by_ranges(o, changed) || *changed)
 		return o->x->status == XSDK_XSC_OK;
 	return compute_in_place(o, changed);
 }
