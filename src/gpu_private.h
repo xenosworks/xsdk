@@ -331,6 +331,8 @@ uint32_t xsdk_tiled_2d(uint32_t x, uint32_t y, uint32_t pitch_texels, uint32_t b
 // The same in a 3D texture's tiled layout, the slices height_texels rows apart, a multiple of 32 too.
 uint32_t xsdk_tiled_3d(
 	uint32_t x, uint32_t y, uint32_t z, uint32_t pitch_texels, uint32_t height_texels, uint32_t bytes_per_texel_log2);
+// The bits of either layout's offsets that count 32-texel tiles: 32 texels on along a row is one more in them.
+uint32_t xsdk_tiled_tile_bits(bool volume, uint32_t bytes_per_texel_log2);
 
 // What places a texture's levels in memory.
 typedef struct {

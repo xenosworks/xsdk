@@ -30,6 +30,7 @@
 
 #include "xsdk/texture.h"
 
+#include <altivec.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -96,7 +97,22 @@ enum {
 	// offset's low 4 stay where they are (xsdk_tiled_2d).
 	TILED_RUN_BYTES = 16,
 	TILED_RUN_BLOCKS_MAX = 8,
+	// A tile's row of blocks is 4 groups of 8, one to each pipe, which offset bits 6 and 7 hold; a group's 16-byte runs
+	// go in pairs 32 bytes apart, the pairs 256 bytes apart (xsdk_tiled_2d).
+	PIPES = 4,
+	PIPE_SHIFT = 6,
+	GROUP_BLOCKS = 8,
+	QUAD_BYTES = 16,
+	RUN_PAIR_BYTES = 32,
+	RUN_PAIRS_BYTES = 256,
+	// A line's worth of 16-byte runs loaded before they're stored.
+	CHUNK_QUADS = 8,
+	// The CPU's cache line (libxenon:drivers/ppc/cache.S:1); uploads ask for their bytes 8 lines ahead, as memcpy does.
+	LINE_BYTES = 128,
+	PREFETCH_BYTES = 8 * LINE_BYTES,
 };
+
+typedef vector unsigned char Quad;
 
 // Endian swaps (xenia:src/xenia/gpu/xenos.h:193-198); libxenon marks 16-bit formats 8-in-16 (xe.h:184).
 enum {
@@ -421,6 +437,116 @@ static uint32_t level_rows(const XsdkTexture *texture, uint32_t level)
 	return xsdk_texture_blocks(level_size(texture->height, level), formats[texture->format].block_log2);
 }
 
+static inline void prefetch(const uint8_t *address)
+{
+	__asm__ volatile("dcbt 0, %0" : : "r"(address));
+}
+
+static inline uint32_t load_word(const uint8_t *bytes)
+{
+	uint32_t value;
+	memcpy(&value, bytes, WORD_BYTES);
+	return value;
+}
+
+// 16 bytes from anywhere: the two aligned quads they span, put together. Each holds one of the bytes, so neither
+// reaches past them.
+static inline Quad load_quad(const uint8_t *bytes, Quad shift)
+{
+	return vec_perm(vec_ld(0, bytes), vec_ld(QUAD_BYTES - 1, bytes), shift);
+}
+
+// One tile on along a row: one more in the offset's tile bits, carried over the bits between them.
+static inline uint32_t next_tile(uint32_t offset, uint32_t tile_bits)
+{
+	return (offset & ~tile_bits) | (((offset | ~tile_bits) + 1) & tile_bits);
+}
+
+// A tile's row of bytes: each pipe's 8 as two words at the tile's offset with its pipe bits flipped. The loads go
+// first, so they overlap.
+static inline void put_tile_bytes(volatile uint32_t *image, uint32_t offset, const uint8_t *bytes)
+{
+	uint32_t words[PIPES * 2];
+#pragma GCC unroll 8
+	for (uint32_t i = 0; i < PIPES * 2; i++)
+		words[i] = load_word(bytes + i * WORD_BYTES);
+#pragma GCC unroll 4
+	for (uint32_t pipe = 0; pipe < PIPES; pipe++) {
+		volatile uint32_t *const group = (volatile uint32_t *)((uintptr_t)image + (offset ^ pipe << PIPE_SHIFT));
+		group[0] = words[pipe * 2];
+		group[1] = words[pipe * 2 + 1];
+	}
+}
+
+// A tile's row of larger blocks, each pipe's group of 8 in 16-byte runs from the tile's offset with its pipe bits
+// flipped, as VMX stores, which land in write-combined memory as the runs start on 16 bytes (docs/HARDWARE.md,
+// "Copies into write-combined and cached memory"). Up to 8 runs' loads go first, so they overlap.
+static inline __attribute__((always_inline)) void put_tile_quads(
+	volatile uint32_t *image, uint32_t offset, const uint8_t *bytes, Quad shift, uint32_t bytes_log2)
+{
+	uint8_t *const image_bytes = (uint8_t *)(uintptr_t)image;
+	const uint32_t group_quads = (GROUP_BLOCKS << bytes_log2) / QUAD_BYTES;
+	const uint32_t tile_quads = PIPES * group_quads;
+	const uint32_t chunk = tile_quads < CHUNK_QUADS ? tile_quads : CHUNK_QUADS;
+#pragma GCC unroll 4
+	for (uint32_t first = 0; first < tile_quads; first += chunk) {
+		Quad quads[CHUNK_QUADS];
+#pragma GCC unroll 8
+		for (uint32_t i = 0; i < chunk; i++)
+			quads[i] = load_quad(bytes + (first + i) * QUAD_BYTES, shift);
+#pragma GCC unroll 8
+		for (uint32_t i = 0; i < chunk; i++) {
+			const uint32_t pipe = (first + i) / group_quads;
+			const uint32_t run = (first + i) % group_quads;
+			const uint32_t to =
+				(offset ^ pipe << PIPE_SHIFT) + (run & 1) * RUN_PAIR_BYTES + (run >> 1) * RUN_PAIRS_BYTES;
+			vec_st(quads[i], (int)to, image_bytes);
+		}
+	}
+}
+
+// A row's whole tiles from word-aligned bytes, the offset the first's. Inlined for each block size, so the offsets
+// within a tile are constants.
+static inline __attribute__((always_inline)) void put_tiles_sized(volatile uint32_t *image, uint32_t offset,
+	uint32_t tiles, const uint8_t *bytes, uint32_t tile_bits, uint32_t bytes_log2)
+{
+	assert(((uintptr_t)image + offset) % (bytes_log2 ? QUAD_BYTES : 2 * WORD_BYTES) == 0);
+	const Quad shift = vec_lvsl(0, bytes);
+	const uint32_t tile_bytes = TILE_BLOCKS << bytes_log2;
+	for (uint32_t tile = 0; tile < tiles; tile++) {
+		for (uint32_t line = 0; line < tile_bytes; line += LINE_BYTES)
+			prefetch(bytes + line + PREFETCH_BYTES);
+		if (bytes_log2 == 0)
+			put_tile_bytes(image, offset, bytes);
+		else
+			put_tile_quads(image, offset, bytes, shift, bytes_log2);
+		offset = next_tile(offset, tile_bits);
+		bytes += tile_bytes;
+	}
+}
+
+static void put_tiles(volatile uint32_t *image, uint32_t offset, uint32_t tiles, const uint8_t *bytes,
+	uint32_t tile_bits, uint32_t bytes_log2)
+{
+	switch (bytes_log2) {
+	case 0:
+		put_tiles_sized(image, offset, tiles, bytes, tile_bits, 0);
+		return;
+	case 1:
+		put_tiles_sized(image, offset, tiles, bytes, tile_bits, 1);
+		return;
+	case 2:
+		put_tiles_sized(image, offset, tiles, bytes, tile_bits, 2);
+		return;
+	case 3:
+		put_tiles_sized(image, offset, tiles, bytes, tile_bits, 3);
+		return;
+	default:
+		put_tiles_sized(image, offset, tiles, bytes, tile_bits, 4);
+		return;
+	}
+}
+
 // Rows of a level's blocks in a face or slice, from first_row, copied in from data or out to it, row_bytes apart.
 static void copy_rows(const XsdkTexture *texture, uint32_t level, uint32_t slice, uint32_t first_row,
 	uint32_t row_count, uint8_t *data, uint32_t row_bytes, bool out)
@@ -436,12 +562,25 @@ static void copy_rows(const XsdkTexture *texture, uint32_t level, uint32_t slice
 	const uint32_t columns = xsdk_texture_blocks(level_size(texture->width, level), info->block_log2);
 	// A run goes as whole words, read from or written to the rows as words, so they must be word-aligned; unaligned
 	// rows go a block at a time.
-	const uint32_t run = ((uintptr_t)data | row_bytes) % WORD_BYTES == 0 ? run_blocks(texture, info, columns) : 1;
+	const bool aligned = ((uintptr_t)data | row_bytes) % WORD_BYTES == 0;
+	const uint32_t run = aligned ? run_blocks(texture, info, columns) : 1;
 	const uint32_t run_bytes = run * block_bytes;
+	// Uploads from aligned rows put whole tiles at once, from tiles_x; the blocks around them go in runs.
+	const uint32_t to_tile = (TILE_BLOCKS - place.x % TILE_BLOCKS) % TILE_BLOCKS;
+	const uint32_t tiles_x = texture->tiled && aligned && !out && to_tile < columns ? to_tile : columns;
+	const uint32_t tiles = (columns - tiles_x) / TILE_BLOCKS;
+	const uint32_t tile_bits =
+		tiles ? xsdk_tiled_tile_bits(texture->dimension == XSDK_TEXTURE_3D, info->block_bytes_log2) : 0;
 	for (uint32_t y = 0; y < row_count; y++) {
 		uint8_t *const row = data + y * row_bytes;
 		uint32_t x = 0;
 		while (x < columns) {
+			if (x == tiles_x && tiles) {
+				const uint32_t first = block_offset(texture, &place, place.x + x, place.y + first_row + y, slice);
+				put_tiles(image, first, tiles, row + x * block_bytes, tile_bits, info->block_bytes_log2);
+				x += tiles * TILE_BLOCKS;
+				continue;
+			}
 			const uint32_t offset = block_offset(texture, &place, place.x + x, place.y + first_row + y, slice);
 			// A whole run, starting where the layout's runs start, of whole words: at a packed level's edges and
 			// across a linear row's last bytes, blocks go one at a time.

@@ -28,6 +28,7 @@
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <assert.h>
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "gpu_private.h"
@@ -58,6 +59,12 @@ uint32_t xsdk_tiled_2d(uint32_t x, uint32_t y, uint32_t pitch_texels, uint32_t b
 	const uint32_t bank = y >> 4 & 1;
 	const uint32_t pipe = (x >> 3 & 3) ^ (y >> 3 & 1) << 1;
 	return combine((outer_blocks | inner_blocks) << bytes_per_texel_log2, bank, pipe, y & 1);
+}
+
+uint32_t xsdk_tiled_tile_bits(bool volume, uint32_t bytes_per_texel_log2)
+{
+	const uint32_t tile_log2 = volume ? MACRO_TILE_BLOCKS_3D_LOG2 : MACRO_TILE_BLOCKS_LOG2;
+	return combine(~0u << (tile_log2 + bytes_per_texel_log2), 0, 0, 0);
 }
 
 uint32_t xsdk_tiled_3d(
