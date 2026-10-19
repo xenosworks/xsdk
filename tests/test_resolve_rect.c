@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <time.h>
 
 #include "constant_shaders.h"
 #include "tests.h"
@@ -16,7 +17,9 @@
 // at a time into a texture of its size: one inside it, and one reaching its right and bottom edges, both off the
 // 8-pixel grid there. The texture must hold the quarters in the rectangles alone, and a resolve of the whole after
 // them each rectangle's clear alone. Then depth cleared far in a rectangle, after a clear of the whole nearer, must
-// let a quad between them show there alone, so a part's clear can't leave hierarchical depth rejecting it.
+// let a quad between them show there alone, so a part's clear can't leave hierarchical depth rejecting it. Last, more
+// rectangles than xsdk keeps the vertices of (src/gpu.c, RECTANGLE_SLOTS) each resolve their own texels, and queuing
+// them doesn't wait out the GPU in sleeps: Dusklight's passes waited 10 ms a frame with 8 kept.
 
 enum {
 	// Off the 8-pixel grid both ways, as the edge rectangle needs; the pitch is 224.
@@ -35,6 +38,12 @@ enum {
 	EDGE_CLEAR_ARGB = 0xFF40E0E0,
 	QUAD_ARGB = 0xFFE040E0,
 	RECTANGLES = 2,
+	// 8x8 cells from the top left, a row of 25 at a time: more than xsdk keeps, each a place of its own.
+	CELL = 8,
+	CELLS = 96,
+	CELLS_ACROSS = WIDTH / CELL,
+	// Queuing the cells: 1.6 ms on the console with 64 kept, 21 ms with 8.
+	CELLS_MOST_US = 10000,
 };
 
 // The quarters meet off the grid, at 100 and 58, so a rectangle copied a cell out of place shows.
@@ -93,6 +102,13 @@ static bool inside(const Rect *rect, uint32_t x, uint32_t y)
 static uint32_t quarter_at(uint32_t x, uint32_t y)
 {
 	return quarter_argb[(y >= SPLIT_Y) * 2 + (x >= SPLIT_X)];
+}
+
+static uint64_t now_us(void)
+{
+	struct timespec now;
+	(void)clock_gettime(CLOCK_MONOTONIC, &now);
+	return (uint64_t)now.tv_sec * 1000000 + (uint64_t)now.tv_nsec / 1000;
 }
 
 static float unorm(uint32_t value)
@@ -180,6 +196,13 @@ static uint32_t cleared_at(uint32_t x, uint32_t y)
 	return quarter_at(x, y);
 }
 
+// The cells' texture: the quarters in each cell resolved, the sentinel elsewhere.
+static uint32_t cells_at(uint32_t x, uint32_t y)
+{
+	const uint32_t cell = y / CELL * CELLS_ACROSS + x / CELL;
+	return x < CELLS_ACROSS * CELL && cell < CELLS ? quarter_at(x, y) : SENTINEL_ARGB;
+}
+
 static uint32_t depth_at(uint32_t x, uint32_t y)
 {
 	return inside(&rects[0], x, y) ? QUAD_ARGB : BACKGROUND_ARGB;
@@ -196,6 +219,7 @@ typedef struct {
 	uint32_t vertices;
 	XsdkTexture *parts;
 	XsdkTexture *whole;
+	XsdkTexture *cells;
 } Scene;
 
 static void set_target(const Scene *scene)
@@ -205,8 +229,7 @@ static void set_target(const Scene *scene)
 	xsdk_gpu_set_vertices(0, scene->vertices, sizeof square);
 }
 
-// The quarters, each rectangle resolved and cleared in turn, then the whole target.
-static void check_colour(const Scene *scene)
+static void draw_quarters(const Scene *scene)
 {
 	set_target(scene);
 	for (uint32_t i = 0; i < 4; i++) {
@@ -214,6 +237,12 @@ static void check_colour(const Scene *scene)
 		const uint32_t y = i / 2 ? SPLIT_Y : 0;
 		draw_quad(x, y, i % 2 ? WIDTH - SPLIT_X : SPLIT_X, i / 2 ? HEIGHT - SPLIT_Y : SPLIT_Y, 0.0f, quarter_argb[i]);
 	}
+}
+
+// The quarters, each rectangle resolved and cleared in turn, then the whole target.
+static void check_colour(const Scene *scene)
+{
+	draw_quarters(scene);
 	xsdk_gpu_set_resolve_clears(true, false);
 	for (uint32_t i = 0; i < RECTANGLES; i++) {
 		const Rect *const r = &rects[i];
@@ -258,6 +287,25 @@ static void check_depth(const Scene *scene)
 	check("resolve rect: a rectangle's depth clear clears its depth alone, and draws find it", done && wrong == 0);
 }
 
+// The quarters, then each cell resolved alone, clearing nothing, timed as the CPU queues them.
+static void check_cells(const Scene *scene)
+{
+	draw_quarters(scene);
+	xsdk_gpu_set_resolve_clears(false, false);
+	const uint64_t start = now_us();
+	for (uint32_t i = 0; i < CELLS; i++)
+		xsdk_gpu_resolve_texture_rect(scene->cells, i % CELLS_ACROSS * CELL, i / CELLS_ACROSS * CELL, CELL, CELL, 0);
+	const uint64_t queued_us = now_us() - start;
+	xsdk_gpu_set_resolve_clears(true, true);
+	const bool done = landed();
+	const uint32_t wrong = done ? count_wrong("cells", scene->cells, cells_at) : 1;
+	xsdk_log_write("resolve rect: %u cells queued in %llu us, %u texels wrong", (unsigned)CELLS,
+		(unsigned long long)queued_us, (unsigned)wrong);
+	check("resolve rect: 96 rectangles, more than xsdk keeps, queue without waiting out the GPU in sleeps",
+		queued_us < CELLS_MOST_US);
+	check("resolve rect: 96 rectangles, more than xsdk keeps, each resolve their own texels", done && wrong == 0);
+}
+
 static volatile uint32_t *upload(const void *data, uint32_t bytes)
 {
 	volatile uint32_t *const vertices = xsdk_gpu_alloc(bytes);
@@ -287,16 +335,22 @@ void test_resolve_rect(void)
 			&vertex, layout, sizeof layout / sizeof layout[0], (const uint32_t[]){ STRIDE_BYTES }));
 	XsdkTexture parts = { .texels = NULL };
 	XsdkTexture whole = { .texels = NULL };
+	XsdkTexture cells = { .texels = NULL };
 	volatile uint32_t *const vertices = upload(square, sizeof square);
-	const bool made = loaded && vertices && make_texture(&parts) && make_texture(&whole);
+	const bool made = loaded && vertices && make_texture(&parts) && make_texture(&whole) && make_texture(&cells);
 	check("resolve rect: shaders, vertices and textures made", made);
 	if (made) {
-		const Scene scene = {
-			.vertex = &vertex, .pixel = &pixel, .vertices = xsdk_gpu_address(vertices), .parts = &parts, .whole = &whole
-		};
+		const Scene scene = { .vertex = &vertex,
+			.pixel = &pixel,
+			.vertices = xsdk_gpu_address(vertices),
+			.parts = &parts,
+			.whole = &whole,
+			.cells = &cells };
 		check_colour(&scene);
 		check_depth(&scene);
+		check_cells(&scene);
 	}
+	xsdk_texture_free(&cells);
 	xsdk_texture_free(&whole);
 	xsdk_texture_free(&parts);
 	xsdk_gpu_free(vertices);

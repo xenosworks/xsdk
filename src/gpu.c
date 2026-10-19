@@ -47,8 +47,9 @@ enum {
 	// A one-dword packet that does nothing (libxenon:drivers/xenos/xe.c:1217-1221).
 	TYPE2_NOP = 0x80000000,
 	RECTANGLE_FLOATS = 6,
-	// Resolve sizes kept at once, so a frame resolving at a few sizes doesn't wait for the GPU.
-	RECTANGLE_SLOTS = 8,
+	// Resolve sizes kept at once, so a frame resolving at many doesn't wait for the GPU: Dusklight's 27 passes a frame
+	// waited about 10 ms for 8 (vulkan4xenon:results/2026-10-19-milestone-29).
+	RECTANGLE_SLOTS = 64,
 	RECTANGLE_STRIDE = 0x20,
 	// Room for the largest packet a call reserves, as the ring has.
 	OVERFLOW_SCRATCH_DWORDS = RING_DWORDS,
@@ -67,10 +68,12 @@ enum {
 	FENCE_OFFSET = 0x20,
 	// Where the kernel's swap writes its fence, which XAM reads to know the GPU is done with its commands.
 	SYSTEM_FENCE_OFFSET = 0x30,
-	RECTANGLE_OFFSET = 0x40,
 	// The stream's own fences, apart from the title's.
 	BLOCK_FENCE_OFFSET = 0x200,
+	RECTANGLE_OFFSET = 0x400,
 };
+
+_Static_assert(RECTANGLE_OFFSET + RECTANGLE_SLOTS * RECTANGLE_STRIDE <= PAGE_BYTES, "the rectangles' write-back room");
 
 // The kernel's swap and the system command buffer it takes (docs/HARDWARE.md, "The Guide shows through VdSwap").
 enum {
