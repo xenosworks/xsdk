@@ -1,0 +1,52 @@
+Milestone 48 step 4: the programs whose container changed, compiled by xsdk 842e73a (step 3's compiler) and by step 4
+at xsdk's register split, the optimiser off and on, with their ALU instructions; each list ends with its totals. The
+25 whose ALU count holds differ only in an export's swizzle of a lane it doesn't write.
+
+== Dusklight's GX shaders, as at dusklight-xenon 85ce2bd163, the same as at bf5a13e557, 150 programs
+optimiser off: 0 of 150 changed, ALU 8016 -> 8016
+093884ef391dfddc.frag on: ALU 24 -> 24
+0c5faf5ad1250944.frag on: ALU 24 -> 24
+15a57b221b955025.frag on: ALU 20 -> 20
+2eefbbd89e53921c.frag on: ALU 27 -> 27
+35fc826ad15e1872.frag on: ALU 20 -> 20
+48cd8f549b507826.frag on: ALU 23 -> 23
+4ee5b3c093bea8ab.frag on: ALU 44 -> 35
+551fb86c6ef59def.frag on: ALU 24 -> 24
+60bcbd6f4104ab13.frag on: ALU 17 -> 17
+66457dda201609ed.frag on: ALU 31 -> 31
+676ff8c4689eaf91.frag on: ALU 13 -> 13
+695e15b366c72818.frag on: ALU 18 -> 18
+6dd3a70373df59bf.frag on: ALU 25 -> 25
+75422301f0e22829.frag on: ALU 36 -> 31
+8586b077d3e63bc1.frag on: ALU 24 -> 24
+858b7f6b67e42fd6.frag on: ALU 9 -> 9
+85c8b022385334bf.frag on: ALU 30 -> 28
+a479ce42ba36b7d8.frag on: ALU 14 -> 14
+b331aaa6bee56ee9.frag on: ALU 43 -> 38
+b40238367bc2ae70.frag on: ALU 24 -> 24
+b4a8c01218dcffe9.frag on: ALU 18 -> 18
+b4bd0f33bde7fc52.frag on: ALU 11 -> 11
+cad12b640d1cfd9c.frag on: ALU 9 -> 9
+dee3af7655c47a63.frag on: ALU 24 -> 24
+e2cfed9f9f80cbf0.frag on: ALU 43 -> 34
+e4c0798e6cc9e4ba.frag on: ALU 9 -> 9
+e7fe951996d1f40b.frag on: ALU 18 -> 18
+e9e5df17e9c42a02.frag on: ALU 9 -> 9
+ed3667059b5c9028.frag on: ALU 16 -> 16
+f3825523049d31cf.frag on: ALU 25 -> 25
+optimiser on: 30 of 150 changed, ALU 4373 -> 4343
+
+== vulkan4xenon's tests/shaders at e251f8b
+optimiser off: 0 of 80 changed, ALU 2124 -> 2124
+optimiser on: 0 of 80 changed, ALU 1296 -> 1296
+
+== vulkan4xenon's src/shaders at e251f8b
+optimiser off: 0 of 7 changed, ALU 19 -> 19
+optimiser on: 0 of 7 changed, ALU 16 -> 16
+
+== vulkan4xenon's bench/shaders at e251f8b
+optimiser off: 0 of 8 changed, ALU 39 -> 39
+optimiser on: 0 of 8 changed, ALU 27 -> 27
+
+== xsdk_test's compiler check, tests/xsc_shaders.h (tools/gen_xsc_shaders.py), optimiser on as it compiles them
+optimiser on: 0 of 46 changed, ALU 1689 -> 1689

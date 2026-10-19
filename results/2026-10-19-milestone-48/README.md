@@ -391,3 +391,93 @@ xost (local/m48/step3_build.sh):
 - **`step3_dusklight.log`:** Dusklight's title scene with the rebuilt pack, at 26 to 30 fps as before.
 - **Breaks:** `tests/test_division.py` failed against the code before the step (above). No console break was built,
   as the probe compares every picture with the baseline's bit for bit.
+
+## Step 4: ranges
+
+Built on 2026-10-19 at `c9c4a38` (docs/scope/48-xost-code-quality-2.md, step 4).
+
+- **The ranges** (src/xsc_optimize.c, `fold_by_ranges`, which step 2's `fold_identities` became): walking the ops in
+  the order they run, the pass gives each register component a range, whether it may be NaN and whether it may be -0,
+  as Xenia's interpreter computes each op (xenia:src/xenia/gpu/shader_interpreter.cc:287-956). They come from
+  literals, a fetch's 0 and 1, saturates, which give +0 for NaN and -0 (xenia:src/xenia/base/math.h:64-79), and `add`,
+  `mul`, `mad`, `max`, `min` and `floor` over their operands' ranges, 0 times anything +0. An interpolator, a uniform
+  and anything fetched may be any number or NaN: a texture's format is the host's to choose. Other ops, `cnd`s and
+  comparisons among them, may give anything, as may scalar ops but for their clamp. Bounds are worked out in doubles
+  and rounded outward to floats, a step further where the doubles rounded (a fast two-sum's error term says), so any
+  rounding the GPU does lies within; an operand's denormal reads as 0 (shader_interpreter.h:108-112). The walk is one
+  pass over the ops, in the first round's programs alone: no hardware loops, predication or `a0`, as before.
+- **What goes:** a `max` or `min` that gives one operand for every value in the ranges becomes a copy of it, and a
+  clamped copy of a value in 0 to 1 that can't be NaN or -0 loses its clamp; copy propagation takes both. Step 2's
+  identities fold through numbers a range fixes too: the floor of a value in 0 to 1, below 1, is 0, so the wrap's `mad`
+  that subtracts it times 256 becomes a copy, and the floor and the `mul`s only it reads go.
+- **Exact:** `max` is `x >= y ? x : y` and `min` `x < y ? x : y` (shader_interpreter.cc:347-361), so a NaN gives `y`,
+  and equal operands give `x` for `max` and `y` for `min`, which differ for -0 and +0. A kept `x` therefore can't be
+  NaN, nor `y` where `x` is kept, and operands that may be equal keep only at a number other than 0; a clamp keeps
+  nothing that may be -0. These drops keep every result bit for bit, zeros' signs too. Keeping `y` where `x` may be
+  NaN rests on Xenia's D3D9 rule (xenia:src/xenia/gpu/ucode.h:975-978), which the console hasn't confirmed; none of
+  Dusklight's drops needs it. The identities through fixed numbers keep the result but for a zero's sign, as step 2's
+  do.
+- **The simulators** (`842e73a`): `xdis/simulate.py`'s clamp kept -0, and `xdis/equivalence.py`'s kept -0 and NaN,
+  where Xenia gives +0 for both. With the old clamp, the test's clamped max of -a and a at a = +0 gave -0 in both, and
+  check_optimize.py found `vk_ranges.frag` differing, 1 / x -inf against +inf. Every test passes as before with step
+  3's compiler.
+
+**xost's tests:** every one passes. `tests/test_ranges.py` runs `xsc/testdata/vk_ranges.frag` on the simulator, the
+optimiser off and on, at inputs on the ranges' edges and a NaN: a ±4 clamp of a product of saturated values and a
+clamp of that, a `min` and a `max` of a saturated `a` with its own ends, and a 255/256 wrap of the product, each
+dropped; a clamp of an input, a `min` of a value that may be NaN, the max of -a and a and its clamp, `1 / x` of it,
+and, biting at their operand's top, `floor(a)`, `min(p * 2, 1)` and the floor of a product whose exact top is below 1
+but rounds to 1, each kept. Every export must be the same bit for bit, the edges' lane 275, and the ALU instructions
+48 off and 23 on; needless.py, blind to -0, still counts the kept max of -a and a. Against 842e73a's compiler it failed
+on its counts: 32 ALU instructions with the optimiser on. Broken on purpose, it fails on its exports with NaN ignored
+(a NaN where 4 belongs), bounds not rounded outward (259 for 275), a saturate's top taken below 1 (19) or a clamp of
+-0 dropped (-inf for +inf), and on its counts with -0 and +0 taken as equal (22) or products widened an ulp (29).
+
+**The counts,** `step4.txt` and `step4.json`, the baseline's command with `--baseline`; 0 shaders differ off against
+on, 50 not simulated and 15 not compiled. It ran over 445 files, the baseline's 441 and testdata's four added since
+(`vk_literal_pool.frag`, `vk_identities.frag`, `vk_division.frag`, `vk_ranges.frag`), so step4.txt's totals hold
+them; the table is over the shaders the baseline compiled, as steps 2's and 3's are. `vk_many_fetches.frag`, which
+compiles since step 2, takes 121 instructions, 128 at step 3: a ±4 clamp of a saturated product, its wrap and a clamp
+of a constant go. Optimiser on, baseline -> step 3 -> step 4:
+
+| | Corpus vertex, 135 | Corpus pixel, 290 | Dusklight vertex, 47 | Dusklight pixel, 103 | Costliest vertex, 10 | Costliest pixel, 15 |
+|---|---|---|---|---|---|---|
+| ALU | 4518 -> 4515 -> 4515 | 4225 -> 3970 -> 3934 | 3257 -> 3257 -> 3257 | 1342 -> 1116 -> 1086 | 1473 -> 1473 -> 1473 | 546 -> 439 -> 409 |
+| Copies | 636 -> 636 -> 636 | 1032 -> 1053 -> 1052 | 305 -> 305 -> 305 | 118 -> 139 -> 138 | 170 -> 170 -> 170 | 37 -> 42 -> 41 |
+| Co-issued | 528 -> 527 -> 527 | 199 -> 131 -> 131 | 471 -> 471 -> 471 | 159 -> 96 -> 96 | 222 -> 222 -> 222 | 96 -> 45 -> 45 |
+| Registers | 720 -> 720 -> 720 | 1403 -> 1382 -> 1381 | 300 -> 300 -> 300 | 466 -> 448 -> 448 | 94 -> 94 -> 94 | 124 -> 120 -> 120 |
+| Identities | 28 -> 3 -> 3 | 389 -> 38 -> 32 | 0 -> 0 -> 0 | 332 -> 10 -> 10 | 0 -> 0 -> 0 | 124 -> 0 -> 0 |
+| Range-useless | 0 -> 0 -> 0 | 34 -> 32 -> 2 | 0 -> 0 -> 0 | 32 -> 30 -> 0 | 0 -> 0 -> 0 | 32 -> 30 -> 0 |
+| Single-lane | 1921 -> 1921 -> 1921 | 578 -> 533 -> 509 | 1623 -> 1623 -> 1623 | 383 -> 336 -> 318 | 602 -> 602 -> 602 | 186 -> 169 -> 151 |
+
+- **This step's own effect:** Dusklight's pixel shaders take 2.7% fewer ALU instructions than at step 3, its 15
+  costliest 6.8%; against the baseline, 19.1% and 25.1%. All 30 instructions are in five of the costliest,
+  `4ee5b3c0` 44 to 35, `e2cfed9f` 43 to 34, `75422301` and `b331aaa6` 5 each and `85c8b022` 2: ±4 clamps of saturated
+  or already clamped values, and wraps' floors of values below 1. No shader takes more ALU instructions than at step 3,
+  off or on, and with the optimiser off none changes.
+- Every range-useless op in Dusklight is gone, 9 maxes, 9 mins, 4 floors, the 4 `mad`s that subtract them and 4
+  `mul`s only those read. The corpus's 2 left are adds of a `cnd`'s lane in unrolled loops, which the ranges don't
+  follow (`vk_loop_grid.frag`, vulkan4xenon's `loop_break.frag`). The other change in the 290 is `fs_vrelation.frag`,
+  15 to 9: `1 - 0` on constants alone, which step 2 leaves, is now 1 to its readers, and their multiplies by it fold.
+- Single-lane fell 336 to 318 in Dusklight's pixel shaders: the alphas' clamps were one lane each.
+
+**Containers that change,** compiled by 842e73a and by this step, per program in `step4_containers.txt`:
+- **Dusklight:** 30 of its 150 programs, all pixel shaders, with the optimiser on, none off; 4373 ALU instructions to
+  4343. The 5 above lose instructions; the other 25 differ only in an export's swizzle of a lane it doesn't write: the
+  fog's clamp of a factor already saturated goes, so its copy propagates into the export, where compute_in_place put
+  it before. Its pack must be rebuilt.
+- **vulkan4xenon:** none of `tests/shaders`, `src/shaders` and `bench/shaders`, off or on.
+- **xsdk_test's 46:** none; `tests/xsc_shaders.h` regenerates as it is.
+
+**Compile time:** compiling Dusklight's 150 programs on the PC, best of 25 runs in two sets of three alternations,
+took 70.2 to 73.6 ms before and 71.6 to 73.2 ms after, about 1 ms, 1.5%, more on average: the walk works out every
+op's ranges once in each round that reaches it. At that share the console's 1.320 s would be about 1.34 s, within 1.42.
+
+**Left for the console,** as at steps 2 and 3, with Dusklight's pack rebuilt with this xost (30 programs change) and
+vulkan4xenon's bundles as they are (none change):
+- `probe_shader_cost`: every one of the 103 pictures must hash as the baseline's, bit for bit, as this step keeps
+  results; the pixel shaders' time should fall from step 3's 55,545 us, 30 instructions in five of the costliest.
+- `probe_xsc`: 150 of 150 programs compile as the pack holds them, within 1.42 s.
+- xsdk_test, whose compiler check doesn't change; vulkan4xenon_test twice; Dusklight's title scene as a smoke run.
+- Breaks: `tests/test_ranges.py` failed against the code before the step and broken on purpose (above); no console
+  break, as the probe compares every picture with the baseline's bit for bit.
