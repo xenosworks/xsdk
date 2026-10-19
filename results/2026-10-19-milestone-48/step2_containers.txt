@@ -1,0 +1,178 @@
+Milestone 48 step 2: the programs whose container changed, compiled by xsdk bd84bf9 and by step 2 at xsdk's
+register split, the optimiser off and on, with their ALU instructions; each list ends with its totals.
+
+== Dusklight's GX shaders, as at dusklight-xenon bf5a13e557 and 58add2aceb, 150 programs
+041a85f07c74ec96.frag off: ALU 12 -> 11, literals changed
+041a85f07c74ec96.frag on: ALU 6 -> 5, literals changed
+05716a5bd2aae204.frag off: ALU 53 -> 50, literals changed
+05716a5bd2aae204.frag on: ALU 25 -> 22, literals changed
+093884ef391dfddc.frag off: ALU 48 -> 47, literals changed
+093884ef391dfddc.frag on: ALU 25 -> 24, literals changed
+0c5faf5ad1250944.frag off: ALU 48 -> 47, literals changed
+0c5faf5ad1250944.frag on: ALU 25 -> 24, literals changed
+12d30073b6d47043.frag off: ALU 21 -> 17, literals changed
+12d30073b6d47043.frag on: ALU 13 -> 9, literals changed
+1510c05add37f2b3.frag off: ALU 127 -> 125, literals changed
+1510c05add37f2b3.frag on: ALU 60 -> 57, literals changed
+15a57b221b955025.frag off: ALU 46 -> 45, literals changed
+15a57b221b955025.frag on: ALU 21 -> 20, literals changed
+1675a46dea18c182.frag off: ALU 14 -> 12, literals changed
+1675a46dea18c182.frag on: ALU 9 -> 7, literals changed
+1ad5c2f8e1cc2653.frag off: ALU 11 -> 8, literals changed
+1ad5c2f8e1cc2653.frag on: ALU 4 -> 2, literals changed
+22d6a7758d2d5d84.frag off: ALU 11 -> 7, literals changed
+22d6a7758d2d5d84.frag on: ALU 4 -> 2, literals changed
+233aa73af10f83bc.frag off: ALU 19 -> 16, literals changed
+233aa73af10f83bc.frag on: ALU 9 -> 5, literals changed
+246ca2b33bb1fdf4.frag off: ALU 14 -> 12, literals changed
+246ca2b33bb1fdf4.frag on: ALU 9 -> 7, literals changed
+29fab4bb2516d607.frag off: ALU 45 -> 41, literals changed
+29fab4bb2516d607.frag on: ALU 23 -> 19, literals changed
+2eefbbd89e53921c.frag off: ALU 74 -> 69, literals changed
+2eefbbd89e53921c.frag on: ALU 36 -> 29, literals changed
+33d3ad7a449b966c.frag off: ALU 12 -> 8, literals changed
+33d3ad7a449b966c.frag on: ALU 4 -> 2, literals changed
+349b6ed78d720732.frag off: ALU 17 -> 13, literals changed
+349b6ed78d720732.frag on: ALU 8 -> 5, literals changed
+35fc826ad15e1872.frag off: ALU 46 -> 45, literals changed
+35fc826ad15e1872.frag on: ALU 21 -> 20, literals changed
+46d1eea9e1360669.frag off: ALU 44 -> 39, literals changed
+46d1eea9e1360669.frag on: ALU 24 -> 18, literals changed
+48cd8f549b507826.frag off: ALU 46 -> 45, literals changed
+48cd8f549b507826.frag on: ALU 24 -> 23, literals changed
+4a2fde48317fee5f.frag off: ALU 41 -> 32, literals changed
+4a2fde48317fee5f.frag on: ALU 30 -> 18, literals changed
+4ee5b3c093bea8ab.frag off: ALU 103 -> 93, literals changed
+4ee5b3c093bea8ab.frag on: ALU 57 -> 48, literals changed
+551fb86c6ef59def.frag off: ALU 48 -> 47, literals changed
+551fb86c6ef59def.frag on: ALU 25 -> 24, literals changed
+607a7b7110387a22.frag off: ALU 11 -> 10, literals changed
+607a7b7110387a22.frag on: ALU 4 -> 3, literals changed
+60bcbd6f4104ab13.frag off: ALU 44 -> 41, literals changed
+60bcbd6f4104ab13.frag on: ALU 20 -> 17, literals changed
+66457dda201609ed.frag off: ALU 64 -> 60, literals changed
+66457dda201609ed.frag on: ALU 38 -> 31, literals changed
+676ff8c4689eaf91.frag off: ALU 48 -> 41, literals changed
+676ff8c4689eaf91.frag on: ALU 23 -> 13, literals changed
+695e15b366c72818.frag off: ALU 42 -> 41, literals changed
+695e15b366c72818.frag on: ALU 19 -> 18, literals changed
+6b7ff186cc28cce5.frag off: ALU 23 -> 21, literals changed
+6b7ff186cc28cce5.frag on: ALU 13 -> 11, literals changed
+6dd3a70373df59bf.frag off: ALU 63 -> 56, literals changed
+6dd3a70373df59bf.frag on: ALU 34 -> 25, literals changed
+75422301f0e22829.frag off: ALU 78 -> 73, literals changed
+75422301f0e22829.frag on: ALU 41 -> 36, literals changed
+820f98f280587ea8.frag off: ALU 59 -> 56, literals changed
+820f98f280587ea8.frag on: ALU 31 -> 27, literals changed
+8586b077d3e63bc1.frag off: ALU 48 -> 47, literals changed
+8586b077d3e63bc1.frag on: ALU 25 -> 24, literals changed
+858b7f6b67e42fd6.frag off: ALU 31 -> 29, literals changed
+858b7f6b67e42fd6.frag on: ALU 11 -> 9, literals changed
+85ae52ee303f618c.frag off: ALU 8 -> 7, literals changed
+85ae52ee303f618c.frag on: ALU 3 -> 2, literals changed
+85c8b022385334bf.frag off: ALU 71 -> 69, literals changed
+85c8b022385334bf.frag on: ALU 36 -> 34, literals changed
+946541a3cc485e48.frag off: ALU 8 -> 6, literals changed
+946541a3cc485e48.frag on: ALU 3 -> 2, literals changed
+987a188c27a802e5.frag off: ALU 19 -> 17, literals changed
+987a188c27a802e5.frag on: ALU 8 -> 6, literals changed
+9f1eca9bebdc35b6.frag off: ALU 11 -> 8, literals changed
+9f1eca9bebdc35b6.frag on: ALU 4 -> 2, literals changed
+a35e191254f5ef46.frag off: ALU 17 -> 16, literals changed
+a35e191254f5ef46.frag on: ALU 10 -> 9, literals changed
+a478595f52157a73.frag off: ALU 14 -> 11, literals changed
+a478595f52157a73.frag on: ALU 7 -> 4, literals changed
+a479ce42ba36b7d8.frag on: ALU 14 -> 14
+b331aaa6bee56ee9.frag off: ALU 85 -> 80, literals changed
+b331aaa6bee56ee9.frag on: ALU 48 -> 43, literals changed
+b40238367bc2ae70.frag off: ALU 53 -> 49, literals changed
+b40238367bc2ae70.frag on: ALU 30 -> 24, literals changed
+b4a8c01218dcffe9.frag off: ALU 47 -> 43, literals changed
+b4a8c01218dcffe9.frag on: ALU 24 -> 18, literals changed
+b4bd0f33bde7fc52.frag off: ALU 23 -> 19, literals changed
+b4bd0f33bde7fc52.frag on: ALU 14 -> 11, literals changed
+c2679fcd0788b78d.frag off: ALU 24 -> 19, literals changed
+c2679fcd0788b78d.frag on: ALU 13 -> 7, literals changed
+c98a0ca2e68f85a1.frag off: ALU 14 -> 13, literals changed
+c98a0ca2e68f85a1.frag on: ALU 8 -> 7, literals changed
+ca44599827bbdb23.frag off: ALU 38 -> 37, literals changed
+ca44599827bbdb23.frag on: ALU 19 -> 17, literals changed
+cad12b640d1cfd9c.frag off: ALU 31 -> 28, literals changed
+cad12b640d1cfd9c.frag on: ALU 11 -> 9, literals changed
+dae9addf7280e276.frag off: ALU 11 -> 10, literals changed
+dae9addf7280e276.frag on: ALU 4 -> 3, literals changed
+dee3af7655c47a63.frag off: ALU 48 -> 47, literals changed
+dee3af7655c47a63.frag on: ALU 25 -> 24, literals changed
+e19f86ee747cb140.frag off: ALU 26 -> 21, literals changed
+e19f86ee747cb140.frag on: ALU 12 -> 7, literals changed
+e2cfed9f9f80cbf0.frag off: ALU 89 -> 82, literals changed
+e2cfed9f9f80cbf0.frag on: ALU 50 -> 43, literals changed
+e2f1c3a692fdfb84.frag off: ALU 10 -> 7, literals changed
+e2f1c3a692fdfb84.frag on: ALU 4 -> 2, literals changed
+e3fba406929fde97.frag off: ALU 36 -> 28, literals changed
+e3fba406929fde97.frag on: ALU 24 -> 9, literals changed
+e4c0798e6cc9e4ba.frag off: ALU 30 -> 28, literals changed
+e4c0798e6cc9e4ba.frag on: ALU 11 -> 9, literals changed
+e6ec5aee8cc08f41.frag off: ALU 11 -> 8, literals changed
+e6ec5aee8cc08f41.frag on: ALU 4 -> 2, literals changed
+e7fe951996d1f40b.frag off: ALU 42 -> 41, literals changed
+e7fe951996d1f40b.frag on: ALU 19 -> 18, literals changed
+e9e5df17e9c42a02.frag off: ALU 30 -> 28, literals changed
+e9e5df17e9c42a02.frag on: ALU 11 -> 9, literals changed
+ed3667059b5c9028.frag off: ALU 36 -> 35, literals changed
+ed3667059b5c9028.frag on: ALU 17 -> 16, literals changed
+f3825523049d31cf.frag off: ALU 56 -> 52, literals changed
+f3825523049d31cf.frag on: ALU 30 -> 25, literals changed
+f5cb41c6eaf01a5f.frag off: ALU 43 -> 40, literals changed
+f5cb41c6eaf01a5f.frag on: ALU 19 -> 16, literals changed
+f7c1df6fe6364447.frag off: ALU 18 -> 17, literals changed
+f7c1df6fe6364447.frag on: ALU 12 -> 11, literals changed
+optimiser off: 62 of 150 changed, ALU 8298 -> 8108
+optimiser on: 63 of 150 changed, ALU 4599 -> 4391
+
+== vulkan4xenon's tests/shaders at d2572cc
+aurora_attr_defaults.frag off: ALU 7 -> 6, literals changed
+aurora_attr_defaults.frag on: ALU 3 -> 2, literals changed
+aurora_emboss.frag off: ALU 7 -> 6, literals changed
+aurora_emboss.frag on: ALU 3 -> 2, literals changed
+aurora_texgen_binormal.frag off: ALU 7 -> 6, literals changed
+aurora_texgen_binormal.frag on: ALU 3 -> 2, literals changed
+aurora_texgen_prior.frag off: ALU 8 -> 7, literals changed
+aurora_texgen_prior.frag on: ALU 4 -> 3, literals changed
+aurora_texgen_prior_inline.frag off: ALU 7 -> 6, literals changed
+aurora_texgen_prior_inline.frag on: ALU 3 -> 2, literals changed
+aurora_texgen_q_zero.frag off: ALU 16 -> 15, literals changed
+aurora_texgen_q_zero.frag on: ALU 9 -> 8, literals changed
+aurora_texgen_tangent.frag off: ALU 7 -> 6, literals changed
+aurora_texgen_tangent.frag on: ALU 3 -> 2, literals changed
+aurora_texgen_zero.frag off: ALU 16 -> 15, literals changed
+aurora_texgen_zero.frag on: ALU 9 -> 8, literals changed
+aurora_ztex_add_u24.frag off: ALU 40 -> 39, literals changed
+aurora_ztex_add_u24.frag on: ALU 19 -> 18, literals changed
+aurora_ztex_add_u8.frag off: ALU 35 -> 34, literals changed
+aurora_ztex_add_u8.frag on: ALU 16 -> 15, literals changed
+aurora_ztex_replace_u24.frag off: ALU 25 -> 24, literals changed
+aurora_ztex_replace_u24.frag on: ALU 13 -> 12, literals changed
+aurora_ztex_replace_u8.frag off: ALU 20 -> 19, literals changed
+aurora_ztex_replace_u8.frag on: ALU 10 -> 9, literals changed
+branch_data.vert on: ALU 21 -> 20
+loop_if.frag on: ALU 24 -> 23
+optimiser off: 12 of 80 changed, ALU 2140 -> 2128
+optimiser on: 14 of 80 changed, ALU 1312 -> 1298
+
+== vulkan4xenon's src/shaders at d2572cc
+optimiser off: 0 of 7 changed, ALU 19 -> 19
+optimiser on: 0 of 7 changed, ALU 16 -> 16
+
+== vulkan4xenon's bench/shaders at d2572cc
+mesh_uniform.vert on: ALU 5 -> 5
+mesh.vert on: ALU 5 -> 5
+optimiser off: 0 of 8 changed, ALU 39 -> 39
+optimiser on: 2 of 8 changed, ALU 27 -> 27
+
+== xsdk_test's compiler check, tests/xsc_shaders.h (tools/gen_xsc_shaders.py), optimiser on as it compiles them
+vk_vertex_if.vert on: ALU 16 -> 15
+vk_loop_grid.frag on: ALU 162 -> 161
+vk_vertex_loop_break.vert on: ALU 92 -> 91
+optimiser off: 0 of 46 changed, ALU 1902 -> 1902
+optimiser on: 3 of 46 changed, ALU 1703 -> 1700

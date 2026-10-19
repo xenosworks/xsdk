@@ -221,3 +221,78 @@ console agent (`probe_baseline_1.log`, `probe_baseline_2.log`):
   for bit must keep every hash.
 - **The milestone's targets, from the runs' means:** pixel shaders at most 55,486 us, 12% under 63,053; vertex shaders
   at most 12,686 us, 5% under 13,354.
+
+## Step 2: identities folded
+
+Built on 2026-10-19 at `99d3731` (docs/scope/48-xost-code-quality-2.md, step 2).
+
+- **`mix`** (src/xsc_lower_glsl.c, `mix`): where the weight is a constant 0 or 1 in every lane, a copy of `x` or `y`;
+  where `x` is a constant 0, `y * a` through `xsdk_xsc_binop`; where `y` is, `mad(-x, a, x)`. A constant is one
+  `xsdk_xsc_splat_const` finds the same in every lane; a vector whose lanes differ is lowered as before.
+- **The optimiser's `fold_identities`** (src/xsc_optimize.c), in the first round after `fuse_multiply_adds`: an add, mul
+  or mad that reads a known 0, 1 or -1 in every lane it writes, a pooled literal (`XscProgram.literals`) or a fetch's 0
+  or 1, becomes what remains. `x + 0` and `0 - x` a copy, `x * ±1` a copy, `x * 0` a copy of the 0, a mad by 0 its
+  addend, a mad adding 0 a mul, which `try_fuse` fuses with an add after it in the next round, and a mad by ±1 an add.
+  One pass over the program folds them all on one flow, as no fold changes what an op writes. An op reading constants
+  alone is left: folded, it became a constant's copy, which `propagate_copies` took into a vector's lanes a copy each,
+  where `compute_in_place` places the op once (vulkan4xenon's `loop_if.frag`, 24 ALU instructions, would have taken
+  25).
+- **Exact:** each fold keeps the result but for a zero's sign (`-0 + 0` is `+0`). The GPU's 0 times anything is +0,
+  NaN and infinities too (xenia:src/xenia/gpu/ucode.h:976-990, shader_interpreter.cc:339-346, 403-413), so `x * 0`, a
+  mad by 0 and a weight of 0 keep the result as well, as `dot`'s one-hot fold already assumed. A weight of 1 gives `y`
+  exactly, where `(y - x) * 1 + x` can round. A fused mad adding 0 now rounds as the GPU's mad does, where the mad and
+  the add rounded apart: Xenia's interpreter rounds the product first, so the same, but the console hasn't said.
+- **xsdk_test's compiler check:** `tests/xsc_shaders.h` regenerated, as 3 of its 46 shaders change.
+
+**xost's tests:** every one passes. `tests/test_identities.py` runs `xsc/testdata/vk_identities.frag` on the simulator,
+the optimiser off and on: mixes with a weight of 1 and of 0, an `x` and a `y` of 0, `x * vec4(1.0)`, `vec4(0.0) - y`,
+`a * vec4(0.0)`, and a mix with a 0 and a multiply by a 1 that only the optimiser sees, through the vector they're
+built into. Every export must be exact, needless.py must find no identity or mix pair with the optimiser on, and the
+ALU instructions must be 24 off and 7 on. Against bd84bf9's compiler it failed at once: the weight of 1 gave
+0.35000002, -0.19999999 and 0.099999994 for 0.35, -0.2 and 0.1; there the program took 28 and 18.
+
+**The counts,** `step2.txt` and `step2.json`, the baseline's command over its 441 files with `--baseline`; 0 shaders
+differ off against on. The corpus's pixel shaders are the 290 the baseline compiled: `vk_many_fetches.frag` compiles
+now too (below). bd84bf9, before this step, counts as the baseline does. Optimiser on, baseline -> step 2:
+
+| | Corpus vertex, 135 | Corpus pixel, 290 | Dusklight vertex, 47 | Dusklight pixel, 103 | Costliest vertex, 10 | Costliest pixel, 15 |
+|---|---|---|---|---|---|---|
+| ALU | 4518 -> 4515 | 4225 -> 4001 | 3257 -> 3257 | 1342 -> 1134 | 1473 -> 1473 | 546 -> 457 |
+| Copies | 636 -> 636 | 1032 -> 1052 | 305 -> 305 | 118 -> 138 | 170 -> 170 | 37 -> 41 |
+| Co-issued | 528 -> 528 | 199 -> 198 | 471 -> 471 | 159 -> 158 | 222 -> 222 | 96 -> 95 |
+| Registers | 720 -> 720 | 1403 -> 1394 | 300 -> 300 | 466 -> 457 | 94 -> 94 | 124 -> 121 |
+| Identities | 28 -> 3 | 389 -> 38 | 0 -> 0 | 332 -> 10 | 0 -> 0 | 124 -> 0 |
+| Mix pairs | 22 -> 22 | 183 -> 4 | 21 -> 21 | 164 -> 0 | 9 -> 9 | 61 -> 0 |
+| Single-lane | 1921 -> 1921 | 578 -> 513 | 1623 -> 1623 | 383 -> 320 | 602 -> 602 | 186 -> 157 |
+
+- No shader takes more ALU instructions than at the baseline. Dusklight's pixel shaders take 15.5% fewer, its 15
+  costliest 16.3%.
+- **Left:** Dusklight's 10 identities are ops on constants alone, in 6 programs; the corpus's others are in programs
+  the first round leaves alone (hardware loops, predicates, a0). The 21 vertex mix pairs are `mix(1.0, ...)`, an `x`
+  of 1, and the 4 pixel ones a `y` of 1 or 0s and 1s that differ by lane, which fold only a lane at a time.
+- The copies that rose, in Dusklight's pixel shaders clamps into temps 7 to 19 and constants, fetched values and inputs
+  into exports 41 to 51, do what an add or a mad with a 0 did before.
+
+**Containers that change,** compiled by bd84bf9 and by this step, per program in `step2_containers.txt`:
+- **Dusklight:** 63 of its 150 programs, all pixel shaders, optimiser on, 4599 ALU instructions to 4391; 62 off, 8298
+  to 8108. Its pack must be rebuilt.
+- **vulkan4xenon:** `tests/shaders` 14 of 80 on, 1312 to 1298 (the 12 `aurora_*` that mix, `branch_data.vert` and
+  `loop_if.frag`); `bench/shaders` 2 of 8, `mesh.vert` and `mesh_uniform.vert`, a mad by the fetched w of 1 now an add,
+  5 instructions as before; `src/shaders` none.
+- **xsdk_test's 46:** `vk_vertex_if.vert`, `vk_loop_grid.frag` and `vk_vertex_loop_break.vert`, one instruction fewer
+  each.
+
+**Found on the way:** with bd84bf9's optimiser, `vk_many_fetches.frag` was refused for 367 registers: copy propagation
+rewrote its `floor`'s operand but left the second source, which a floor doesn't read, naming a copy's temp the pass
+then dropped, and the allocator counts a temp read before any write as an input. Folded, the program takes another
+shape and compiles in 13 registers, its exports equal off and on. The stale operand can still happen elsewhere; not
+fixed here.
+
+**Compile time:** compiling Dusklight's 150 programs on the PC, best of 25 runs in three alternations, took 78.8 to
+80.2 ms before and 77.5 to 81.1 ms after. Placed before `fuse_multiply_adds`, the pass cost about 5%, a flow built in
+every round that reached it; after it, only the rounds that reach `compute_in_place` pay for one.
+
+**On the console,** still to run: xsdk_test with its compiler check; vulkan4xenon_test twice with its bundle rebuilt;
+`probe_shader_cost` with Dusklight's pack rebuilt, its pictures against the baseline's (63 pixel programs change: the
+same picture, or within one step of a channel where a weight of 1 or a newly fused mad rounds differently), and the
+time; `probe_xsc` for the compile time, at most 1.42 s; Dusklight's title scene.
