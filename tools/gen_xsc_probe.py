@@ -36,7 +36,8 @@ def programs(pack_text):
                   re.findall(r"static const uint32_t (glsl_\w+)_container\[\] = \{([^}]*)\};", pack_text)}
     literals = {n: re.findall(r"\{ (\d+), \{ ([^}]*) \} \}", b) for n, b in
                 re.findall(r"static const V4xShaderLiteral (glsl_\w+)_literals\[\] = \{(.*?)\n\};", pack_text, re.S)}
-    resources = {n: re.findall(r"\{ (V4X_RESOURCE_\w+), (\d+), (\d+), (\d+), (\d+) \}", b) for n, b in
+    # A resource line's last two fields, a block loop's start and step (milestone 46), are past what the probe compares.
+    resources = {n: re.findall(r"\{ (V4X_RESOURCE_\w+), (\d+), (\d+), (\d+), (\d+)(?:, \d+, \d+)? \}", b) for n, b in
                  re.findall(r"static const V4xShaderResource (glsl_\w+)_resources\[\] = \{(.*?)\n\};", pack_text,
                             re.S)}
     for name in sorted(spirv):
