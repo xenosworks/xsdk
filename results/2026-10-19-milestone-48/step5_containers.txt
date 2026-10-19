@@ -1,0 +1,140 @@
+Milestone 48 step 5: the programs whose container changed, compiled by xsdk cec88d4 (step 4's compiler) and by step 5
+at xsdk's register split, the optimiser off and on, with their ALU instructions; each list ends with its totals.
+
+== Dusklight's GX shaders, as at dusklight-xenon 4abb5f49f1, the same as at bf5a13e557, 150 programs
+optimiser off: 0 of 150 changed, ALU 8016 -> 8016
+020233a3aaada7e9.vert on: ALU 11 -> 10
+04a469b1240c5698.vert on: ALU 21 -> 15
+05716a5bd2aae204.frag on: ALU 22 -> 20
+093884ef391dfddc.frag on: ALU 24 -> 22
+0963325b37f04df0.vert on: ALU 133 -> 124
+0c5faf5ad1250944.frag on: ALU 24 -> 22
+1510c05add37f2b3.frag on: ALU 57 -> 50
+15a57b221b955025.frag on: ALU 20 -> 19
+172ccfa9a454e318.vert on: ALU 10 -> 9
+20a291c66ca7e0fd.vert on: ALU 127 -> 118
+251e226c8a088a82.vert on: ALU 148 -> 138
+29fab4bb2516d607.frag on: ALU 19 -> 16
+2a1a218d5688204a.vert on: ALU 142 -> 132
+2e7f30cdc49bd211.vert on: ALU 17 -> 16
+2eefbbd89e53921c.frag on: ALU 27 -> 23
+31871ebc6e90765a.vert on: ALU 13 -> 12
+32d160ecc3deb658.vert on: ALU 11 -> 10
+350248024002ce37.vert on: ALU 144 -> 134
+35fc826ad15e1872.frag on: ALU 20 -> 19
+3ba44326990edfeb.vert on: ALU 12 -> 11
+407248b726bcb428.vert on: ALU 150 -> 140
+412f75e329bbe3a2.vert on: ALU 11 -> 10
+48cd8f549b507826.frag on: ALU 23 -> 21
+4e6272cd5ea024f5.vert on: ALU 19 -> 18
+4ee5b3c093bea8ab.frag on: ALU 35 -> 32
+4f41862f49358139.frag on: ALU 8 -> 7
+4f939ba938f196ae.vert on: ALU 148 -> 138
+551fb86c6ef59def.frag on: ALU 24 -> 22
+556ea181d0d34829.vert on: ALU 130 -> 121
+55a0066e2650ed99.vert on: ALU 13 -> 12
+58786ba1a7e49515.vert on: ALU 16 -> 15
+60bcbd6f4104ab13.frag on: ALU 17 -> 15
+61cdb76b69b6489b.frag on: ALU 6 -> 5
+66457dda201609ed.frag on: ALU 31 -> 29
+676ff8c4689eaf91.frag on: ALU 13 -> 11
+68b11762bd80366b.vert on: ALU 148 -> 138
+695e15b366c72818.frag on: ALU 18 -> 16
+6b7ff186cc28cce5.frag on: ALU 11 -> 10
+6c429f0c99b0524f.vert on: ALU 126 -> 117
+6dd3a70373df59bf.frag on: ALU 25 -> 22
+6e690d475f0af5fe.vert on: ALU 11 -> 10
+70ee109df12524e4.vert on: ALU 112 -> 104
+71ac4a48df92e5b7.vert on: ALU 131 -> 122
+72abd6191dcd7bfe.vert on: ALU 142 -> 132
+75422301f0e22829.frag on: ALU 31 -> 27
+820f98f280587ea8.frag on: ALU 23 -> 21
+8586b077d3e63bc1.frag on: ALU 24 -> 22
+858b7f6b67e42fd6.frag on: ALU 9 -> 8
+85c8b022385334bf.frag on: ALU 28 -> 24
+88a3de8e328f385a.vert on: ALU 9 -> 8
+8e555ecc28e3d240.vert on: ALU 11 -> 10
+8ecfa22174a91d18.frag on: ALU 6 -> 5
+8f974c0335e452d5.vert on: ALU 13 -> 12
+93d36ce55e3f9bad.vert on: ALU 192 -> 150
+a479ce42ba36b7d8.frag on: ALU 14 -> 13
+ad037db0d56a10dd.vert on: ALU 20 -> 19
+b331aaa6bee56ee9.frag on: ALU 38 -> 36
+b40238367bc2ae70.frag on: ALU 24 -> 22
+b4a8c01218dcffe9.frag on: ALU 18 -> 16
+b624738d17bc5ca0.frag on: ALU 8 -> 7
+bacc292ad5a86eb3.vert on: ALU 33 -> 32
+bde83fec0182df1d.vert on: ALU 13 -> 12
+be7931e3ec0bb85e.frag on: ALU 10 -> 9
+c0887c56621045a9.vert on: ALU 13 -> 12
+c0ddfd4547c71e5a.vert on: ALU 213 -> 166
+c2679fcd0788b78d.frag on: ALU 7 -> 6
+c359885760b8a624.vert on: ALU 13 -> 12
+ca44599827bbdb23.frag on: ALU 17 -> 15
+cad12b640d1cfd9c.frag on: ALU 9 -> 8
+cefc467138f9dac7.vert on: ALU 14 -> 13
+d5d99e338acc096e.vert on: ALU 10 -> 9
+d8658b0e39305f51.vert on: ALU 150 -> 140
+d8d724f61446ecbb.vert on: ALU 15 -> 14
+d90889c31c82dbe8.vert on: ALU 115 -> 107
+da2593920df168c8.vert on: ALU 11 -> 10
+dee3af7655c47a63.frag on: ALU 24 -> 22
+e19f86ee747cb140.frag on: ALU 7 -> 6
+e2cfed9f9f80cbf0.frag on: ALU 34 -> 30
+e4c0798e6cc9e4ba.frag on: ALU 9 -> 8
+e5ea8b62e2ebf4ac.vert on: ALU 147 -> 137
+e7fe951996d1f40b.frag on: ALU 18 -> 16
+e9d14d2c939cffe4.vert on: ALU 145 -> 135
+e9e5df17e9c42a02.frag on: ALU 9 -> 8
+ed3667059b5c9028.frag on: ALU 16 -> 14
+f12926532ee0b4d0.vert on: ALU 42 -> 38
+f1f88472976e4bfb.vert on: ALU 127 -> 118
+f2f1d4cd60de5251.frag on: ALU 12 -> 10
+f3825523049d31cf.frag on: ALU 25 -> 23
+f5cb41c6eaf01a5f.frag on: ALU 16 -> 15
+optimiser on: 89 of 150 changed, ALU 4343 -> 3963
+
+== vulkan4xenon's tests/shaders at 1cb5ac4, the same as at e251f8b
+optimiser off: 0 of 80 changed, ALU 2124 -> 2124
+aurora_attr_defaults.vert on: ALU 27 -> 24
+aurora_emboss.vert on: ALU 38 -> 33
+aurora_texgen_binormal.vert on: ALU 27 -> 21
+aurora_texgen_prior.vert on: ALU 34 -> 26
+aurora_texgen_prior_inline.vert on: ALU 27 -> 21
+aurora_texgen_q_zero.frag on: ALU 8 -> 7
+aurora_texgen_q_zero.vert on: ALU 35 -> 29
+aurora_texgen_tangent.vert on: ALU 27 -> 21
+aurora_texgen_zero.frag on: ALU 8 -> 7
+aurora_texgen_zero.vert on: ALU 38 -> 32
+aurora_ztex_add_u24.frag on: ALU 18 -> 17
+aurora_ztex_add_u24.vert on: ALU 27 -> 22
+aurora_ztex_add_u8.frag on: ALU 15 -> 14
+aurora_ztex_add_u8.vert on: ALU 27 -> 22
+aurora_ztex_replace_u24.vert on: ALU 24 -> 20
+aurora_ztex_replace_u8.vert on: ALU 24 -> 20
+branch_data.vert on: ALU 20 -> 15
+branch_uniform.vert on: ALU 8 -> 6
+instanced.vert on: ALU 11 -> 10
+lod_gradients.frag on: ALU 8 -> 7
+loop_break.frag on: ALU 223 -> 208
+loop_if.frag on: ALU 23 -> 16
+optimiser on: 22 of 80 changed, ALU 1296 -> 1197
+
+== vulkan4xenon's src/shaders at 1cb5ac4
+optimiser off: 0 of 7 changed, ALU 19 -> 19
+optimiser on: 0 of 7 changed, ALU 16 -> 16
+
+== vulkan4xenon's bench/shaders at 1cb5ac4
+optimiser off: 0 of 8 changed, ALU 39 -> 39
+mesh_gray.frag on: ALU 3 -> 2
+optimiser on: 1 of 8 changed, ALU 27 -> 26
+
+== xsdk_test's compiler check, tests/xsc_shaders.h (tools/gen_xsc_shaders.py), optimiser on as it compiles them
+vk_vertex_if.vert.spv: ALU 15 -> 12
+vk_dynamic_interpolator.vert.spv: ALU 12 -> 10
+vk_slow_fetch.frag.spv: ALU 12 -> 9
+vk_loop_if_break.frag.spv: ALU 26 -> 25
+vk_loop_grid.frag.spv: ALU 161 -> 145
+vk_vertex_loop_break.vert.spv: ALU 91 -> 79
+vk_scalar_input.frag.spv: ALU 31 -> 30
+optimiser on: 7 of 46 changed, ALU 1689 -> 1651

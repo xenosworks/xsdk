@@ -484,3 +484,105 @@ op's ranges once in each round that reaches it. At that share the console's 1.32
 - **`step4_dusklight.log`:** Dusklight's title scene with the rebuilt pack, at 26 to 30 fps as before.
 - **Breaks:** `tests/test_ranges.py` failed against the code before the step and broken on purpose six ways (above);
   no console break, as the probe compares every picture with the baseline's bit for bit.
+
+## Step 5: the scalar unit
+
+Built on 2026-10-19 at `7dc5220`, on `f33acdb` and `4bf5d02` (docs/scope/48-xost-code-quality-2.md, step 5).
+
+- **co_issue keeps scanning** (`f33acdb`, src/xsc_optimize.c, `co_issue`): it started its scan over after every pair;
+  it now goes on past one and leaves what a pair opened to the next round. Alone, it left every container of the
+  corpus byte for byte as at step 4 and took 8% off compiling Dusklight's 150 programs on the PC.
+- **Scalar forms** (`scalar_form`): an op that writes one value, in one lane or the same in several, takes the scalar
+  pipe beside a vector op as `adds`, `subs`, `muls`, `maxs`, `mins`, `floors`, `frcs` or `truncs` where its operands
+  are one register's, and as `mulsc`, `addsc` or `subsc` where they are a constant and a temp. co_issue converts an op
+  only to pair it; one left alone stays a vector op. A copy of one value is a max and pairs as `maxs`.
+- **mulsc, addsc and subsc** read a constant's w and a temp's x, the temp's index spread over the opcode's bit 0,
+  src3_sel and src3's swizzle (xenia:src/xenia/gpu/ucode.h:954-960, 1992-1995). In the optimiser src3 holds the temp,
+  as for any scalar op, and `XscAlu.scalar_constant` the constant; xsc_program.c's `encode` spreads the index. xost's
+  simulators, counts and text assembler read them since `4bf5d02`; textasm lost the constant's component before.
+- **Two greedy pairings** (`pair_ops`): pairing each op with its nearest partner did best in the two skinned vertex
+  shaders, `93d36ce5` and `c0ddfd45` 150 and 166 ALU instructions against 162 and 180, but cost the lit ones a register
+  each; pairing scalar ops before converted ones did the reverse. co_issue pairs both ways from one start and keeps
+  the way with fewer instructions, the second on a tie.
+- **Exact:** each form is its vector op as Xenia's interpreter runs both (xenia:src/xenia/gpu/shader_interpreter.cc:
+  334-401, 655-761, 824-829), on the same operands read the same way. src3's a is lane w's component and b lane x's,
+  so a max or a min keeps its operands' order, which a NaN and equal zeros of two signs show; src3 has one negation, so
+  x + -y is `subs` of x and y, and -x + y `subs` of -x and -y, -x - -y, which rounds as -x + y; add and mul alone
+  commute for a constant to take a's place. A multiply or a max with one operand negated or absolute, a max or min with
+  a constant, and operands in two registers stay vector ops. The negation of `mulsc`, `addsc` and `subsc` applies to
+  both operands as Xenia's interpreter and documentation take it (ucode.h:961-962); Dusklight relies on it only in 19
+  vertex `subsc`s, `mix(1.0, inversesqrt(...), step(...))`'s y - 1, which the probe doesn't check.
+- **dp2add, not built:** a dot product with a literal 1 becomes `dp2add` exactly only where the 1 is its last lane, as
+  Xenia's dp3 adds its products from x on and dp2add its addend last (shader_interpreter.cc:449-474). Dusklight's 300
+  dp3s with a literal 1 hold it in lane x, the lights' (1, d, d * d) and (1, cos, cos * cos), and none in lane z; the
+  rest of the corpus has 5 that could take it. Built for those, it would have shown no win, and a dp2add, reading three
+  operands, can't co-issue where a dp3 can.
+
+**xost's tests:** every one passes. `tests/test_scalar_unit.py` runs `xsc/testdata/vk_scalar_unit.frag` on the
+simulator, the optimiser off and on, at inputs with NaN and -0 in a max's and a min's first operands and at ordinary
+ones: every export must be the same bit for bit, a NaN as NaN; with the optimiser on, the program must hold each form
+above, each beside a dot product, 20 scalar ops in all, every one co-issued, keep a multiply of two registers, one with
+a negated operand, a max with a constant, an absolute value's max and add and a dp3, and take 38 ALU instructions, 157
+off. mulsc, addsc and subsc built by hand on r45, r18 and r33, whose indices use every bit, must give what their
+constant and temp make. Against `4bf5d02`'s compiler it failed on its counts: 58 ALU instructions, no scalar op.
+Broken on purpose it fails seven ways: with a max's and a min's operands swapped or the temp's index without its bit 1
+or bit 0 on its exports, without its bits 2 to 5 on the ops built by hand, and with the negation dropped, a multiply
+with one operand negated taken or operands in two registers taken on its scalar ops. `test_optimize.py`'s and
+`test_fetch_fills.py`'s counts drop where a one-lane copy or op now co-issues, each checked by hand;
+`test_dynamic_index.py`'s simulator runs the scalar forms.
+
+**The counts,** `step5.txt` and `step5.json`, the baseline's command with `--baseline`; 0 shaders differ off against
+on, 50 not simulated and 15 not compiled, as at step 4. It ran over 446 files, step 4's and `vk_scalar_unit.frag`; the
+table is over the shaders the baseline compiled. Optimiser on, baseline -> step 4 -> step 5:
+
+| | Corpus vertex, 135 | Corpus pixel, 290 | Dusklight vertex, 47 | Dusklight pixel, 103 | Costliest vertex, 10 | Costliest pixel, 15 |
+|---|---|---|---|---|---|---|
+| ALU | 4518 -> 4515 -> 4132 | 4225 -> 3934 -> 3778 | 3257 -> 3257 -> 2965 | 1342 -> 1086 -> 998 | 1473 -> 1473 -> 1313 | 546 -> 409 -> 368 |
+| Copies | 636 -> 636 -> 415 | 1032 -> 1052 -> 948 | 305 -> 305 -> 147 | 118 -> 138 -> 94 | 170 -> 170 -> 55 | 37 -> 41 -> 17 |
+| Co-issued | 528 -> 527 -> 910 | 199 -> 131 -> 287 | 471 -> 471 -> 763 | 159 -> 96 -> 184 | 222 -> 222 -> 382 | 96 -> 45 -> 86 |
+| Registers | 720 -> 720 -> 723 | 1403 -> 1381 -> 1376 | 300 -> 300 -> 299 | 466 -> 448 -> 440 | 94 -> 94 -> 92 | 124 -> 120 -> 113 |
+| Single-lane | 1921 -> 1921 -> 1474 | 578 -> 509 -> 332 | 1623 -> 1623 -> 1289 | 383 -> 318 -> 200 | 602 -> 602 -> 475 | 186 -> 151 -> 100 |
+| of them `add` `mul` `max` `min` `floor` `frc` | 873 -> 893 -> 681 | 402 -> 353 -> 187 | 713 -> 713 -> 558 | 271 -> 228 -> 116 | 294 -> 294 -> 231 | 128 -> 109 -> 63 |
+
+- **This step's own effect:** Dusklight's vertex shaders take 9.0% fewer ALU instructions than at step 4, its 10
+  costliest 10.9%; its pixel shaders 8.1%, the 15 costliest 10.0%, 25.6% and 32.6% under the baseline. No shader takes
+  more ALU instructions than at step 4, off or on; with the optimiser off none changes. 8 programs take a register
+  more and 8 fewer, in Dusklight `f12926532ee0b4d0.vert`, 8 to 9.
+- **The scalar ops in Dusklight's pack:** in its vertex shaders 144 `maxs`, every one a copy, 77 of them of a literal,
+  the lights' 1s among them, 135 `muls`, every one a square, the lights' cos * cos among them, and 19 `subsc`, beside
+  the 300 `rcp`s, 150 `sqrt`s and 21 `rsq`s they had; in its pixel shaders 29 `subs`, 29 `floors`, 16 `maxs`, 8
+  `mulsc` and 6 `subsc`.
+  In the 10 costliest vertex shaders, a copy of a literal sits beside a `sqrt`, `rcp` or `rsq` in 112 slots, 142 at
+  step 4.
+- needless.py's vertex mix pairs fall 21 to 2 only because their `add` of y and -x is now a `subsc`, which it doesn't
+  follow; no mix folded.
+- **Left, in Dusklight:** its vertex shaders' 1289 single-lane ops are 712 dot products, which have no scalar form;
+  288 maxes of a constant and a temp, the lights' max(0, x), for which the scalar unit has no constant form; 256
+  multiplies of two registers' values, the lights' attenuation times its reciprocal and times n dot l among them; 14
+  multiplies of one register's left without a partner; and 19 mads. Its pixel shaders' 200 are 77 mads, 72 adds and
+  multiplies of a constant and a temp and 11 floors left without a partner, and 40 others. The maxes and the multiplies
+  of two registers would take the allocator placing both operands, or a 0, in one register before co_issue, which
+  pack_registers does after it: the step leaves that work, up to 544 more ops in Dusklight's vertex shaders that could
+  take the scalar pipe, of which a pair saves one slot.
+
+**Containers that change,** compiled by `cec88d4` and by this step, per program in `step5_containers.txt`:
+- **Dusklight:** 89 of its 150 programs with the optimiser on, none off; 4343 ALU instructions to 3963. Its pack must
+  be rebuilt.
+- **vulkan4xenon:** none of `tests/shaders`, `src/shaders` and `bench/shaders` with the optimiser off, as its bundles
+  are built; with it on, 22 of `tests/shaders`' 80 (1296 to 1197) and `bench/shaders`' `mesh_gray.frag` (3 to 2).
+- **xsdk_test's 46:** 7 change, 1689 ALU instructions to 1651: `vk_vertex_if.vert`, `vk_dynamic_interpolator.vert`,
+  `vk_slow_fetch.frag` (a `mulsc`), `vk_loop_if_break.frag`, `vk_loop_grid.frag`, `vk_vertex_loop_break.vert` and
+  `vk_scalar_input.frag`; `tests/xsc_shaders.h` regenerated.
+
+**Compile time:** compiling Dusklight's 150 programs on the PC, best of 25 runs in six alternations, took 76.1 to
+77.3 ms at step 4 and 73.2 to 73.9 ms now, about 4% less: the scan going on past a pair took 8% off, and the second
+pairing gives half of it back. At that share the console's 1.354 s would be about 1.30 s, within 1.42.
+
+**What's left for the console,** built clean from the M48 pair, Dusklight's pack rebuilt with this xost:
+- `probe_shader_cost`: Dusklight's vertex shaders, the milestone's open target, at most 12,686 us; every pixel picture
+  as the baseline's, bit for bit, the pixel shaders with `mulsc`, `subs` and `floors` among them.
+- `probe_xsc`: 150 of 150 programs as the pack holds them, within 1.42 s.
+- xsdk_test, its compiler check taking the 7 regenerated programs and its raster test drawing some of them;
+  vulkan4xenon_test twice, its bundles as they are.
+- Dusklight's title scene, whose lighting alone shows the 19 vertex `subsc`s' negation, as the probe checks no vertex
+  results.
