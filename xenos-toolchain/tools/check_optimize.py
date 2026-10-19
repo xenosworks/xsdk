@@ -4,14 +4,19 @@ optimiser (xsdk:src/xsc_optimize.c), at xsdk's register split, and checks the tw
 exports, run on random inputs and constants by xdis/equivalence.py, on the export components the first defines and
 the output's GLSL type has. Counts each program as xdis disassembles it: ALU instructions; copies, a vector max of one source with itself and no scalar
 operation beside it; co-issued slots, a vector and a scalar operation in one instruction; texture and vertex fetches;
-control flow instructions but cnop; and registers. Prints each shader's counts off and on, then the totals per stage;
+control flow instructions but cnop; and registers. Counts too the needless work milestone 48 goes after
+(tools/needless.py), and with the optimiser on each copy's kind (tools/copy_kinds.py). Prints each shader's counts off
+and on, then the totals per stage, and per stage of each --group, the shaders whose path matches one of its patterns;
 exits 1 if any exports differ. A shader the compiler refuses is listed and left out. --json writes every count and
 the totals, and --baseline prints how each total moved from such a file. Runs in WSL, as the compiler does, with xost's
 Windows glslang.
 
-    python3 tools/check_optimize.py ../local/m11-xenia-record/shaders --trials 20 --json counts.json
+    python3 tools/check_optimize.py ../local/m11-xenia-record/shaders --trials 20 --json counts.json \
+        --group 'two=*/4ee5b3c0*,*/1510c05a*'
 """
 import argparse
+import collections
+import fnmatch
 import json
 import math
 import random
@@ -33,6 +38,11 @@ from xsc.lower import LowerError, lower_ex  # noqa: E402
 GLSLANG = ROOT / "tools" / "glslang" / "bin" / "glslang.exe"
 NAMES = {"alu": "ALU", "copies": "copies", "co_issued": "co-issued", "fetches": "fetches",
          "control_flow": "control flow", "registers": "registers"}
+# tools/needless.py's counts.
+NEEDLESS = {"identities": "identities", "mix_pairs": "mix pairs", "divided_lanes": "divided lanes",
+            "constant_rcps": "rcps of constants", "single_lane": "single-lane", "range_useless": "range-useless",
+            "without_flow": "walked without flow"}
+ALL_NAMES = {**NAMES, **NEEDLESS}
 
 
 def host_path(path) -> str:
@@ -142,11 +152,18 @@ def compare(plain, optimized, manifest, manifest_opt, widths, trials, seed):
 
 def check(spv_bytes, trials, seed):
     """(stage, counts off, counts on, problem): each program's counts, and what differed, if anything."""
+    import copy_kinds  # both import this file
+    import needless
     module = spirv.Module.parse(spv_bytes)
     plain, manifest = lower_ex(module, XSDK_REGISTERS)
     optimized, manifest_opt = lower_ex(spirv.Module.parse(spv_bytes), XSDK_REGISTERS, optimize=True)
-    problem = compare(plain, optimized, manifest, manifest_opt, output_widths(module), trials, seed)
-    return container.Container(plain).shader_type, counts(plain), counts(optimized), problem
+    widths = output_widths(module)
+    problem = compare(plain, optimized, manifest, manifest_opt, widths, trials, seed)
+    before = {**counts(plain), **needless.count(plain, manifest)}
+    after = {**counts(optimized), **needless.count(optimized, manifest_opt)}
+    for kind, _, _, _ in copy_kinds.program_copies(optimized, manifest_opt, widths):
+        after["kinds"]["copy: " + kind] = after["kinds"].get("copy: " + kind, 0) + 1
+    return container.Container(plain).shader_type, before, after, problem
 
 
 def spirv_of(source, work):
@@ -162,9 +179,16 @@ def total(shaders, stage):
     mine = [s for s in shaders.values() if s.get("stage") == stage]
     result = {"shaders": len(mine)}
     for program in ("off", "on"):
-        result[program] = {k: sum(s[program][k] for s in mine) for k in NAMES}
+        result[program] = {k: sum(s[program][k] for s in mine) for k in ALL_NAMES}
         result[program]["registers_most"] = max((s[program]["registers"] for s in mine), default=0)
+        kinds = sum((collections.Counter(s[program]["kinds"]) for s in mine), collections.Counter())
+        result[program]["kinds"] = dict(sorted(kinds.items()))
     return result
+
+
+def stage_totals(shaders):
+    totals = {stage: total(shaders, stage) for stage in ("vertex", "pixel")}
+    return {stage: t for stage, t in totals.items() if t["shaders"]}
 
 
 def share(part, whole):
@@ -179,18 +203,22 @@ def print_total(stage, t):
           f"-> {on['co_issued']} ({share(on['co_issued'], on['alu'])}); fetches {off['fetches']} -> {on['fetches']}; "
           f"control flow {off['control_flow']} -> {on['control_flow']}; registers {off['registers'] / count:.1f} -> "
           f"{on['registers'] / count:.1f} a shader, most {off['registers_most']} -> {on['registers_most']}")
+    print(f"{stage}, needless work: " + ", ".join(f"{name} {off[k]} -> {on[k]}" for k, name in NEEDLESS.items()))
+    for kind in sorted(set(off["kinds"]) | set(on["kinds"])):
+        print(f"    {kind}: {off['kinds'].get(kind, 0)} -> {on['kinds'].get(kind, 0)}")
 
 
-def print_baseline(totals, baseline):
-    """Each total against the baseline's, the optimiser off and on."""
+def print_baseline(totals, baseline, label=""):
+    """Each total against the baseline's, the optimiser off and on; a count the baseline hasn't is left out."""
     for stage, t in totals.items():
-        if stage not in baseline["totals"]:
+        if stage not in baseline:
             continue
         for program in ("off", "on"):
-            was, now = baseline["totals"][stage][program], t[program]
-            moves = ", ".join(f"{NAMES.get(k, 'most registers')} {was[k]} -> {now[k]}"
-                              + (f" ({100.0 * (now[k] - was[k]) / was[k]:+.1f}%)" if was[k] else "") for k in now)
-            print(f"against the baseline, {stage}, optimiser {program}: {moves}")
+            was, now = baseline[stage][program], t[program]
+            moves = ", ".join(f"{ALL_NAMES.get(k, 'most registers')} {was[k]} -> {now[k]}"
+                              + (f" ({100.0 * (now[k] - was[k]) / was[k]:+.1f}%)" if was[k] else "")
+                              for k in now if k in was and k != "kinds")
+            print(f"against the baseline, {label}{stage}, optimiser {program}: {moves}")
 
 
 def main():
@@ -200,6 +228,8 @@ def main():
     ap.add_argument("--seed", type=int, default=1)
     ap.add_argument("--json", help="write every shader's counts and the totals to this file")
     ap.add_argument("--baseline", help="a file --json wrote, whose totals these are compared with")
+    ap.add_argument("--group", action="append", default=[], metavar="NAME=PATTERN[,PATTERN...]",
+                    help="totals too for the shaders whose path matches a pattern, as fnmatch matches")
     args = ap.parse_args()
     sources = []
     for p in map(Path, args.paths):
@@ -222,18 +252,27 @@ def main():
             elif problem:
                 failed += 1
             shaders[str(source)] = {"stage": stage, "off": before, "on": after, "result": problem or "ok"}
-            print(f"{source.name}: " + ", ".join(f"{NAMES[k]} {before[k]} -> {after[k]}" for k in NAMES)
+            print(f"{source.name}: " + ", ".join(f"{ALL_NAMES[k]} {before[k]} -> {after[k]}" for k in ALL_NAMES)
                   + f"; {problem or 'ok'}")
-    totals = {stage: total(shaders, stage) for stage in ("vertex", "pixel")}
-    totals = {stage: t for stage, t in totals.items() if t["shaders"]}
+    totals = stage_totals(shaders)
     for stage, t in totals.items():
         print_total(stage, t)
+    groups = {}
+    for spec in args.group:
+        name, patterns = spec.split("=", 1)
+        mine = {p: s for p, s in shaders.items() if any(fnmatch.fnmatch(p, q) for q in patterns.split(","))}
+        groups[name] = stage_totals(mine)
+        for stage, t in groups[name].items():
+            print_total(f"{name}, {stage}", t)
     print(f"{len(sources)} shaders, {failed} differ, {skipped} not simulated, {refused} not compiled")
     if args.baseline:
-        print_baseline(totals, json.loads(Path(args.baseline).read_text()))
+        baseline = json.loads(Path(args.baseline).read_text())
+        print_baseline(totals, baseline["totals"])
+        for name, t in groups.items():
+            print_baseline(t, baseline.get("groups", {}).get(name, {}), f"{name}, ")
     if args.json:
         Path(args.json).write_text(json.dumps({"trials": args.trials, "seed": args.seed, "shaders": shaders,
-                                               "totals": totals}, indent=1) + "\n")
+                                               "totals": totals, "groups": groups}, indent=1) + "\n")
     return 1 if failed else 0
 
 

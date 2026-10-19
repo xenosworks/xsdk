@@ -344,13 +344,20 @@ def copy_kinds(spv):
     module = spirv.Module.parse(spv)
     blob, manifest = lower_ex(module, XSDK_REGISTERS, optimize=True)
     c = container.Container(blob)
-    records = xu._decode_program(c.ucode_dwords, c.shader_type)[0]
-    alone = left_alone(records)
+    alone = left_alone(xu._decode_program(c.ucode_dwords, c.shader_type)[0])
     if alone and alone != INDEXED:
         # The optimiser returns at once for these (xsdk_xsc_optimize), so both programs are the same.
         assert blob == lower_ex(spirv.Module.parse(spv), XSDK_REGISTERS)[0], f"left alone for {alone}, yet changed"
+    return program_copies(blob, manifest, check_optimize.output_widths(module))
+
+
+def program_copies(blob, manifest, widths):
+    """Each copy left in a program the optimiser had, as copy_kinds gives them."""
+    c = container.Container(blob)
+    records = xu._decode_program(c.ucode_dwords, c.shader_type)[0]
+    alone = left_alone(records)
     literals = {entry[0]: entry[1] for entry in manifest if len(entry) == 2 and isinstance(entry[0], int)}
-    p = Program(records, literals, check_optimize.output_widths(module))
+    p = Program(records, literals, widths)
     copies = []
     for j, step in enumerate(p.steps):
         if not step.is_copy():
