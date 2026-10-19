@@ -681,7 +681,10 @@ on, an op that writes one value takes its scalar form beside a vector op
 where its operands are one register's, or a constant and a temp for an add or
 a multiply (`mulsc`, `addsc`, `subsc`; xsdk:src/xsc_optimize.c, scalar_form);
 not where they are two registers' or a max or min takes a constant, which
-needs the allocator to put both in one register (`tests/test_scalar_unit.py`).
+needs the allocator to put both in one register (`tests/test_scalar_unit.py`),
+nor where a uniform's lane is the temp's, which the console reads as the temp
+with itself (xsdk:docs/HARDWARE.md, "The scalar unit's constant forms,
+milestone 48 step 5"); a literal is read from another lane of its splat.
 
 Loops, left out of milestone 46 (xsdk:docs/scope/46-loops.md, "Not in it"):
 - a constant count with a break on data unrolls and runs every pass, gated,

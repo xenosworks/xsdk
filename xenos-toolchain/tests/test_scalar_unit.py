@@ -14,27 +14,37 @@ and no dp2add, and the ALU instructions they leave.
 
 mulsc, addsc and subsc spread their temp's index over the opcode, src3_sel and src3's swizzle (xsdk:src/xsc_program.c,
 encode). Built by hand reading r45, r18 and r33, which use every bit of an index, each must give on the simulator what
-its constant and temp make.
+its constant and temp make, or, r33's reading its constant's lane w, what the temp makes with itself, as the console
+runs one whose constant's component is its temp's (xsdk:docs/HARDWARE.md, "The scalar unit's constant forms,
+milestone 48 step 5"). So the compiler never writes one: vk_scalar_unit.frag's literals are read in another lane of
+their splats, a multiply of a uniform's lane and the temp's same lane stays in the vector unit beside one of another
+lane that takes mulsc, and no program of the corpus, xost's testdata, Dusklight's GX shaders and vulkan4xenon's, holds
+one with the optimiser on.
 """
 import collections
 import math
 import struct
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tests"))
+sys.path.insert(0, str(ROOT / "tools"))
 
+import check_optimize  # noqa: E402
 import xdis.container as container  # noqa: E402
 import xdis.simulate as simulate  # noqa: E402
 import xdis.xenos_ucode as xu  # noqa: E402
+import xsc.spirv as spirv  # noqa: E402
 from test_local_stores import module  # noqa: E402
-from test_optimize import build, export, r, scalar  # noqa: E402
+from test_optimize import alu, build, c, compare, export, r, scalar  # noqa: E402
 from xasm.program import XSDK_REGISTERS  # noqa: E402
-from xsc.lower import lower_ex  # noqa: E402
+from xsc.lower import LowerError, lower_ex  # noqa: E402
 
 S = xu.AluScalarOpcode
+V = xu.AluVectorOpcode
 NAME = "vk_scalar_unit.frag"
 NAN = math.nan
 # (v_a, v_b): NaN in the max's and the min's first operands, -0 against +0 in them, and ordinary values.
@@ -50,8 +60,15 @@ KEPT = {"mul": 2, "max": 2, "add": 3}
 ALU = {False: 157, True: 38}
 # By hand: (opcode, temp, its component, constant, its component, negated), each writing its own lane of r2.
 BY_HAND = [(S.kMulsc0, 45, 0, 7, 2, False), (S.kAddsc0, 18, 1, 9, 0, False), (S.kSubsc0, 33, 3, 7, 3, True)]
+# uniform_lanes's program: (ALU instructions, co-issued, scalar ops, one-lane muls, constant forms with equal lanes).
+UNIFORM = (4, 1, {("mulsc", False): 1}, 1, [])
 TEMP = [0.375, -2.5, 1.25, 7.5]
 CONSTANT = [3.0, -0.5, 1.75, 0.625]
+# The corpus's GLSL beside xost's testdata: Dusklight's GX shaders, and vulkan4xenon's beside this xsdk, as worktree
+# pairs have it (results/2026-10-19-milestone-48/README.md).
+VULKAN4XENON = ROOT.parent.parent / "vulkan4xenon"
+CORPUS = [Path("/mnt/z/dusklight-xenon/platforms/xenon/shaders")] + [VULKAN4XENON / d / "shaders"
+                                                                      for d in ("tests", "src", "bench")]
 
 
 def census(blob):
@@ -88,13 +105,57 @@ def by_hand():
         f["src3_swizzle"] = t | ((c - 3) & 3) << 6
         f["scalar_constant"] = constant
         body.append(f)
-        a, b = (-CONSTANT[c], -TEMP[t]) if negate else (CONSTANT[c], TEMP[t])
+        # Where the constant's component is the temp's, the console reads the temp for both.
+        a, b = (TEMP[t] if c == t else CONSTANT[c]), TEMP[t]
+        a, b = (-a, -b) if negate else (a, b)
         want.append(simulate.single(a * b if op == S.kMulsc0 else a + b if op == S.kAddsc0 else a - b))
     blob = build(body, [export(r(2))], False)
     got = simulate.run(blob, {temp: TEMP for _, temp, *_ in BY_HAND}, {7: CONSTANT, 9: CONSTANT}).exports[0][:3]
     if got != want:
-        raise SystemExit(f"  FAIL mulsc, addsc and subsc of r45, r18 and r33 by hand: {got}, want {want}")
-    print(f"  PASS mulsc, addsc and subsc of r45, r18 and r33 by hand: {got}")
+        raise SystemExit(f"  FAIL mulsc, addsc and subsc of r45, r18 and r33 by hand, r33.w the temp for both: {got}, "
+                         f"want {want}")
+    print(f"  PASS mulsc, addsc and subsc of r45, r18 and r33 by hand, r33.w the temp for both: {got}")
+
+
+def uniform_lanes():
+    """c5.x * r0.x, a uniform in the temp's lane, stays in the vector unit; c5.x * r0.y takes mulsc beside a dp4."""
+    body = [alu(V.kDp4, 2, 0x1, r(0), r(1)), alu(V.kMul, 2, 0x2, c(5, "xxxx"), r(0, "xxxx")),
+            alu(V.kDp4, 2, 0x4, r(0), r(0)), alu(V.kMul, 2, 0x8, c(5, "xxxx"), r(0, "yyyy"))]
+    plain, optimized = build(body, [export(r(2))], False), build(body, [export(r(2))], True)
+    problem = compare(plain, optimized)
+    alu_count, co_issued, scalar_ops, one_lane, _ = census(optimized)
+    got = (alu_count, co_issued, dict(scalar_ops), one_lane["mul"], equal_lanes(optimized))
+    if problem or got != UNIFORM:
+        raise SystemExit(f"  FAIL a uniform's lane: {problem or got}, want {UNIFORM}")
+    print(f"  PASS a uniform's lane: {alu_count} ALU instructions, the mul in the temp's lane kept, one mulsc")
+
+
+def equal_lanes(blob):
+    """The instructions, by index, holding a mulsc, addsc or subsc whose constant's component is its temp's."""
+    c = container.Container(blob)
+    records = [rec for rec in xu._decode_program(c.ucode_dwords, c.shader_type)[0] if rec.kind == "alu"]
+    return [i for i, rec in enumerate(records) if xu.AluInstruction(*rec.raw).scalar_constant_reads_temp()]
+
+
+def corpus():
+    """No program of the corpus, compiled with the optimiser, holds a constant form whose lanes are equal."""
+    sources = sorted((ROOT / "xsc" / "testdata").glob("*.spv"))
+    for folder in CORPUS:
+        if not folder.is_dir():
+            raise SystemExit(f"  FAIL the corpus: {folder} isn't there")
+        sources += sorted(q for q in folder.iterdir() if q.suffix in (".vert", ".frag"))
+    found, compiled = [], 0
+    with tempfile.TemporaryDirectory() as work:
+        for source in sources:
+            try:
+                blob, _ = lower_ex(spirv.Module.parse(check_optimize.spirv_of(source, work)), XSDK_REGISTERS, True)
+            except (LowerError, ValueError):
+                continue
+            compiled += 1
+            found += [f"{source.name} at ALU {i}" for i in equal_lanes(blob)]
+    if found:
+        raise SystemExit(f"  FAIL the corpus: {len(found)} constant forms with equal lanes: {', '.join(found)}")
+    print(f"  PASS the corpus: {compiled} of {len(sources)} programs compiled, none with a constant form's lanes equal")
 
 
 def main():
@@ -117,7 +178,12 @@ def main():
     if runs[True] != runs[False]:
         raise SystemExit(f"  FAIL {NAME}: exports differ, optimiser off {runs[False]}, on {runs[True]}")
     print(f"  PASS {NAME}: exports the same bit for bit at {len(INPUTS)} inputs, NaN and -0 among them")
+    if equal_lanes(blob):
+        raise SystemExit(f"  FAIL {NAME}: constant forms with equal lanes at ALU {equal_lanes(blob)}")
+    print(f"  PASS {NAME}: each literal read in a lane apart from its temp's")
     by_hand()
+    uniform_lanes()
+    corpus()
     print("OK")
 
 

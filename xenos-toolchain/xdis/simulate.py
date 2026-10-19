@@ -443,13 +443,15 @@ def _source(op, i, regs, consts, state):
 
 def _with_constant(op, regs, consts, state):
     """mulsc's, addsc's and subsc's a, a constant's w, in lane w and b, a temp's x, in lane x, one negation for both
-    (xenia:src/xenia/gpu/shader_interpreter.cc:655-670)."""
+    (xenia:src/xenia/gpu/shader_interpreter.cc:655-670). Where the constant's component is the temp's, the console
+    reads the temp for a too, as probe_scalar_forms showed (xsdk:docs/HARDWARE.md, "The scalar unit's constant forms,
+    milestone 48 step 5"); Xenia doesn't."""
     reg = op.src_reg(3)
     if op.src_const_is_addressed(3):
         reg += state["a0"] if op.is_const_address_register_relative() else state["aL"]
     lane = xu.AluInstruction.GetSwizzledComponentIndex
-    a = consts.get(reg, [0.0] * 4)[lane(op.src_swizzle(3), 3)]
     b = regs.get(op.scalar_const_reg_op_src_temp_reg(), [0.0] * 4)[lane(op.src_swizzle(3), 0)]
+    a = b if op.scalar_constant_reads_temp() else consts.get(reg, [0.0] * 4)[lane(op.src_swizzle(3), 3)]
     a, b = (-a, -b) if op.src_negate(3) else (a, b)
     return [b, 0.0, 0.0, a]
 

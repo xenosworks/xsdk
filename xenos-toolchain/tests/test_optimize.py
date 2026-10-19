@@ -217,7 +217,7 @@ CASES = [
     ("a component whose place is read before the copy stays in its temp",
      [move(3, r(1), 0x7), alu(V.kAdd, 3, 0x8, r(0), c(2)), alu(V.kAdd, 2, 0x1, r(0), c(0)),
       alu(V.kMul, 4, 0xF, r(3), c(1)), move(3, r(2, "xxxx"), 0x1), alu(V.kAdd, 5, 0xF, r(3), r(4))],
-     [export(r(5))], 5),
+     [export(r(5))], 6),
     ("an export assembled from parts takes each part, its lanes nothing writes filled by one",
      [],
      [alu(V.kDp4, 2, 0x1, r(0), c(0)), alu(V.kMul, 3, 0x1, r(1, "yyyy"), c(1)), move(4, r(2), 0x1),

@@ -1304,10 +1304,21 @@ static int64_t scalar_twin(int64_t opcode)
 	}
 }
 
+// A lane of constant reg other than c holding c's number bit for bit, as a literal splat's lanes do, or -1.
+static int other_lane(const XscProgram *p, int64_t reg, int c)
+{
+	const int64_t at = reg - p->literal_base;
+	for (int k = 0; at >= 0 && (size_t)at < p->literal_count && k < 4; k++) {
+		if (k != c && !memcmp(&p->literals[4 * at + k], &p->literals[4 * at + c], sizeof *p->literals))
+			return k;
+	}
+	return -1;
+}
+
 // Whether vector op op, writing one value, has a scalar form that computes it bit for bit, then form: adds to truncs,
 // mulsc, addsc and subsc run as their vector ops do (xenia:src/xenia/gpu/shader_interpreter.cc:334-401, 655-761,
 // 824-829) on a and b, read with one negation, so x + -y is x - y and -x + y is -x - -y.
-static bool scalar_form(const XscOp *op, XscOp *form)
+static bool scalar_form(const XscProgram *p, const XscOp *op, XscOp *form)
 {
 	int64_t opcode = scalar_twin(op->alu.vector_opcode);
 	const int64_t mask = op->alu.vector_write_mask;
@@ -1335,6 +1346,9 @@ static bool scalar_form(const XscOp *op, XscOp *form)
 	// Else a and b are one register's, which src3 is.
 	if (constant ? b.absolute : (a.temp != b.temp || a.reg != b.reg || a.absolute != b.absolute))
 		return false;
+	// The GPU reads the temp for both where the lanes match (docs/HARDWARE.md, "The scalar unit's constant forms").
+	if (constant && ca == cb && (ca = other_lane(p, a.reg, ca)) < 0)
+		return false;
 	if (sub)
 		opcode = constant ? XSC_SCALAR_SUBSC : XSC_SCALAR_SUBS;
 	else if (constant)
@@ -1359,22 +1373,22 @@ static bool scalar_form(const XscOp *op, XscOp *form)
 }
 
 // Whether op works in the scalar pipe alone, or, if convert, can, as form does.
-static bool scalar_ready(const XscOp *op, bool convert, XscOp *form)
+static bool scalar_ready(const XscProgram *p, const XscOp *op, bool convert, XscOp *form)
 {
 	if (scalar_only(op)) {
 		*form = *op;
 		return true;
 	}
-	return convert && scalar_form(op, form);
+	return convert && scalar_form(p, op, form);
 }
 
 // Puts x's working pipe into y, which keeps its own, one of them taking the scalar pipe as its scalar form if convert
 // where it works in the vector one (optimize.py merge).
-static bool merge(XscOp *y, const XscOp *x, bool convert)
+static bool merge(const XscProgram *p, XscOp *y, const XscOp *x, bool convert)
 {
 	XscOp form;
-	const bool x_vector = vector_only(x) && scalar_ready(y, convert, &form);
-	if (!x_vector && !(vector_only(y) && scalar_ready(x, convert, &form)))
+	const bool x_vector = vector_only(x) && scalar_ready(p, y, convert, &form);
+	if (!x_vector && !(vector_only(y) && scalar_ready(p, x, convert, &form)))
 		return false;
 	const XscOp *const vec = x_vector ? x : y;
 	const XscAlu *const sca = &form.alu;
@@ -1446,9 +1460,9 @@ static bool join(Optimizer *o, size_t j, bool later, bool nearest)
 		if (later ? intersects(&y_reads, &x_defs) : intersects(&x_reads, &y_defs))
 			break;
 		if (!intersects(&x_defs, &y_defs)) {
-			merged = merge(y, x, nearest);
+			merged = merge(o->p, y, x, nearest);
 			const XscAlu saved = y->alu;
-			if (!merged && !nearest && !converting && merge(y, x, true)) {
+			if (!merged && !nearest && !converting && merge(o->p, y, x, true)) {
 				y->alu = saved;
 				converting = y;
 			}
@@ -1458,7 +1472,7 @@ static bool join(Optimizer *o, size_t j, bool later, bool nearest)
 			(is_alu(y) && fixed(y)))
 			break;
 	}
-	if (!merged && !(converting && merge(converting, x, true)))
+	if (!merged && !(converting && merge(o->p, converting, x, true)))
 		return false;
 	XscOp *doomed = x;
 	remove_ops(o, &doomed, 1);

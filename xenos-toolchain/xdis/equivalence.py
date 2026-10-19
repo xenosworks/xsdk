@@ -249,13 +249,15 @@ def _operand(ins, n, state):
 
 def _scalar_operands(ins, state):
     """The scalar op's a and b: src3's w and x, or for mulsc, addsc and subsc a constant's w and a temp's x, one
-    negation for both (shader_interpreter.cc:655-670)."""
+    negation for both (shader_interpreter.cc:655-670), the temp for both where the constant's component is the temp's,
+    as the console runs them (xsdk:docs/HARDWARE.md, "The scalar unit's constant forms, milestone 48 step 5")."""
     if not ins.scalar_with_constant():
         src = _operand(ins, 3, state)
         return src[3], src[0]
     swizzle = ins.src_swizzle(3)
-    a = _constant(ins, 3, state)[xu.AluInstruction.GetSwizzledComponentIndex(swizzle, 3)]
     b = state.reg(ins.scalar_const_reg_op_src_temp_reg())[xu.AluInstruction.GetSwizzledComponentIndex(swizzle, 0)]
+    a = b if ins.scalar_constant_reads_temp() else \
+        _constant(ins, 3, state)[xu.AluInstruction.GetSwizzledComponentIndex(swizzle, 3)]
     return tuple(-v if v is not None and ins.src_negate(3) else v for v in (a, b))
 
 

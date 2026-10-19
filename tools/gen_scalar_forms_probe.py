@@ -3,7 +3,8 @@
 milestone 48 step 5's co_issue writes (results/2026-10-19-milestone-48/README.md, "Step 5"): mulsc, addsc and subsc
 of a constant and a temp, adds, subs, muls, maxs and mins of two lanes of one register, floors, frcs, truncs and maxs
 copies of one lane, and rcp of a constant as the control. The console gave wrong pictures where mulsc and addsc read
-odd temps.
+odd temps; the probe showed the cause, a constant form whose constant's lane is its temp's reading the temp for both
+(xsdk:docs/HARDWARE.md, "The scalar unit's constant forms, milestone 48 step 5"), which its cases now expect.
 
 Each case is a pixel shader that loads r0 to r63 from c128 to c191, runs the instruction under test once, alone or
 beside a vector op, and exports r61.x, which the scalar op writes, or r60.x, which the vector op writes, to a 32-bit
@@ -13,9 +14,10 @@ Every lane of every input holds its own value, so a value the GPU gets wrong nam
   lanes' sums, differences and products name the pair, the lane codes being a Golomb ruler;
 - c0, c1, c13, c105 and c2 hold powers of two, a lane each: a product's exponent names the constant and its mantissa the
   temp, and a sum keeps both, every one exact.
-The generator stops unless xost's simulator (xenos-toolchain/xdis/simulate.py, Xenia's model) runs each case to a value
-that only the case's own reading of its inputs gives, by the probe's search; unless the disassembler reads each
-instruction as the case names it; and unless the probe's patching rebuilds each case's container word for word.
+The generator stops unless xost's simulator (xenos-toolchain/xdis/simulate.py, Xenia's model but for the lanes above)
+runs each case to a value that only the case's own reading of its inputs gives, by the probe's search, or, for a temp
+with itself, which the search can't single out, to that value; unless the disassembler reads each instruction as the
+case names it; and unless the probe's patching rebuilds each case's container word for word.
 """
 import itertools
 import struct
@@ -125,6 +127,9 @@ class Case:
     def __init__(self, form, op, domain, fields, text, variant, reading, exported=SCALAR_DEST):
         self.form, self.op, self.domain, self.fields, self.text = form, op, domain, fields, text
         self.variant, self.reading, self.exported = variant, reading, exported
+        # A temp with itself, which the probe's search can't single out: twice it is a difference of two lanes, and
+        # less itself 0.
+        self.alike = None
         if exported == VECTOR_DEST:
             self.form, self.op, self.domain, self.reading = VECTOR_HALF, VARIANTS[variant][2], "DOMAIN_ALL", \
                 VARIANTS[variant][3]
@@ -146,11 +151,18 @@ def neg(negate):
 def constant_case(op, row, a, temp, b, negate, variant, exported=SCALAR_DEST):
     form, opcode, family = op
     c, r = f"c{row}.{LANES[a]}", f"r{temp}.{LANES[b]}"
+    # The console reads the temp for the constant too where their lanes match (xsdk:docs/HARDWARE.md, "The scalar
+    # unit's constant forms, milestone 48 step 5").
+    first = r if a == b else c
     # One negation for both operands, as Xenia takes it (xenia:src/xenia/gpu/ucode.h:961-962).
-    reading = {"mulsc": f"{c} * {r}", "addsc": f"{neg(negate)}{c} {'-' if negate else '+'} {r}",
-               "subsc": f"{neg(negate)}{c} {'+' if negate else '-'} {r}"}[form]
-    return Case(form, family, "DOMAIN_CONSTANT_TEMP", constant_form(opcode, row, a, temp, b, negate),
+    reading = {"mulsc": f"{first} * {r}", "addsc": f"{neg(negate)}{first} {'-' if negate else '+'} {r}",
+               "subsc": f"{neg(negate)}{first} {'+' if negate else '-'} {r}"}[form]
+    case = Case(form, family, "DOMAIN_CONSTANT_TEMP", constant_form(opcode, row, a, temp, b, negate),
                 f"{form} {neg(negate)}{c}, {neg(negate)}{r}", variant, reading, exported)
+    if a == b and exported == SCALAR_DEST:
+        t = -temp_value(temp, b) if negate else temp_value(temp, b)
+        case.alike = {"mulsc": t * t, "addsc": t + t, "subsc": t - t}[form]
+    return case
 
 
 def lane_name(reg, lane):
@@ -351,6 +363,10 @@ def check_case(case, words, named, rows):
         sys.exit(f"gen_scalar_forms_probe: {case.name()}: the disassembler reads {lines}")
     blob = struct.pack(f">{len(words)}I", *words)
     value = simulate.run(blob, {}, rows).exports[tri.EXPORT_COLOR_0][0]
+    if case.alike is not None:
+        if not same(value, case.alike):
+            sys.exit(f"gen_scalar_forms_probe: {case.name()}: the model gives {value!r}, not {case.reading}")
+        return value
     found = readings(value, case.op, case.domain, case.fields["src3_reg"] & 0x3F, named)
     if found != [case.reading] and not (case.form == VECTOR_HALF and case.reading in found):
         sys.exit(f"gen_scalar_forms_probe: {case.name()}: Xenia's model gives {value!r}, read as {found}, "

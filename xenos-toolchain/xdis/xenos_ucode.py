@@ -903,6 +903,14 @@ class AluInstruction:
         # above, r#.x (ucode.h, the conventions before AluScalarOpcode).
         return kAluScalarOpcodeInfos[self.scalar_opcode_raw()][1] == 2
 
+    def scalar_constant_reads_temp(self) -> bool:
+        # mulsc/addsc/subsc whose constant's component is the temp's read
+        # the temp for both on the console (xsdk:docs/HARDWARE.md, "The
+        # scalar unit's constant forms, milestone 48 step 5").
+        swizzle = self.src_swizzle(3)
+        return (self.scalar_with_constant() and
+                self.GetSwizzledComponentIndex(swizzle, 3) == self.GetSwizzledComponentIndex(swizzle, 0))
+
     def src_temps(self) -> dict:
         # Each source's temp register field, by source; src3's for
         # mulsc/addsc/subsc is their temp's index (xost's own helper).

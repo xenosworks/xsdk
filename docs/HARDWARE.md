@@ -4346,3 +4346,43 @@ one indexed draw through each backend. Logs: `results/2026-10-19-milestone-47-st
   492 of 492 twice; Dusklight's title scene ran at its frame rates before.
 - **Milestone 47 is done:** each of docs/scope/47-instancing.md's "Done when" holds; lists draw in one draw, indexed or
   not, and strips, fans and draws past a packet go an instance at a time, as the scope left them.
+
+## The scalar unit's constant forms, milestone 48 step 5 (2026-10-19)
+
+Step 5's first console run drew three of Dusklight's pixel shaders unlike the baseline and every pixel of xsdk_test's
+`vk_loop_grid.frag` grid wrong where xost co-issued `mulsc` and `addsc` (results/2026-10-19-milestone-48/README.md,
+"Step 5"). `probe_scalar_forms` (tests/probe_scalar_forms.c, its cases from tools/gen_scalar_forms_probe.py) runs 695
+pixel shaders, each loading r0 to r63 from constants whose every lane holds its own value, running one instruction and
+reading back what its scalar or vector op wrote. Log: `results/2026-10-19-milestone-48/probe_scalar_forms.log`.
+
+| Form | Pass | Fail |
+|---|---|---|
+| `mulsc`, `addsc`, `subsc` | 124 each | 36 each |
+| `adds`, `muls`, `maxs`, `mins` | 30 each | 0 |
+| `subs` | 26 | 0 |
+| `floors`, `truncs` | 14 each | 0 |
+| `frcs`, `maxs` copies | 10 each | 0 |
+| `rcp`, the control | 2 | 0 |
+| the vector half beside a form | 19 | 0 |
+
+- **A constant form whose constant's component is its temp's reads the temp for both.** `mulsc`, `addsc` and `subsc`
+  read a constant's component in src3's lane w and a temp's in lane x (xenia:src/xenia/gpu/ucode.h:950-962). Every case
+  whose two components were one failed, x and x or w and w, 36 a form, and the GPU gave the temp with itself under the
+  one negation: `mulsc c0.x, r1.x` gave r1.x * r1.x, `addsc c1.w, r2.w` r2.w + r2.w, `addsc -c13.x, -r0.x`
+  -r0.x - r0.x, and `subsc` 0. Every case whose components differ passed: temps r0 to r63 through each bit of the index
+  the opcode's bit 0, src3_sel and the swizzle's bits 2 to 5 spread (ucode.h:1992-1995), c0, c1, c13 and c105 in every
+  lane, negated or not, alone and beside a vector op of two temps, of a temp and a constant, and of two constants. y
+  and y, and z and z, weren't run; xost takes them as the same.
+- **Xenia doesn't show it:** its interpreter reads the constant whatever the lanes
+  (xenia:src/xenia/gpu/shader_interpreter.cc:655-671), and xost's simulators, its model, ran step 5's programs as their
+  vector ops. Everything else is as that model says, bit for bit, both orders of a max's and a min's operands among it.
+- **What step 5's programs read:** the three pictures that changed used `mulsc r0.w, c0.w, r1.w`, `mulsc c2.w, r1.w`
+  and `mulsc c4.x, r1.x`, and `vk_loop_grid.frag` `addsc r15.z, c13.z, r9.z`, each with equal lanes; the programs whose
+  pictures matched used `subsc c105.y, r0.z`, `mulsc c145.w, r0.y` and `subsc c105.y, r1.z`. vulkan4xenon_test's six
+  failures, `branch_data.vert`, `branch_uniform.vert` and `loop_break.frag` compiled on the console, held such forms as
+  the PC compiles them.
+- **xost never writes one** (src/xsc_optimize.c, `scalar_form`; src/xsc_program.c, `register_kinds`): it reads a
+  literal from another lane of its register that holds the same number, as a splat's lanes do, keeps an op on a
+  uniform in its temp's lane in the vector unit, and leaves the temp in its lanes when it packs registers. xost's
+  simulators (xdis/simulate.py, xdis/equivalence.py) read the temp for both, and with them the probe's cases expect what
+  the console gave, all 695.

@@ -119,14 +119,19 @@ static int64_t tracked(const XscProgram *p, const XscOp *op, int64_t most)
 	return most;
 }
 
+static bool with_constant(const XscOp *op)
+{
+	const int64_t sop = op->alu.scalar_opcode;
+	return op->kind == XSC_OP_ALU && (sop == XSC_SCALAR_MULSC || sop == XSC_SCALAR_ADDSC || sop == XSC_SCALAR_SUBSC);
+}
+
 static bool encode(Xsc *x, const XscOp *op, uint32_t triple[3])
 {
 	if (op->kind == XSC_OP_ALU) {
 		XscAlu f = op->alu;
-		const int64_t sop = f.scalar_opcode;
 		// mulsc names its constant in src3 and spreads its temp over the opcode's bit 0, src3_sel and src3's swizzle
 		// (xenia:src/xenia/gpu/ucode.h:1992-1995).
-		if (sop == XSC_SCALAR_MULSC || sop == XSC_SCALAR_ADDSC || sop == XSC_SCALAR_SUBSC) {
+		if (with_constant(op)) {
 			const int64_t temp = f.src_reg[2] & 0x3F;
 			f.scalar_opcode |= temp & 1;
 			f.src_is_temp[2] = temp >> 1 & 1;
@@ -1150,6 +1155,9 @@ static uint8_t *register_kinds(Xsc *x, XscOp *const *ops, size_t count, int64_t 
 		} else if (xsdk_xsc_lanes_fixed(op)) {
 			kinds[op->alu.vector_dest] |= REG_FIXED;
 		}
+		// A constant form's temp keeps the lane scalar_form kept apart from its constant's (docs/HARDWARE.md).
+		if (with_constant(op))
+			kinds[op->alu.src_reg[2]] |= REG_FIXED;
 	}
 	return kinds;
 }
