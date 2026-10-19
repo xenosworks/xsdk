@@ -473,11 +473,14 @@ of a constant go. Optimiser on, baseline -> step 3 -> step 4:
 took 70.2 to 73.6 ms before and 71.6 to 73.2 ms after, about 1 ms, 1.5%, more on average: the walk works out every
 op's ranges once in each round that reaches it. At that share the console's 1.320 s would be about 1.34 s, within 1.42.
 
-**Left for the console,** as at steps 2 and 3, with Dusklight's pack rebuilt with this xost (30 programs change) and
-vulkan4xenon's bundles as they are (none change):
-- `probe_shader_cost`: every one of the 103 pictures must hash as the baseline's, bit for bit, as this step keeps
-  results; the pixel shaders' time should fall from step 3's 55,545 us, 30 instructions in five of the costliest.
-- `probe_xsc`: 150 of 150 programs compile as the pack holds them, within 1.42 s.
-- xsdk_test, whose compiler check doesn't change; vulkan4xenon_test twice; Dusklight's title scene as a smoke run.
-- Breaks: `tests/test_ranges.py` failed against the code before the step and broken on purpose (above); no console
-  break, as the probe compares every picture with the baseline's bit for bit.
+**On the console,** built clean from the M48 pair rebased on main `8fa66d5`, Dusklight's pack rebuilt with this xost
+(30 programs change) and vulkan4xenon's bundles as they are (none change; local/m48/step4_build.sh):
+- **`probe_step4.log`:** Dusklight's pixel shaders take 54,145 us for a draw of each, 14.1% under the baseline's
+  63,053, past the milestone's 12%, and 2.5% under step 3's; its vertex shaders 13,348 us, as before. All 103 pictures
+  hash as the baseline's, bit for bit.
+- **`probe_xsc_step4.log`:** 150 of 150 programs compile on the console as the pack holds them, the 150 in 1.354 s.
+- **`step4_xsdk_test.log`:** 463 passed, 2 failed, the controller's checks with no pad.
+- **`step4_vulkan4xenon_test_1.log`, `_2.log`:** 492 of 492 each.
+- **`step4_dusklight.log`:** Dusklight's title scene with the rebuilt pack, at 26 to 30 fps as before.
+- **Breaks:** `tests/test_ranges.py` failed against the code before the step and broken on purpose six ways (above);
+  no console break, as the probe compares every picture with the baseline's bit for bit.
