@@ -200,8 +200,12 @@ def _scalar(op, s3, ps, state):
         index = math.floor(a + 0.5) if so == S.kMaxAs else math.floor(a)
         state["a0"] = int(max(-256.0, min(255.0, index)))
         return a if a >= b else b
-    if so == S.kSubs:
+    if so in (S.kSubs, S.kSubsc0, S.kSubsc1):
         return a - b
+    if so in (S.kMulsc0, S.kMulsc1):
+        return a * b
+    if so in (S.kAddsc0, S.kAddsc1):
+        return a + b
     if so == S.kSubsPrev:
         return a - ps
     if so in (S.kSetpEq, S.kSetpNe, S.kSetpGt, S.kSetpGe):
@@ -289,6 +293,8 @@ def _execute(rec, regs, consts, exports, state, vertex_fetch, texture_fetch, tex
     if op.is_predicated() and op.predicate_condition() != state["p0"]:
         return
     s = {i: _source(op, i, regs, consts, state) for i in (1, 2, 3)}
+    if op.scalar_with_constant():
+        s[3] = _with_constant(op, regs, consts, state)
     vector, kill = _vector(op, s[1], s[2], s[3])
     state["killed"] = state["killed"] or kill
     scalar = _scalar(op, s[3], state["ps"], state)
@@ -433,6 +439,19 @@ def _source(op, i, regs, consts, state):
             value = [abs(x) for x in value]
     value = [value[xu.AluInstruction.GetSwizzledComponentIndex(op.src_swizzle(i), k)] for k in range(4)]
     return [-x for x in value] if op.src_negate(i) else value
+
+
+def _with_constant(op, regs, consts, state):
+    """mulsc's, addsc's and subsc's a, a constant's w, in lane w and b, a temp's x, in lane x, one negation for both
+    (xenia:src/xenia/gpu/shader_interpreter.cc:655-670)."""
+    reg = op.src_reg(3)
+    if op.src_const_is_addressed(3):
+        reg += state["a0"] if op.is_const_address_register_relative() else state["aL"]
+    lane = xu.AluInstruction.GetSwizzledComponentIndex
+    a = consts.get(reg, [0.0] * 4)[lane(op.src_swizzle(3), 3)]
+    b = regs.get(op.scalar_const_reg_op_src_temp_reg(), [0.0] * 4)[lane(op.src_swizzle(3), 0)]
+    a, b = (-a, -b) if op.src_negate(3) else (a, b)
+    return [b, 0.0, 0.0, a]
 
 
 def _write_fetch(regs, dest, swizzle, value):

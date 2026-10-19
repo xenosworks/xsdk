@@ -61,7 +61,7 @@ def instruction(rec):
     writes, reads = set(), set()
     if rec.kind == "alu":
         alu_ins = xu.AluInstruction(*rec.raw)
-        reads = {alu_ins.src_reg(n) & 0x3F for n in (1, 2, 3) if alu_ins.src_is_temp(n)}
+        reads = {reg & 0x3F for reg in alu_ins.src_temps().values()}
     for part in rec.text.split("+"):
         m = re.search(r"\b[a-zA-Z0-9_]+\s+([^,\s]+)\s*,(.*)", part)
         if not m:

@@ -546,6 +546,8 @@ class TextAssembler:
             f["src3_swizzle"] = swiz
             f["src3_negate"] = bool(cm.group("neg")) or bool(tm.group("neg"))
             f.update(extra)
+            # The constant's component, lane w's bits 6:7, which the register index leaves.
+            f["src3_swizzle"] |= swiz & 0xC0
 
     def _slot_vfetch(self, word, rest, lineno, is_pred, pred_cond):
         toks, attrs = _split_attrs(rest)

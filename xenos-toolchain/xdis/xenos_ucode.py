@@ -898,6 +898,19 @@ class AluInstruction:
         return ((self.scalar_opcode_raw() & 1) | (self.src3_sel() << 1) |
                 (self.src_swizzle(3) & 0x3C))
 
+    def scalar_with_constant(self) -> bool:
+        # mulsc/addsc/subsc: src3 names a constant, c#.w, beside the temp
+        # above, r#.x (ucode.h, the conventions before AluScalarOpcode).
+        return kAluScalarOpcodeInfos[self.scalar_opcode_raw()][1] == 2
+
+    def src_temps(self) -> dict:
+        # Each source's temp register field, by source; src3's for
+        # mulsc/addsc/subsc is their temp's index (xost's own helper).
+        temps = {n: self.src_reg(n) for n in (1, 2, 3) if self.src_is_temp(n)}
+        if self.scalar_with_constant():
+            temps[3] = self.scalar_const_reg_op_src_temp_reg()
+        return temps
+
     @staticmethod
     def GetSwizzledComponentIndex(swizzle: int, component_index: int) -> int:
         # ALU source swizzles are component-relative.

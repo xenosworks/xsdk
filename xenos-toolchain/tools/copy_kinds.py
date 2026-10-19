@@ -44,6 +44,8 @@ REPLICATES = {V.kDp4, V.kDp3, V.kDp2Add, V.kMax4}
 SCALAR_TWO = {S.kAdds, S.kMuls, S.kMaxs, S.kMins, S.kSubs}
 SCALAR_ONE = set(range(S.kSeqs, S.kRsq + 1)) | {S.kSqrt, S.kSin, S.kCos}
 SCALAR_PREVIOUS = {S.kAddsPrev, S.kMulsPrev, S.kMulsPrev2, S.kSubsPrev}
+# mulsc, addsc and subsc, which read a constant's w and a temp's x (xenia:src/xenia/gpu/ucode.h:954-960).
+SCALAR_CONSTANT = {S.kMulsc0, S.kMulsc1, S.kAddsc0, S.kAddsc1, S.kSubsc0, S.kSubsc1}
 KINDS = ("in a program the optimiser leaves alone", "a constant into a temp", "a constant into an export",
          "a fetched value into an export", "an input into an export", "a computed value step 2 can't move",
          "a clamp into a temp", "anything else")
@@ -91,14 +93,15 @@ class Step:
         if a.scalar_opcode() != S.kRetainPrev:
             sop = a.scalar_opcode()
             self.operands["scalar"] = (3,)
-            self.read("scalar", 3, 0x9 if sop in SCALAR_TWO else 0x8 if sop in SCALAR_ONE else ALL)
+            self.read("scalar", 3, 0x9 if sop in SCALAR_TWO else 0x8 if sop in SCALAR_ONE else
+                      0x1 if sop in SCALAR_CONSTANT else ALL)
         if not a.is_export():
             self.writes.update({(a.vector_dest(), c): "vector" for c in range(4) if a.vector_write_mask() >> c & 1})
             self.writes.update({(a.scalar_dest(), c): "scalar" for c in range(4) if a.scalar_write_mask() >> c & 1})
 
     def read(self, pipe, n, lanes):
-        if self.alu.src_is_temp(n):
-            reg = self.alu.src_reg(n) & 0x3F
+        if n in self.alu.src_temps():
+            reg = self.alu.src_temps()[n] & 0x3F
             self.reads += [(pipe, n, lane, (reg, component(self.alu.src_swizzle(n), lane)))
                            for lane in range(4) if lanes >> lane & 1]
 
@@ -108,7 +111,7 @@ class Step:
             return True
         if pipe == "vector":
             return self.alu.vector_opcode() in STATE
-        return self.alu.scalar_opcode() not in SCALAR_TWO | SCALAR_ONE
+        return self.alu.scalar_opcode() not in SCALAR_TWO | SCALAR_ONE | SCALAR_CONSTANT
 
     def is_copy(self):
         """A copy as check_optimize.py counts it."""

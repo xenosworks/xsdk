@@ -175,8 +175,12 @@ _SCALAR = {
     S.kCos: lambda a, b: _trig(math.cos, a),
     S.kMaxAs: lambda a, b: a if a >= b else b,
     S.kMaxAsf: lambda a, b: a if a >= b else b,
+    **dict.fromkeys((S.kMulsc0, S.kMulsc1), lambda a, b: _mul(a, b)),
+    **dict.fromkeys((S.kAddsc0, S.kAddsc1), lambda a, b: a + b),
+    **dict.fromkeys((S.kSubsc0, S.kSubsc1), lambda a, b: a - b),
 }
-_TWO_COMPONENT = {S.kAdds, S.kMuls, S.kMaxs, S.kMins, S.kSubs, S.kMaxAs, S.kMaxAsf}
+_TWO_COMPONENT = {S.kAdds, S.kMuls, S.kMaxs, S.kMins, S.kSubs, S.kMaxAs, S.kMaxAsf, S.kMulsc0, S.kMulsc1, S.kAddsc0,
+                  S.kAddsc1, S.kSubsc0, S.kSubsc1}
 
 
 def _address(sop, a):
@@ -243,6 +247,18 @@ def _operand(ins, n, state):
     return [None if x is None else -x for x in value] if ins.src_negate(n) else value
 
 
+def _scalar_operands(ins, state):
+    """The scalar op's a and b: src3's w and x, or for mulsc, addsc and subsc a constant's w and a temp's x, one
+    negation for both (shader_interpreter.cc:655-670)."""
+    if not ins.scalar_with_constant():
+        src = _operand(ins, 3, state)
+        return src[3], src[0]
+    swizzle = ins.src_swizzle(3)
+    a = _constant(ins, 3, state)[xu.AluInstruction.GetSwizzledComponentIndex(swizzle, 3)]
+    b = state.reg(ins.scalar_const_reg_op_src_temp_reg())[xu.AluInstruction.GetSwizzledComponentIndex(swizzle, 0)]
+    return tuple(-v if v is not None and ins.src_negate(3) else v for v in (a, b))
+
+
 def _execute_alu(ins, state):
     if ins.is_predicated():
         raise Unsupported("predication")
@@ -258,8 +274,7 @@ def _execute_alu(ins, state):
         f = _SCALAR.get(sop)
         if f is None:
             raise Unsupported(f"scalar {sop.name}")
-        src = _operand(ins, 3, state)
-        a, b = src[3], src[0]
+        a, b = _scalar_operands(ins, state)
         state.previous = None if a is None or (sop in _TWO_COMPONENT and b is None) else f(a, b)
         if sop in (S.kMaxAs, S.kMaxAsf):
             state.address = _address(sop, a)

@@ -29,7 +29,8 @@ V, S = xu.AluVectorOpcode, xu.AluScalarOpcode
 INF = math.inf
 COUNTS = ("identities", "mix_pairs", "divided_lanes", "constant_rcps", "single_lane", "range_useless", "without_flow")
 RCPS = {S.kRcp, S.kRcpc, S.kRcpf}
-COMPUTES = copy_kinds.SCALAR_TWO | copy_kinds.SCALAR_ONE | copy_kinds.SCALAR_PREVIOUS | {S.kRetainPrev}
+TWO = copy_kinds.SCALAR_TWO | copy_kinds.SCALAR_CONSTANT
+COMPUTES = TWO | copy_kinds.SCALAR_ONE | copy_kinds.SCALAR_PREVIOUS | {S.kRetainPrev}
 COMPARES = {V.kSeq, V.kSgt, V.kSge, V.kSne}
 
 
@@ -126,9 +127,9 @@ RANGES = {
 
 
 def scalar_range(sop, a, b):
-    if sop in (S.kAdds, S.kSubs):
-        return add(a, b if sop == S.kAdds else Value(-b.hi, -b.lo, b.nan))
-    if sop == S.kMuls:
+    if sop in (S.kAdds, S.kSubs, S.kAddsc0, S.kAddsc1, S.kSubsc0, S.kSubsc1):
+        return add(a, b if sop in (S.kAdds, S.kAddsc0, S.kAddsc1) else Value(-b.hi, -b.lo, b.nan))
+    if sop in (S.kMuls, S.kMulsc0, S.kMulsc1):
         return mul(a, b)
     if sop == S.kMaxs:
         return maximum(a, b)
@@ -213,7 +214,7 @@ def straight_line(records):
                 return False
         elif rec.kind == "alu":
             a = xu.AluInstruction(*rec.raw)
-            temps = [a.src_reg(n) for n in (1, 2, 3) if a.src_is_temp(n)]
+            temps = list(a.src_temps().values())
             relative = a.is_vector_dest_relative() or (a.is_scalar_dest_relative() and not a.is_export())
             if a.is_predicated() or relative or any(reg & 0x40 for reg in temps):
                 return False
@@ -244,8 +245,9 @@ class Walk:
 
     def read(self, a, n, lane):
         comp = copy_kinds.component(a.src_swizzle(n), lane)
-        if a.src_is_temp(n):
-            reg = a.src_reg(n)
+        # mulsc's src3 is its constant in lane w and its temp in lane x (shader_interpreter.cc:655-670).
+        if n in a.src_temps() and not (n == 3 and lane == 3 and a.scalar_with_constant()):
+            reg = a.src_temps()[n]
             return Read(self.temp(reg & 0x3F, comp), a.src_negate(n), bool(reg & 0x80))
         # abs_constants takes a constant's absolute value (xenia:src/xenia/gpu/shader_translator.cc:1238).
         if a.src_const_is_addressed(n):
@@ -277,8 +279,7 @@ class Walk:
                 step.reads["vector"] += [(n, lane, self.read(a, n, lane)) for lane in range(4) if lanes >> lane & 1]
         scalar = sop != S.kRetainPrev or a.GetScalarOpResultWriteMask()
         if scalar:
-            lanes = 0 if sop == S.kRetainPrev else 0x9 if sop in copy_kinds.SCALAR_TWO else 0x8 if sop in COMPUTES \
-                else copy_kinds.ALL
+            lanes = 0 if sop == S.kRetainPrev else 0x9 if sop in TWO else 0x8 if sop in COMPUTES else copy_kinds.ALL
             step.reads["scalar"] = [(3, lane, self.read(a, 3, lane)) for lane in range(4) if lanes >> lane & 1]
             if sop in copy_kinds.SCALAR_PREVIOUS or sop == S.kRetainPrev:
                 step.reads["scalar"].append((0, 0, Read(self.previous, False, False)))
@@ -339,7 +340,7 @@ class Walk:
             src = {lane: r.value for n, lane, r in step.reads["scalar"] if n == 3}
             x, y = src.get(3, Value()), src.get(0, Value())
             f = simulate._SCALAR.get(sop)
-            two = sop in copy_kinds.SCALAR_TWO
+            two = sop in TWO
             known = None
             if f and sop in COMPUTES and x.known is not None and (not two or y.known is not None):
                 known = f(x.known, y.known if two else 0.0)

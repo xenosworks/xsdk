@@ -60,7 +60,7 @@ def inputs(blob):
     for rec in xu._decode_program(c.ucode_dwords, c.shader_type)[0]:
         if rec.kind == "alu":
             ins = xu.AluInstruction(*rec.raw)
-            read_first |= {ins.src_reg(n) & 0x3F for n in (1, 2, 3) if ins.src_is_temp(n)} - written
+            read_first |= {reg & 0x3F for reg in ins.src_temps().values()} - written
             if not ins.is_export():
                 written |= {ins.vector_dest()} if ins.vector_write_mask() else set()
                 written |= {ins.scalar_dest()} if ins.scalar_write_mask() else set()
