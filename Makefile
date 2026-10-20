@@ -25,7 +25,7 @@ SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/thread.c src/file.c src/path
 	src/pthread.c src/lock.c src/reent.c src/time.c src/sysconf.c src/entropy.c src/exit.c src/gpu.c \
 	src/gpu_setup.c src/gpu_resolve.c src/gpu_draw.c src/gpu_constants.c src/gpu_tiles.c src/display.c src/shader.c \
 	src/microcode.c src/texture.c src/texture_layout.c src/tiled.c src/present.c src/splash.c src/copy.c src/socket.c \
-	src/netdb.c
+	src/netdb.c src/xam.c src/save.c src/system_ui.c
 # xost's compiler, in the SDK for titles and built for the PC as libxsc.so for the shader tools.
 XSC_SOURCES := src/xsc_memory.c src/xsc_spirv.c src/xsc_resolve.c src/xsc_unroll.c src/xsc_encode.c src/xsc_container.c \
 	src/xsc_program.c src/xsc_optimize.c src/xsc_lower.c src/xsc_lower_block.c src/xsc_lower_matrix.c \
@@ -51,7 +51,7 @@ TEST_SOURCES := tests/main.c tests/test_image.c tests/test_memory.c tests/test_t
 	tests/test_formats.c tests/test_upload.c tests/test_vertex.c tests/test_replay.c tests/test_registers.c \
 	tests/test_copy.c tests/test_microcode.c tests/test_multisample.c tests/test_hiz.c tests/test_net.c \
 	tests/test_interrupts.c tests/test_xsc.c tests/test_cube_volume.c tests/test_targets.c tests/test_resolve_rect.c \
-	tests/test_visibility.c tests/test_tiles.c tests/test_instancing.c tests/test_indexed_reads.c
+	tests/test_visibility.c tests/test_tiles.c tests/test_instancing.c tests/test_indexed_reads.c tests/test_xam.c
 TEST_OBJECTS := $(patsubst tests/%,$(BUILD)/tests/%.o,$(basename $(TEST_SOURCES)))
 # A title for listening to the audio frame layout on the console.
 AUDIO_CHECK_SOURCES := tests/audio_check.c tests/audio_frame.c

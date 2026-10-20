@@ -60,6 +60,8 @@ void test_entry_snapshot(EntryRegs *out);
 // Which of them differ from the sentinels test_entry_regs_call set.
 EntryChanged test_entry_changed(const EntryRegs *regs);
 void test_files(void);
+// Saves, the signed-in user and XAM's asynchronous calls, with nobody signed in (milestone 51).
+void test_xam(void);
 // The SDK's memcpy and memmove (milestone 20).
 void test_copy(void);
 // xost's compiler, shaders compiled from SPIR-V (docs/scope/shader-compiling.md, step 2).

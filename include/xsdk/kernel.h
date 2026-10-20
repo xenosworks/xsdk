@@ -208,12 +208,16 @@ enum {
 	STATUS_NOT_A_DIRECTORY = (int32_t)0xC0000103,
 };
 
-// Win32 errors that XAM returns (xenia:src/xenia/xbox.h:86-100).
+// Win32 errors that XAM returns (xenia:src/xenia/xbox.h:86-104).
 enum {
 	ERROR_SUCCESS = 0,
 	ERROR_NO_MORE_FILES = 0x12,
+	ERROR_INVALID_PARAMETER = 0x57,
+	// XamGetOverlappedResult's answer while a call runs (results/2026-10-19-milestone-51/probe_xam.log).
+	ERROR_IO_INCOMPLETE = 0x3E4,
 	ERROR_IO_PENDING = 0x3E5,
 	ERROR_DEVICE_NOT_CONNECTED = 0x48F,
+	ERROR_NO_SUCH_USER = 0x525,
 };
 
 // xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:357

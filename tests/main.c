@@ -40,6 +40,7 @@ int main(int argc, char **argv)
 	test_kernel_entry();
 	test_interrupts();
 	test_files();
+	test_xam();
 	test_copy();
 	test_xsc();
 	test_net();

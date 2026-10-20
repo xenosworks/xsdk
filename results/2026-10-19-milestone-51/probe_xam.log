@@ -1,0 +1,195 @@
+log: game:\probe_xam.log
+log: named after \Device\Harddisk0\Partition1\xamprobe\probe_xam.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+open: NtCreateFile(game:\xam_start.txt) failed: 0xC0000034
+probe_xam: no cases named in game:\xam_start.txt; running the unattended ones
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 19242 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 24067 us
+probe_xam: 5 cases; listener 0xF8000008, XamIsUIActive 0
+probe_xam: case users: sign-in states, XUIDs, the name and sign-in info; at 2452 ms, frame 2
+users: XamUserGetSigninState of users 0 to 3: 0 0 0 0
+users: XamUserGetXUID(user 0, type mask 1) = 0x80070525, XUID 0000000000000000
+users: XamUserGetXUID(user 0, type mask 2) = 0x80070525, XUID 0000000000000000
+users: XamUserGetXUID(user 0, type mask 4) = 0x80070525, XUID 0000000000000000
+users: XamUserGetXUID(user 0, type mask 7) = 0x80070525, XUID 0000000000000000
+users: XamUserGetName(user 0, 16 bytes) = 0x00000525, ''
+users: the name +0x000: 00 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5
+users: XamUserGetSigninInfo(user 0, flags 0) = 0x80070525
+users: XamUserGetSigninInfo(user 0, flags 0) +0x000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FE 00 00 00 00 00 00 00 00
+users: XamUserGetSigninInfo(user 0, flags 0) +0x020: 00 00 00 00 00 00 00 00
+users: XamUserGetSigninInfo(user 0, flags 1) = 0x80070525
+users: XamUserGetSigninInfo(user 0, flags 1) +0x000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FE 00 00 00 00 00 00 00 00
+users: XamUserGetSigninInfo(user 0, flags 1) +0x020: 00 00 00 00 00 00 00 00
+users: XamUserGetSigninInfo(user 0, flags 2) = 0x80070525
+users: XamUserGetSigninInfo(user 0, flags 2) +0x000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 FE 00 00 00 00 00 00 00 00
+users: XamUserGetSigninInfo(user 0, flags 2) +0x020: 00 00 00 00 00 00 00 00
+notify: 0x00000009, parameter 0x00000000, at 2641 ms, frame 14
+notify: 0x0000000A, parameter 0x00000000, at 2652 ms, frame 14
+notify: 0x00060019, parameter 0x00000000, at 2663 ms, frame 15
+notify: 0x02000009, parameter 0x00000000, at 2674 ms, frame 16
+notify: 0x0A000001, parameter 0x00000000, at 2685 ms, frame 16
+notify: 0x0A000003, parameter 0x00000001, at 2696 ms, frame 17
+probe_xam: case users done at 2707 ms, frame 18
+probe_xam: case devices: the device enumerator, and each device's data, name and state; at 2712 ms, frame 18
+devices: XamContentCreateDeviceEnumerator(saved games, 8 items) = 0x00000000, 0x00000280 bytes, handle 0xF800000C
+devices: XamEnumerate pass 0 = 0x00000000, 0x00000002 items
+devices: enumerated: device 0x00000001, type 0x00000001, 154888372224 bytes, 139987730432 free, name 'Hard Drive'
+devices: enumerated: device 0x00000003, type 0x00000010, 61513662464 bytes, 61463724032 free, name 'USB Storage Device'
+devices: XamEnumerate pass 1 = 0x00000103, 0x00000000 items
+devices: NtClose(enumerator) = 0x00000000
+devices: XamContentGetDeviceData(0x00000001) = 0x00000000
+devices: its data: device 0x00000001, type 0x00000001, 154888372224 bytes, 139987730432 free, name 'Hard Drive'
+devices: XamContentGetDeviceName(0x00000001, 28 chars) = 0x00000000, 'Hard Drive'
+devices: XamContentGetDeviceState(0x00000001, no overlapped) = 0x00000000
+devices: XamContentGetDeviceData(0x00000003) = 0x00000000
+devices: its data: device 0x00000003, type 0x00000010, 61513662464 bytes, 61463724032 free, name 'USB Storage Device'
+devices: XamContentGetDeviceName(0x00000003, 28 chars) = 0x00000000, 'USB Storage Device'
+devices: XamContentGetDeviceState(0x00000003, no overlapped) = 0x00000000
+devices: content goes on device 0x00000001
+probe_xam: case devices done at 2954 ms, frame 32
+probe_xam: case overlapped: how overlapped calls complete; at 2963 ms, frame 33
+overlapped: XamContentGetDeviceState(0x00000001), an event: overlapped before the call: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+overlapped: XamContentGetDeviceState(0x00000001), an event returned 0x000003E5
+overlapped: XamContentGetDeviceState(0x00000001), an event: overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+overlapped: XamContentGetDeviceState(0x00000001), an event: XamGetOverlappedResult(wait 0) straight after = 0x000003E4 in 0 us, length 0xA5A5A5A5
+overlapped: XamContentGetDeviceState(0x00000001), an event: completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+overlapped: XamContentGetDeviceState(0x00000001), an event: overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+overlapped: XamContentGetDeviceState(0x00000001), an event: XamGetOverlappedResult(wait 0) once complete = 0x00000000, length 0x00000000
+overlapped: XamContentGetDeviceState(0x00000001), an event: XamGetOverlappedResult(wait 1) once complete = 0x00000000, length 0x00000000
+overlapped: XamContentGetDeviceState(0x00000001), an event: the call took 10 us
+overlapped: XamContentGetDeviceState(0x00000001), no event: overlapped before the call: result 0xA5A5A5A5, length 0xA5A5A5A5, context 0x00000000, event 0x00000000 (none), routine 0x00000000, routine context 0x00000000, extended error 0xA5A5A5A5
+overlapped: XamContentGetDeviceState(0x00000001), no event returned 0x000003E5
+overlapped: XamContentGetDeviceState(0x00000001), no event: overlapped on return: result 0x000003E5, length 0xA5A5A5A5, context 0x000106A0, event 0x00000000 (none), routine 0x00000000, routine context 0x00000000, extended error 0xA5A5A5A5
+overlapped: XamContentGetDeviceState(0x00000001), no event: XamGetOverlappedResult(wait 0) straight after = 0x000003E4 in 0 us, length 0xA5A5A5A5
+overlapped: XamContentGetDeviceState(0x00000001), no event: completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+overlapped: XamContentGetDeviceState(0x00000001), no event: overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0x00000000 (none), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+overlapped: XamContentGetDeviceState(0x00000001), no event: XamGetOverlappedResult(wait 0) once complete = 0x00000000, length 0x00000000
+overlapped: XamContentGetDeviceState(0x00000001), no event: XamGetOverlappedResult(wait 1) once complete = 0x00000000, length 0x00000000
+overlapped: XamContentGetDeviceState(0x00000001), no event: the call took 10 us
+overlapped: XamContentGetDeviceState, then waited returned 0x000003E5
+overlapped: XamContentGetDeviceState, then waited: overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+overlapped: XamGetOverlappedResult(wait 1) straight after XamContentGetDeviceState returned 0x00000000 after 0 ms, 2 frames presented meanwhile
+overlapped: XamGetOverlappedResult(wait 1) straight after XamContentGetDeviceState: length 0x00000000
+overlapped: XamContentGetDeviceState, then waited: completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+overlapped: XamContentGetDeviceState, then waited: overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+overlapped: XamContentClose(xsdkprb), a root not mounted returned 0x000003E5
+overlapped: XamContentClose(xsdkprb), a root not mounted: overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+overlapped: XamContentClose(xsdkprb), a root not mounted: XamGetOverlappedResult(wait 0) straight after = 0x000003E4 in 0 us, length 0xA5A5A5A5
+overlapped: XamContentClose(xsdkprb), a root not mounted: completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+overlapped: XamContentClose(xsdkprb), a root not mounted: overlapped complete: result 0x0000065B, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x80070002
+overlapped: XamContentClose(xsdkprb), a root not mounted: XamGetOverlappedResult(wait 0) once complete = 0x0000065B, length 0x00000000
+overlapped: XamContentClose(xsdkprb), a root not mounted: XamGetOverlappedResult(wait 1) once complete = 0x0000065B, length 0x00000000
+overlapped: XamContentGetDeviceState(0x7F), no such device returned 0x000003E5
+overlapped: XamContentGetDeviceState(0x7F), no such device: overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+overlapped: XamContentGetDeviceState(0x7F), no such device: XamGetOverlappedResult(wait 0) straight after = 0x000003E4 in 0 us, length 0xA5A5A5A5
+overlapped: XamContentGetDeviceState(0x7F), no such device: completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+overlapped: XamContentGetDeviceState(0x7F), no such device: overlapped complete: result 0x0000065B, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x8007048F
+overlapped: XamContentGetDeviceState(0x7F), no such device: XamGetOverlappedResult(wait 0) once complete = 0x0000065B, length 0x00000000
+overlapped: XamContentGetDeviceState(0x7F), no such device: XamGetOverlappedResult(wait 1) once complete = 0x0000065B, length 0x00000000
+overlapped: XamContentGetDeviceState(0x00000001, no overlapped) = 0x00000000
+probe_xam: case overlapped done at 3608 ms, frame 72
+probe_xam: case content: a save made, written, closed, opened again and read, for users 0xFE, 0xFF and 0; at 3617 ms, frame 72
+listing before: 11 entries under \Device\Harddisk0\Partition1\Content, in 23 ms
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4) returned 0x000003E5
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4): completed after 48 ms (wait 0x00000000), 3 frames presented meanwhile
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4): overlapped complete: result 0x00000000, length 0x00000001, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4): result 0x00000000, disposition 0x00000001, license mask 0x00000000
+content: wrote 26 of 26 bytes to save:\probe.dat, fclose 0, errno 0
+content: XamContentFlush(save) returned 0x000003E5
+content: XamContentFlush(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentFlush(save): completed after 49 ms (wait 0x00000000), 3 frames presented meanwhile
+content: XamContentFlush(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save) returned 0x000003E5
+content: XamContentClose(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentClose(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3) returned 0x000003E5
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3): overlapped complete: result 0x00000000, length 0x00000002, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3): result 0x00000000, disposition 0x00000002, license mask 0x00000000
+content: read 26 bytes back from save:\probe.dat, as written
+content: XamContentClose(save) returned 0x000003E5
+content: XamContentClose(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save): completed after 2 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentClose(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 4) returned 0x000003E5
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 4): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 4): completed after 32 ms (wait 0x00000000), 2 frames presented meanwhile
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 4): overlapped complete: result 0x00000000, length 0x00000001, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 4): result 0x00000000, disposition 0x00000001, license mask 0x00000000
+content: wrote 26 of 26 bytes to save:\probe.dat, fclose 0, errno 0
+content: XamContentFlush(save) returned 0x000003E5
+content: XamContentFlush(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentFlush(save): completed after 49 ms (wait 0x00000000), 3 frames presented meanwhile
+content: XamContentFlush(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save) returned 0x000003E5
+content: XamContentClose(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentClose(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 3) returned 0x000003E5
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 3): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 3): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 3): overlapped complete: result 0x00000000, length 0x00000002, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFF, save, device 0x00000001, xsdkprobe_ff, flags 3): result 0x00000000, disposition 0x00000002, license mask 0x00000000
+content: read 26 bytes back from save:\probe.dat, as written
+content: XamContentClose(save) returned 0x000003E5
+content: XamContentClose(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentClose(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4) returned 0x000003E5
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4): overlapped complete: result 0x0000065B, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x80070525
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4): result 0x0000065B, disposition 0x00000000, license mask 0x00000000
+content: XamContentCreateEnumerator(user 0xFE, device 0x00000001, saved games, 16 items) = 0x00000000, 0x00001340 bytes, handle 0xF800000C
+content: XamEnumerate pass 0 = 0x00000000, 0x00000002 items
+content: enumerated device 0x00000001, type 0x00000001, display name 'xsdk probe, user FE', file name 'xsdkprobe_fe', padding 00 00
+content: enumerated device 0x00000001, type 0x00000001, display name 'xsdk probe, user FF', file name 'xsdkprobe_ff', padding 00 00
+content: XamEnumerate pass 1 = 0x00000012, 0x00000000 items
+content: NtClose(enumerator) = 0x00000000
+content: XamContentCreateEnumerator(user 0xFF, device 0x00000001, saved games, 16 items) = 0x00000000, 0x00001340 bytes, handle 0xF800000C
+content: XamEnumerate pass 0 = 0x00000000, 0x00000002 items
+content: enumerated device 0x00000001, type 0x00000001, display name 'xsdk probe, user FE', file name 'xsdkprobe_fe', padding 00 00
+content: enumerated device 0x00000001, type 0x00000001, display name 'xsdk probe, user FF', file name 'xsdkprobe_ff', padding 00 00
+content: XamEnumerate pass 1 = 0x00000012, 0x00000000 items
+content: NtClose(enumerator) = 0x00000000
+content: XamContentCreateEnumerator(user 0x00, device 0x00000001, saved games, 16 items) = 0x00000525, 0xA5A5A5A5 bytes, handle 0x00000000
+listing after: 15 entries under \Device\Harddisk0\Partition1\Content, in 19 ms
+listing: new \Device\Harddisk0\Partition1\Content\0000000000000000\5853444B, a folder of 0 bytes
+listing: new \Device\Harddisk0\Partition1\Content\0000000000000000\5853444B\00000001, a folder of 0 bytes
+listing: new \Device\Harddisk0\Partition1\Content\0000000000000000\5853444B\00000001\xsdkprobe_fe, a file of 61440 bytes
+listing: new \Device\Harddisk0\Partition1\Content\0000000000000000\5853444B\00000001\xsdkprobe_ff, a file of 61440 bytes
+listing: 4 changes
+probe_xam: case content done at 5089 ms, frame 160
+probe_xam: case close_open_file: a package closed with a file in it open; at 5099 ms, frame 161
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4) returned 0x000003E5
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4): completed after 16 ms (wait 0x00000000), 1 frames presented meanwhile
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4): overlapped complete: result 0x00000000, length 0x00000002, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 4): result 0x00000000, disposition 0x00000002, license mask 0x00000000
+close_open_file: NtCreateFile(save:\open.dat) = 0x00000000
+close_open_file: a write before the close = 0x00000000
+content: XamContentClose(save) returned 0x000003E5
+content: XamContentClose(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF8000010 (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save): completed after 82 ms (wait 0x00000000), 5 frames presented meanwhile
+content: XamContentClose(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF8000010 (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+close_open_file: a write after the close = 0xC000026E
+close_open_file: a read after the close = 0xC000026E, 2779096485 bytes, ''
+close_open_file: NtClose(the file) = 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3) returned 0x000003E5
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3): overlapped complete: result 0x00000000, length 0x00000002, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0xFE, save, device 0x00000001, xsdkprobe_fe, flags 3): result 0x00000000, disposition 0x00000002, license mask 0x00000000
+close_open_file: save:\open.dat holds 7 bytes after opening the package again
+content: XamContentClose(save) returned 0x000003E5
+content: XamContentClose(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentClose(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+probe_xam: case close_open_file done at 5583 ms, frame 189
+probe_xam: done after 192 frames; xsdk_gpu_close 0x00000000
+exit: status 0
