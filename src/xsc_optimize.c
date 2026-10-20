@@ -1345,9 +1345,24 @@ static bool fuse_multiply_adds(Optimizer *o, bool *changed)
 	return true;
 }
 
+// An export of its vector op alone, writing no 0 or 1 of its own, which a scalar op can join.
+static bool plain_export(const XscOp *op)
+{
+	return !fixed(op) && op->alu.is_export && !scalar_active(op) && !op->alu.scalar_write_mask &&
+		!op->alu.is_scalar_dest_relative && op->alu.vector_write_mask != 0;
+}
+
+// The lanes of its register an export writes, its 0s and 1s among them (xenia:src/xenia/gpu/ucode.h:2025-2035).
+static int64_t export_lanes(const XscOp *op)
+{
+	if (!is_alu(op) || !op->alu.is_export)
+		return 0;
+	return op->alu.vector_write_mask | op->alu.scalar_write_mask | (op->alu.is_scalar_dest_relative ? ALL : 0);
+}
+
 static bool vector_only(const XscOp *op)
 {
-	if (!plain_vector(op))
+	if (!plain_vector(op) && !plain_export(op))
 		return false;
 	int64_t lanes[4];
 	vector_reads(op, lanes);
@@ -1418,7 +1433,7 @@ static bool scalar_form(const XscProgram *p, const XscOp *op, XscOp *form)
 {
 	int64_t opcode = scalar_twin(op->alu.vector_opcode);
 	const int64_t mask = op->alu.vector_write_mask;
-	if (opcode < 0 || !plain_vector(op) || addresses_constants(&op->alu))
+	if (opcode < 0 || !(plain_vector(op) || plain_export(op)) || addresses_constants(&op->alu))
 		return false;
 	const bool unary = opcode == XSC_SCALAR_FLOORS || opcode == XSC_SCALAR_FRCS || opcode == XSC_SCALAR_TRUNCS;
 	Source a = source(op, 1);
@@ -1488,6 +1503,10 @@ static bool merge(const XscProgram *p, XscOp *y, const XscOp *x, bool convert)
 		return false;
 	const XscOp *const vec = x_vector ? x : y;
 	const XscAlu *const sca = &form.alu;
+	// An export's scalar op writes the vector op's export register (xenia:src/xenia/gpu/ucode.h:2041-2059).
+	if (vec->alu.is_export != sca->is_export ||
+		(sca->is_export && (sca->vector_dest != vec->alu.vector_dest || (sca->scalar_write_mask & export_lanes(vec)))))
+		return false;
 	// A scalar op's constant could take the vector op's index (xenia:src/xenia/gpu/ucode.h:1945-1964).
 	const bool reads_constant = !sca->src_is_temp[2] || with_constant(sca->scalar_opcode);
 	if (addresses_constants(sca) || (reads_constant && addresses_constants(&vec->alu)))
@@ -1564,9 +1583,11 @@ static bool join(Optimizer *o, size_t j, bool later, bool nearest)
 				converting = y;
 			}
 		}
-		// Moving x past y: neither may read or write what the other writes, nor y change state.
+		// Moving x past y: neither may read or write what the other writes, nor y change state, nor two exports swap
+		// what they write to one lane.
 		if (intersects(&x_reads, &y_defs) || intersects(&x_defs, &y_reads) || intersects(&x_defs, &y_defs) ||
-			(is_alu(y) && fixed(y)))
+			(is_alu(y) && fixed(y)) ||
+			((export_lanes(x) & export_lanes(y)) && x->alu.vector_dest == y->alu.vector_dest))
 			break;
 	}
 	if (!merged && !(converting && merge(o->p, converting, x, true)))

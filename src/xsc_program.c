@@ -1312,6 +1312,8 @@ static bool allocate_registers(Xsc *x, XscProgram *p)
 	if (p->optimized ? !pack_registers(x, p, ops, count, stage_of, &r, npinned, &mapping, &most)
 					 : !assign_whole(x, p, &r, never, npinned, &mapping, &most))
 		return false;
+	// The count is one less than the registers (xenia:src/xenia/gpu/registers.h:130-136), and a program may name none.
+	most = highest(most, 0);
 	// Past the budget, refused as such before an instruction is encoded with a register it can't name.
 	if (most + 1 > p->registers || most + 1 > ENCODABLE_REGS) {
 		p->max_reg = most;

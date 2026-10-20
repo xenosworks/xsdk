@@ -7,7 +7,8 @@ Each case builds a program twice, without and with the pass, and checks:
     components the first defines;
   - the pass left the number of ALU instructions the case expects: what it may remove it does, and what it mustn't
     touch (a move other values share a register with, a source changed in between, a third constant) it keeps, an
-    op that writes one value co-issued as a scalar op beside a vector one where it can.
+    op that writes one value co-issued as a scalar op beside a vector one where it can, an export's beside the vector
+    op exporting its register's other lanes.
 The fetch cases check fetches the same way, and two testdata shaders what a dropped fetch leaves: a vertex shader's
 elements, one for each fetch left, and a pixel shader's sampler. A last case hands the comparison a wrong rewrite, to
 show it would see one. Runs in WSL, where make builds build/host/libxsc.so.
@@ -248,10 +249,10 @@ CASES = [
      [move(3, r(1), 0x7), alu(V.kAdd, 3, 0x8, r(0), c(2)), alu(V.kAdd, 2, 0x1, r(0), c(0)),
       alu(V.kMul, 4, 0xF, r(3), c(1)), move(3, r(2, "xxxx"), 0x1), alu(V.kAdd, 5, 0xF, r(3), r(4))],
      [export(r(5))], 6),
-    ("an export assembled from parts takes each part, its lanes nothing writes filled by one",
+    ("an export assembled from parts takes each part, its lanes nothing writes filled by one, the mul beside the dp4",
      [],
      [alu(V.kDp4, 2, 0x1, r(0), c(0)), alu(V.kMul, 3, 0x1, r(1, "yyyy"), c(1)), move(4, r(2), 0x1),
-      move(4, r(3, "xxxx"), 0x2), alu(V.kMax, 0, 0xF, r(4), r(4), export=True)], 2),
+      move(4, r(3, "xxxx"), 0x2), alu(V.kMax, 0, 0xF, r(4), r(4), export=True)], 1),
     ("a value computed before the colours' alloc is copied to its export after it",
      [alu(V.kAdd, 2, 0xF, r(0), c(0))],
      [export(r(2))], 2),
@@ -283,6 +284,21 @@ CASES = [
       alu(V.kDp3, 4, 0x1, r(2), r(0)), alu(V.kDp3, 5, 0x1, r(3), r(0)),
       alu(V.kMul, 6, 0xF, r(4, "xxxx"), r(5, "xxxx"))],
      [export(r(6))], 7),
+    ("an export's one value joins its register's vector part as a scalar op, not another register's",
+     [],
+     [alu(V.kMul, 0, 0x7, r(0), r(1), export=True), alu(V.kMax, 1, 0x8, r(1, "wwww"), r(1, "wwww"), export=True),
+      alu(V.kMax, 1, 0x7, r(0), r(0), export=True)], 2),
+    ("an export that writes a lane again keeps its own instruction",
+     [],
+     [alu(V.kMul, 0, 0xF, r(0), r(1), export=True), alu(V.kMax, 0, 0x8, r(1, "yyyy"), r(1, "yyyy"), export=True)], 2),
+    ("an export's one value doesn't move past another export of its lane",
+     [],
+     [alu(V.kMul, 0, 0x7, r(0), r(1), export=True), alu(V.kMax, 0, 0x8, r(0), r(1), export=True),
+      alu(V.kMax, 0, 0x8, r(1, "yyyy"), r(1, "yyyy"), export=True)], 2),
+    ("a scalar op writing a temp doesn't join an export",
+     [],
+     [scalar(S.kRcp, 3, r(1, "xyzw"), 0x8), alu(V.kMul, 0, 0x7, r(0), r(1), export=True),
+      alu(V.kMax, 0, 0x8, r(3, "wwww"), r(3, "wwww"), export=True)], 2),
 ]
 
 

@@ -34,7 +34,7 @@ B = [simulate.single(v) for v in (1.7, -0.6, 3.1, 2.3)]
 BY_CONSTANT = [255.0, 255.0, 255.0, 7.0]
 BY_CONSTANTS = [3.0, -5.0, 0.1, 256.0]
 COUNTS = {"divided lanes": 2, "rcps of constants": 2}
-ALU = {False: 21, True: 13}
+ALU = {False: 21, True: 12}
 
 
 def bits(x):

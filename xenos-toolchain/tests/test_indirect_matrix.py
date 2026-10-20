@@ -31,7 +31,7 @@ M1 = [-0.5, 0.25, 0.0625, 3.0]
 INPUTS = [([200.0, 64.0, 255.0, 7.0], [0.25, 0.5, -0.75, 1.0]), ([0.0, 128.0, 31.0, 0.0], [-2.0, 0.125, 4.0, -0.5])]
 # The dot products and ALU instructions with the optimiser off and on.
 DOTS = {False: 4, True: 2}
-ALU = {False: 32, True: 10}
+ALU = {False: 32, True: 9}
 
 
 def wants(ind, uv):
