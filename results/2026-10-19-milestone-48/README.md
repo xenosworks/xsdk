@@ -798,3 +798,140 @@ load line taken out and `tests/xsc_shaders.h` made by that compiler, so the comp
   differ by a few dozen quads from run to run, as the console's a0 in predicated code does.
 - **`step6_dusklight_frames.log`:** Dusklight's title scene, its frames captured every 150th; Link and Epona, lit by
   the skinned shaders, look as at step 5 (local/m48/frames_step5, frames_step6).
+
+## Step 7: the rest
+
+Built on 2026-10-20 at `752a3ee`, on `ec9913a` to `bac2c87` (docs/scope/48-xost-code-quality-2.md, step 7).
+
+**What the three were,** measured with `tools/copy_kinds.py` and the disassembly at step 6 (xdis's instruction numbers):
+- **The indirect texture matrix built twice:** Dusklight's `1510c05add37f2b3.frag` alone, the one shader whose two
+  indirect stages read one matrix (`29fab4bb`, `2eefbbd8`, `820f98f2` and `ca445998` run one stage each). Each stage
+  builds the rows `vec3(ind_mtx[0].xz, ind_mtx[1].x)` and `vec3(ind_mtx[0].yw, ind_mtx[1].y)` again, by moves into a
+  temp of its own, at 9-10 and 14-15 for the first stage and 20-21 and 22-23 for the second, so the second's `dp3`s at
+  22 and 24 and its multiply by `ind_mtx[1].z` at 25 read other temps than the first's at 14, 16 and 17. Common
+  subexpression elimination missed them through a copy in between: `same_computation` compared operand registers, not
+  what they hold. No operand order, span or modifier is involved. In the rest of the corpus `vk_many_fetches.frag`
+  holds the same kind of pair.
+- **Alpha computed apart from its colour's vector:** 21 of Dusklight's pixel shaders copy the alpha into `oC0.w` in an
+  instruction of its own after the colour's export, 20 of them as their alpha test keeps it in every lane of a temp:
+  `15a57b221b955025.frag`'s `mul oC0.xyz_, r1, r0.xyzx` at 22 and `max oC0.___w, r2, r2` at 23. co_issue paired no
+  export. Its vertex shaders export a 1 or a uniform's alpha into an interpolator's lane the same way,
+  `f12926532ee0b4d0.vert`'s `max o1.__z_, c168.xyzx, c168.xyzx` at 42 beside `dp4 o1._y__` at 41.
+- **The fog coordinates copied into place:** 27 of Dusklight's vertex shaders end in `max oN, rK.zwzw, rK.zwzw`,
+  `f12926532ee0b4d0.vert`'s at 46. Its `dp4`s of clip z and w at 14 and 15 are in the position's alloc, where
+  `mul oPos, r0, c169` at 16 reads them too.
+
+**Built:**
+- **Common subexpressions through moves** (`ec9913a`, src/xsc_optimize.c, `value_of`, `same_lanes`): two temps in two
+  registers hold the same where every lane read holds the same value, a component a move of a constant wrote holding
+  that constant, one a move of a temp wrote what the temp held there, and anything else its write. A negated, absolute
+  or clamped move, or one of a constant at a0, ends the chain. `1510c05add37f2b3.frag` takes 45 ALU instructions for
+  50, its second matrix gone, and `vk_many_fetches.frag` 100 for 102.
+- **An export's one value beside its register's** (`ed4807e`, `plain_export`, `share_export`, `merge`, `join`): an
+  export of its vector op alone pairs, as the vector op or in its scalar form, with an export of the same register in
+  other lanes; an export's scalar op writes the vector op's export register (xenia:src/xenia/gpu/ucode.h:2041-2059;
+  shader_interpreter.cc:911-939). Not beside a non-export, another register or a lane the other writes, where both
+  masks would export 1 (ucode.h:2025-2035), and no export moves past another of its register that writes one of its
+  lanes. 9 of the 21 alpha copies pair this way, with 16 more pixel exports and 53 vertex ones, the 1s and alphas into
+  interpolators' lanes.
+- **A program that names no temp** (`ed4807e`, src/xsc_program.c, `allocate_registers`): Dusklight's
+  `1e5db8674ad9d29e.frag` and `22d6a7758d2d5d84.frag`, a clamped uniform's colour and alpha, became one instruction
+  with no temp, and their register count -1, 64 in SQ_PROGRAM_CNTL. The count is one less than the registers
+  (xenia:src/xenia/gpu/registers.h:130-136), so the allocator keeps it at one at least.
+
+**Left out:**
+- **The alpha beside a mad:** the other 12 alpha copies follow a colour's `mad` (10) or `mad_sat` (2), whose third
+  operand the scalar op would share. A scalar copy reads that operand's w and x, and the mad's x lane reads the colour
+  there; no scalar op copies lane w alone. 12 slots stay.
+- **The fog coordinates:** none of the 27 copies can go. oPos's export in the position's alloc and the fog's in the
+  interpolators' both read clip z and w, and an instruction exports one register, so it takes a temp and the copy, or
+  the two `dp4`s again, 2 slots for the copy's 1. Writing oPos's lanes from `dp4`s directly takes 4 for the 4 and the
+  multiply, and the fog's 2 make 6, as now. Packing the fog into another interpolator's free lanes would change the
+  pixel shaders' inputs, which the step doesn't reach.
+
+**Exact:** the ops CSE takes as one read the same bits: `max(x, x)` is x, a NaN too
+(xenia:src/xenia/gpu/shader_interpreter.cc:347-354), and a denormal any read makes 0 either way. A scalar form computes
+its vector op's value bit for bit (step 5, the console's lane rule kept), and the export takes it in the lanes the
+vector op wrote. Every result is the same bit for bit, zeros' signs too.
+
+**xost's tests:** all 50 pass. `tests/test_indirect_matrix.py` runs `xsc/testdata/vk_indirect_matrix.frag`, the two
+stages of `1510c05a` on one matrix, on `xdis/simulate.py`, the optimiser off and on: exports exact, the texels
+integers and the matrix dyadic so nothing rounds; 4 dot products and 32 ALU instructions off, 2 and 9 on, where step
+6's compiler took 4 and 13. `tests/test_packed_alpha.py` runs `vk_packed_alpha.frag`, a colour and its tested alpha
+into a target whose colour is a mul and into one whose colour is a mad: exports exact, 17 ALU instructions off and 10
+on, the first alpha a scalar op beside its colour and the second a copy; and `vk_packed_uniform.frag`, `1e5db8674`'s
+shape, in one instruction and one register. `test_optimize.py` adds six cases: a row moved twice from the same
+constants (5 ALU instructions, 7 at step 6), one from negated constants, kept, and one for each export rule; its
+export assembled from parts takes 1 instruction for 2. `test_division.py`'s `vk_division.frag` takes 12 for 13, its
+alpha's division by a constant a `mulsc` beside the colour, and `test_fetch_fills.py`'s program 9 for 10, a 1 into
+in_color's w.
+
+**Broken on purpose**, each in src/xsc_optimize.c or src/xsc_program.c alone at `752a3ee`, built, then the step's
+tests and `check_optimize.py` over Dusklight's 150 programs:
+
+| Break | Fails |
+|---|---|
+| `value_of` not following moves | test_indirect_matrix (4 dot products, 12 ALU), test_optimize's row case (7 for 5) |
+| `value_of` following negated moves | test_optimize's negated row (exports), test_ranges (`vk_ranges.frag` 22 for 23) |
+| `share_export` blind to the register | test_optimize's other register's case (oC1.w undefined) |
+| `share_export` blind to the lanes | test_optimize's lane written again and export order cases (w 1.0) |
+| `join` moving an export past another of its lane | test_optimize's export order case |
+| `share_export` taking an export beside a non-export | test_optimize's temp case, test_packed_alpha, test_division, check_optimize (29 differ, 13 refused) |
+| The register count let go below 1 | test_packed_alpha (`vk_packed_uniform.frag` takes 64 registers) |
+
+**The counts,** `step7.txt` and `step7.json`, the baseline's command with `--baseline step6.json`; 0 shaders differ off
+against on, 50 not simulated and 15 not compiled, over 450 files, step 6's and testdata's three new ones; the table is
+over the shaders the baseline compiled. Optimiser on, baseline -> step 6 -> step 7:
+
+| | Corpus vertex, 135 | Corpus pixel, 290 | Dusklight vertex, 47 | Dusklight pixel, 103 | Costliest vertex, 10 | Costliest pixel, 15 |
+|---|---|---|---|---|---|---|
+| ALU | 4518 -> 4063 -> 3999 | 4225 -> 3790 -> 3731 | 3257 -> 2900 -> 2847 | 1342 -> 1000 -> 970 | 1473 -> 1253 -> 1227 | 546 -> 369 -> 363 |
+| Copies | 636 -> 378 -> 310 | 1032 -> 958 -> 892 | 305 -> 135 -> 80 | 118 -> 94 -> 64 | 170 -> 45 -> 19 | 37 -> 17 -> 15 |
+| Co-issued | 528 -> 806 -> 870 | 199 -> 267 -> 319 | 471 -> 685 -> 738 | 159 -> 182 -> 205 | 222 -> 310 -> 336 | 96 -> 85 -> 84 |
+| Registers | 720 -> 695 -> 695 | 1403 -> 1366 -> 1366 | 300 -> 289 -> 289 | 466 -> 440 -> 440 | 94 -> 86 -> 86 | 124 -> 113 -> 113 |
+| Single-lane | 1921 -> 1666 -> 1666 | 578 -> 355 -> 354 | 1623 -> 1425 -> 1425 | 383 -> 202 -> 201 | 602 -> 604 -> 604 | 186 -> 101 -> 100 |
+
+- **This step's own effect:** Dusklight's vertex shaders take 1.8% fewer ALU instructions than at step 6, its 10
+  costliest 2.1%; its pixel shaders 3.0%, the 15 costliest 1.6%; against the baseline 12.6%, 16.7%, 27.7% and 33.5%.
+  No shader takes more ALU instructions or registers than at step 6, off or on; with the optimiser off none changes.
+- **The copies:** in Dusklight's vertex shaders constants into exports fall from 49 to 6 and fetched values into
+  exports from 56 to 44, now `maxs` beside their register's other lanes; the 27 fog copies stay. In its pixel shaders
+  computed values into exports fall from 18 to 11, the alpha copies after a mad among those left.
+- **The scalar exports:** Dusklight's pack holds 78, 53 `maxs` in its vertex shaders and 12 `maxs`, 8 `maxs_sat` and 5
+  `mulsc` in its pixel shaders; the corpus 123. At step 6 the corpus held none, so the console has run no xost program
+  that exports through a scalar op.
+
+**Containers that change,** compiled by `b231db0` and by `752a3ee`, per program in `step7_containers.txt`:
+- **Dusklight:** 54 of its 150 programs with the optimiser on, 28 pixel and 26 vertex shaders, none off; 3900 ALU
+  instructions to 3817. Its pack must be rebuilt.
+- **vulkan4xenon:** none with the optimiser off, as its bundles are built; with it on, 12 of `tests/shaders`' 80, the
+  `aurora_*` pixel shaders with an alpha beside their colour (1224 to 1212), and `bench/shaders`' `sprite.vert` (5 to
+  4). `matrix_index.vert` and `band.frag`, which its tests compile on the console with the optimiser on, don't change.
+- **xsdk_test's 47:** `vk_frag_coord_rows.frag` (4 to 3, a `maxs` into oC0.z, which the tiles test draws),
+  `vk_instance_cells.vert` and `vk_instance_step.vert` (12 to 11 each, a `mulsc` into o0.z, which the instancing test
+  draws); `tests/xsc_shaders.h` regenerated.
+
+**Compile time:** compiling Dusklight's 150 programs on the PC, the best of 25 runs in each of six alternations, took
+78.5 to 80.2 ms with step 6's compiler and 73.4 to 75.1 ms now. The two rewrites as first built took 90.5 ms:
+`same_computation` decoded every same-opcode pair's operands before comparing their registers, 39 million calls of
+`source` for the 150 and 41% of the time (gprof), and `value_of` went further for pairs in two registers; `merge`
+formed a scalar op before refusing an export beside a non-export, and `join` scanned an export's stage though most
+exports have no partner. `bac2c87` checks exports' pairing first (86.6 to 89.3 ms), and `752a3ee` compares an
+operand's register as the instruction holds it before decoding it, ending where the two differ and neither is a temp
+a move wrote (73.4 to 75.1 ms). That check alone takes step 6's compiler to 68.5 to 69.2 ms, so the rewrites cost
+about 5 ms past it. Every program compiles byte for byte as at `ed4807e`. At that share the console's 1.382 s would be
+about 1.29 s, within 1.42.
+
+**On the console,** to run, built clean from the M48 pair, Dusklight's pack rebuilt with this xost; vulkan4xenon's
+bundles don't change:
+- **xsdk_test,** its compiler check of the 47 programs in `tests/xsc_shaders.h`, and the tiles and instancing tests
+  drawing `vk_frag_coord_rows.frag`, `vk_instance_cells.vert` and `vk_instance_step.vert`, the first xost programs to
+  export through a scalar op on the console: 468 passing and the 2 controller checks failing with no pad, as at step
+  6.
+- **vulkan4xenon_test, twice:** 492 of 492 each.
+- **`probe_shader_cost`,** its pictures against the baseline's: all 103 pixel pictures hashing as the baseline's, the
+  28 programs that change among them, `1510c05add37f2b3.frag`'s matrix with them. The vertex shaders a little under
+  step 6's 12,488 us, 53 of their slots gone.
+- **`probe_xsc`:** 150 of 150 programs as the pack holds them, within 1.42 s.
+- **Dusklight:** its title scene as a smoke run, and its frames captured every 150th: Link and Epona, lit by the
+  skinned `93d36ce5` and `c0ddfd45` that change, looking as at step 6 (local/m48/frames_step6).
