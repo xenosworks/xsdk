@@ -65,12 +65,6 @@ work begins.
   14% faster and xsdk's own recording 2-3% faster. The recording functions are the same instructions under both
   compilers; every non-leaf frame now reserves the 64-byte parameter area (vkCmdDraw's grew from 32 to 96 bytes), a
   candidate cause not yet checked. The user put it off until the Dusklight session has it rendering.
-- **A pixel shader's discard in its first if/else kills on that if alone.** The fragment lowering plans a kill from
-  the first if/else whose arm discards and ignores what else branches (src/xsc_lower_fragment.c, `plan`): `if (uv.y >
-  0.5) { if (uv.x > 0.5) { o = c; return; } } discard;` leaves unkilled the pixels whose y passes and whose x doesn't,
-  in GLSL and as HLSL's early return and `clip`, as it did before milestone 50 made early returns compile
-  (results/2026-10-20-milestone-50/README.md, "Early returns and switches"). Wrong without a refusal; a fix changes
-  containers that compile today.
 - **C code can't name `char16_t`.** newlib has no `<uchar.h>`, so C code sharing UTF-16 text with MSVC code spells it
   `__CHAR16_TYPE__` (local/abi's probe does); C++ has the keyword.
 - **xost's assembler and disassembler off Python.** Its compiler is C, xsdk's `src/xsc_*.c`, which titles call on the

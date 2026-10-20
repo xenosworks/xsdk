@@ -488,9 +488,34 @@ static bool plan_selection(Fragment *f, const XscInstr *top)
 	return gather_output(f);
 }
 
-// The module's first if/else picks the shape: none, a discard, or a selection.
+// Whether a discard is past what the kill-if sees: it sees one that ends the first block of an arm of the module's one
+// if/else, a block storing nothing, so the last store of each variable is what a pixel that lives leaves it.
+static bool kill_unseen(const XscModule *m, const XscInstr *top)
+{
+	size_t branches = 0, kills = 0;
+	uint32_t label = 0;
+	bool stored = false;
+	for (size_t i = 0; i < m->instr_count; i++) {
+		const XscInstr *const ins = &m->instrs[i];
+		label = ins->opcode == SPV_LABEL ? ins->result_id : label;
+		stored = ins->opcode == SPV_STORE || (stored && ins->opcode != SPV_LABEL);
+		branches += ins->opcode == SPV_BRANCH_CONDITIONAL;
+		if (ins->opcode != SPV_KILL)
+			continue;
+		kills++;
+		if (stored || !top || (label != xsdk_xsc_operand(top, 1) && label != xsdk_xsc_operand(top, 2)))
+			return true;
+	}
+	return kills && branches > 1;
+}
+
+// The module's first if/else picks the shape: none, a discard, or a selection. Any other discard is the unroller's
+// (xsc_compile.c, lower_pixel).
 static bool plan(Fragment *f, const XscInstr *top)
 {
+	if (kill_unseen(f->l.m, top))
+		return xsdk_xsc_lower_refuse(
+			&f->l, "a discard beside another if/else, outside the kill-if's arms or after a store in one");
 	if (!top)
 		return gather_output(f);
 	if (xsdk_xsc_operand_count(top) != 3)

@@ -68,16 +68,18 @@ static bool refuse_initializers(Xsc *x, const XscModule *m)
 	return true;
 }
 
-// A pixel shader. An if/else the fragment lowering refuses where the unroller didn't run, one that changes a value in
-// one arm alone among them, as spirv-opt leaves HLSL's in a Phi, goes through the unroller, which merges what the arms
-// leave apart by selects, then the fragment lowering again; what compiled before compiles as it did. Refused both
-// ways, it gives both reasons.
+// A pixel shader. An if/else or discard the fragment lowering refuses where the unroller didn't run, one that changes a
+// value in one arm alone among them, as spirv-opt leaves HLSL's in a Phi, or a discard beside another if/else, goes
+// through the unroller, which merges what the arms leave apart by selects and defers each discard to one kill-if at
+// the end, then the fragment lowering again; what compiled before compiles as it did. Refused both ways, it gives
+// both reasons.
 static bool lower_pixel(
 	Xsc *x, XscModule *m, const XsdkXscOptions *options, bool unrolled, XscInterface *si, XscLowered *out)
 {
 	if (xsdk_xsc_lower_fragment(x, m, options, si, out))
 		return true;
-	if (x->status != XSDK_XSC_REFUSED || unrolled || !has_opcode(m, SPV_BRANCH_CONDITIONAL))
+	if (x->status != XSDK_XSC_REFUSED || unrolled ||
+		(!has_opcode(m, SPV_BRANCH_CONDITIONAL) && !has_opcode(m, SPV_KILL)))
 		return false;
 	char fragment[XSDK_XSC_MESSAGE_BYTES];
 	memcpy(fragment, x->message, sizeof fragment);

@@ -36,12 +36,17 @@ bool or int keeps its `b#` or `i#`: `idioms/i05` and `i10`, `binding/`'s `intege
   sample and one on a bool at `register(b2)`.
 - **`return/`**: `tests/test_hlsl_return.py`'s, early returns, which spirv-opt's merge-return wraps in a switch, step 8:
   under an if (`if_ps.hlsl`, beside its GLSL twin `if.frag`), in the else, in an if inside another, after a sample,
-  two of them, in a vertex shader, in an unrolled loop and in a hardware loop, and a refusal, a discard after a return
-  on data (`refused_discard_ps.hlsl`, beside its GLSL twin `refused_discard.frag`).
+  two of them, in a vertex shader, in an unrolled loop and in a hardware loop.
 - **`switch/`**: `tests/test_hlsl_return.py`'s, switches, step 8: cases that break, two literals sharing one, and a
   default (`switch_ps.hlsl`, beside its GLSL twin `switch.frag`), a vertex shader's without a default, an early return
   in a case, and a refusal, a case falling through to the next.
+- **`discard/`**: `tests/test_hlsl_discard.py`'s, discards the unroller defers, step 8: a clip then an if
+  (`clip_if_ps.hlsl`), an if then a clip, a discard under an if then an if (`if_discard.frag`), a discard after a
+  return in an if inside another (`nested_ps.hlsl`, beside its GLSL twin `nested.frag`), one in an if inside another,
+  beside an early return, after a return in a loop (`after_return_ps.hlsl`) and after one the unroller takes (the GLSL
+  `after_return.frag`), a clip on a float4 with an if and alone, an alpha test before a second sample, in an unrolled
+  loop beside a break and in one inside another, and a refusal, in a hardware loop (`refused_counted_ps.hlsl`).
 - **`grid_*`**: xsdk_test's HLSL grid (xsdk:tests/test_hlsl.c), compiled on the console from this SPIR-V;
   `tests/test_hlsl_link.py` links `grid_gaps_*` on the PC, `tests/test_hlsl_rest.py` runs `grid_skin_vs`,
-  `tests/test_hlsl_binding.py` `grid_binding_ps`, `tests/test_hlsl_if.py` `grid_if_ps` and `tests/test_hlsl_return.py`
-  `grid_return_ps` and `grid_switch_ps`.
+  `tests/test_hlsl_binding.py` `grid_binding_ps`, `tests/test_hlsl_if.py` `grid_if_ps`, `tests/test_hlsl_return.py`
+  `grid_return_ps` and `grid_switch_ps`, and `tests/test_hlsl_discard.py` `grid_discard_ps`.

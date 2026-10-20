@@ -16,8 +16,8 @@ result is the value HLSL or GLSL defines, exactly, on inputs no operation rounds
   which xost compiled before as if the switch weren't there; switch_vs: a vertex shader's, without a default; return_ps:
   an early return in a case.
 - grid_return_ps and grid_switch_ps: xsdk_test's cells (xsdk:tests/test_hlsl.c), every one of their 80 columns.
-- Refused: switch/refused_fallthrough_ps, a case falling through to the next; return/refused_discard_ps and its GLSL
-  twin, a discard after a return on data, which the unroller emits no kill for.
+- Refused: switch/refused_fallthrough_ps, a case falling through to the next. A discard after a return on data, which
+  this refused before the unroller deferred discards, is test_hlsl_discard.py's.
 
 A pixel shader declares the interpolators it reads, packed from 0 by semantic: TEXCOORD0 before COLOR0.
 """
@@ -46,9 +46,7 @@ COUNT_LOOP = 16
 # The grid's cell width, and COLOR0, its link colour.
 GRID_WIDTH = 80
 LINK = [0.25, 0.75, 0.0, 1.0]
-REFUSALS = {"switch/refused_fallthrough_ps.hlsl": "a switch's case falling through to another",
-            "return/refused_discard_ps.hlsl": "a discard after a return on data",
-            "return/refused_discard.frag": "a discard after a return on data"}
+REFUSALS = {"switch/refused_fallthrough_ps.hlsl": "a switch's case falling through to another"}
 
 
 def fail(message):

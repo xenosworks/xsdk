@@ -67,7 +67,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | **`if/else`**, incl. **nested**, assigning the output | branch-free chained `cndgt`/`cndge`/`cndeq` selects |
 | **`if/else` assigning a Function-local** later read by the output | branch-free `cnd*` select into a temp registered as that local's merged value (pixel shaders) |
 | `if/else`, or a `?:` glslang branches for, in a **vertex** shader, nested, `&&`/`\|\|` (a Phi) | the unroller runs both arms and merges each local and output they leave apart with a select: a `cnd*` on the comparison branched on, on a condition every vertex shares too, as execs on the predicate hung the GPU (see Control flow; `tests/test_vertex_branches.py`) |
-| **`discard` / `OpKill` inside `if(cond)`** | `kill_gt`/`kill_ge`/`kill_eq`/`kill_ne` ALU side effect; confirmed on the console, a `discard` on `!gl_FrontFacing` (vulkan4xenon milestone 22) |
+| **`discard` / `OpKill` inside `if(cond)`**, HLSL's `clip` among them | `kill_gt`/`kill_ge`/`kill_eq`/`kill_ne` ALU side effect on that if, where it's the shader's only branch; beside other branches, after a return or in an unrolled loop, the unroller defers each discard to one kill where the shader ends (see Control flow; `tests/test_hlsl_discard.py`); confirmed on the console, a `discard` on `!gl_FrontFacing` (vulkan4xenon milestone 22) |
 | **`for`/`while`** with a compile-time trip count, incl. **nested** | unrolled to branch-free SSA; induction variable constant-folded (see below) |
 | uniform-bound loop `sum += const` | real `LOOP_START/END` (G28 pending) |
 | `for (int i = s; i < b.n; i += k)`, `n` an int in a push constant or uniform block, `s` and `k` constants, in a vertex or pixel shader | a hardware loop of ceil((n - s) / k) passes, which the runtime works out from the block, as Shader Model 3's `loop` counts them: what the loop carries in registers, `i` a float counter, an if/else in the pass, a break ending it; a `break` or `continue` on data anywhere in the pass gated as in an unrolled loop, LOOP_END breaking once no pixel of the group is left (see "Loops a block counts"; `tests/test_hardware_loops.py`, `tests/test_hardware_loop_breaks.py`) |
@@ -381,12 +381,16 @@ spirv-opt's merge-return wraps a shader that returns early in a switch on a cons
 branch to its merge, and xost puts each return back where it was, as GLSL's is; a return in a loop arrives as a flag
 and a break, which the loop's handling takes; a `switch` becomes an if/else chain.
 
+`clip(x)`, which discards where any component of x is below 0, and `discard` may sit anywhere, as on D3D9: glslang
+makes `clip` an if around an `OpKill`. The fragment lowering kills on that if where it's the shader's only branch; any
+other discard, beside another if/else, after an early return or in an unrolled loop, the unroller defers, and the pixel
+is killed once where the shader ends (Control flow; `tests/test_hlsl_discard.py`).
+
 Refused, each by name, with xost's message where it's short:
 - **Switches and returns** (Switches): a case falling through to the next (`falling through`); a case left other than
   by one `break` at its end, a `break` in an if inside it or a `continue` among them (`other than by a break at its
-  end`); a switch on other than a 32-bit int; more than 32 cases; merge-return's merge holding more than values and
-  output stores before its return; and a `discard` after a return on data where the unroller takes the shader (`a
-  discard after a return on data`).
+  end`); a switch on other than a 32-bit int; more than 32 cases; and merge-return's merge holding more than values
+  and output stores before its return.
 - **Loops** (Loops): a do/while's header Phi read after the loop; a value a loop's test works out, kept past the loop or
   read in its pass where xost can't work it out again; a value a do/while's pass works out read after the loop that no
   header Phi carries; a merge Phi of a header Phi that can't share its variable; a Phi on the edge from a test into the
@@ -405,12 +409,10 @@ Refused, each by name, with xost's message where it's short:
 - **Registers:** a `b#` on other than a bool, an `i#` on other than an int; two members in one register (`share
   register`); a bool an if reads past b127 or an int a loop counts past i15 (`past the stage's`); and an arm of a
   bool's if, in execs on its boolean constant, that uses a0 (`an arm on a boolean constant that uses a0`).
-- **What GLSL can't do either** (Supported; Not yet / out of scope): a `discard` in a loop, a fifth nested hardware
-  loop, more than 255 passes of one, more than 64 registers.
+- **What GLSL can't do either** (Supported; Not yet / out of scope): a `discard` in a hardware loop (`a discard
+  inside a hardware loop`), a fifth nested hardware loop, more than 255 passes of one, more than 64 registers.
 
-Wrong without a refusal, for GLSL too: `pow` of an exponent whose components differ takes its x in every lane; and a
-discard in a pixel shader's first if/else kills on that if alone, whatever else branches, a return in an if inside its
-other arm among it (xsdk:TODO.md).
+Wrong without a refusal, for GLSL too: `pow` of an exponent whose components differ takes its x in every lane.
 
 ## Literal constant pool (the host-upload contract)
 
@@ -589,7 +591,9 @@ In an unrolled loop:
   `xdis/equivalence.py` take as they are (`tests/test_loop_branches.py`; on the
   console, xsdk:docs/HARDWARE.md, "Breaks and continues on data in unrolled
   loops, milestone 46 step 2").
-- **Refused:** a `discard` or `return` in a loop, and a `continue` on data
+- **A `discard`** in a pass leaves the loop as a break does, and the pixel is
+  killed where the shader ends (Control flow).
+- **Refused:** a `return` in a loop, and a `continue` on data
   where the counter isn't what it is at the pass's end, as in a `while` that
   steps it after the `continue`. HLSL's `return` in a loop reaches the
   unroller as a break (Switches).
@@ -686,7 +690,7 @@ gradients it worked out go on steering its quad's LOD: they want to be the same
 across a quad, as derivatives of a value linear across it are
 (`tests/test_loop_samples.py`).
 
-Refused: a fifth nested hardware loop; a `discard` or `return` in a loop; a
+Refused: a fifth nested hardware loop; a `discard` or `return` in one; a
 store into part of an output in a hardware loop, which a local does instead; a
 loop's condition on a block's int other than `i < b.n`; a matrix, array or
 struct a hardware loop carries; and loops needing more than 16 loop constants
@@ -717,9 +721,19 @@ or `continue` in an arm is gated (Loops), and so is a `return` in an arm
 outside any loop, as a break leaving the function: where the pixel or vertex
 returns, each output keeps a returned copy, `cnd(running && c, value now,
 returned)`, and `running` becomes `running && !c`; at the end each output is
-`cnd(running, value, returned)` (`return_on_data`). The unroller emits no
-kill, so a `discard` after such a return is refused. The lowering
-(`xsdk:src/xsc_lower_flow.c`) then picks, for each if/else:
+`cnd(running, value, returned)` (`return_on_data`). A `discard` is deferred
+(`discard`): `killed` becomes `killed || (running && c)`, `c` the arms'
+conditions and `running` each unrolled loop's too, so a pixel that returned is
+never killed; an arm a discard ends gives its merge nothing, and in an
+unrolled loop the discard leaves the loop as a break does. The pixel runs on,
+so its quad's derivatives stay whole, as Xenia lets a killed pixel run on as a
+helper or kills it once its derivatives are done
+(xenia:src/xenia/gpu/spirv_shader_translator_alu.cc:42-59,
+spirv_shader_translator_rb.cc:456-468). Where the function ends the unroller leaves one if on `killed` around an
+`OpKill`, which the fragment lowering kills on as it does a lone if/discard:
+`kill_gt killed, -killed`, or the comparison's own kill where `killed` is one
+comparison. The lowering (`xsdk:src/xsc_lower_flow.c`) then picks, for each
+if/else:
 
 - **Execs on the predicate,** in a pixel shader where every pixel takes the same
   arm, as its condition reads only constants (uniforms, push constants, literals), and
@@ -760,7 +774,14 @@ the shader as it takes a vertex shader's, and the fragment lowering lowers what
 it leaves; refused both ways, the shader gets both reasons. A shader the
 fragment lowering took lowers as it did (`xsdk:src/xsc_compile.c`,
 `lower_pixel`; `tests/test_hlsl_if.py`, `tests/test_local_stores.py`,
-`tests/test_color_outputs.py`).
+`tests/test_color_outputs.py`). Its kill-if kills on that if alone, so it takes
+a discard only where that if/else is the shader's only branch and the discard
+ends the first block of an arm, which stores nothing; it refuses any other, a
+discard beside another if/else, outside the arms or after a store, and the
+unroller takes the shader (`tests/test_hlsl_discard.py`). Before, it took the
+first if/else whose arm discarded and ignored what else branched, so `if (y >
+0.25) { if (x > 0.5) { o = c; return; } } discard;` left alive the pixels whose
+y passed and whose x didn't.
 
 - **No jumps:** Xenia documents how an exec on the predicate treats a group of
   64 but not how a predicated jump does, and the execs a jump would skip cost
@@ -775,9 +796,8 @@ fragment lowering took lowers as it did (`xsdk:src/xsc_compile.c`,
   (xenia:src/xenia/gpu/draw_util.cc:498-502). `gl_FragDepth` stored on one path
   alone is refused for that; an interpolator or colour stored on one path takes
   that value on the other, which GLSL leaves undefined.
-- **Refused:** a `discard` in an arm of an if/else the unroller merges, a
-  `return` in one inside a loop, a `discard` after a return on data, and a
-  matrix, array or struct an if/else chooses.
+- **Refused:** a `return` in an arm of an if/else inside a loop, a `discard`
+  in a hardware loop, and a matrix, array or struct an if/else chooses.
 - **The optimiser** leaves a program with predicated instructions alone, as it
   did before (`can_optimize`).
 
@@ -840,8 +860,8 @@ switches in both stages, each against what HLSL defines, beside GLSL twins.
   divisors: on the console `mod(x, 3.0)` at 3 and `mod(x, 5.0)` at 5, 10 and 15
   gave the divisor, not 0, which GLSL's precision for a division allows
   (xsdk:docs/HARDWARE.md, "Samples in a loop's pass, milestone 46 step 6").
-- **Loops:** a `discard` in a loop, GLSL's `return` in one, which HLSL's
-  reaches xost as a break (Switches), a store into part of an output in a
+- **Loops:** a `discard` in a hardware loop, GLSL's `return` in a loop, which
+  HLSL's reaches xost as a break (Switches), a store into part of an output in a
   hardware loop, a fifth nested hardware loop, and more than 255 passes of one
   hardware loop, which Shader Model 3 hasn't either (Loops a block counts).
 
