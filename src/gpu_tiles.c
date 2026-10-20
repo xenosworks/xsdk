@@ -148,8 +148,9 @@ NTSTATUS xsdk_gpu_begin_tiles(const XsdkTiling *t, XsdkCommandBuffer *buffer)
 	pass_buffer = buffer;
 	tiling = true;
 	// Each band's resolve clears its depth with the hierarchical buffer, so the recording can test it, at the sizes
-	// xsdk_gpu_hiz_cleared keeps it on.
-	if (pass.depth && !pass.depth_whole)
+	// xsdk_gpu_hiz_cleared keeps it on; a pass without colour targets leaves it off, as only a depth resolve could
+	// clear it (runs_at).
+	if (pass.depth && !pass.depth_whole && pass.count)
 		xsdk_gpu_hiz_cleared(pass.width, band_rows, xsdk_gpu_depth_clear());
 	return STATUS_SUCCESS;
 }
@@ -212,20 +213,30 @@ static bool resolved_again(const XsdkTileResolve *resolves, uint32_t count, uint
 	return false;
 }
 
-// A band's resolves, each clearing its colour unless a later one copies that target too, the last its depth too unless
-// it stays whole; band 0's clear, before the first band, leaves out those the recording draws back.
+// Whether resolve k % count runs at step k of 2 * count: depth's first, then the colours' in order, so a colour
+// resolve clears depth, as the hierarchical buffer went wrong past band 0 where a depth resolve did (docs/HARDWARE.md,
+// "Render passes past eDRAM in the layer, milestone 44"); band 0's clear leaves out those drawn back.
+static bool runs_at(const XsdkTileResolve *resolves, uint32_t count, uint32_t k, bool before)
+{
+	const XsdkTileResolve *const r = &resolves[k % count];
+	return (r->target == XSDK_TILE_DEPTH) == (k < count) && !(before && r->drawn_back);
+}
+
+// A band's resolves, each clearing its colour unless a later one copies that target too, the last to run its depth too
+// unless it stays whole.
 static void resolve_band(const XsdkTileResolve *resolves, uint32_t count, uint32_t band, bool before)
 {
 	uint32_t last = count;
-	for (uint32_t i = 0; i < count; i++) {
-		if (!before || !resolves[i].drawn_back)
-			last = i;
+	for (uint32_t k = 0; k < 2 * count; k++) {
+		if (runs_at(resolves, count, k, before))
+			last = k % count;
 	}
-	for (uint32_t i = 0; i < count; i++) {
+	for (uint32_t k = 0; k < 2 * count; k++) {
+		const uint32_t i = k % count;
 		const XsdkTileResolve *const r = &resolves[i];
 		assert(r->target < pass.count || (r->target == XSDK_TILE_DEPTH && pass.depth));
 		assert(r->texture->width == pass.width && r->texture->height == pass.height);
-		if (before && r->drawn_back)
+		if (!runs_at(resolves, count, k, before))
 			continue;
 		const bool color = !resolved_again(resolves, count, i, before);
 		const bool depth = pass.depth && !pass.depth_whole && i == last;

@@ -28,7 +28,7 @@
 //   rows that reaches every band;
 // - the same at 2 samples in 2 bands and with depth whole in 3, against 1280x512 pieces, and at 4 samples in 3 bands,
 //   against 1280x256 pieces, the bands as few as fit and the gradient a flat tint, as a piece's gl_FragCoord starts at
-//   its own top;
+//   its own top; and at 4 samples with its depth resolved too, listed after the colour;
 // - a pass drawing its own texture back first, as vulkan4xenon loads an attachment, band 0's clear leaving it alone;
 // - two passes laid out the same back to back, clearing to different colours, the second's band 0 its own clear;
 // - four targets of four formats at 1280x720 with depth, in as many bands as they need, each read by value;
@@ -97,26 +97,32 @@ typedef struct {
 	uint32_t samples;
 	// The bands as few as fit, which band_rows is then what they come to; else band_rows asked for.
 	bool fewest;
+	// Its depth resolved too, into a D24S8 texture, listed after the colour as vulkan4xenon lists a stored depth.
+	bool depth_resolved;
 } Variant;
 
 static const Variant variants[] = {
-	{ "1280x720 in 2 bands of 384 rows", 384, false, 0xFF202040, 0xFF000060, 0xFF40E040, 0xFFE04040, false, 1, false },
-	{ "1280x720 in 3 bands of 256 rows", 256, false, 0xFF402020, 0xFF0000C0, 0xFF40E0E0, 0xFFE0A040, false, 1, false },
+	{ "1280x720 in 2 bands of 384 rows", 384, false, 0xFF202040, 0xFF000060, 0xFF40E040, 0xFFE04040, false, 1, false,
+		false },
+	{ "1280x720 in 3 bands of 256 rows", 256, false, 0xFF402020, 0xFF0000C0, 0xFF40E0E0, 0xFFE0A040, false, 1, false,
+		false },
 	{ "1280x720 with depth whole in 3 bands of 256 rows", 256, true, 0xFF204020, 0xFF0000FF, 0xFFE040E0, 0xFF4040E0,
-		false, 1, false },
+		false, 1, false, false },
 	{ "1280x720 with depth whole at eDRAM's top in 3 bands of 256 rows", 256, true, 0xFF203838, 0xFF00A0A0, 0xFFA0E040,
-		0xFFE0E0E0, true, 1, false },
+		0xFFE0E0E0, true, 1, false, false },
 };
 
-// Hierarchical depth on in the bands of the first and last, 384 rows at 2 samples and 256 at 4, and in their
+// Hierarchical depth on in the bands of all but the second, 384 rows at 2 samples and 256 at 4, and in their
 // references' pieces (src/gpu_draw.c, xsdk_gpu_hiz_fits).
 static const Variant sampled_variants[] = {
 	{ "1280x720 at 2 samples in 2 bands of 384 rows", 384, false, 0xFF283048, 0xFF305078, 0xFF60E0A0, 0xFFE08060, false,
-		2, true },
+		2, true, false },
 	{ "1280x720 at 2 samples with depth whole in 3 bands of 256 rows", 256, true, 0xFF482830, 0xFF784060, 0xFFA0E060,
-		0xFF6080E0, false, 2, true },
+		0xFF6080E0, false, 2, true, false },
 	{ "1280x720 at 4 samples in 3 bands of 256 rows", 256, false, 0xFF304828, 0xFF507830, 0xFFE0A0E0, 0xFF60E0E0, false,
-		4, true },
+		4, true, false },
+	{ "1280x720 at 4 samples in 3 bands of 256 rows, its depth resolved too", 256, false, 0xFF402838, 0xFF784870,
+		0xFFE0E060, 0xFF60A0E0, false, 4, true, true },
 };
 
 // The back-to-back passes' clears.
@@ -215,6 +221,8 @@ typedef struct {
 	XsdkTexture pieces[XSDK_COLOR_TARGETS];
 	XsdkTexture big_depth;
 	XsdkTexture big_sampled;
+	// The 1280x720 depth a variant resolves.
+	XsdkTexture depth;
 	bool has_display;
 	bool shown;
 	uint32_t frame;
@@ -415,14 +423,15 @@ static bool draw_tiled(Scene *s, const Variant *v, const XsdkTexture *frame)
 		.depth_whole = v->depth_whole,
 		.band_rows = v->fewest ? 0 : v->band_rows,
 		.depth_top = v->depth_top };
-	XsdkTileResolve resolve = { .target = 0, .texture = frame };
-	rgba_of(v->clear_argb, resolve.clear_rgba);
+	XsdkTileResolve resolves[2] = { { .target = 0, .texture = frame },
+		{ .target = XSDK_TILE_DEPTH, .texture = &s->depth } };
+	rgba_of(v->clear_argb, resolves[0].clear_rgba);
 	if (v->depth_whole)
 		clear_depth_whole(v, frame);
 	if (!NT_SUCCESS(xsdk_gpu_begin_tiles(&tiling, &s->commands)))
 		return false;
 	draw_single(s, v, true, 0, HEIGHT);
-	return NT_SUCCESS(xsdk_gpu_end_tiles(&resolve, 1));
+	return NT_SUCCESS(xsdk_gpu_end_tiles(resolves, v->depth_resolved ? 2 : 1));
 }
 
 // The reference's rows from top, untiled into a target as tall as the piece at the variant's samples, its depth from
@@ -892,7 +901,8 @@ static bool make_textures(Scene *s)
 	bool made = NT_SUCCESS(xsdk_texture_create(&s->reference, XSDK_FORMAT_B8G8R8A8, WIDTH, HEIGHT, 1, true)) &&
 		NT_SUCCESS(xsdk_texture_create(&s->half, XSDK_FORMAT_B8G8R8A8, WIDTH, HALF_ROWS, 1, true)) &&
 		NT_SUCCESS(xsdk_texture_create(&s->big_depth, XSDK_FORMAT_D24S8, BIG, BIG, 1, true)) &&
-		NT_SUCCESS(xsdk_texture_create(&s->big_sampled, XSDK_FORMAT_B8G8R8A8, BIG, BIG, 1, true));
+		NT_SUCCESS(xsdk_texture_create(&s->big_sampled, XSDK_FORMAT_B8G8R8A8, BIG, BIG, 1, true)) &&
+		NT_SUCCESS(xsdk_texture_create(&s->depth, XSDK_FORMAT_D24S8, WIDTH, HEIGHT, 1, true));
 	for (uint32_t i = 0; made && i < FRAMES; i++)
 		made = NT_SUCCESS(xsdk_texture_create(&s->frames[i], XSDK_FORMAT_B8G8R8A8, WIDTH, HEIGHT, 1, true));
 	for (uint32_t i = 0; made && i < XSDK_COLOR_TARGETS; i++)
@@ -903,8 +913,8 @@ static bool make_textures(Scene *s)
 
 static void free_textures(Scene *s)
 {
-	XsdkTexture *const all[] = { &s->reference, &s->half, &s->big_depth, &s->big_sampled, &s->frames[0], &s->frames[1],
-		&s->four[0], &s->four[1], &s->four[2], &s->four[3], &s->pieces[0], &s->pieces[1], &s->pieces[2],
+	XsdkTexture *const all[] = { &s->reference, &s->half, &s->big_depth, &s->big_sampled, &s->depth, &s->frames[0],
+		&s->frames[1], &s->four[0], &s->four[1], &s->four[2], &s->four[3], &s->pieces[0], &s->pieces[1], &s->pieces[2],
 		&s->pieces[3] };
 	for (uint32_t i = 0; i < sizeof all / sizeof all[0]; i++) {
 		if (all[i]->texels)

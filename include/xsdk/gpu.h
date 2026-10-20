@@ -266,19 +266,20 @@ typedef struct {
 uint32_t xsdk_gpu_tiling_bands(const XsdkTiling *tiling);
 // Sets the pass's targets, as xsdk_gpu_set_targets_samples sets them over the whole target, and records what follows
 // into buffer; STATUS_INVALID_PARAMETER for a pass that can't be tiled. Until xsdk_gpu_end_tiles: nothing a recording
-// can't hold, no visibility queries and no targets set. Depth in bands the hierarchical buffer covers
-// (xsdk_gpu_set_depth_stencil) is tested against it, from a clear to the depth xsdk_gpu_set_depth_clear set before.
+// can't hold, no visibility queries and no targets set. Depth in bands of a pass with colour targets, where the
+// hierarchical buffer covers it (xsdk_gpu_set_depth_stencil), is tested against it, from a clear to the depth
+// xsdk_gpu_set_depth_clear set before.
 NTSTATUS xsdk_gpu_begin_tiles(const XsdkTiling *tiling, XsdkCommandBuffer *buffer);
 // The draws after reach only rows top to bottom - 1, so the bands those rows miss skip them; rows 0 to the height
 // again for every band.
 void xsdk_gpu_set_draw_rows(uint32_t top, uint32_t bottom);
 // Ends the recording and queues each band: its targets, the recording, then each of count resolves into the band's rows
-// of its texture, the last clearing depth for the next band, and a colour target named twice cleared by its last
-// resolve alone. Before the first band, the resolves not drawn back clear band 0, the last of them depth too, unless
-// the pass before was laid out the same, cleared each of their targets to the same and its depth to the same, and since
-// then no target was set, resolved or run from a recording; with every resolve drawn back, nothing clears band 0's
-// depth. A colour target no resolve names isn't cleared between bands. Fails as xsdk_gpu_record_end does, queuing
-// nothing.
+// of its texture, depth's before the colour targets', the last clearing depth for the next band, and a colour target
+// named twice cleared by its last resolve alone. Before the first band, the resolves not drawn back clear band 0, the
+// last of them depth too, unless the pass before was laid out the same, cleared each of their targets to the same and
+// its depth to the same, and since then no target was set, resolved or run from a recording; with every resolve drawn
+// back, nothing clears band 0's depth. A colour target no resolve names isn't cleared between bands. Fails as
+// xsdk_gpu_record_end does, queuing nothing.
 NTSTATUS xsdk_gpu_end_tiles(const XsdkTileResolve *resolves, uint32_t count);
 
 // Loads both shaders with IM_LOAD and sets the program registers, an HLSL pair as xsdk_shader_link linked it; a resolve
