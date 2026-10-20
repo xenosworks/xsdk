@@ -277,6 +277,34 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 - Samplers (UniformConstant) → with a DescriptorSet decoration (Vulkan), fetch
   constants from 0 in (DescriptorSet, Binding) order; without (OpenGL), fetch
   constant = Binding.
+- HLSL binds as D3D9 does (xsdk:docs/scope/50-hlsl.md, step 6;
+  `tests/test_hlsl_binding.py`). glslang keeps `register(sN)` as binding N,
+  and gives a sampler without one binding 0
+  (glslang:glslang/HLSL/hlslParseHelper.cpp:6402-6412), so an HLSL sampler's
+  fetch constant is its binding, as `SetTexture(N)` binds it; one sharing a
+  binding takes the lowest no binding names. glslang drops `b#` and `i#`
+  (hlslParseHelper.cpp:6396-6431) and packs bools and ints into `$Global`
+  beside the floats, so:
+  - a bool or int in a register another member holds, as i10's `b0` and
+    `i0` over `LightColor[0]`'s c0, gets a register of its own past the
+    blocks; one alone in its register stays, as `register(cN)` puts it.
+    Read as a value, it is that register's float, 1.0 or 0.0 for a bool.
+  - a bool a pixel shader's if reads, where the if's arms go in execs, is a
+    boolean constant from 128, libxenon's pixel half
+    (libxenon:drivers/xenos/xe.c:2038-2064), the arms in `cexec b`*n* and
+    `cexec !b`*n* execs; an arm there using a0 is refused.
+  - an int a loop counts is the loop constant that loop reads, set to
+    `xsdk_gpu_loop_constant(n, 0, 1)`; a loop from other than 0 by 1 is
+    refused, as a title setting the int by name can't count its passes.
+- The constant table (XenosRecomp:XenosRecomp/constant_table.h) is GLSL's as
+  before: samplers `tex`*slot*, uniforms as vectors. HLSL's names each sampler
+  and member as declared, its register set, index and count, and its type:
+  class, bool, int or float, HLSL's rows and columns, array elements, a matrix
+  `column_major` by columns; a bool read as a boolean constant is in the bool
+  set, an int a loop counts in the int4 set at its loop constant, and either
+  read as a value in the float4 set too. `xsdk_shader_constant` finds one by
+  name (xsdk:include/xsdk/shader.h); `xsc/native.py`'s `constant_table` lists
+  them.
 - A sampler2DShadow's comparison → a register past the blocks, before the
   literals, named `_compare<slot>`, its resource `comparison` (the C's
   `XSDK_XSC_COMPARISON`). A Vulkan shader takes its compare op from the

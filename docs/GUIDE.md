@@ -126,6 +126,14 @@ call. The header holds, for each file:
   use the same constants.
 - **Samplers** take texture fetch constants from 0 in each stage, by set and binding; a vertex shader that samples
   moves its own with `xsdk_shader_move_textures` so both stages fit.
+- **HLSL's constants by name,** as a D3D9 port binds them (docs/scope/50-hlsl.md, step 6):
+  `xsdk_shader_constant(&shader, "LightColor", XSDK_SHADER_FLOAT, &c)` (`shader.h`) reads the container's table and
+  gives `c.index`, the first float constant, `c.count` and the rows, columns and elements. `register(cN)` is cN, and
+  `register(sN)` fetch constant N, so `SetTexture(N)` is `xsdk_gpu_set_texture(N, ...)`. glslang drops `b#` and `i#`,
+  so find bools and ints by name and set each in every set the table names it in: a bool a pixel shader's if reads in
+  execs of its own is a boolean constant, `XSDK_SHADER_BOOL`, bit `c.index % 32` of word `c.index / 32` for
+  `xsdk_gpu_set_bool_constants`; an int a loop counts a loop constant, `XSDK_SHADER_INT`, set to
+  `xsdk_gpu_loop_constant(n, 0, 1)`; either read as a value a float constant, 1.0 or 0.0 for a bool.
 - **Indices** are big-endian, as the CPU writes them, 16 bits each unless `indices_32_bit`, up to 65535 a draw.
 - **Constants the GPU loads from memory,** `xsdk_gpu_load_vertex_constants` and `xsdk_gpu_load_pixel_constants`, go in
   whole groups of 4 from a multiple of 4, from 64-byte aligned memory; a group loaded isn't also set. The boolean and

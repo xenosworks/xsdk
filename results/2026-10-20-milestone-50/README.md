@@ -378,6 +378,90 @@ it is: its stages pack TEXCOORD0 and COLOR0 alike.
 and resources byte for byte, and the 30 refused refused alike. `tests/xsc_shaders.h` regenerates as it is, plus
 `grid_skin_vs.hlsl`.
 
+## Step 6: binding as D3D9 binds
+
+`step6.txt`, `step6.json` (docs/scope/50-hlsl.md, step 6); the JSON now holds each compiled shader's constant table.
+glslang keeps an HLSL sampler's `register(sN)` as binding N, a sampler without one binding 0, and drops `b#` and `i#`:
+`i` is an unrecognized register type, and `b` sets a binding a `$Global` member doesn't keep
+(glslang:glslang/HLSL/hlslParseHelper.cpp:6396-6431); it packs bools and ints into `$Global` beside the floats. So,
+HLSL alone, by OpSource (xenos-toolchain/docs/xsc.md, "Interface conventions"):
+- **Samplers** take their binding as their fetch constant, as `SetTexture(N)` binds them (src/xsc_resolve.c,
+  `hlsl_slots`); one sharing a binding, a sampler without a register beside another or beside one at s0, the lowest no
+  binding names. glslang gives `s0` and no register alike, so a sampler at s0 declared after one without a register
+  takes another constant; the table says which. GLSL still packs from 0 by set and binding.
+- **A bool or int in a register another member holds** takes a float register of its own past the blocks
+  (`move_shared`); one alone in its register stays there, as `register(cN)` puts it. Read as a value it is that
+  register's float (src/xsc_lower_block.c, `xsdk_xsc_integral_place`).
+- **A bool a pixel shader's if reads,** where the if's arms go in execs (a shader the unroller runs on, its arms
+  working something out), is a boolean constant from 128, libxenon's pixel half, the arms in `cexec b128` and
+  `cexec !b128` execs, opcode 13 as milestone 11's console probe ran `cexec b128` (docs/HARDWARE.md, "Shader constants:
+  partial writes hang the GPU, libxenon's whole blocks don't"); `!b` is new to the console. An arm there that uses a0
+  is refused, and the optimiser leaves a program with such execs alone, as their ops aren't predicated. Elsewhere, a
+  select as i10's or a vertex shader's if, the bool is a value.
+- **An int a loop counts** is the loop constant that loop reads, as step 3's block loops had it, set to
+  `xsdk_gpu_loop_constant(n, 0, 1)`; a loop from other than 0 by 1 is refused, as a title setting the int by name can't
+  count its passes.
+- **The constant table** names each sampler and member as declared, with its register set, index and count, and its
+  type: class, bool, int or float, HLSL's rows and columns, array elements, a matrix `column_major` by columns
+  (src/xsc_lower_stage.c, `xsdk_xsc_uniform_constants`); a bool read as a boolean constant is in the bool set, an int
+  a loop counts in the int4 set, and either read as a value in the float4 set. GLSL's table is as it was.
+  `xsdk_shader_constant` (include/xsdk/shader.h) finds one by name.
+
+| | Corpus, 157 | Idioms, 21 |
+|---|---|---|
+| Compiled | 157 | 21 |
+
+Every result is step 5's, shader by shader: 151 exact and the same 6 inexact. The tables now say:
+- **m4:** A at s3 is fetch constant 3, B at s1 is 1, C without a register 0, where step 5 packed C, B and A at 0, 1
+  and 2; K at c5.
+- **i10:** UseTexture, at b0, which glslang put at c0.x over `LightColor[0]`, is c8, a float register of its own past
+  the block's c0 to c7, read as a value as its `?:` is a select; LightCount, at i0, which glslang put at c0.y, is loop
+  constant 16 in the int4 set, its loop's, and no float register; LightColor and LightDir are c0 and c4, 4 registers
+  and 4 elements each.
+- **i16 and i17:** LightCount is loop constant 16; UseTexture, alone at its `register(c0)`, stays c0.
+
+Of the HLSL testdata, only i10's and m4's microcode change; every other container gains its table's names and types.
+
+**On the simulator:** `tests/test_hlsl_binding.py`, new, runs `xsc/testdata/hlsl/binding`, the optimiser off and on:
+`slots_ps` (samplers at s1 and s4 sample 1 and 4, two without a register 0 and 2) and its GLSL twin `slots.frag`
+(packed 1, 3, 0 and 2); `integers_ps` (Flip at b3 in an if, boolean 128; Count at i2, loop constant 16; Tint at b1 and
+Scale at i0, values, c5 and c7, glslang having packed all four into c2, which holds 99 there; each Flip and Tint, Count
+0 and 2); `unrolled_ps` (a bool's if past an unrolled loop, which the optimiser would take); `table_ps` (every entry);
+xsdk_test's `grid_binding_ps`, its cell drawn and checked as the console's; and `refused_step_ps`. Each of 17 changes
+broken on purpose failed it: samplers packed from 0 `slots_ps ... samples fetch constants [2.0, 3.0, 0.0, 1.0], not
+[1.0, 4.0, 0.0, 2.0]`; a shared binding's sampler at 0 `[1.0, 4.0, 0.0, 0.0]`; shared ints not moved `Tint ... and
+Scale ..., not floats of their own`; a moved member read where glslang put it `[198.0, -173.25, 272.25, 99.0]`; no
+boolean constants `Flip in the bool set: []`; a bool's arms swapped `[4.5, 12.0, -7.5, 3.0], not [1.5, -3.75, 6.0,
+2.25]`; no loop constant entry `Count in the int4 set: []`; other loop shapes not refused `refused_step_ps compiled`;
+matrices' class flipped, a vector's columns 4, elements written 1, each `table_ps ...`; a bool unread as a float
+listed `Flip or Count read as a float`; HLSL samplers named tex<slot> `A in the sampler set: []`; a cexec's boolean a
+bit low, its condition dropped, its ops predicated, each `integers_ps ...`; the optimiser let in `unrolled_ps,
+optimiser on, Flip True: [1.0, -2.25, 5.0, 1.0], not [2.0, 10.0, -4.5, 2.0]`. `xdis/simulate.py` runs execs on
+boolean constants, `bools` the true ones.
+
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, `test_scalar_unit.py` with its corpus at
+`/mnt/z/vulkan4xenon`. WSL's binfmt entry for Windows `.exe` files was gone in this session, so the tests that run
+XenosRecomp, and check_hlsl.py's glslang, launched them through `/init` by hand from a scratch `sitecustomize.py`.
+
+**xsdk_test:** `tests/test_hlsl.c` draws `grid_binding_ps.hlsl` in an eighth cell, left of the gaps' at column 860,
+row 600, in two quads: Low at s3 and High at s7 sample 4-texel point-sampled textures bound with
+`xsdk_gpu_set_texture(3)` and `(7)`, other textures at 0 and 1; Step, Bright and Count are found by name with
+`xsdk_shader_constant` and set there, the left half Bright with Count 2, blue 191, the right half not with Count 5,
+blue 159. Checks: `hlsl: samplers at s3 and s7 sample the textures bound at slots 3 and 7, an if reads a bool at b2
+and a loop counts an int at i1, each set by name through the container's table, as D3D9 binds them: %u of %u pixels
+wrong`, and `hlsl: grid_binding_ps.hlsl's table names Low at fetch constant %d and High at %d, as their s3 and s7, Step
+at float constant %d, Bright at boolean constant %d and Count at loop constant %d`, which wants 3 and 7 and every name
+found. `tests/breaks/hlsl/binding.patch` packs HLSL's samplers from 0 again: on the simulator its container draws all
+80 columns red 8 and green 8, the textures at 0 and 1, 28800 of the check's 28800 pixels wrong over its 9 frames, and
+its table puts Low and High at 0 and 1; an empty cell, the clear colour, is 28800 wrong too, and the PC's container 0.
+It must fail both checks and `xsc: hlsl/grid_binding_ps.hlsl compiles into the PC's container, literals and
+resources` on the console.
+
+**GLSL unchanged:** every GLSL program of step 2, 451 now with xost's newer testdata, the optimiser off and on,
+compiled by 5dd03e9 and by this step: 902 containers, manifests and resources the same byte for byte, the 30 refused
+refused alike. `tests/xsc_shaders.h` regenerates with `grid_binding_ps.hlsl`; of the others only HLSL tables change,
+grid_loop_ps's Count an int at loop constant 16, grid_skin_vs's bones 8 float4x3s.
+
 ## On the console
 
 docs/HARDWARE.md, "HLSL on the console, milestone 50", records what these settled. Each run built clean in full from

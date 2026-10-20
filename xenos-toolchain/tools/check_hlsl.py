@@ -17,8 +17,9 @@ lays from c0), the GLSL's in its blocks; a uniform <block>_<member> of the HLSL 
 instance <block>, as SPIRV-Cross names them. Each comparison is exact, every export component the shader's type has,
 a vertex shader's position among them, equal bit for bit on every trial, inexact, or not comparable, with the reason.
 
---refresh writes each shader's SPIR-V beside it, <name>.spv, as testdata keeps it; --json writes every result. Runs in
-WSL with xost's Windows glslang, as check_optimize.py does.
+--refresh writes each shader's SPIR-V beside it, <name>.spv, as testdata keeps it; --json writes every result, a
+compiled shader's constant table among it (xsc/native.py, constant_table). Runs in WSL with xost's Windows glslang,
+as check_optimize.py does.
 
     python3 tools/check_hlsl.py --json ../results/2026-10-20-milestone-50/step2.json
 """
@@ -333,7 +334,7 @@ def check(source, args, work):
     if message:
         result = {"status": "refused", "cause": cause_of(message, module), "message": message}
     else:
-        result = {"status": "compiled"}
+        result = {"status": "compiled", "table": native.constant_table(compiled)}
     if not twin:
         return result
     if result["status"] != "compiled":
