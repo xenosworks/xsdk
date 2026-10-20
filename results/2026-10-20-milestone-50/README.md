@@ -727,8 +727,8 @@ docs/scope/50-hlsl.md, step 8 and "Done when", built on the PC on 2026-10-20; no
 - **docs/GETTING_STARTED.md, section 4,** builds glslang-xenon with SPIRV-Tools and SPIRV-Headers fetched by its
   `update_glslang_sources.py`, `ENABLE_OPT=ON`, into `~/xsdk-gcc/bin/glslang`. Its commands ran verbatim with HOME at
   `~/fresh50`, cloning from GitHub: 1.3 s, 6.0 s, 3.2 s and 60.6 s on 32 threads, printing what the section shows.
-  GitHub's `xenon` is at 9bc57aec, without step 7's three commits, which are on Z:\glslang-xenon's `xenon` alone; that
-  tree fetched to a607c3a9 and rebuilt, its glslang:
+  GitHub's `xenon` was then at 9bc57aec, without step 7's three commits, pushed since as a607c3a9; that tree fetched
+  to a607c3a9 and rebuilt, its glslang:
   - **GLSL:** step 7's 623 programs, `-V`, against Khronos's 16.3.0 (`~/fresh41`): 596 the same SPIR-V byte for byte,
     the 27 others refused alike, with the same messages;
   - **HLSL:** `check_hlsl.py --refresh` over every folder of xost's HLSL testdata, 234 shaders and the corpus's GLSL
@@ -808,3 +808,15 @@ shaders before.
 then cmake_check and its break: 0 warnings; vulkan4xenon against it, clean, 0 warnings. The console set is in
 `local/m50/set8/`: `xsdk_test.xex`, `x_hlsl_if.xex` (the if break), `cmake_check.xex` and `cmake_check_hlsl_brk.xex`.
 `local/m50/build.sh` builds and copies the if break with the others.
+
+## Step 8 on the console
+
+At 1548f93, built clean with vulkan4xenon against it (local/m50/build.sh), cmake_check and its break through
+glslang-xenon a607c3a9 at `~/xsdk-gcc/bin/glslang`, through the console agent on 2026-10-20 (`step8_*.log`):
+- xsdk_test 527 of 529, the controller's two failing with the pad idle; the loop-free if/else cell 0 of 28800 pixels
+  wrong.
+- The if break failed that cell, 28800 of 28800 wrong, and `xsc: hlsl/grid_if_ps.hlsl compiles into the PC's
+  container, literals and resources`, besides the controller's two.
+- cmake_check 6 of 6, its HLSL line as above, 0 of 2048 pixels wrong; its break 5 of 6, failing that line alone, Swap
+  at boolean constant 128 and Count at loop constant 16, 2048 of 2048 wrong.
+- vulkan4xenon_test 517 of 517 twice; vkbench 17 of 17, xsdk's draw+submit as step 7's.

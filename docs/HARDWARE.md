@@ -4571,7 +4571,10 @@ xsdk_test's HLSL grid (`tests/test_hlsl.c`), its shaders compiled by xost from H
   `cexec !b128`, the negated form's first run on the console; an int counting a loop ran through loop constant 16.
   With `register(b2)` and `register(i1)` kept (`step7_xsdk_test.log`), the bool took its arms through `cexec b130`
   and `cexec !b130`, the first boolean constant past 128 run on the console, and the loop counted through loop
-  constant 17.
+  constant 17. A title's own CMake build (`step8_cmake_check.log`) drew `register(s2)`, `(b1)` at boolean constant
+  129 and `(i3)` at loop constant 19, set as D3D9 sets them.
+- **A loop-free pixel shader's if/else,** an if with no else and nested if/else, merged by the unroller's selects,
+  drew what HLSL defines in every pixel (`step8_xsdk_test.log`).
 - **Skinning from int4 BLENDINDICES** fetched as UBYTE4, a0 loaded from each index lane in turn times a bone's 3
   registers, picked each corner's four float4x3 bones: the quad landed and shaded as the CPU skins it, and a palette
   with two bones swapped, or the indices unscaled, drew elsewhere (`step5_probe_skin.log`).
