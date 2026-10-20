@@ -1,0 +1,12 @@
+--- a/src/gpu_draw.c
++++ b/src/gpu_draw.c
+@@ -323,7 +323,8 @@
+ 	if (probe_sample_select != UINT32_MAX)
+ 		return probe_sample_select;
+ #endif
+-	return depth ? 0 : copy_sample_selects[samples_log2(target_samples)];
++	// Broken on purpose: every resolve copies sample 0.
++	return depth ? 0 : copy_sample_selects[0];
+ }
+ 
+ // As libxenon sets it (xe.c:1411-1412): without msaa_enable the console's edges don't blend (docs/HARDWARE.md).

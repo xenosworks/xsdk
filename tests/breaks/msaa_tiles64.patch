@@ -1,0 +1,12 @@
+--- a/src/gpu_draw.c
++++ b/src/gpu_draw.c
+@@ -292,7 +292,8 @@
+ // At 2 and 4 samples too (results/2026-10-20-milestone-44-step-3/probe_msaa_default.log, "takes N eDRAM tiles").
+ uint32_t xsdk_gpu_color_target_sample_tiles(uint32_t width, uint32_t height, uint32_t format, uint32_t samples)
+ {
+-	return xsdk_gpu_target_sample_tiles(width, height, samples) << is_64_bit(format);
++	// Broken on purpose: a 64-bit target's tiles not doubled at 4 samples.
++	return xsdk_gpu_target_sample_tiles(width, height, samples) << (is_64_bit(format) && samples != 4);
+ }
+ 
+ uint32_t xsdk_gpu_color_target_tiles(uint32_t width, uint32_t height, uint32_t format)

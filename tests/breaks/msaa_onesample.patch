@@ -1,0 +1,12 @@
+--- a/src/gpu_draw.c
++++ b/src/gpu_draw.c
+@@ -466,7 +466,8 @@
+ 	assert(count >= 1);
+ 	for (uint32_t i = 0; i < count; i++)
+ 		assert(xsdk_gpu_target_takes_samples(targets[i].format, samples));
+-	hold_targets(targets, count, depth_tile, samples);
++	// Broken on purpose: the targets set at 1 sample whatever the count.
++	hold_targets(targets, count, depth_tile, 1);
+ 	put_target(width, height, height);
+ }
+ 

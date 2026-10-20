@@ -1,0 +1,26 @@
+--- a/src/gpu_tiles.c
++++ b/src/gpu_tiles.c
+@@ -60,9 +60,11 @@
+ static uint32_t band_tiles(const XsdkTiling *t, uint32_t rows)
+ {
+ 	const uint32_t depth_rows = t->depth_whole ? t->height : rows;
+-	uint32_t tiles = t->depth ? xsdk_gpu_target_sample_tiles(t->width, depth_rows, t->samples) : 0;
++	// Broken on purpose: a 4-sample pass's bands sized as for 2 samples.
++	const uint32_t samples = t->samples == 4 ? 2 : t->samples;
++	uint32_t tiles = t->depth ? xsdk_gpu_target_sample_tiles(t->width, depth_rows, samples) : 0;
+ 	for (uint32_t i = 0; i < t->count; i++)
+-		tiles += xsdk_gpu_color_target_sample_tiles(t->width, rows, t->targets[i].format, t->samples);
++		tiles += xsdk_gpu_color_target_sample_tiles(t->width, rows, t->targets[i].format, samples);
+ 	return tiles;
+ }
+ 
+--- a/src/gpu_draw.c
++++ b/src/gpu_draw.c
+@@ -337,7 +337,6 @@
+ {
+ 	const XsdkColorTarget *const color = &color_targets[target];
+ 	const uint32_t tile = target_placed ? color->tile : target_tiles;
+-	assert(tile + (target_tiles << is_64_bit(color->format)) <= XSDK_EDRAM_TILES);
+ 	return tile | color->format << COLOR_FORMAT_SHIFT;
+ }
+ 
