@@ -1,6 +1,6 @@
 --- a/src/shader.c
 +++ b/src/shader.c
-@@ -423,7 +423,8 @@
+@@ -450,7 +450,8 @@ NTSTATUS xsdk_shader_link(XsdkShader *vertex, const XsdkShader *pixel)
  	uint8_t links[XSDK_XSC_INTERPOLATORS];
  	const int32_t exported = xsdk_xsc_link(
  		vertex->interpolators, vertex->interpolator_count, pixel->interpolators, pixel->interpolator_count, links);

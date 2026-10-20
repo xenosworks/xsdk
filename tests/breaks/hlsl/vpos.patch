@@ -1,6 +1,6 @@
 --- a/src/xsc_lower_fragment.c
 +++ b/src/xsc_lower_fragment.c
-@@ -136,7 +136,8 @@
+@@ -134,7 +134,8 @@ static bool frag_coord_register(XscLower *l, const XscInterface *si, int64_t par
  static bool vpos_register(XscLower *l, const XscInterface *si, int64_t param_reg)
  {
  	const int64_t vpos = xsdk_xsc_fresh(l);
