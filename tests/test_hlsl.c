@@ -19,8 +19,9 @@
 // (xsdk_shader_link), as five cells where the raster test's frame has nothing, each checked by pixel. One vertex
 // shader's TEXCOORD0 and COLOR0 meet a pixel shader's by semantic, with a TEXCOORD1 declared first; VPOS is each
 // pixel's whole column and row; VFACE's sign on a clockwise and a counter-clockwise quad, front faces clockwise as on
-// D3D9, is reported; DEPTH from TEXCOORD0's x leaves a nearer quad in front of half a cell; and another vertex shader's
-// TEXCOORD3, COLOR1, TEXCOORD0 and FOG meet a pixel shader reading COLOR1 and TEXCOORD3 alone, in 2 interpolators.
+// D3D9, is reported; DEPTH from TEXCOORD0's x leaves a nearer quad in front of half a cell; another vertex shader's
+// TEXCOORD3, COLOR1, TEXCOORD0 and FOG meet a pixel shader reading COLOR1 and TEXCOORD3 alone, in 2 interpolators; and
+// a loop in SSA form (step 3), a hardware loop an int in $Global counts, each pixel leaving it on its own TEXCOORD0.
 
 enum {
 	WIDTH = 1280,
@@ -43,12 +44,13 @@ enum {
 	VFACE_Y = 510,
 	DEPTH_Y = 555,
 	GAPS_Y = 600,
+	LOOP_Y = 645,
 	// A position, a colour and a coordinate a vertex: POSITION, COLOR0 and TEXCOORD0.
 	VERTEX_FLOATS = 10,
 	STRIDE_BYTES = VERTEX_FLOATS * 4,
 	QUAD_VERTICES = 6,
-	// The link's quad, VPOS's, VFACE's two, DEPTH's, the nearer one over it and the link with gaps'.
-	QUADS = 7,
+	// The link's quad, VPOS's, VFACE's two, DEPTH's, the nearer one over it, the link with gaps' and the loop's.
+	QUADS = 8,
 	VERTEX_WORDS = QUADS * QUAD_VERTICES * VERTEX_FLOATS,
 	// VPOS's red and green: the column and row mod 64, times 4.
 	VPOS_PERIOD = 64,
@@ -58,6 +60,8 @@ enum {
 	// The link with gaps' pixel shader's interpolators, COLOR1's and TEXCOORD3's; a map of each semantic to one
 	// interpolator in both stages, step 4's first, took 14.
 	GAPS_INTERPOLATORS = 2,
+	// The loop's count, Count in grid_loop_ps.hlsl's $Global: columns past 12 steps of red run every pass.
+	LOOP_COUNT = 12,
 };
 
 // The vertex shaders, then the pixel shaders.
@@ -69,12 +73,13 @@ enum {
 	SHADER_VFACE,
 	SHADER_DEPTH,
 	SHADER_GAPS,
+	SHADER_LOOP,
 	SHADERS,
 };
 
 static const char *const shader_names[SHADERS] = { "hlsl/grid_vs.hlsl", "hlsl/grid_gaps_vs.hlsl",
 	"hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl", "hlsl/grid_depth_ps.hlsl",
-	"hlsl/grid_gaps_ps.hlsl" };
+	"hlsl/grid_gaps_ps.hlsl", "hlsl/grid_loop_ps.hlsl" };
 
 static const XsdkVertexElement layout[] = {
 	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT4 },
@@ -85,6 +90,8 @@ static const XsdkVertexElement layout[] = {
 // The link's colour, red 64 and green 191, and the nearer quad's red.
 static const float link_colour[4] = { 0.25f, 0.75f, 0.0f, 1.0f };
 static const float near_colour[4] = { 1.0f, 0.0f, 0.0f, 1.0f };
+// The loop's Step at c0: what each pass adds to red and green, and blue's for each pass before the pixel left.
+static const float loop_step[4] = { 1.0f / 16.0f, 1.0f / 32.0f, 1.0f / 16.0f, 0.0f };
 
 typedef struct {
 	uint32_t y;
@@ -104,6 +111,7 @@ static const Quad quads[QUADS] = {
 	{ DEPTH_Y, false, CELL_X, CELL_WIDTH, 0.75f, link_colour },
 	{ DEPTH_Y, false, CELL_X, CELL_WIDTH, 0.5f, near_colour },
 	{ GAPS_Y, false, CELL_X, CELL_WIDTH, 0.5f, link_colour },
+	{ LOOP_Y, false, CELL_X, CELL_WIDTH, 0.5f, link_colour },
 };
 
 // A quad's two triangles, in units of a quad: top left, top right, bottom left, then the other half.
@@ -118,6 +126,9 @@ typedef struct {
 	volatile uint32_t *buffers[BUFFERS];
 	XsdkRasterState raster;
 	XsdkDepthStencilState depth;
+	// The loop's loop constant, from its compile's block loop need, and that constant's value for LOOP_COUNT.
+	uint32_t loop_constant;
+	uint32_t loop_value;
 	bool has_display;
 } Grid;
 
@@ -126,6 +137,7 @@ typedef struct {
 	uint32_t vpos;
 	uint32_t depth;
 	uint32_t gaps;
+	uint32_t loop;
 	// VFACE's front and back quads: pixels reading +1, -1 and neither.
 	uint32_t faces[2][3];
 } Wrong;
@@ -193,6 +205,22 @@ static bool load_pair(Grid *g, uint32_t pixel)
 		NT_SUCCESS(xsdk_shader_link(&g->linked[pixel], &g->shaders[pixel]));
 }
 
+// The loop's loop constant and its value for LOOP_COUNT passes, as xsdk works them out from the block's int; false
+// without the block loop need, the loop not a hardware loop.
+static bool find_loop(Grid *g)
+{
+	const XsdkXscShader *const c = &g->compiled[SHADER_LOOP];
+	for (size_t i = 0; i < c->need_count; i++) {
+		const XsdkXscNeed *const n = &c->needs[i];
+		if (n->kind != XSDK_XSC_BLOCK_LOOP)
+			continue;
+		g->loop_constant = n->reg;
+		g->loop_value = xsdk_gpu_loop_constant(xsdk_xsc_loop_passes(n->start, n->step, LOOP_COUNT), 0, 1);
+		return true;
+	}
+	return false;
+}
+
 // The shaders compiled on the console as the raster test compiles its own, the vertices and the frames' buffers.
 static bool make_grid(Grid *g)
 {
@@ -200,6 +228,8 @@ static bool make_grid(Grid *g)
 		if (!compile_shader(g, i))
 			return false;
 	}
+	if (!find_loop(g))
+		return false;
 	for (uint32_t i = SHADER_LINK; i < SHADERS; i++) {
 		if (!load_pair(g, i))
 			return false;
@@ -241,7 +271,7 @@ static void draw_quads(const Grid *g, uint32_t pixel, uint32_t first, uint32_t c
 	xsdk_gpu_draw(XSDK_PRIMITIVE_TRIANGLE_LIST, count * QUAD_VERTICES);
 }
 
-// One frame of the four cells, resolved and waited for; false if the fence didn't land.
+// One frame of the cells, resolved and waited for; false if the fence didn't land.
 static bool draw(const Grid *g, volatile uint32_t *buffer)
 {
 	xsdk_gpu_set_target(WIDTH, HEIGHT);
@@ -250,6 +280,9 @@ static bool draw(const Grid *g, volatile uint32_t *buffer)
 	draw_quads(g, SHADER_VPOS, 1, 1);
 	draw_quads(g, SHADER_VFACE, 2, 2);
 	draw_quads(g, SHADER_GAPS, 6, 1);
+	xsdk_gpu_set_pixel_constants(0, loop_step, 1);
+	xsdk_gpu_set_loop_constants(g->loop_constant, &g->loop_value, 1);
+	draw_quads(g, SHADER_LOOP, 7, 1);
 	xsdk_gpu_set_depth_stencil(&g->depth);
 	draw_quads(g, SHADER_DEPTH, 4, 1);
 	draw_quads(g, SHADER_LINK, 5, 1);
@@ -283,6 +316,28 @@ static uint32_t channel(uint32_t held, uint32_t shift)
 static uint32_t ramp(uint32_t x)
 {
 	return (uint32_t)(((float)(x - CELL_X) + 0.5f) / CELL_WIDTH * 255.0f + 0.5f);
+}
+
+static uint32_t unorm(float value)
+{
+	return (uint32_t)(value * 255.0f + 0.5f);
+}
+
+// The loop's colour at column x, as grid_loop_ps.hlsl works it out: a step of red and green each pass till red passes
+// TEXCOORD0's x, and blue the pass the pixel left at.
+static uint32_t loop_colour(uint32_t x)
+{
+	const float u = ((float)(x - CELL_X) + 0.5f) / CELL_WIDTH;
+	float red = 0.0f, green = 0.0f;
+	uint32_t i = 0;
+	while (i < LOOP_COUNT) {
+		red += loop_step[0];
+		green += loop_step[1];
+		if (red > u)
+			break;
+		i++;
+	}
+	return stored(unorm(red), unorm(green), unorm((float)i * loop_step[2]));
 }
 
 static bool pixel_right(const char *what, uint32_t x, uint32_t y, uint32_t held, uint32_t want, uint32_t tolerance,
@@ -328,6 +383,9 @@ static void check_frame(volatile const uint32_t *buffer, uint32_t frame, Wrong *
 			y = GAPS_Y + dy;
 			wrong->gaps +=
 				!pixel_right("gaps", x, y, buffer[tiled_index(x, y, WIDTH)], link, RAMP_TOLERANCE, frame, logged);
+			y = LOOP_Y + dy;
+			wrong->loop +=
+				!pixel_right("loop", x, y, buffer[tiled_index(x, y, WIDTH)], loop_colour(x), TOLERANCE, frame, logged);
 		}
 	}
 }
@@ -369,6 +427,12 @@ static void report(const Wrong *w, bool landed, uint32_t frames)
 		"semantic, the other two unread: %u of %u pixels wrong",
 		(unsigned)w->gaps, (unsigned)pixels);
 	check(name, landed && frames && w->gaps == 0);
+	(void)snprintf(name, sizeof name,
+		"hlsl: a hardware loop an int in $Global counts, each pixel leaving it once its red passes TEXCOORD0's x, "
+		"draws "
+		"what it carries and the pass it left at: %u of %u pixels wrong",
+		(unsigned)w->loop, (unsigned)pixels);
+	check(name, landed && frames && w->loop == 0);
 }
 
 static void free_grid(Grid *g)

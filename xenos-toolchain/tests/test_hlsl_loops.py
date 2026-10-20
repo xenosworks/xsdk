@@ -23,6 +23,9 @@ longer than the twin, in ALU and control flow instructions:
 - uniform_ps: a hardware loop an int in $Global counts, left on data, its counter read after it;
 - data_ps: a while on data, whose test works out a value its pass and what follows read.
 
+xsdk_test's HLSL grid's loop, hlsl/grid_loop_ps.hlsl (xsdk:tests/test_hlsl.c), a hardware loop an int in $Global
+counts, runs too, its cell's 80 columns in one group, each pixel's colour the test's CPU reference's exactly.
+
 Refused for what they are: refused_last_ps, a do/while's header's Phi read after the loop, where its variable holds
 the next pass's value; refused_exit_ps, a value a loop's test works out kept past the loop, which a break sets too; and
 refused_kept_ps, a value a do/while's pass works out read after the loop, which no Phi of its header carries.
@@ -261,6 +264,41 @@ def check(name, optimize):
           f"{sizes[1]}")
 
 
+# xsdk_test's HLSL grid's loop (xsdk:tests/test_hlsl.c): its step, its count, and its cell's columns.
+GRID_STEP = [1.0 / 16, 1.0 / 32, 1.0 / 16, 0.0]
+GRID_COUNT = 12
+GRID_COLUMNS = 80
+
+
+def grid_colour(u):
+    c, i = [0.0, 0.0, 0.0, 1.0], 0
+    while i < GRID_COUNT:
+        c[0] += GRID_STEP[0]
+        c[1] += GRID_STEP[1]
+        if c[0] > u:
+            break
+        i += 1
+    c[2] = i * GRID_STEP[2]
+    return c
+
+
+def grid(optimize):
+    tag = f"optimiser {'on' if optimize else 'off'}"
+    m = module("hlsl/grid_loop_ps.hlsl")
+    blob, manifest = lower_ex(m, XSDK_REGISTERS, optimize)
+    if kinds(manifest) != ["block_loop"]:
+        raise SystemExit(f"  FAIL grid_loop_ps.hlsl, {tag}: loops {kinds(manifest)}, not a block's")
+    uvs = [[(x + 0.5) / GRID_COLUMNS, 0.0, 0.0, 0.0] for x in range(GRID_COLUMNS)]
+    group = simulate.run_group(blob, [{0: uv} for uv in uvs], constants(m, manifest, [GRID_STEP]),
+                               loops=loops(manifest, GRID_COUNT))
+    wrong = [x for x, r in enumerate(group) if r.exports[0] != [simulate.single(v) for v in grid_colour(uvs[x][0])]]
+    if wrong:
+        raise SystemExit(f"  FAIL grid_loop_ps.hlsl, {tag}: {len(wrong)} of {GRID_COLUMNS} columns wrong, column "
+                         f"{wrong[0]} {group[wrong[0]].exports[0]}, not {grid_colour(uvs[wrong[0]][0])}")
+    print(f"  PASS grid_loop_ps.hlsl, {tag}: all {GRID_COLUMNS} columns in one group, which ran {group[0].passes} "
+          f"passes")
+
+
 REFUSALS = {
     "refused_last_ps.hlsl": "a do/while's header's Phi read after the loop",
     "refused_exit_ps.hlsl": "a value a loop's test works out, kept past the loop",
@@ -286,6 +324,7 @@ def main():
     for optimize in (False, True):
         for name in CASES:
             check(name, optimize)
+        grid(optimize)
     print("OK")
 
 

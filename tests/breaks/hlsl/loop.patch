@@ -1,0 +1,12 @@
+--- a/src/xsc_ssa.c
++++ b/src/xsc_ssa.c
+@@ -496,7 +496,8 @@
+ 	from = remapped(p, from);
+ 	const Loop *const l = loop_tested_in(p, from);
+ 	if (!l || !l->at_top)
+-		return store_at_end(p, from, var, value);
++		// Broken on purpose: a loop merge's Phi held in its header's Phi's variable not stored at a break.
++		return phi->shares || store_at_end(p, from, var, value);
+ 	if (label_of(&p->blocks[phi->block]) != l->merge)
+ 		return refuse(p, "a Phi on the edge from a loop's test into its pass (v1)");
+ 	return phi->shares || store_on_entry(p, l, var, value);

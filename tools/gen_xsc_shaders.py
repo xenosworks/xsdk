@@ -28,7 +28,8 @@ loops' passes, the grid drawn in the raster test; and vk_scalar_input_loop.frag,
 vk_vertex_scalar_input.vert, scalar inputs, held in x alone, read as values; and milestone 47's vk_instance_cells.vert
 and vk_instance_step.vert, instanced, which the instancing test draws; and milestone 48's vk_indexed_reads.vert, rows
 read at two run-time indices that the optimiser reads at a0 where they're used, which the indexed reads test draws;
-and milestone 50's HLSL grid, hlsl/grid_*.hlsl, glslang's SPIR-V of D3D9's semantics, which the HLSL test draws.
+and milestone 50's HLSL grid, hlsl/grid_*.hlsl, glslang's SPIR-V of D3D9's semantics and of a loop in SSA form,
+which the HLSL test draws.
 Prints a C header. Runs in WSL, where make builds the compiler for the PC.
 """
 
@@ -56,7 +57,7 @@ SHADERS = ("vk_block_literals.vert", "vk_texel_offsets.frag", "vk_vertex_if.vert
            "vk_scalar_input_loop.frag", "vk_scalar_input.frag", "vk_vertex_scalar_input.vert",
            "vk_instance_cells.vert", "vk_instance_step.vert", "vk_indexed_reads.vert", "hlsl/grid_vs.hlsl",
            "hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl", "hlsl/grid_depth_ps.hlsl",
-           "hlsl/grid_gaps_vs.hlsl", "hlsl/grid_gaps_ps.hlsl")
+           "hlsl/grid_gaps_vs.hlsl", "hlsl/grid_gaps_ps.hlsl", "hlsl/grid_loop_ps.hlsl")
 # xsdk's split (xsdk:src/gpu_setup.c).
 REGISTERS = 64
 RESOURCE_KINDS = {"push": "XSDK_XSC_PUSH_CONSTANTS", "uniform": "XSDK_XSC_UNIFORM_BUFFER",
