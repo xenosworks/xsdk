@@ -307,19 +307,28 @@ $(BUILD)/probe_xam_t2.xex: $(BUILD)/probe_xam.elf tools/elf2xex.py
 xam_probes: $(BUILD)/probe_xam.xex $(BUILD)/probe_xam_t2.xex
 
 # Milestone 49 step 1's probe of what puts the hierarchical buffer right after a depth clear, with xsdk_test's
-# hierarchical depth checks; outside all. It links src/gpu_resolve.c built with the probe's hook ahead of libxsdk.a,
-# standing in for the library's.
+# hierarchical depth checks; outside all. xsdk_test_nohizpass leaves the pass out, so must fail "hiz: near and far drawn
+# both ways over depth clears, less-than and greater-than, every pixel right", and likely "hiz: draws whose pixel shader
+# writes depth are tested and leave depth by what it writes". Each links src/gpu_resolve.c built with the probe's hook
+# ahead of libxsdk.a, standing in for the library's.
 PROBE_HIZ_PASS_OBJECTS := $(BUILD)/tests/probe_hiz_pass.o $(BUILD)/tests/test_hiz.o \
 	$(BUILD)/tests/gpu_resolve_hiz_pass.o
 
-hiz_pass_probes: $(BUILD)/probe_hiz_pass.xex
+hiz_pass_probes: $(BUILD)/probe_hiz_pass.xex $(BUILD)/xsdk_test_nohizpass.xex
 
 $(BUILD)/tests/gpu_resolve_hiz_pass.o: src/gpu_resolve.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -DXSDK_HIZ_PASS_PROBE=1 -c $< -o $@
 
+$(BUILD)/tests/gpu_resolve_nohizpass.o: src/gpu_resolve.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -DXSDK_HIZ_PASS_PROBE=0 -c $< -o $@
+
 $(BUILD)/probe_hiz_pass.elf: $(PROBE_HIZ_PASS_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(PROBE_HIZ_PASS_OBJECTS) $(LIBS)
+
+$(BUILD)/xsdk_test_nohizpass.elf: $(TEST_OBJECTS) $(BUILD)/tests/gpu_resolve_nohizpass.o $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(TEST_OBJECTS) $(BUILD)/tests/gpu_resolve_nohizpass.o $(LIBS)
 
 $(BUILD)/host/libxsc.so: $(XSC_SOURCES:src/%.c=$(BUILD)/host/%.o)
 	$(HOST_CC) -shared -o $@ $^
