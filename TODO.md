@@ -67,9 +67,10 @@ work begins.
   candidate cause not yet checked. The user put it off until the Dusklight session has it rendering.
 - **C code can't name `char16_t`.** newlib has no `<uchar.h>`, so C code sharing UTF-16 text with MSVC code spells it
   `__CHAR16_TYPE__` (local/abi's probe does); C++ has the keyword.
-- **xost off Python.** Its compiler (`xsc`), assembler (`xasm`) and disassembler (`xdis`) are Python; only the
-  combiner generator `xcomb` is C99 (xost:README.md:49-71, docs/xsc.md:1-14). The combined SDK shouldn't need
-  Python. Until then, the Vulkan layer compiles shaders offline and looks them up by their SPIR-V.
+- **xost's assembler and disassembler off Python.** Its compiler is C, xsdk's `src/xsc_*.c`, which titles call on the
+  console (`include/xsdk/xsc.h`) and the PC's tools through `build/host/libxsc.so`; its assembler (`xasm`), and its
+  disassembler and simulator (`xdis`), which the tests and the shader generators use, are still Python
+  (xenos-toolchain/README.md, "What's here").
 
 ## GPU features SCOPE.md left out of milestones 11 to 18
 
@@ -82,7 +83,10 @@ work begins.
   `xsdk_gpu_resolve_target`). Left: 16_16, 32_32_FLOAT, 8_8_8_8_GAMMA and the two AS_ formats
   (xenia:src/xenia/gpu/xenos.h:299-313); and any of them but 8_8_8_8 at 2 or 4 samples (vulkan4xenon milestone 17).
   7e3 and 16_16_16_16 blend; the 16- and 32-bit floats don't (docs/HARDWARE.md).
-- **Predicated tiling,** for targets larger than eDRAM.
+- **Predicated tiling at 2 and 4 samples,** for multisampled targets larger than eDRAM. Milestone 44's first part
+  tiles passes at one sample (`xsdk_gpu_begin_tiles`; docs/HARDWARE.md, "Tiled passes at one sample, milestone 44
+  step 2"), and refuses 2 and 4 with `STATUS_NOT_IMPLEMENTED`; its second part brings them
+  (docs/scope/44-tiling-and-msaa.md).
 - **Cube and 3D textures, the rest.** vulkan4xenon milestone 23 brought tiled cubes with their mips and tiled 3D
   textures of one level (include/xsdk/texture.h), right on the console (docs/HARDWARE.md). Left: linear cubes and
   3D textures; a 3D texture's mips, which Xenia sizes by the base's depth at every level
@@ -124,8 +128,9 @@ work begins.
 - **Image views of some of a texture's levels.** vulkan4xenon refuses a view that doesn't cover every level
   (vulkan4xenon:src/image.c). The sampler's lowest level and count of levels (include/xsdk/texture.h), which took
   Vulkan's `minLod` and `maxLod` in vulkan4xenon milestone 18's step 2, could take a view's range too.
-- **More texture formats.** Milestone 16 covers 13, milestone 28 R32F, and vulkan4xenon's milestone 20 DXN, DXT5A,
-  16-bit fixed point and 10-11-11, and signed and gamma reads (`xsdk_texture_signs`). Left: 32-bit floats in two and
+- **More texture formats.** `texture.h` has 24: milestone 16's 13, the byte-order R8G8B8A8 and B8G8R8A8, milestone
+  28's R32F, D24S8 for depth resolves, and vulkan4xenon milestone 20's DXN, DXT5A, 16-bit fixed point and 10-11-11,
+  with signed and gamma reads (`xsdk_texture_signs`). Left: 32-bit floats in two and
   four channels (`k_32_32_FLOAT`, `k_32_32_32_32_FLOAT`); DXN and DXT5A read signed, which Xenia doesn't read
   (vulkan/vulkan_texture_cache.cc:333-337, 384-388), and so the layer's BC4 and BC5 `SNORM`; and the formats no
   Vulkan format or port has asked for, such as CTX1 and DXT3A (`TextureFormat`, xenos.h:450-532).
