@@ -1,0 +1,14 @@
+log: game:\sdl3.log
+log: named after \Device\Harddisk0\Partition1\samples\sdl3\sdl3.xex
+sbrk: the heap may grow to 472 MB from 0x00070000, the title's free memory
+sdl3: the left stick sets the colour, the right trigger the tone's volume, A rumbles; Back ends
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 22632 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 22386 us
+sdl3: the first frame's middle held FF87407A, cleared to FF87407A
+PASS: sdl3: the first resolved frame holds the colour it was cleared to
+sdl3: gamepad "Xbox 360 Controller", type xbox360
+PASS: sdl3: a gamepad opened, an Xbox 360 controller
+sdl3: SDL pulled 55808 frames of the tone, 55727 expected
+PASS: sdl3: SDL pulled the tone at 48 kHz
