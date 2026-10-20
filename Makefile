@@ -83,7 +83,7 @@ UNROLL_O2_FLAGS := -munroll-only-small-loops -fno-rename-registers
 UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_loops_unrolled.o
 
 .PHONY: all clean cmake_check cmake_check_break samples sample_breaks occlusion_tries tiles_probe loop_break_probes \
-	instancing_probes cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe drive_probes
+	instancing_probes cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe drive_probes system_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -302,6 +302,10 @@ instancing_probes: $(BUILD)/probe_instancing.xex $(INSTANCING_BREAKS:%=$(BUILD)/
 
 # Milestone 52 step 1's probes of how bdnz counts CTR and of what atomics cost; outside all.
 cpu_probes: $(BUILD)/probe_ctr.xex $(BUILD)/probe_atomics.xex
+
+# Milestone 54 steps 4 and 5's probes of the title-terminate notification and of what places the scaled picture;
+# outside all.
+system_probes: $(BUILD)/probe_terminate.xex
 
 # Milestone 51 step 1's probe of XAM, presenting the bar scene while XAM's calls and dialogs run, and the same title
 # under a second title ID, to see whether XAM keeps content apart by title; outside all.

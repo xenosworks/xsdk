@@ -185,6 +185,15 @@ typedef struct {
 	uint32_t context;
 } XAUDIO_RENDER_DRIVER_CLIENT;
 
+// The kernel links it into its list, so it must outlive the registration. Xenia keeps the priority without using it,
+// and its call of the routine, commented out, passes nothing (xenia:src/xenia/xbox.h:300-305,
+// xenia:src/xenia/kernel/kernel_state.cc:153-160, 489-504).
+typedef struct {
+	void (*notification_routine)(void);
+	uint32_t priority;
+	uint32_t list_entry[2];
+} EX_TITLE_TERMINATE_REGISTRATION;
+
 // xenia:src/xenia/xbox.h:39-68
 enum {
 	STATUS_SUCCESS = 0x00000000,
@@ -329,6 +338,9 @@ NTSTATUS ExCreateThread(HANDLE *thread, uint32_t stack_bytes, uint32_t *thread_i
 // Copies a console setting into buffer and gives its size (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc:44-139).
 NTSTATUS ExGetXConfigSetting(
 	uint16_t category, uint16_t setting, void *buffer, uint16_t buffer_bytes, uint16_t *required_bytes);
+// Adds the registration's routine to those run as the title ends, or removes it where create is 0
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_modules.cc:188-198).
+void ExRegisterTitleTerminateNotification(EX_TITLE_TERMINATE_REGISTRATION *registration, uint32_t create);
 void ExTerminateThread(uint32_t exit_code);
 // The running .xex's path, which the loader writes into the kernel's 256 bytes as it starts the title; custom
 // dashboards read their own path there (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:177-185,

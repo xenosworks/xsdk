@@ -6,6 +6,7 @@
 xboxkrnl.exe  0x003  DbgPrint
 xboxkrnl.exe  0x00D  ExCreateThread
 xboxkrnl.exe  0x010  ExGetXConfigSetting
+xboxkrnl.exe  0x015  ExRegisterTitleTerminateNotification
 xboxkrnl.exe  0x019  ExTerminateThread
 xboxkrnl.exe  0x05A  KeDelayExecutionThread
 xboxkrnl.exe  0x083  KeQueryPerformanceFrequency
