@@ -293,6 +293,90 @@ on the simulator 60 of the 80 columns go wrong, each pixel that broke a step sho
 and resources byte for byte, and the 30 refused refused alike. `tests/xsc_shaders.h` regenerates as it is, plus the
 grid's loop.
 
+## Step 5: the rest
+
+`step5.txt`, `step5.json` (docs/scope/50-hlsl.md, step 5), each in shared code GLSL reaches too:
+- **Constant arrays:** at a constant index, an unrolled loop's counter among them, the element itself, folded by the
+  unroller from the constant or construct that made the local whole (src/xsc_unroll.c, `element`); at a run-time index,
+  a hardware loop's counter among them, the array's elements in literal registers of their own, one each, a float's in
+  every component, read at a0 as a block's array is (src/xsc_lower.c, `xsdk_xsc_literal_array`; src/xsc_lower_block.c,
+  `xsdk_xsc_constant_element`). GLSL's constant arrays at a run-time index, refused before, take the same path.
+- **Matrices not loaded from uniforms:** one built of columns is its columns' registers, read as columns; a leading
+  block of one matrix's columns, as `(float3x3)M` takes, that matrix's first registers as they are, so i01's cast of a
+  matrix glslang holds by rows is 3 `dp3`s (src/xsc_lower_matrix.c, `construct_matrix`). A matrix varying with a
+  semantic takes an interpolator a column from the semantic's index (src/xsc_resolve.c, `add_varying`): TEXCOORD2's
+  `float3x3` is TEXCOORD2 to 4, a row of the HLSL each; a pixel shader reads them as its columns, i11's tangent frame,
+  and a vertex shader writes one made of columns. A matrix's rows are dotted as wide as the vector, so i09's `float4x3`
+  bones, held by rows, take `dp4`s where they took `dp3`s and dropped the translation.
+- **Bools:** an int or bool in HLSL's blocks is its register's float, as D3D9 sets HLSL's constants, i10's and i17's,
+  HLSL alone by OpSource, as a Vulkan block holds an int's bits; a constant bool vector's lanes are 1.0 and 0.0, where
+  they read 0.0; and a shuffle reading its second vector, which spirv-opt folds a select on a constant bool vector to,
+  is a masked copy a lane, the second vector's components counted past the first's, not past 4.
+- **Int vectors:** an int vector's component, an int vertex input, which its fetch makes floats as UBYTE4's are, a
+  component of one through an access chain, and a0 loaded straight from an int vector's lane, as skinning's
+  BLENDINDICES index bones; i09's `D3DCOLORtoUBYTE4` is float work and a `trunc`.
+- **A lone PSIZE:** an out parameter, which glslang makes a PointSize of its own, is oPts.x, step 4's export.
+- **And what the idioms needed besides:** a unary minus of a value (FNegate), a copy with the negate modifier, i01's;
+  and `exp`, `log`, `exp2`, `log2`, `sqrt`, `inversesqrt`, `sin` and `cos` of a vector a component at a time,
+  i15's, where the scalar unit read one component, w or x, for every lane.
+
+| | Corpus, 157 | Idioms, 21 |
+|---|---|---|
+| Compiled | 157 | 21 |
+
+The corpus's results are step 3's, shader by shader: 151 exact, the same 6 inexact.
+
+**On the simulator:** `tests/test_hlsl_rest.py`, new, runs `xsc/testdata/hlsl/rest`, each shader beside its GLSL twin
+where one is written, the optimiser off and on, every export exact and the twin's bit for bit: `array_unrolled_ps`
+(float and float2 arrays at unrolled counters), `array_indexed_ps` (a float4 and a float array at a block-counted
+hardware loop's counter, counts 0, 3 and 6, and at an index from TEXCOORD0), `matrix_cast_vs`, `matrix_tbn_ps` and
+`matrix_tbn_vs` linked into it, `bool_ps` (a bool in `$Global` at 0 and 1, float4 and float3 two-source shuffles, a
+bool4 of constants and a comparison; the twin's a constant bvec4 select), `vector_exp_ps`, `psize_vs`, `skin_vs`
+(i09's), `grid_skin_vs` (xsdk_test's, int4 BLENDINDICES) and `negate_vs` (a scalar int input and an int4's
+components, one negated), and two refusals, `refused_array_ps` and `refused_rows_vs`. Each of 24 changes broken on
+purpose failed it: the array fold `array_unrolled_ps ... [-4.8125, 12.375, ...], not [0.078125, -5.28125, ...]`; the
+run-time chain refused; the literal registers one up `array_indexed_ps ... [-0.5, 2.5, 1.25, 1.0], not [1.5, 1.25,
+1.125, 2.0]`, a float's not in every component `[1.5, 0.25, 0.125, 1.0]`; the constant array not found `a run-time
+index into a local array other than a constant one`; a cast's majorness flipped `refused_rows_vs.hlsl compiled`; a
+construct's columns read as rows `matrix_tbn_ps ... the GLSL twin [0.375, -1.5, 0.9375, 1.0]`; a matrix input's
+columns one register `[0.625, 0.3125, -1.25, 1.0]`, one interpolator `[0.375, 0.1875, -0.75, 1.0]`, from its last
+`[0.09375, -0.375, 1.5, 1.0]`; an output's column always 0 `matrix_tbn_vs linked ... [0.625, 0.3125, -1.25, 1.0]`;
+the dot width the rows' `skin_vs ... [1.1796875, 1.109375, 1.0390625, 1.0], not [0.921875, 0.6015625, 0.40625, 1.0]`;
+FNegate not negating `matrix_cast_vs d ... [0.5, -1.0, 0.25, -1.109375]`, a scalar's `negate_vs ... [0.75, 3.0, ...]`,
+a scalar not spread `[0.75, -7.0, ...]`; bool lanes 0 `bool_ps ... the GLSL twin [23.75, ...]`; the second vector's
+components past 4 `bool_ps ... [6.0, 5.75, 5.5, 3.25], not [7.25, 7.0, 6.75, 4.5]`; HLSL's block ints and int inputs
+`integer Load must be a foldable local`; an int extract's lane 0 `negate_vs ... [0.75, -3.0, 5.0, 8.0]`; a0 from an
+extract's x `skin_vs ... [1.0625, 0.8125, 0.6875, 1.0]`; an input chain's lane 0 `grid_skin_vs's position ... the GLSL
+twin [1.0625, 0.8125, 0.5, 1.0]`; PSIZE unread `gl_PointSize ... outside gl_PerVertex`; each lane's transcendental
+from x `vector_exp_ps ... [2.3987..., 2.3987..., 2.1798..., 2.1798...]`.
+
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, `test_scalar_unit.py` with its corpus at
+`/mnt/z/vulkan4xenon`; `test_hlsl_link.py` checks the export slots of 66 HLSL vertex shaders now, `rest/`'s among them.
+
+**What stays refused** (for docs/xsc.md's HLSL section, step 8), each by name: a local array of other values at a
+run-time index, or stored by element; a matrix output held by rows, as a cast of a block's matrix, where an
+interpolator takes a column; a vertex shader's matrix input; a column of a matrix value other than a cast's; an int or
+bool load other than a local's, an input's, gl_InstanceIndex or HLSL's in a block, a GLSL block's among them, whose
+int bits xost doesn't read; and int operations past add, subtract, multiply, divide and remainder, the bitwise and
+shift ones Xenos lacks. Not refused and wrong, as before this step: `pow` of an exponent whose components differ takes
+its x in every lane. Step 6's: i10's `bool : register(b0)` and `int : register(i0)` sit in `$Global` at c0.x and c0.y,
+over `LightColor[0]`, and its loop's count is read from the block's bits as a Vulkan int.
+
+**xsdk_test:** `tests/test_hlsl.c` draws `grid_skin_vs.hlsl` with the link's pixel shader in a seventh cell, left of the
+loop's at column 860, row 645: each corner of a quad skinned by four of 8 `float4x3` bones in vertex constants c0 to
+c23 that its int4 BLENDINDICES pick, UBYTE4s, weighted a half, a quarter and the rest, each corner's bones a pair whose
+changes cancel at their weights, so the quad lands on the cell with red from 0.25 to 0.75 and a bone read at a wrong
+index moves or reshades it: `hlsl: a quad skinned by float4x3 bones in vertex constants that its corners' int4
+BLENDINDICES, UBYTE4s, pick lands and shades as the CPU's skinning of its corners: %u of %u pixels wrong`.
+`tests/breaks/hlsl/skin.patch` loads a0 from an int vector's x for each component: on the simulator every corner takes
+its first bone four times and the quad collapses to no width at column 1019.5, failing that check and `xsc:
+hlsl/grid_skin_vs.hlsl compiles into the PC's container, literals and resources`. The link break leaves this pair as
+it is: its stages pack TEXCOORD0 and COLOR0 alike.
+
+**GLSL unchanged:** the 900 programs of step 2, compiled by 4e37768 and by this step: the same containers, manifests
+and resources byte for byte, and the 30 refused refused alike. `tests/xsc_shaders.h` regenerates as it is, plus
+`grid_skin_vs.hlsl`.
+
 ## On the console
 
 docs/HARDWARE.md, "HLSL on the console, milestone 50", records what these settled. Each run built clean in full from
