@@ -70,6 +70,12 @@ static const PassCase cases[] = {
 		{ WIDTH - BLOCK_WIDTH, 0, BLOCK_WIDTH, BLOCK_HEIGHT } },
 	{ "quarter", "the pass over the top left quarter, which holds the small rectangle's first block", true, 0,
 		{ 0, 0, WIDTH / 2, HEIGHT / 2 } },
+	// Whether the pass must touch some number of blocks, as rows8 put every pixel right and corner none.
+	{ "strip2", "the pass over the top left 2 blocks, 64x8", true, 0, { 0, 0, 2 * BLOCK_WIDTH, BLOCK_HEIGHT } },
+	{ "strip4", "the pass over the top left 4 blocks, 128x8", true, 0, { 0, 0, 4 * BLOCK_WIDTH, BLOCK_HEIGHT } },
+	{ "strip8", "the pass over the top left 8 blocks, 256x8", true, 0, { 0, 0, 8 * BLOCK_WIDTH, BLOCK_HEIGHT } },
+	{ "strip20", "the pass over the top left 20 blocks, 640x8", true, 0, { 0, 0, 20 * BLOCK_WIDTH, BLOCK_HEIGHT } },
+	{ "column", "the pass over the left column of blocks, 32x720", true, 0, { 0, 0, BLOCK_WIDTH, HEIGHT } },
 	{ "event4", "EVENT_WRITE CACHE_FLUSH_TS (4) in place of the pass", true, 4, { 0, 0, 0, 0 } },
 	{ "event10", "EVENT_WRITE MPASS_PS_CP_REFETCH (10) in place of the pass", true, 10, { 0, 0, 0, 0 } },
 	{ "event20", "EVENT_WRITE CACHE_FLUSH_AND_INV_TS_EVENT (20) in place of the pass", true, 20, { 0, 0, 0, 0 } },
