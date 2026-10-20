@@ -118,6 +118,8 @@ enum {
 	SPV_KILL = 252,
 	SPV_RETURN = 253,
 	SPV_RETURN_VALUE = 254,
+	// OpDecorateString, glslang's OpDecorateStringGOOGLE (SPIR-V 1.4, section 3.32.3).
+	SPV_DECORATE_STRING = 5632,
 	SPV_STORAGE_PRIVATE = 6,
 	SPV_STORAGE_FUNCTION = 7,
 };
@@ -272,6 +274,8 @@ enum {
 	SPV_DEC_BINDING = 33,
 	SPV_DEC_DESCRIPTOR_SET = 34,
 	SPV_DEC_OFFSET = 35,
+	// An HLSL semantic, glslang's HlslSemanticGOOGLE under -fhlsl_functionality1 (SPIR-V 1.4, section 3.20).
+	SPV_DEC_USER_SEMANTIC = 5635,
 };
 
 typedef enum {
@@ -401,6 +405,10 @@ typedef struct {
 	XscVarUse *comparisons;
 	size_t comparison_count;
 	const XscVar *point_coord;
+	// D3D9's VPOS and VFACE, a pixel shader's inputs, and PSIZE, a vertex shader's output, from their semantics.
+	const XscVar *vpos;
+	const XscVar *vface;
+	const XscVar *point_size;
 } XscInterface;
 
 XscType *xsdk_xsc_resolve_types(Xsc *x, const XscModule *m);

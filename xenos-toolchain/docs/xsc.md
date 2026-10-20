@@ -78,6 +78,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | block array at a run-time index, `rows[int(f) + k]`, `m[i]` | `movasf` (`int(f)`) or `movas` sets a0, then `c[a0 + base + k]` is copied into a temp; reads at one index share the `movas` (`tests/test_dynamic_index.py`) |
 | fragment `gl_FragCoord.xy`, `gl_FrontFacing` | the pixel parameters in the register past the interpolators, `\|r.xy\| + c255`, the constant xsdk keeps at 0.5 and a tiled pass's band's top row plus 0.5 (see Interface conventions), `.zw` refused; facing from x's sign (see Facing) |
 | fragment `gl_PointCoord` | the same parameters' `\|r.zw\|`, a point sprite's coordinates (`tests/test_point_sprite.py`) |
+| fragment HLSL `VPOS` and `VFACE`, by their semantics | the same parameters: VPOS `\|r.xy\| + c255.zw`, which xsdk keeps at 0 and a tiled pass's band's top row, the pixel's whole column and row, its z and w 0; VFACE a `cndge` on x's sign, +1 on a front face and -1 on a back one (see Interface conventions and Facing; `tests/test_hlsl_semantics.py`) |
 | vertex `gl_PointSize` | `oPts.x___`, the point's width in pixels, and the record's vs_export_mode 2 (`tests/test_point_sprite.py`) |
 | fragment `gl_FragDepth`, stored once outside any `if/else` | `oDepth.x___` after the colour, the record's ps_export_mode 3 (`tests/test_frag_depth.py`) |
 | fragment `gl_FragDepth` stored in both arms of an `if/else`, or before one and again in an arm | merged by a select as a vertex shader's outputs are, exported once; stored on one path alone, refused (see Control flow) |
@@ -122,6 +123,30 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
   At 2, the console left targets 1 to 3 as they were; Xenia never reads the
   mode (registers.h:145; xsdk:docs/HARDWARE.md, "Float, 10-bit and 64-bit
   targets and four at once").
+- HLSL through glslang with `-fhlsl_functionality1` keeps each varying's semantic,
+  an OpDecorateString of UserSemantic (SPV_GOOGLE_hlsl_functionality1), and xost
+  takes D3D9's meaning from it where glslang left a location
+  (xsdk:docs/scope/50-hlsl.md, step 4; `xsdk:src/xsc_resolve.c`;
+  `tests/test_hlsl_semantics.py`):
+  - A VS input's usage and index are its semantic's: D3D9's usages as libxenon
+    numbers them, POSITION 0, BLENDWEIGHT 1, BLENDINDICES 2, NORMAL 3, PSIZE 4,
+    TEXCOORD 5, TANGENT 6, BINORMAL 7, TESSFACTOR 8, POSITIONT 9, COLOR 10,
+    FOG 11, DEPTH 12 and SAMPLE 13 (libxenon:drivers/xenos/xe.h:159-172), at
+    an index to 15, which a vertex element holds in 4 bits; any other refused.
+  - Outputs POSITION and PSIZE are oPos and oPts.x, DEPTH oDepth, and COLOR*n*
+    oC*n*, struct members and return values too.
+  - Interpolators link by semantic, the same in both stages, as D3D9 links a
+    pair: TEXCOORD0 at 0, COLOR0 at 1, TEXCOORD1 to 11 at 2 to 12, COLOR1 at 13
+    and FOG at 14, r15 left for the pixel parameters; any other semantic, or two
+    variables of one, refused. A pixel shader declares the interpolators below
+    its highest that it doesn't read, and a vertex shader's SQ_PROGRAM_CNTL
+    counts its exports to its highest, so a gap costs an interpolator: a
+    sprite's TEXCOORD0 and COLOR0 take two, TEXCOORD0 and TEXCOORD1 three, and
+    each interpolator costs a pixel time (xsdk:docs/HARDWARE.md, "xost's code
+    quality, milestone 45").
+  - VPOS and VFACE come from the pixel parameters (see the table and Facing).
+
+  GLSL, which has no semantics, keeps its locations.
 - With the optimiser, a vertex input or a texture sample nothing exported, killed
   or tested reads takes no fetch (`xsdk:src/xsc_optimize.c`, remove_dead). The
   input's vertex element goes with its fetch, so a host's layout needn't hold it,
@@ -193,7 +218,9 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
   (xsdk:include/xsdk/gpu.h, tiled passes). It isn't a need or a resource:
   every shader shares the register. xsdk writes c252 to c255 as a whole group
   of 4, so a shader reading gl_FragCoord whose constants reach c252 is refused
-  (`tests/test_frag_coord_band.py`).
+  (`tests/test_frag_coord_band.py`). HLSL's VPOS, the pixel's whole column and
+  row, gl_FragCoord less 0.5, adds c255's z and w, which xsdk keeps at 0 and the
+  band's top row (`tests/test_hlsl_semantics.py`).
 - gl_PointSize → oPts (export 63)'s x, the point's full width in pixels, its
   y and z, the edge and kill flags, unwritten
   (xenia:src/xenia/gpu/ucode.h:1813-1834), with SQ_PROGRAM_CNTL's
@@ -643,6 +670,10 @@ if/else to `cndgt b, true arm, false arm`, a discard where b holds to `kill_gt b
 simulator, at columns 3 and 0 of each face. The console has to settle which face the sign marks: Xenia gives it the
 host's front face, set from PA_SU_SC_MODE_CNTL's face as culling is
 (xenia:src/xenia/gpu/vulkan/vulkan_pipeline_cache.cc:625).
+
+HLSL's VFACE reads the same sign: `cndge` on the `rcpc`, +1 on a front face and -1 on a back one, D3D9's signs, from
+one constant, `VFACE_FRONT` (`xsdk:src/xsc_lower_fragment.c`), till the console's `hlsl: VFACE` check says which sign a
+front face gets under xsdk's winding (xsdk:tests/test_hlsl.c).
 
 ## Vertex textures
 

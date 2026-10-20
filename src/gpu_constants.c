@@ -107,11 +107,11 @@ void xsdk_gpu_set_vertex_constants(uint32_t first, const float *values, uint32_t
 	set_floats(0, SHADER_CONSTANT_000_X, first, values, count);
 }
 
-// xost's gl_FragCoord adds this to the pixel parameters, which give the row within a tiled pass's band
-// (docs/HARDWARE.md, "Tiling's registers and packets, milestone 44 step 1").
+// xost's gl_FragCoord adds its xy to the pixel parameters, which give the row within a tiled pass's band
+// (docs/HARDWARE.md, "Tiling's registers and packets, milestone 44 step 1"), and D3D9's VPOS its zw.
 void xsdk_gpu_put_frag_coord_top(uint32_t top)
 {
-	const float offset[4] = { 0.5f, 0.5f + (float)top, 0.0f, 0.0f };
+	const float offset[4] = { 0.5f, 0.5f + (float)top, 0.0f, (float)top };
 	set_floats(1, SHADER_CONSTANT_256_X, XSDK_XSC_FRAG_COORD_CONSTANT, offset, 1);
 }
 

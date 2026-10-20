@@ -164,6 +164,8 @@ static bool index_one(Xsc *x, XscModule *m, const XscInstr *ins, Capacities *cap
 		return add_name(x, &m->member_names, &m->member_name_count, &capacity->member_names,
 			(XscName){ .target = w[0], .member = w[1], .name = decode_string(x, w + 2, n - 2, &used) });
 	case SPV_DECORATE:
+	// A string's words are its arguments, as an HLSL semantic's are (xsc_resolve.c).
+	case SPV_DECORATE_STRING:
 		if (n < 2)
 			return xsdk_xsc_fail(x, XSDK_XSC_MALFORMED, "OpDecorate without a decoration");
 		return add_decoration(x, &m->decorations, &m->decoration_count, &capacity->decorations,

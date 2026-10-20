@@ -222,6 +222,94 @@ static uint32_t location_or_zero(const XscVar *v)
 	return v->location == XSC_NONE ? 0 : (uint32_t)v->location;
 }
 
+enum {
+	SEMANTIC_BYTES = 32,
+	// A usage's index takes 4 bits of a vertex element (xsc_container.c; src/shader.c, PATCH_FIELD_MASK).
+	MAX_USAGE_INDEX = 15,
+	// The semantics' interpolators: TEXCOORD0, COLOR0, TEXCOORD1 to 11, COLOR1, then FOG, r15 left to the pixel
+	// parameters.
+	LAST_TEXCOORD = 11,
+	COLOR0_INTERPOLATOR = 1,
+	COLOR1_INTERPOLATOR = 13,
+	FOG_INTERPOLATOR = 14,
+};
+
+// An HLSL semantic as glslang writes it, in capitals, and the digits that end it: COLOR is COLOR0.
+typedef struct {
+	char name[SEMANTIC_BYTES];
+	uint32_t index;
+} Semantic;
+
+// D3D9's declaration usages, numbered as libxenon has them (libxenon:drivers/xenos/xe.h:159-172).
+static const char *const usages[] = { "POSITION", "BLENDWEIGHT", "BLENDINDICES", "NORMAL", "PSIZE", "TEXCOORD",
+	"TANGENT", "BINORMAL", "TESSFACTOR", "POSITIONT", "COLOR", "FOG", "DEPTH", "SAMPLE" };
+
+// The variable's semantic; false for one without, as GLSL's are.
+static bool semantic_of(const XscModule *m, uint32_t id, Semantic *s)
+{
+	const XscDecoration *const d = xsdk_xsc_decoration(m, id, SPV_DEC_USER_SEMANTIC);
+	if (!d)
+		return false;
+	size_t length = 0;
+	for (; length < SEMANTIC_BYTES - 1 && length < 4 * (size_t)d->arg_count; length++) {
+		s->name[length] = (char)(d->args[length / 4] >> 8 * (length % 4) & 0xFF);
+		if (!s->name[length])
+			break;
+	}
+	size_t digits = length;
+	while (digits > 0 && s->name[digits - 1] >= '0' && s->name[digits - 1] <= '9')
+		digits--;
+	s->index = 0;
+	for (size_t i = digits; i < length && s->index <= MAX_USAGE_INDEX; i++)
+		s->index = s->index * 10 + (uint32_t)(s->name[i] - '0');
+	s->name[digits] = '\0';
+	return true;
+}
+
+static bool is_semantic(const Semantic *s, const char *name)
+{
+	return !strcmp(s->name, name) && s->index == 0;
+}
+
+static int64_t usage_of(const Semantic *s)
+{
+	for (size_t i = 0; i < sizeof usages / sizeof usages[0]; i++) {
+		if (!strcmp(s->name, usages[i]))
+			return s->index <= MAX_USAGE_INDEX ? (int64_t)i : XSC_NONE;
+	}
+	return XSC_NONE;
+}
+
+// Where a semantic links, the same in both stages, as D3D9 links them by semantic; a sprite's TEXCOORD0 and COLOR0
+// take two, as each interpolator costs a pixel time (docs/HARDWARE.md, "xost's code quality, milestone 45").
+static int64_t interpolator_of(const Semantic *s)
+{
+	const int64_t usage = usage_of(s);
+	if (usage == XSC_USAGE_TEXCOORD && s->index <= LAST_TEXCOORD)
+		return s->index ? s->index + 1 : 0;
+	if (usage == XSC_USAGE_COLOR && s->index <= 1)
+		return s->index ? COLOR1_INTERPOLATOR : COLOR0_INTERPOLATOR;
+	return is_semantic(s, "FOG") ? FOG_INTERPOLATOR : XSC_NONE;
+}
+
+// An interpolator linked by semantic, refused where D3D9's has none here or another variable has it.
+static bool semantic_interpolator(
+	Xsc *x, const XscVar *v, const Semantic *s, const XscVarUse *uses, size_t count, uint32_t *r)
+{
+	const int64_t found = interpolator_of(s);
+	if (found == XSC_NONE)
+		return xsdk_xsc_fail(x, XSDK_XSC_REFUSED,
+			"%s's semantic %s%u: interpolators link TEXCOORD0 to TEXCOORD%u, COLOR0, COLOR1 and FOG", v->name, s->name,
+			(unsigned)s->index, (unsigned)LAST_TEXCOORD);
+	for (size_t i = 0; i < count; i++) {
+		if (uses[i].a == found)
+			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "%s and %s share semantic %s%u", uses[i].var->name, v->name,
+				s->name, (unsigned)s->index);
+	}
+	*r = (uint32_t)found;
+	return true;
+}
+
 typedef struct {
 	size_t vfetch;
 	size_t interp_out;
@@ -340,22 +428,51 @@ static bool read_vars(Xsc *x, const XscModule *m, const XscType *types, XscVar *
 	return true;
 }
 
+// A vertex input's usage and index: its semantic's, or from its location, 0 POSITION, 1 COLOR, then TEXCOORD.
+static bool vertex_usage(Xsc *x, const XscModule *m, const XscVar *v, XscVarUse *use)
+{
+	Semantic s;
+	if (!semantic_of(m, v->vid, &s)) {
+		const uint32_t loc = location_or_zero(v);
+		const uint32_t usage = loc == 0 ? XSC_USAGE_POSITION : loc == 1 ? XSC_USAGE_COLOR : XSC_USAGE_TEXCOORD;
+		*use = (XscVarUse){ v, usage, loc > 2 ? loc - 2 : 0 };
+		return true;
+	}
+	const int64_t usage = usage_of(&s);
+	if (usage == XSC_NONE)
+		return xsdk_xsc_fail(x, XSDK_XSC_REFUSED,
+			"vertex input %s's semantic %s%u: not one of D3D9's declaration usages at an index to %u", v->name, s.name,
+			(unsigned)s.index, (unsigned)MAX_USAGE_INDEX);
+	*use = (XscVarUse){ v, (uint32_t)usage, s.index };
+	return true;
+}
+
 static bool resolve_input(
 	Xsc *x, const XscModule *m, const XscType *types, XscInterface *si, const XscVar *v, ListCapacities *capacity)
 {
 	if (v->builtin == BUILTIN_VERTEX_ID || v->builtin == BUILTIN_INSTANCE_ID)
 		return true;
 	if (!si->pixel) {
-		const uint32_t loc = location_or_zero(v);
-		const uint32_t usage = loc == 0 ? XSC_USAGE_POSITION : loc == 1 ? XSC_USAGE_COLOR : XSC_USAGE_TEXCOORD;
-		const uint32_t usage_index = loc > 2 ? loc - 2 : 0;
-		if (!add_use(x, &si->vfetch, &si->vfetch_count, &capacity->vfetch, (XscVarUse){ v, usage, usage_index }))
+		XscVarUse use = { .var = v };
+		if (!vertex_usage(x, m, v, &use) || !add_use(x, &si->vfetch, &si->vfetch_count, &capacity->vfetch, use))
 			return false;
 		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_VFETCH, (int64_t)si->vfetch_count - 1, 0, 0 });
 	}
+	Semantic s;
+	const bool hlsl = v->builtin == XSC_NONE && semantic_of(m, v->vid, &s);
 	if (v->builtin == BUILTIN_FRAG_COORD) {
 		si->frag_coord = v;
 		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_FRAG_COORD, 0, 0, 0 });
+	}
+	// D3D9's VPOS and VFACE come from the pixel parameters, as gl_FragCoord and gl_FrontFacing do
+	// (xsc_lower_fragment.c).
+	if (hlsl && is_semantic(&s, "VPOS")) {
+		si->vpos = v;
+		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_FRAG_COORD, 0, 0, 0 });
+	}
+	if (hlsl && is_semantic(&s, "VFACE")) {
+		si->vface = v;
+		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_FRONT_FACING, 0, 0, 0 });
 	}
 	if (v->builtin == BUILTIN_FRONT_FACING) {
 		si->front_facing = v;
@@ -366,7 +483,9 @@ static bool resolve_input(
 		si->point_coord = v;
 		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_POINT_COORD, 0, 0, 0 });
 	}
-	const uint32_t r = location_or_zero(v);
+	uint32_t r = location_or_zero(v);
+	if (hlsl && !semantic_interpolator(x, v, &s, si->interp_in, si->interp_in_count, &r))
+		return false;
 	if (!add_use(x, &si->interp_in, &si->interp_in_count, &capacity->interp_in,
 			(XscVarUse){ v, r, usage_for_vector(m, types, v->pointee) }))
 		return false;
@@ -400,13 +519,33 @@ static bool resolve_output(
 		si->frag_depth = v;
 	if (v->builtin != XSC_NONE)
 		return true;
-	const uint32_t loc = location_or_zero(v);
+	Semantic s;
+	const bool hlsl = semantic_of(m, v->vid, &s);
+	// D3D9's POSITION, PSIZE and DEPTH, which glslang makes built-ins only as out parameters.
+	if (hlsl && !si->pixel && is_semantic(&s, "POSITION")) {
+		si->position_out = v->vid;
+		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_POSITION_STRUCT, XSC_NONE, 0, 0 });
+	}
+	if (hlsl && !si->pixel && is_semantic(&s, "PSIZE")) {
+		si->point_size = v;
+		return true;
+	}
+	if (hlsl && si->pixel && is_semantic(&s, "DEPTH")) {
+		si->frag_depth = v;
+		return true;
+	}
+	uint32_t loc = location_or_zero(v);
 	if (!si->pixel) {
+		if (hlsl && !semantic_interpolator(x, v, &s, si->interp_out, si->interp_out_count, &loc))
+			return false;
 		if (!add_use(x, &si->interp_out, &si->interp_out_count, &capacity->interp_out,
 				(XscVarUse){ v, loc, usage_for_vector(m, types, v->pointee) }))
 			return false;
 		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_INTERP_OUT, loc, 0, 0 });
 	}
+	// COLORn is target n; SV_Target's location is glslang's.
+	if (hlsl && !strcmp(s.name, "COLOR"))
+		loc = s.index;
 	if (!add_use(x, &si->color_out, &si->color_out_count, &capacity->color_out, (XscVarUse){ v, loc, 0 }))
 		return false;
 	return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_COLOR, loc, 0, 0 });

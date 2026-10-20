@@ -18,6 +18,9 @@ enum {
 	LAST_COMPARISON = 191,
 	// Outputs at locations 0 to 3 go to exports 0 to 3, oC0 to oC3 (xenia:src/xenia/gpu/ucode.h:1836-1839).
 	COLOR_OUTPUTS = 4,
+	// D3D9's VFACE on a face the pipeline takes for its front, positive as D3D9's; unverified till xsdk_test's "hlsl:
+	// VFACE" check runs on the console.
+	VFACE_FRONT = 1,
 };
 
 typedef struct Region Region;
@@ -127,6 +130,25 @@ static bool frag_coord_register(XscLower *l, const XscInterface *si, int64_t par
 	return true;
 }
 
+// D3D9's VPOS is the pixel's column and row, whole as its centres sit on whole coordinates under PIX_CENTER_D3D
+// (xsdk:docs/HARDWARE.md, "Triangle fans, and raster facts through vulkan4xenon"): gl_FragCoord less 0.5, the
+// parameters' |xy| plus c255's zw, which xsdk keeps at 0 and the band's top row. Its z and w, past D3D9's two, read 0.
+static bool vpos_register(XscLower *l, const XscInterface *si, int64_t param_reg)
+{
+	const int64_t vpos = xsdk_xsc_fresh(l);
+	const int64_t zw[2] = { 2, 3 };
+	const XscSrc top = xsc_src(xsc_const(XSDK_XSC_FRAG_COORD_CONSTANT), false, xsdk_xsc_swz(zw, 2));
+	if (!xsc_emit2(l, XSC_VECTOR_ADD, xsc_temp(param_reg | XSC_ABS_SOURCE), top, vpos, false, 0x3))
+		return false;
+	const XscType *const t = xsdk_xsc_type(l->m, l->types, (uint64_t)si->vpos->pointee);
+	if (t && t->kind == XSC_TYPE_VECTOR && t->count > 2 &&
+		xsdk_xsc_emit_copy(
+			l, xsc_const(XSDK_XSC_FRAG_COORD_CONSTANT), vpos, false, false, xsdk_xsc_bsw(2), 0xC, false) == XSC_NONE)
+		return false;
+	l->inputs[si->vpos->vid] = vpos;
+	return true;
+}
+
 // gl_FrontFacing, 1.0 on a front face and 0.0 on a back one: the pixel parameters' x is negative on a back face, and
 // rcpc keeps the sign of column 0's zero for the compare (xenia:src/xenia/gpu/registers.h:224-227).
 static bool front_facing_register(XscLower *l, const XscInterface *si, int64_t param_reg)
@@ -139,6 +161,22 @@ static bool front_facing_register(XscLower *l, const XscInterface *si, int64_t p
 	if (!xsc_emit2(l, XSC_VECTOR_SGE, x, xsc_src(xsc_reg(sign), true, xsdk_xsc_bsw(0)), face, false, 0xF))
 		return false;
 	l->inputs[si->front_facing->vid] = face;
+	return true;
+}
+
+// D3D9's VFACE, VFACE_FRONT on a front face and its negative on a back one, by the sign gl_FrontFacing reads: rcpc keeps
+// the parameters' x's, column 0's -0.0 as -FLT_MAX, for cndge (xenia:src/xenia/gpu/registers.h:224-227).
+static bool vface_register(XscLower *l, const XscInterface *si, int64_t param_reg)
+{
+	const int64_t sign = xsdk_xsc_emit_scalar(l, XSC_SCALAR_RCPC, xsdk_xsc_fresh(l), xsc_reg(param_reg), 0, WRITE_X);
+	const int64_t front = xsdk_xsc_literal_splat(l, VFACE_FRONT);
+	if (sign == XSC_NONE || front == XSC_NONE)
+		return false;
+	const int64_t face = xsdk_xsc_fresh(l);
+	if (!xsc_emit3(l, XSC_VECTOR_CND_GE, xsc_src(xsc_reg(sign), false, xsdk_xsc_bsw(0)), xsc_plain(xsc_const(front)),
+			xsc_negated(xsc_const(front)), face, false, 0xF))
+		return false;
+	l->inputs[si->vface->vid] = face;
 	return true;
 }
 
@@ -677,7 +715,7 @@ static bool emit_depth(Fragment *f)
 static bool below_frag_coord_group(XscLower *l)
 {
 	const int64_t group = XSDK_XSC_FRAG_COORD_CONSTANT & ~3;
-	if (!l->si->frag_coord || l->lit_base <= group)
+	if ((!l->si->frag_coord && !l->si->vpos) || l->lit_base <= group)
 		return true;
 	return xsdk_xsc_lower_refuse(l, "gl_FragCoord with constants from c%lld on, which xsdk keeps", (long long)group);
 }
@@ -743,12 +781,17 @@ static bool declare_inputs(Xsc *x, const XscModule *m, const XscType *types, Xsc
 	*param_reg = XSC_NONE;
 	for (size_t i = 0; i < si->interp_in_count; i++) {
 		const XscVarUse *const use = &si->interp_in[i];
+		// A semantic's interpolator may leave some below it unread, which arrive all the same (xsc_resolve.c).
+		while (p->interpolator_count < use->a) {
+			if (!xsdk_xsc_program_input(x, p, (int64_t)p->interpolator_count, XSC_USAGE_TEXCOORD))
+				return false;
+		}
 		if (!xsdk_xsc_program_input(x, p, use->a, use->b))
 			return false;
 		if ((int64_t)use->a > *highest)
 			*highest = use->a;
 	}
-	if (!si->frag_coord && !si->front_facing && !si->point_coord)
+	if (!si->frag_coord && !si->front_facing && !si->point_coord && !si->vpos && !si->vface)
 		return true;
 	bool depth = false;
 	if (si->frag_coord && !reads_depth(x, m, types, si->frag_coord, &depth))
@@ -771,6 +814,10 @@ static bool lower_body(Fragment *f, int64_t param_reg, XscConstants *constants, 
 	if (si->front_facing && !front_facing_register(l, si, param_reg))
 		return false;
 	if (si->point_coord && !point_coord_register(l, si, param_reg))
+		return false;
+	if (si->vpos && !vpos_register(l, si, param_reg))
+		return false;
+	if (si->vface && !vface_register(l, si, param_reg))
 		return false;
 	if (!find_outputs(f))
 		return false;

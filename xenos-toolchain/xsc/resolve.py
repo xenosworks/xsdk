@@ -21,6 +21,10 @@ Conventions for the GLSL<->Xenos mapping (documented; v1):
     (Vulkan), fetch constants from 0 in (DescriptorSet, Binding) order;
     without (OpenGL), fetch-constant = Binding.
   - FS output Location 0 -> oC0.
+  - HLSL's semantics, where glslang's -fhlsl_functionality1 keeps them (xsdk:docs/scope/50-hlsl.md, step 4): a VS
+    input's usage and index are its semantic's; POSITION, PSIZE, DEPTH and COLORn outputs are oPos, the point's
+    size, oDepth and oCn; VPOS and VFACE come from the pixel parameters; TEXCOORD0, COLOR0, TEXCOORD1-11, COLOR1 and
+    FOG are interpolators 0, 1, 2-12, 13 and 14 in both stages, so a pair links by semantic.
 """
 from __future__ import annotations
 
@@ -75,6 +79,9 @@ class ShaderInterface:
     frag_coord: Var | None = None                     # a pixel shader's gl_FragCoord
     front_facing: Var | None = None                   # and its gl_FrontFacing
     point_coord: Var | None = None                    # and its gl_PointCoord
+    vpos: Var | None = None                           # and D3D9's VPOS and VFACE, from their semantics
+    vface: Var | None = None
+    point_size: Var | None = None                     # a vertex shader's PSIZE, from its semantic
     color_out: list = field(default_factory=list)     # (Var, oC index)
     constants: list = field(default_factory=list)     # ConstantSlot
     samplers: list = field(default_factory=list)      # (Var, fetch_slot)
@@ -111,6 +118,9 @@ def resolve_interface(m: spirv.Module) -> ShaderInterface:
         frag_coord=var(r["frag_coord"]),
         front_facing=var(r["front_facing"]),
         point_coord=var(r["point_coord"]),
+        vpos=var(r["vpos"]),
+        vface=var(r["vface"]),
+        point_size=var(r["point_size"]),
         color_out=[(var(v), a) for v, a in r["color_out"]],
         constants=[ConstantSlot(*c) for c in r["constants"]],
         samplers=[(var(v), a) for v, a in r["samplers"]],

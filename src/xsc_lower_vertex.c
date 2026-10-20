@@ -131,7 +131,8 @@ static uint32_t position_value(XscLower *l, const PerVertex *pv, const XscStores
 // export mode to the sprite's; its edge and kill flags are left unwritten. Without it, points are PA_SU_POINT_SIZE's.
 static bool export_point_size(XscLower *l, const PerVertex *pv, const XscStores *stores)
 {
-	uint32_t value = 0;
+	// HLSL's PSIZE is a variable of its own (xsc_resolve.c).
+	uint32_t value = l->si->point_size ? stores->value[l->si->point_size->vid] : 0;
 	for (size_t i = 0; i < stores->target_count && pv->point_size != XSC_NONE; i++) {
 		if (member_of(l, stores->targets[i]) == pv->point_size)
 			value = stores->value[stores->targets[i]];

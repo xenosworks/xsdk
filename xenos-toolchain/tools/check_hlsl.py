@@ -4,16 +4,16 @@ folders, xsc/testdata/hlsl's corpus and idioms by default, goes through glslang 
 -D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stage> -e <entry>, the last flag keeping each varying's semantic
 as a string xost reads (SPV_GOOGLE_hlsl_functionality1), the stage from the name's _vs or _ps and the entry vs_main or
 ps_main where the source has one, else main, then through xost at xsdk's register split with the optimiser on. What
-xost refuses is sorted by cause, and a shader that compiles with VPOS or VFACE, which glslang takes for interpolators,
-is counted apart.
+xost refuses is sorted by cause.
 
-A corpus pixel shader beside its GLSL twin, <name>.frag for <name>_ps.hlsl, is compared with it: the twin goes
-through glslang -V and xost as GLSL does today, and both programs run on xdis/simulate.py on the same random
-interpolators, constants and textures, matched by name. HLSL's constants sit at their registers, as D3D9's
-SetPixelShaderConstantF sets them (glslang's $Global block, which xost lays from c0), the GLSL's in its blocks; a
-uniform <block>_<member> of the HLSL is member <member> of the GLSL's block instance <block>, as SPIRV-Cross names
-them. Each comparison is exact, every export component the shader's type has equal bit for bit on every trial,
-inexact, or not comparable, with the reason; vertex shaders, which compile from step 4 on, are not compared yet.
+A corpus shader beside its GLSL twin, <name>.frag for <name>_ps.hlsl and <name>.vert for <name>_vs.hlsl, is compared
+with it: the twin goes through glslang -V and xost as GLSL does today, and both programs run on xdis/simulate.py on
+the same random inputs, constants and textures, matched by name: a pixel shader's interpolators, and VPOS and
+gl_FragCoord the same pixel; a vertex shader's fetches, each told apart by the input its element names. HLSL's
+constants sit at their registers, as D3D9's SetPixelShaderConstantF sets them (glslang's $Global block, which xost
+lays from c0), the GLSL's in its blocks; a uniform <block>_<member> of the HLSL is member <member> of the GLSL's block
+instance <block>, as SPIRV-Cross names them. Each comparison is exact, every export component the shader's type has,
+a vertex shader's position among them, equal bit for bit on every trial, inexact, or not comparable, with the reason.
 
 --refresh writes each shader's SPIR-V beside it, <name>.spv, as testdata keeps it; --json writes every result. Runs in
 WSL with xost's Windows glslang, as check_optimize.py does.
@@ -26,6 +26,7 @@ import json
 import math
 import random
 import re
+import struct
 import subprocess
 import sys
 import tempfile
@@ -34,6 +35,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
+import xdis.container as container  # noqa: E402
 import xdis.simulate as simulate  # noqa: E402
 import xsc.native as native  # noqa: E402
 import xsc.resolve as resolve  # noqa: E402
@@ -45,10 +47,13 @@ FLAGS = ["-D", "-V", "--hlsl-dx9-compatible", "-fhlsl_functionality1"]
 # xsdk's split (xsdk:src/xsc_compile.c).
 REGISTERS = 64
 ENTRY = re.compile(r"\b(vs_main|ps_main)\s*\(")
-# D3D9's pixel position and facing, which glslang makes locations, so xost reads them as interpolators.
-D3D9_PIXEL_INPUTS = re.compile(r":\s*(VPOS|VFACE)\b")
-# The constant xsdk keeps for gl_FragCoord (xsdk:include/xsdk/xsc.h, XSDK_XSC_FRAG_COORD_CONSTANT).
-FRAG_COORD = (0.5, 0.5, 0.5, 0.5)
+# The constant xsdk keeps for gl_FragCoord and VPOS outside a tiled pass (xsdk:include/xsdk/xsc.h,
+# XSDK_XSC_FRAG_COORD_CONSTANT).
+FRAG_COORD = (0.5, 0.5, 0.0, 0.0)
+# A vertex shader's position export, and a fetch's constant fields (xenia:src/xenia/gpu/ucode.h:745-758).
+EXPORT_POSITION = 62
+CONSTANT_SHIFT, SELECT_SHIFT = 20, 25
+CONSTANT_FIELDS = 0x7F << CONSTANT_SHIFT
 OP_LOAD, OP_ACCESS_CHAIN, OP_VARIABLE, OP_UNDEF, OP_CONSTANT_NULL, OP_CONSTANT_COMPOSITE = 61, 65, 59, 1, 46, 44
 STORAGE_PRIVATE = 6
 DEC_OFFSET, DEC_ARRAY_STRIDE, DEC_MATRIX_STRIDE, DEC_BUILTIN, BUILTIN_FRAG_COORD = 35, 6, 7, 11, 15
@@ -112,6 +117,11 @@ CAUSES = (
     (r"a colour output at location \d+, past oC3", None, "D3D9 semantics: DEPTH out a colour's location (step 4)"),
     (r"loop header terminator|structured loop header", None, "a loop in SSA form (step 3)"),
     (r"integer Load must be a foldable local", None, "an int or bool constant (step 5)"),
+    (r"unhandled matrix op", None, "a matrix not loaded from uniforms (step 5)"),
+    (r"unsupported integer op", None, "an int vector (step 5)"),
+    (r"interpolators link|not one of D3D9's declaration usages|share semantic", None,
+     "D3D9 semantics: one xost doesn't link"),
+    (r"with an initializer", None, "a local with an initializer"),
 )
 
 
@@ -161,9 +171,10 @@ def type_bytes(module, type_id, matrix_stride):
     raise ValueError(f"a block member of {t.name}")
 
 
-def value(seed, key, count):
+def value(seed, key, count, low=-2.0):
+    """count random singles from low to 2, as the GPU holds constants and inputs."""
     rng = random.Random(f"{seed}:{key}")
-    return [rng.uniform(-2.0, 2.0) for _ in range(count)]
+    return [simulate.single(rng.uniform(low, 2.0)) for _ in range(count)]
 
 
 def constants(module, si, manifest, name_of, seed):
@@ -189,11 +200,12 @@ def constants(module, si, manifest, name_of, seed):
 
 def interface(module):
     """A pixel shader's interface by name: inputs (name -> register), exports (name -> (export, width)), samplers
-    (slot -> name). gl_FragCoord is the pixel parameters, the register past the interpolators (docs/xsc.md)."""
+    (slot -> name). gl_FragCoord, VPOS and the facing are the pixel parameters, the register past the interpolators
+    (docs/xsc.md), the same pixel's for both programs."""
     si = resolve.resolve_interface(module)
     inputs = {short(v.name): r for v, r, _ in si.interp_in}
     exports = {short(v.name): (n, width(module, v.pointee)) for v, n in si.color_out}
-    if si.frag_coord:
+    if si.frag_coord or si.vpos or si.front_facing or si.vface or si.point_coord:
         inputs["@frag_coord"] = max(inputs.values(), default=-1) + 1
     samplers = {slot: short(v.name) for v, slot in si.samplers}
     return si, inputs, exports, samplers
@@ -209,8 +221,47 @@ def texel(samplers, seed):
     return sample
 
 
+def vertex_elements(blob):
+    """A vertex shader's elements, (slot, usage, usage index) each, as xsdk:src/shader.c patches its fetches by them:
+    the record's count, then the elements four words on (tests/test_optimize.py)."""
+    words = struct.unpack(f">{len(blob) // 4}I", blob)
+    record = words[6] // 4
+    return [(w & 0xFFF, w >> 12 & 0xF, w >> 16 & 0xF) for w in words[record + 10:record + 10 + words[record + 7]]]
+
+
+def separated(blob, elements):
+    """The blob with element n's fetch at fetch constant n, so a fetch says which input it reads."""
+    c = container.Container(blob)
+    out = bytearray(blob)
+    for n, (slot, _, _) in enumerate(elements):
+        at = c.offset + c.sh_off + slot * 12
+        word = struct.unpack_from(">I", out, at)[0] & ~CONSTANT_FIELDS
+        struct.pack_into(">I", out, at, word | n // 3 << CONSTANT_SHIFT | n % 3 << SELECT_SHIFT)
+    return bytes(out)
+
+
+def run_vertex(blob, module, manifest, name_of, trial, seed):
+    """A vertex shader's exports by name, its position "@position", and its inputs' names."""
+    si = resolve.resolve_interface(module)
+    by_usage = {(usage, index): short(v.name) for v, usage, index in si.vfetch}
+    elements = vertex_elements(blob)
+    names = [by_usage[(usage, index)] for _, usage, index in elements]
+    # From 0, so an index a shader works out from an input stays in its array, as GX's matrix indices do.
+    data = {name: value(f"{seed}:{trial}", name, 4, 0.0) for name in names}
+    result = simulate.run(separated(blob, elements), {0: [0.0] * 4}, constants(module, si, manifest, name_of, seed),
+                          vertex_fetch=lambda n, fetch, index: data[names[fetch.fetch_constant_index()]])
+    exports = {short(v.name): (o, width(module, v.pointee)) for v, o, _ in si.interp_out}
+    exports["@position"] = (EXPORT_POSITION, 4)
+    missing = [n for n, _ in exports.values() if n not in result.exports]
+    if missing:
+        raise ValueError(f"no export {missing}")
+    return {name: result.exports[n][:w] for name, (n, w) in exports.items()}, False, set(names)
+
+
 def run(blob, module, manifest, name_of, trial, seed):
-    """A pixel shader's exports by name, whether it killed, and its inputs' names."""
+    """A shader's exports by name, whether it killed, and its inputs' names."""
+    if container.Container(blob).shader_type == "vertex":
+        return run_vertex(blob, module, manifest, name_of, trial, seed)
     si, inputs, exports, samplers = interface(module)
     consts = constants(module, si, manifest, name_of, seed)
     trial_seed = f"{seed}:{trial}"
@@ -270,25 +321,19 @@ def check(source, args, work):
         if twin:
             twin.with_name(twin.name + ".spv").write_bytes(twin_blob)
     module = spirv.Module.parse(blob)
-    container, manifest, message = compile_xost(blob)
-    found = D3D9_PIXEL_INPUTS.search(source.read_text())
+    compiled, manifest, message = compile_xost(blob)
     if message:
         result = {"status": "refused", "cause": cause_of(message, module), "message": message}
-    elif found:
-        result = {"status": "compiled, wrong", "cause": f"{found.group(1)} as an interpolator (step 4)"}
     else:
         result = {"status": "compiled"}
     if not twin:
         return result
     if result["status"] != "compiled":
         result["comparison"] = ("not comparable", result["cause"])
-    elif vertex:
-        # shortcut: no vertex shader compiles before step 4, so their fetches aren't matched by input; match them then.
-        result["comparison"] = ("not comparable", "a vertex shader, its fetches not matched yet (step 4)")
     else:
         twin_container, twin_manifest, twin_message = compile_xost(twin_blob)
         result["comparison"] = (("not comparable", f"the GLSL refused: {twin_message}") if twin_message else
-                                compare(container, module, manifest, twin_container, spirv.Module.parse(twin_blob),
+                                compare(compiled, module, manifest, twin_container, spirv.Module.parse(twin_blob),
                                         twin_manifest, args.trials, args.seed))
     return result
 

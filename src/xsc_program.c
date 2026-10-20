@@ -1366,10 +1366,19 @@ static bool optimize(Xsc *x, XscProgram *p)
 	return true;
 }
 
+// The interpolators to the highest exported: an HLSL shader's semantics may leave some between unwritten.
+static uint32_t exported_interpolators(const XscProgram *p)
+{
+	uint32_t count = 0;
+	for (size_t i = 0; i < p->interpolator_count; i++)
+		count = p->interpolators[i].reg >= count ? p->interpolators[i].reg + 1 : count;
+	return count;
+}
+
 static bool finish_vertex(Xsc *x, XscProgram *p, XscContainerParts *parts)
 {
-	parts->program_control = (uint32_t)p->max_reg | 1u << 16 |
-		(uint32_t)(p->interpolator_count ? p->interpolator_count - 1 : 0) << 20 |
+	const uint32_t exported = exported_interpolators(p);
+	parts->program_control = (uint32_t)p->max_reg | 1u << 16 | (exported ? exported - 1 : 0) << 20 |
 		(p->exports_point_size ? (uint32_t)VS_EXPORT_SPRITE << VS_EXPORT_MODE_SHIFT : 0);
 	for (size_t e = 0; e < p->vertex_element_count; e++)
 		p->vertex_elements[e].slot = DROPPED_SLOT;

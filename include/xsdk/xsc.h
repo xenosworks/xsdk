@@ -27,8 +27,8 @@ typedef enum {
 enum {
 	XSDK_XSC_MESSAGE_BYTES = 512,
 	// The pixel shader's float constant gl_FragCoord.xy adds to the pixel parameters: 0.5, and 0.5 more than a tiled
-	// pass's band's top row, as xsdk keeps it (include/xsdk/gpu.h, tiled passes). A shader reading gl_FragCoord leaves
-	// its group of 4 to xsdk.
+	// pass's band's top row, as xsdk keeps it (include/xsdk/gpu.h, tiled passes); D3D9's VPOS adds its zw, 0 and the
+	// top row. A shader reading gl_FragCoord or VPOS leaves its group of 4 to xsdk.
 	XSDK_XSC_FRAG_COORD_CONSTANT = 255,
 };
 
