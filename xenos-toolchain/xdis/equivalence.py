@@ -5,7 +5,8 @@ optimiser (xsdk:src/xsc_optimize.c) gives against what it was given (tools/check
 xdis/simulate.py runs a program for its numbers; this one tracks which values are undefined.
 
 A register component nothing has written is None (undefined), and anything computed from one is too, so a comparison
-can skip what the original program never defined. Fetches return values that depend only on what they read, so two
+can skip what the original program never defined; so is a constant read at a0 with no a0 load since the start or the
+last alloc, where the console loses a0. Fetches return values that depend only on what they read, so two
 programs fetching the same coordinates get the same texels; the values are made up. Doubles stand in for the
 hardware's floats: two programs run here compute the same thing or don't; what the GPU prints to the last bit isn't
 modelled.
@@ -338,6 +339,9 @@ def run(blob: bytes, registers: dict, constants: dict) -> dict:
             word = rec.text.split()[0] if rec.text else ""
             if not word.startswith(("exec", "alloc", "cnop")):
                 raise Unsupported(f"control flow {rec.text!r}")
+            # a0 is lost at an alloc on the console (xsdk:docs/HARDWARE.md, "a0 doesn't survive an alloc").
+            if rec.opcode == "alloc":
+                state.address = None
         elif rec.kind == "tfetch":
             ins = xu.TextureFetchInstruction(*rec.raw)
             if ins.is_predicated() or ins.is_dest_relative() or ins.is_src_relative():

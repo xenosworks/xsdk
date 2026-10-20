@@ -9,8 +9,8 @@ the predicate runs if any of them needs it, each instruction predicated for each
 only when every one agrees (xenia:src/xenia/gpu/ucode.h:114-124, 372-373); loops nest 4 deep (ucode.h:131).
 The ALU's vector and scalar ops are as Xenia's ucode.h describes them
 (xenia:src/xenia/gpu/ucode.h, AluScalarOpcode and AluVectorOpcode), with a temp's absolute-value bit, a constant's,
-negation, swizzles, write masks, clamps, a0- and aL-relative constants (MOVA's maxas and maxasf), the predicate and
-kills, and the cube op as Xenia runs it; every value written is rounded to a single, as the GPU keeps it. Exports land in their export registers.
+negation, swizzles, write masks, clamps, a0- and aL-relative constants (MOVA's maxas and maxasf), a0 lost at an
+alloc as on the console, where a read at it raises, the predicate and kills, and the cube op as Xenia runs it; every value written is rounded to a single, as the GPU keeps it. Exports land in their export registers.
 Vertex and texture fetches come from functions the caller gives; setTexLOD and the gradients' setters keep the state
 the texture fetches after them read. A group run as quads, each four lanes a 2x2 quad, gives getGradients and a computed
 LOD the coordinates' coarse gradients over the quad, as Xenia's translator takes them
@@ -409,6 +409,11 @@ def run_group(blob: bytes, registers: list, constants: dict | None = None, verte
                 stack.append([0, count])
                 for _, _, state in lanes:
                     state["aL"] = 0
+        elif isinstance(d, xu.ParsedAllocInstruction):
+            # a0 is lost at an alloc on the console, where Xenia keeps it (xsdk:docs/HARDWARE.md, "a0 doesn't survive
+            # an alloc").
+            for _, _, state in lanes:
+                state["a0"] = None
         elif isinstance(d, xu.ParsedLoopEndInstruction):
             passes += 1
             stack[-1][0] += 1
@@ -425,6 +430,15 @@ def run_group(blob: bytes, registers: list, constants: dict | None = None, verte
     return [Result(exports, state["killed"], regs, passes) for regs, exports, state in lanes]
 
 
+def _address(op, state):
+    """The register a constant read at an index is past: a0's, or aL's."""
+    if not op.is_const_address_register_relative():
+        return state["aL"]
+    if state["a0"] is None:
+        raise RuntimeError("simulate: a constant read at a0 past an alloc with no a0 load since")
+    return state["a0"]
+
+
 def _source(op, i, regs, consts, state):
     reg = op.src_reg(i)
     if op.src_is_temp(i):
@@ -433,7 +447,7 @@ def _source(op, i, regs, consts, state):
             value = [abs(x) for x in value]
     else:
         if op.src_const_is_addressed(i):
-            reg += state["a0"] if op.is_const_address_register_relative() else state["aL"]
+            reg += _address(op, state)
         value = list(consts.get(reg, [0.0] * 4))
         if op.abs_constants():
             value = [abs(x) for x in value]
@@ -448,7 +462,7 @@ def _with_constant(op, regs, consts, state):
     milestone 48 step 5"); Xenia doesn't."""
     reg = op.src_reg(3)
     if op.src_const_is_addressed(3):
-        reg += state["a0"] if op.is_const_address_register_relative() else state["aL"]
+        reg += _address(op, state)
     lane = xu.AluInstruction.GetSwizzledComponentIndex
     b = regs.get(op.scalar_const_reg_op_src_temp_reg(), [0.0] * 4)[lane(op.src_swizzle(3), 0)]
     a = b if op.scalar_constant_reads_temp() else consts.get(reg, [0.0] * 4)[lane(op.src_swizzle(3), 3)]
