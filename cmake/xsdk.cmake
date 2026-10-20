@@ -49,6 +49,26 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 set(ENV{PKG_CONFIG_LIBDIR} "${XSDK_TOOLCHAIN}/powerpc-xsdk-elf/lib/pkgconfig")
 set(ENV{PKG_CONFIG_PATH} "")
 
+set(XSDK_GLSLANG "${XSDK_TOOLCHAIN}/bin/glslang" CACHE FILEPATH
+	"glslang for xsdk_add_shaders; if it isn't there, tools/build_shaders.py finds one itself")
+
+# Compiles a target's GLSL files into <target>_shaders.h, which its sources include (tools/build_shaders.py); once a
+# target.
+function(xsdk_add_shaders target)
+	set(header "${CMAKE_CURRENT_BINARY_DIR}/${target}_shaders.h")
+	list(TRANSFORM ARGN PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/" REGEX "^[^/]" OUTPUT_VARIABLE sources)
+	set(glslang "")
+	if(EXISTS "${XSDK_GLSLANG}")
+		set(glslang --glslang "${XSDK_GLSLANG}")
+	endif()
+	add_custom_command(OUTPUT "${header}"
+		COMMAND python3 "${XSDK_ROOT}/tools/build_shaders.py" ${glslang} --output "${header}" ${sources}
+		DEPENDS ${sources} "${XSDK_ROOT}/tools/build_shaders.py" "${XSDK_ROOT}/build/host/libxsc.so"
+		VERBATIM)
+	target_sources(${target} PRIVATE "${header}")
+	target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+endfunction()
+
 # Packs a title's ELF into <target>.xex beside it, and lists what Xenia would skip, as the Makefile does.
 function(xsdk_add_xex target)
 	# The link rule names these outside CMake's view, so a rebuilt SDK would otherwise leave the title linked to the old.
