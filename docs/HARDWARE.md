@@ -4551,3 +4551,18 @@ boot (docs/scope/44-tiling-and-msaa.md, step 3). Logs: `results/2026-10-20-miles
   idle, each count's squares covering the samples above at every alpha step and the colour control back to xsdk's
   once the target is set; `xsdk_test_atoc_noenable` and `_offsets0` each failed the three coverage checks alone.
   vulkan4xenon_test 492 of 492 twice and vkbench 17 of 17, vkbench's xsdk backend filling `XsdkBlend` by name.
+
+## HLSL on the console, milestone 50 (2026-10-20)
+
+xsdk_test's HLSL grid (`tests/test_hlsl.c`), its shaders compiled by xost from HLSL through glslang
+(results/2026-10-20-milestone-50/):
+- **VFACE** is +1 on a clockwise front face and -1 on a back one, D3D9's convention, from the same sign
+  `gl_FrontFacing` reads.
+- **VPOS** is each pixel's whole column and row as the pixel parameters' xy plus c255's zw, (0, the band's top):
+  gl_FragCoord less a half, in a tiled pass too.
+- **An ALU export with no write mask writes nothing:** a vertex shader's exports the pixel shader doesn't read go to
+  interpolator 0 with no mask after `xsdk_shader_link`, and the pixel shader's own interpolator 0, written by another
+  export first, came out right in every pixel, as Xenia describes the empty export (xenia:src/xenia/gpu/ucode.h:
+  2041-2059).
+- **A hardware loop an int in `$Global` counts,** from HLSL's loop in SSA form put back in the shape GLSL's takes, ran
+  as its GLSL twin with each pixel leaving at its own pass.

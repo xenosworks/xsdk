@@ -292,3 +292,17 @@ on the simulator 60 of the 80 columns go wrong, each pixel that broke a step sho
 **GLSL unchanged:** the 900 programs of step 2, compiled by f69e026 and by this step: the same containers, manifests
 and resources byte for byte, and the 30 refused refused alike. `tests/xsc_shaders.h` regenerates as it is, plus the
 grid's loop.
+
+## On the console
+
+docs/HARDWARE.md, "HLSL on the console, milestone 50", records what these settled. Each run built clean in full from
+M50 with vulkan4xenon against it (local/m50/build.sh), through the console agent on 2026-10-20:
+- **Step 4** (`step4_*.log`, at 11a3e72): xsdk_test 488 of 490, the controller's two failing with the pad idle; the
+  grid's link, VPOS, VFACE and DEPTH checks pass, VFACE +1 on a clockwise front face. Each break failed the checks it
+  names and its shader's compile check. vulkan4xenon_test 492 of 492 twice.
+- **Step 4 linked at bind** (`step4b_*.log`): xsdk_test 512 of 514 with the gaps pair's check and the 2-interpolator
+  check passing; the link break failed the three link checks, the others theirs. vulkan4xenon_test 492 of 492 twice,
+  vkbench 17 of 17.
+- **Step 3** (`step3_*.log`, at 245091a): xsdk_test 514 of 516, the loop's cell passing. The loop break failed the loop
+  check and its compile check; the link break the three link checks and the loop's, whose cell links its stages too.
+  vulkan4xenon_test 492 of 492 twice, vkbench 17 of 17.
