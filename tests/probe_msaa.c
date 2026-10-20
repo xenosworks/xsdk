@@ -22,12 +22,12 @@
 // never has, so it runs alone after a reboot, as a hang leaves the GPU hung. Each step is logged before it's sent and
 // ends with a fence and a resolve the CPU reads back. Built with src/gpu_draw.c's probe hooks (Makefile, msaa_probes).
 
-// The hooks XSDK_MSAA_PROBE builds into src/gpu_draw.c: colour targets of any format at any count, the resolves' copy
-// sample select (UINT32_MAX for xsdk's), and the hierarchical buffer allowed at 2 and 4 samples.
+// The hooks XSDK_MSAA_PROBE builds into src/gpu_draw.c: colour targets of any format at any count, and the resolves'
+// copy sample select (UINT32_MAX for xsdk's). xsdk keeps the hierarchical buffer on at 1280x256 at 2 and 4 samples
+// since step 3, as this probe found it right there.
 void xsdk_probe_msaa_targets(uint32_t width, uint32_t height, const XsdkColorTarget *targets, uint32_t count,
 	uint32_t depth_tile, uint32_t samples);
 void xsdk_probe_msaa_select(uint32_t select);
-void xsdk_probe_msaa_hiz(bool on);
 
 enum {
 	// The format, four-target, pattern and depth cases' target, milestone 32's.
@@ -1282,7 +1282,6 @@ static void check_scattered(void)
 static bool run_hiz(uint32_t samples)
 {
 	wide_samples = samples;
-	xsdk_probe_msaa_hiz(true);
 	const bool timed = check_hidden();
 	if (timed) {
 		xsdk_log_write("msaa: hiz at %u: milestone 49's draws after clears", (unsigned)samples);
@@ -1290,7 +1289,6 @@ static bool run_hiz(uint32_t samples)
 		check_scattered();
 		check_top_rows();
 	}
-	xsdk_probe_msaa_hiz(false);
 	xsdk_gpu_set_depth_clear(1.0f, 0);
 	return timed && !stopped;
 }

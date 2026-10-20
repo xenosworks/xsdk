@@ -64,10 +64,12 @@ enum {
 	TILE_HEIGHT = 16,
 	// A resolve's width is whole columns of 32 pixels.
 	RESOLVE_COLUMN = 32,
-	// The largest target milestone 30 checked the hierarchical buffer at; past it, at a 2048 pitch, the buffer rejected
-	// pixels it shouldn't (docs/HARDWARE.md, "Render passes past eDRAM in the layer, milestone 44").
+	// The largest targets the hierarchical buffer was checked at, 1280x1024 at 1 sample (milestone 30) and 1280x256 at
+	// 4 (results/2026-10-20-milestone-44-step-3/probe_msaa_default.log), so rows times samples up to 1024; past 1280
+	// wide, at a 2048 pitch, it rejected pixels it shouldn't (docs/HARDWARE.md, "Render passes past eDRAM in the
+	// layer, milestone 44").
 	HIZ_MOST_WIDTH = 1280,
-	HIZ_MOST_HEIGHT = 1024,
+	HIZ_MOST_SAMPLE_ROWS = 1024,
 	// RB_SURFACE_INFO's fields (xenia:src/xenia/gpu/registers.h:670-679).
 	SURFACE_SAMPLES_SHIFT = 16,
 	SURFACE_HIZ_PITCH_SHIFT = 18,
@@ -214,9 +216,8 @@ static uint32_t depth_control_set;
 
 #ifdef XSDK_MSAA_PROBE
 // Milestone 44 step 3's probe (tests/probe_msaa.c) of what xsdk refuses or never sends at 2 and 4 samples: a resolve's
-// copy sample select, UINT32_MAX for xsdk's, and the hierarchical buffer there.
+// copy sample select, UINT32_MAX for xsdk's.
 static uint32_t probe_sample_select = UINT32_MAX;
-static bool probe_hiz;
 #endif
 
 // MsaaSamples, 0 to 2 for 1, 2 and 4 samples (xenia:src/xenia/gpu/xenos.h:288-292).
@@ -261,12 +262,7 @@ static bool is_hiz_surface(uint32_t width, uint32_t height)
 
 bool xsdk_gpu_hiz_fits(uint32_t width, uint32_t height)
 {
-#ifdef XSDK_MSAA_PROBE
-	if (probe_hiz)
-		return width <= HIZ_MOST_WIDTH && height <= HIZ_MOST_HEIGHT;
-#endif
-	// Multisampled targets haven't been tried with the buffer on the console.
-	return target_samples == 1 && width <= HIZ_MOST_WIDTH && height <= HIZ_MOST_HEIGHT;
+	return width <= HIZ_MOST_WIDTH && height * target_samples <= HIZ_MOST_SAMPLE_ROWS;
 }
 
 void xsdk_gpu_hiz_cleared(uint32_t width, uint32_t height, uint32_t depth_clear)
@@ -469,11 +465,6 @@ void xsdk_probe_msaa_targets(uint32_t width, uint32_t height, const XsdkColorTar
 void xsdk_probe_msaa_select(uint32_t select)
 {
 	probe_sample_select = select;
-}
-
-void xsdk_probe_msaa_hiz(bool on)
-{
-	probe_hiz = on;
 }
 #endif
 

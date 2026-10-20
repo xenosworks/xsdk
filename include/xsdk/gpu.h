@@ -382,7 +382,8 @@ void xsdk_gpu_depth_stencil_state(XsdkDepthStencilState *state, const XsdkDepthS
 // Applies to the draws after; xsdk_gpu_set_target and resolves turn depth and stencil off. Draws testing depth skip
 // hidden pixels before the pixel shader from a resolve that clears the whole target's depth until another target is
 // set, a recording is begun or run, part of the depth is cleared, or depth is written with a compare the clear doesn't
-// suit (docs/HARDWARE.md, "Hierarchical depth"); draws whose pixel shader writes depth never do.
+// suit (docs/HARDWARE.md, "Hierarchical depth"); draws whose pixel shader writes depth never do, nor targets past 1280
+// wide or past 1024 rows times samples, the most the console was checked at (1280x256 at 4 samples).
 void xsdk_gpu_set_depth_stencil(const XsdkDepthStencilState *state);
 // The depth, 0 to 1, and stencil the later resolves clear to; far and 0 until set. Below 0.5 suits greater-than
 // compares, else less-than ones; equal suits both.
