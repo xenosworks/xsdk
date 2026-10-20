@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-// XAM's asynchronous calls, saves in content packages, the signed-in user and XAM's UI (milestone 51). Each call
+// XAM's asynchronous calls, saves in content packages, the signed-in user and XAM's dialogs (milestone 51). Each call
 // gives XAM's own result unchanged and none waits unless told to, as the Guide and XAM's dialogs show only while the
 // title keeps presenting (docs/HARDWARE.md, "The Guide shows through VdSwap"). How to use them:
 // - Any XAM call that takes an overlapped: xsdk_xam_prepare it, pass the call's return through xsdk_xam_returned, and
@@ -18,7 +18,8 @@ extern "C" {
 // - Saves: xsdk_save_mount, then xsdk_save_wait once a frame; files are then "save:/name" for fopen or open; after
 //   writing, xsdk_save_unmount and xsdk_save_wait again. To delete an unmounted one, XamContentDelete(save.user_index,
 //   &save.data, &save.overlapped), its overlapped prepared and waited for as above.
-// - Pause the game while xsdk_system_ui_open says XAM's UI is up.
+// - Dialogs: xsdk_xam_keyboard or xsdk_xam_message_box, then xsdk_xam_wait as above; pause the game while one runs or
+//   xsdk_system_ui_open says XAM's UI is up.
 
 enum {
 	XSDK_XAM_USERS = 4,
@@ -41,15 +42,22 @@ void xsdk_xam_prepare(XAM_OVERLAPPED *overlapped);
 uint32_t xsdk_xam_returned(XAM_OVERLAPPED *overlapped, uint32_t returned);
 // For a call that returned ERROR_IO_PENDING: ERROR_IO_INCOMPLETE until it's done, waiting up to timeout_ms for its
 // event (0 only looks); then XAM's result, with its length if length isn't NULL. How it went also shows in the
-// overlapped's extended_error.
+// overlapped's extended_error, which a cancelled keyboard may set.
 uint32_t xsdk_xam_wait(XAM_OVERLAPPED *overlapped, uint32_t timeout_ms, uint32_t *length);
 
 // The first user signed in and their gamertag: XamUserGetName's result, or ERROR_NO_SUCH_USER with nobody signed in,
 // user_index then XSDK_XAM_USER_NONE.
 uint32_t xsdk_xam_signed_in_user(uint32_t *user_index, char gamertag[XSDK_XAM_GAMERTAG_BYTES]);
 
+// Opens the on-screen keyboard; the text, UTF-16, lands in text once the call is done.
+uint32_t xsdk_xam_keyboard(uint32_t user_index, const uint16_t *title, const uint16_t *description,
+	const uint16_t *default_text, uint16_t *text, uint32_t text_chars, XAM_OVERLAPPED *overlapped);
+// Opens a message box; the button pressed, from 0, lands in pressed once the call is done.
+uint32_t xsdk_xam_message_box(uint32_t user_index, const uint16_t *title, const uint16_t *text,
+	const uint16_t *const *buttons, uint32_t button_count, uint32_t *pressed, XAM_OVERLAPPED *overlapped);
+
 // Whether the Guide or a dialog of XAM's is open, from XAM's notifications; call it once a frame from one thread. The
-// first call starts listening, so call it once at start.
+// first call starts listening, and the dialogs above call it, so call it once at start if the Guide matters before.
 bool xsdk_system_ui_open(void);
 
 // A save game: a content package on the hard disk mounted as a drive. XAM writes into it while a call on it runs, so

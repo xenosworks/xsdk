@@ -62,6 +62,9 @@ PACING_OBJECTS := $(patsubst tests/%,$(BUILD)/tests/%.o,$(basename $(PACING_SOUR
 # Milestone 37's check, watched while the user opens the Guide.
 GUIDE_CHECK_SOURCES := tests/guide_check.c tests/bar_scene.c
 GUIDE_CHECK_OBJECTS := $(patsubst tests/%,$(BUILD)/tests/%.o,$(basename $(GUIDE_CHECK_SOURCES)))
+# Milestone 51's check with a person at the console, under a title ID and name of its own, and the same title under a
+# second, to see each keep its saves apart.
+SAVE_CHECK_OBJECTS := $(BUILD)/tests/save_check.o $(BUILD)/tests/bar_scene.o
 # Bring-up probes: titles that each answer one question on the console.
 PROBES := probe_spin probe_print probe_cp probe_ring probe_interrupt probe_exports probe_engines probe_swap \
 	probe_display probe_guide probe_resolve probe_triangle probe_vblank probe_720p probe_constants probe_mip_tail \
@@ -82,7 +85,7 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
-	$(BUILD)/guide_check.xex $(PROBES:%=$(BUILD)/%.xex)
+	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(PROBES:%=$(BUILD)/%.xex)
 
 # Configures CMake project $(1) in $(2) with this toolchain, afresh when $(2) was configured with another, whose
 # compiler a configure would keep.
@@ -125,6 +128,15 @@ $(BUILD)/pacing_test.elf: $(PACING_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 
 $(BUILD)/guide_check.elf: $(GUIDE_CHECK_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(GUIDE_CHECK_OBJECTS) $(LIBS)
+
+$(BUILD)/save_check.elf: $(SAVE_CHECK_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(SAVE_CHECK_OBJECTS) $(LIBS)
+
+$(BUILD)/save_check.xex: $(BUILD)/save_check.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --title-id 0x5853444D --title-name "xsdk save_check" $< $@
+
+$(BUILD)/save_check_t2.xex: $(BUILD)/save_check.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --title-id 0x5853444E --title-name "xsdk save_check 2" $< $@
 
 $(BUILD)/probe_%.elf: $(BUILD)/tests/probe_%.o $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/probe_$*.o $(LIBS)

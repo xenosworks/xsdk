@@ -71,3 +71,23 @@ uint32_t xsdk_xam_signed_in_user(uint32_t *user_index, char gamertag[XSDK_XAM_GA
 	}
 	return ERROR_NO_SUCH_USER;
 }
+
+// Flags 0, the default keyboard, as Xenia's shim and the probe call it (xenia:src/xenia/kernel/xam/xam_ui.cc:408-462).
+uint32_t xsdk_xam_keyboard(uint32_t user_index, const uint16_t *title, const uint16_t *description,
+	const uint16_t *default_text, uint16_t *text, uint32_t text_chars, XAM_OVERLAPPED *overlapped)
+{
+	(void)xsdk_system_ui_open();
+	xsdk_xam_prepare(overlapped);
+	return xsdk_xam_returned(
+		overlapped, XamShowKeyboardUI(user_index, 0, default_text, title, description, text, text_chars, overlapped));
+}
+
+// The first button focused, flags 0 for no icon (xenia:src/xenia/kernel/xam/xam_ui.cc:268-323).
+uint32_t xsdk_xam_message_box(uint32_t user_index, const uint16_t *title, const uint16_t *text,
+	const uint16_t *const *buttons, uint32_t button_count, uint32_t *pressed, XAM_OVERLAPPED *overlapped)
+{
+	(void)xsdk_system_ui_open();
+	xsdk_xam_prepare(overlapped);
+	return xsdk_xam_returned(
+		overlapped, XamShowMessageBoxUI(user_index, title, text, button_count, buttons, 0, 0, pressed, overlapped));
+}
