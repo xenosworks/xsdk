@@ -10,17 +10,21 @@
 #include "tests.h"
 #include "tiled_index.h"
 #include "triangle_shaders.h"
+#include "xsdk/display.h"
 #include "xsdk/gpu.h"
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
 #include "xsdk/shader.h"
 #include "xsdk/texture.h"
+#include "xsdk/thread.h"
 
 // A triangle drawn at 1, 2 and 4 samples, each resolved into a texture whose every pixel is checked: off the edges
 // as the CPU works out, on them one of the blends a pixel's samples can make. Then the same through
 // xsdk_gpu_set_targets_samples at 2 and 4 samples for each format it takes there, alone and four at once, each texel
 // read back by value within the format's precision, with the step 3 probe's colours
-// (results/2026-10-20-milestone-44-step-3/probe_msaa_default.log).
+// (results/2026-10-20-milestone-44-step-3/probe_msaa_default.log). Then alpha to coverage at 1, 2 and 4 samples, a band
+// of squares at alphas 0 to 1 in 16ths for each count, shown on screen, every pixel the share of its samples the step 4
+// probe found covered at its square's alpha (results/2026-10-20-milestone-44-step-4).
 
 enum {
 	// Resolved across its texture's 256-texel pitch, which at 4 samples takes more eDRAM tiles across than 240 does.
@@ -47,6 +51,48 @@ enum {
 	PLACE_CONSTANTS = 2,
 	// Four half floats.
 	MAX_TEXEL_BYTES = 8,
+};
+
+// Alpha to coverage: for each count a 1280x64 target, resolved into a band of a 1280x720 frame's rows, the bands one
+// above another on screen.
+enum {
+	FRAME_WIDTH = 1280,
+	FRAME_HEIGHT = 720,
+	BAND_ROWS = 64,
+	// From a multiple of 32 rows, where a resolve's destination moves in a tiled frame (docs/HARDWARE.md, "Tiling's
+	// registers and packets, milestone 44 step 1").
+	FIRST_BAND_TOP = 224,
+	BAND_STEP = 96,
+	// On even pixels, so each square is whole quads.
+	SQUARE_LEFT = 72,
+	SQUARE_TOP = 8,
+	SQUARE_CELL = 64,
+	SQUARE_SIZE = 48,
+	ALPHA_STEPS = 16,
+	// The squares at alphas 0 to 16/16, then one at 1/16 drawn after the target is set again.
+	UNDONE_SQUARE = ALPHA_STEPS + 1,
+	SQUARES = UNDONE_SQUARE + 1,
+	ALPHA_CASES = 3,
+	QUAD_VERTICES = 6,
+	TEXT_BYTES = 192,
+	// Red, green and blue; alpha is left out, as the squares' differ, as tests/probe_msaa.c reads them.
+	RGB_LAST_SHIFT = 16,
+	ALL_LAST_SHIFT = 24,
+};
+
+// A count's band: its colour, and the first alpha in 16ths at which each pixel covers 1, 2 and so on of its samples, as
+// the probe found them (results/2026-10-20-milestone-44-step-4/probe_msaa_atoc_sym_<n>.log).
+typedef struct {
+	uint32_t samples;
+	uint32_t shape_argb;
+	uint8_t thresholds[MAX_SAMPLES];
+} AlphaCase;
+
+// Each channel the clear's plus a multiple of 4, as SHAPE_ARGB.
+static const AlphaCase alpha_cases[ALPHA_CASES] = {
+	{ 1, 0xFFE0A060, { 8 } },
+	{ 2, 0xFF60E0A0, { 4, 12 } },
+	{ 4, 0xFFA060E0, { 2, 6, 10, 14 } },
 };
 
 // How a texture holds a texel, as tests/test_targets.c reads them.
@@ -117,6 +163,8 @@ typedef struct {
 	const XsdkShader *place_vertex;
 	const XsdkShader *flat_pixel;
 	const XsdkShader *four_pixel;
+	// A unit square after the triangle, for constant_vertex_shader to place.
+	uint32_t square;
 } Scene;
 
 typedef struct {
@@ -173,10 +221,11 @@ static void find_places(void)
 	}
 }
 
-// Edges half a pixel early (xenia:src/xenia/gpu/draw_util.cc:837), in the triangle's colour.
-static volatile uint32_t *upload_triangle(void)
+// Edges half a pixel early (xenia:src/xenia/gpu/draw_util.cc:837), in the triangle's colour; then the unit square.
+static volatile uint32_t *upload_vertices(void)
 {
-	float vertices[TRIANGLE_VERTICES][VERTEX_FLOATS];
+	static const float unit_square[QUAD_VERTICES][2] = { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 0, 1 }, { 1, 0 }, { 1, 1 } };
+	float vertices[TRIANGLE_VERTICES + QUAD_VERTICES][VERTEX_FLOATS] = { { 0.0f } };
 	const float colour[4] = { (SHAPE_ARGB >> 16 & 0xFF) / 255.0f, (SHAPE_ARGB >> 8 & 0xFF) / 255.0f,
 		(SHAPE_ARGB & 0xFF) / 255.0f, (SHAPE_ARGB >> 24) / 255.0f };
 	for (uint32_t i = 0; i < TRIANGLE_VERTICES; i++) {
@@ -184,6 +233,10 @@ static volatile uint32_t *upload_triangle(void)
 			1.0f - (corners[i].y - 0.5f) / (TARGET_HEIGHT / 2.0f), 0.0f, 1.0f };
 		memcpy(&vertices[i][0], position, sizeof position);
 		memcpy(&vertices[i][4], colour, sizeof colour);
+	}
+	for (uint32_t i = 0; i < QUAD_VERTICES; i++) {
+		const float position[4] = { unit_square[i][0], unit_square[i][1], 0.0f, 1.0f };
+		memcpy(&vertices[TRIANGLE_VERTICES + i][0], position, sizeof position);
 	}
 	volatile uint32_t *const memory = xsdk_gpu_alloc(sizeof vertices);
 	if (!memory)
@@ -220,14 +273,15 @@ static void draw_case(const Scene *scene, const Case *c, const XsdkTexture *text
 	xsdk_gpu_resolve_texture(texture, CLEAR_ARGB);
 }
 
-// Which k of samples the pixel is, k samples of the triangle and the rest of the clear colour, or -1 for none.
-static int blend_level(uint32_t argb, uint32_t samples)
+// Which k of samples the pixel is, k samples of the shape and the rest of the clear colour, in the channels from blue
+// to last_shift's, or -1 for none.
+static int blend_level(uint32_t argb, uint32_t shape_argb, uint32_t samples, uint32_t last_shift)
 {
 	for (uint32_t k = 0; k <= samples; k++) {
 		bool matches = true;
-		for (uint32_t shift = 0; shift <= 24; shift += 8) {
+		for (uint32_t shift = 0; shift <= last_shift; shift += 8) {
 			const int clear = CLEAR_ARGB >> shift & 0xFF;
-			const int shape = SHAPE_ARGB >> shift & 0xFF;
+			const int shape = shape_argb >> shift & 0xFF;
 			const int want = clear + (int)k * (shape - clear) / (int)samples;
 			const int got = argb >> shift & 0xFF;
 			matches = matches && got - want <= (int)TOLERANCE && want - got <= (int)TOLERANCE;
@@ -269,7 +323,7 @@ static void tally_case(const Case *c, const XsdkTexture *texture, Tally *tally, 
 				log_miss(c, "off the edges", x, y, argb, logged);
 				continue;
 			}
-			const int level = blend_level(argb, c->samples);
+			const int level = blend_level(argb, SHAPE_ARGB, c->samples, ALL_LAST_SHIFT);
 			if (level >= 0) {
 				tally->levels[level]++;
 				continue;
@@ -488,6 +542,166 @@ static void check_targets_samples(const Scene *scene, const XsdkTexture *texture
 	}
 }
 
+// constant_vertex_shader's place for the unit square over pixels from square's cell of a band, edges half a pixel early
+// (xenia:src/xenia/gpu/draw_util.cc:837).
+static void place_square(uint32_t square)
+{
+	const float left = (SQUARE_LEFT + square * SQUARE_CELL - 0.5f) / (FRAME_WIDTH / 2.0f) - 1.0f;
+	const float top = 1.0f - (SQUARE_TOP - 0.5f) / (BAND_ROWS / 2.0f);
+	const float place[PLACE_CONSTANTS][4] = {
+		{ SQUARE_SIZE / (FRAME_WIDTH / 2.0f), -SQUARE_SIZE / (BAND_ROWS / 2.0f), 1.0f, 1.0f },
+		{ left, top, 0.0f, 0.0f },
+	};
+	xsdk_gpu_set_vertex_constants(0, &place[0][0], PLACE_CONSTANTS);
+}
+
+// A count's band: eDRAM cleared by a resolve into the band's rows, the squares drawn under alpha to coverage, the last
+// after the target is set again, then resolved into the rows. 4 samples sets it through xsdk_gpu_set_blends, so both
+// calls are checked.
+static void draw_alpha_band(const Scene *scene, const AlphaCase *a, const XsdkTexture *frame, uint32_t top)
+{
+	static const XsdkBlend coverage = { .color_source = XSDK_BLEND_ONE,
+		.color_dest = XSDK_BLEND_ZERO,
+		.alpha_source = XSDK_BLEND_ONE,
+		.alpha_dest = XSDK_BLEND_ZERO,
+		.write_mask = XSDK_WRITE_ALL,
+		.alpha_to_coverage = true };
+	XsdkBlendState state;
+	xsdk_gpu_blend_state(&state, &coverage);
+	// A tiled frame's row top, a multiple of 32, starts top rows of its pitch in.
+	const uint32_t address = frame->address + top * frame->pitch * 4;
+	xsdk_gpu_set_target_samples(FRAME_WIDTH, BAND_ROWS, a->samples);
+	xsdk_gpu_resolve(address, FRAME_WIDTH, BAND_ROWS, CLEAR_ARGB);
+	xsdk_gpu_set_target_samples(FRAME_WIDTH, BAND_ROWS, a->samples);
+	xsdk_gpu_set_shaders(scene->place_vertex, scene->flat_pixel);
+	xsdk_gpu_set_vertices(0, scene->square, QUAD_VERTICES * STRIDE_BYTES);
+	if (a->samples == MAX_SAMPLES)
+		xsdk_gpu_set_blends(&state, 1);
+	else
+		xsdk_gpu_set_blend(&state);
+	for (uint32_t square = 0; square < SQUARES; square++) {
+		if (square == UNDONE_SQUARE)
+			xsdk_gpu_set_target_samples(FRAME_WIDTH, BAND_ROWS, a->samples);
+		const uint32_t argb = a->shape_argb;
+		const float alpha = square == UNDONE_SQUARE ? 1.0f / ALPHA_STEPS : (float)square / ALPHA_STEPS;
+		const float color[CHANNELS] = { (argb >> 16 & 0xFF) / 255.0f, (argb >> 8 & 0xFF) / 255.0f,
+			(argb & 0xFF) / 255.0f, alpha };
+		place_square(square);
+		xsdk_gpu_set_pixel_constants(0, color, 1);
+		xsdk_gpu_draw(XSDK_PRIMITIVE_TRIANGLE_LIST, QUAD_VERTICES);
+	}
+	xsdk_gpu_resolve(address, FRAME_WIDTH, BAND_ROWS, CLEAR_ARGB);
+}
+
+// The samples a pixel of a band should cover, and its square or SQUARES off them: the probe's at the square's alpha,
+// every one in the square drawn after the target is set again, none off the squares.
+static uint32_t covered_at(const AlphaCase *a, uint32_t x, uint32_t y, uint32_t *square)
+{
+	const uint32_t in_x = x - SQUARE_LEFT;
+	*square = in_x / SQUARE_CELL;
+	if (x < SQUARE_LEFT || *square >= SQUARES || in_x % SQUARE_CELL >= SQUARE_SIZE || y < SQUARE_TOP ||
+		y >= SQUARE_TOP + SQUARE_SIZE) {
+		*square = SQUARES;
+		return 0;
+	}
+	if (*square == UNDONE_SQUARE)
+		return a->samples;
+	uint32_t covered = 0;
+	while (covered < a->samples && a->thresholds[covered] <= *square)
+		covered++;
+	return covered;
+}
+
+typedef struct {
+	// Pixels of the alpha squares, and off the squares, unlike the probe's; and of the square after the target was set.
+	uint32_t wrong;
+	uint32_t undone_wrong;
+	// Each square's first pixel's samples covered, or -1 for a colour that's no step, to log.
+	int levels[SQUARES];
+} AlphaTally;
+
+// Every pixel of the band, as ARGB once its word's bytes are swapped (docs/HARDWARE.md, "Render to texture, milestone
+// 8").
+static void tally_alpha_band(const AlphaCase *a, const XsdkTexture *frame, uint32_t top, AlphaTally *t)
+{
+	uint32_t logged = 0;
+	for (uint32_t y = 0; y < BAND_ROWS; y++) {
+		for (uint32_t x = 0; x < FRAME_WIDTH; x++) {
+			const uint32_t argb = __builtin_bswap32(frame->texels[tiled_index(x, top + y, frame->pitch)]);
+			uint32_t square;
+			const uint32_t want = covered_at(a, x, y, &square);
+			const int level = blend_level(argb, a->shape_argb, a->samples, RGB_LAST_SHIFT);
+			if (square < SQUARES && x == SQUARE_LEFT + square * SQUARE_CELL && y == SQUARE_TOP)
+				t->levels[square] = level;
+			if (level == (int)want)
+				continue;
+			if (square == UNDONE_SQUARE)
+				t->undone_wrong++;
+			else
+				t->wrong++;
+			if (logged++ < MAX_MISSES_LOGGED)
+				xsdk_log_write("multisample: alpha to coverage at %u samples: (%u, %u) held %08X, not %u covered",
+					(unsigned)a->samples, (unsigned)x, (unsigned)(top + y), (unsigned)argb, (unsigned)want);
+		}
+	}
+}
+
+static void report_alpha_band(const AlphaCase *a, const AlphaTally *t, bool landed)
+{
+	char levels[TEXT_BYTES];
+	uint32_t length = 0;
+	for (uint32_t i = 0; i < ALPHA_STEPS + 1; i++)
+		length += (uint32_t)snprintf(levels + length, sizeof levels - length, " %d", t->levels[i]);
+	if (landed)
+		xsdk_log_write(
+			"multisample: alpha to coverage at %u samples: samples covered at alphas 0 to 16/16:%s; at "
+			"1/16 after the target set again: %d",
+			(unsigned)a->samples, levels, t->levels[UNDONE_SQUARE]);
+	char name[TEXT_BYTES];
+	snprintf(name, sizeof name,
+		"multisample: alpha to coverage at %u sample%s%s: each square covers the samples the probe found at its "
+		"alpha, every pixel, the rest the clear",
+		(unsigned)a->samples, a->samples > 1 ? "s" : "",
+		a->samples == MAX_SAMPLES ? ", through xsdk_gpu_set_blends" : "");
+	check(name, landed && t->wrong == 0);
+}
+
+// The frame cleared by two resolves, the first clearing eDRAM, each count's band drawn, every band pixel checked, then
+// the frame shown.
+static void check_alpha_to_coverage(const Scene *scene, const XsdkTexture *frame)
+{
+	uint32_t width = 0;
+	uint32_t height = 0;
+	const bool display = NT_SUCCESS(xsdk_display_open(XSDK_DISPLAY_720P, &width, &height)) && width == FRAME_WIDTH &&
+		height == FRAME_HEIGHT;
+	for (uint32_t i = 0; i < 2; i++) {
+		xsdk_gpu_set_target(FRAME_WIDTH, FRAME_HEIGHT);
+		xsdk_gpu_resolve(frame->address, FRAME_WIDTH, FRAME_HEIGHT, CLEAR_ARGB);
+	}
+	for (uint32_t i = 0; i < ALPHA_CASES; i++)
+		draw_alpha_band(scene, &alpha_cases[i], frame, FIRST_BAND_TOP + i * BAND_STEP);
+	const bool landed = NT_SUCCESS(xsdk_gpu_wait(xsdk_gpu_fence(), FENCE_TIMEOUT_MS));
+	if (!landed)
+		xsdk_log_write("multisample: alpha to coverage: the fence didn't land");
+	uint32_t undone_wrong = 0;
+	for (uint32_t i = 0; i < ALPHA_CASES; i++) {
+		AlphaTally tally = { .wrong = 0 };
+		if (landed)
+			tally_alpha_band(&alpha_cases[i], frame, FIRST_BAND_TOP + i * BAND_STEP, &tally);
+		report_alpha_band(&alpha_cases[i], &tally, landed);
+		undone_wrong += tally.undone_wrong;
+	}
+	check(
+		"multisample: alpha to coverage: off again once the target is set, alpha 1/16 covering every sample at 1, 2 "
+		"and 4 samples",
+		landed && undone_wrong == 0);
+	const bool shown = display && NT_SUCCESS(xsdk_display_show(frame->address, frame->pitch));
+	if (shown)
+		(void)xsdk_thread_sleep(TEST_SHOW_MS);
+	xsdk_display_close();
+	check("multisample: alpha to coverage: the squares shown at 1280x720", shown);
+}
+
 void test_multisample(void)
 {
 	// 80x16 samples a tile, 4 samples two across (xenia:src/xenia/gpu/xenos.h:414-437), over whole 32-pixel columns.
@@ -518,7 +732,7 @@ void test_multisample(void)
 		NT_SUCCESS(xsdk_shader_load(&flat_pixel, microcode_pixel_shader, sizeof microcode_pixel_shader)) &&
 		NT_SUCCESS(xsdk_shader_load(&four_pixel, four_targets_pixel_shader, sizeof four_targets_pixel_shader));
 	check("multisample: shaders load and patch", loaded);
-	volatile uint32_t *const vertices = upload_triangle();
+	volatile uint32_t *const vertices = upload_vertices();
 	XsdkTexture textures[CASES];
 	XsdkTexture format_textures[XSDK_COLOR_TARGETS];
 	bool made = vertices != NULL;
@@ -534,6 +748,8 @@ void test_multisample(void)
 			xsdk_texture_create(&format_textures[i], formats[i].texture, TARGET_WIDTH, TARGET_HEIGHT, 1, true);
 		made = made && NT_SUCCESS(created);
 	}
+	XsdkTexture frame = { .texels = NULL };
+	made = made && NT_SUCCESS(xsdk_texture_create(&frame, XSDK_FORMAT_B8G8R8A8, FRAME_WIDTH, FRAME_HEIGHT, 1, true));
 	check("multisample: vertices and textures", made);
 	find_places();
 	if (loaded && made) {
@@ -542,16 +758,19 @@ void test_multisample(void)
 			.vertices = xsdk_gpu_address(vertices),
 			.place_vertex = &place_vertex,
 			.flat_pixel = &flat_pixel,
-			.four_pixel = &four_pixel };
+			.four_pixel = &four_pixel,
+			.square = xsdk_gpu_address(vertices) + TRIANGLE_VERTICES * STRIDE_BYTES };
 		const XsdkRaster raster = { .cull = XSDK_CULL_NONE, .front_clockwise = true };
 		xsdk_gpu_raster_state(&scene.raster, &raster);
 		draw_rounds(&scene, textures);
 		check_targets_samples(&scene, format_textures);
+		check_alpha_to_coverage(&scene, &frame);
 	}
 	for (uint32_t i = 0; i < CASES; i++)
 		xsdk_texture_free(&textures[i]);
 	for (uint32_t i = 0; i < XSDK_COLOR_TARGETS; i++)
 		xsdk_texture_free(&format_textures[i]);
+	xsdk_texture_free(&frame);
 	xsdk_gpu_free(vertices);
 	xsdk_shader_free(&four_pixel);
 	xsdk_shader_free(&flat_pixel);
