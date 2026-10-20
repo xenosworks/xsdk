@@ -922,16 +922,23 @@ a move wrote (73.4 to 75.1 ms). That check alone takes step 6's compiler to 68.5
 about 5 ms past it. Every program compiles byte for byte as at `ed4807e`. At that share the console's 1.382 s would be
 about 1.29 s, within 1.42.
 
-**On the console,** to run, built clean from the M48 pair, Dusklight's pack rebuilt with this xost; vulkan4xenon's
-bundles don't change:
-- **xsdk_test,** its compiler check of the 47 programs in `tests/xsc_shaders.h`, and the tiles and instancing tests
-  drawing `vk_frag_coord_rows.frag`, `vk_instance_cells.vert` and `vk_instance_step.vert`, the first xost programs to
-  export through a scalar op on the console: 468 passing and the 2 controller checks failing with no pad, as at step
-  6.
-- **vulkan4xenon_test, twice:** 492 of 492 each.
-- **`probe_shader_cost`,** its pictures against the baseline's: all 103 pixel pictures hashing as the baseline's, the
-  28 programs that change among them, `1510c05add37f2b3.frag`'s matrix with them. The vertex shaders a little under
-  step 6's 12,488 us, 53 of their slots gone.
-- **`probe_xsc`:** 150 of 150 programs as the pack holds them, within 1.42 s.
-- **Dusklight:** its title scene as a smoke run, and its frames captured every 150th: Link and Epona, lit by the
-  skinned `93d36ce5` and `c0ddfd45` that change, looking as at step 6 (local/m48/frames_step6).
+**On the console,** built clean from the M48 pair rebased on main `97e8b7b`, Dusklight's pack rebuilt with this xost
+(local/m48/step7_build.sh); vulkan4xenon's bundles don't change:
+- **`step7_xsdk_test.log`:** 477 of 477, with a pad connected and a profile signed in. Its compiler check of
+  `vk_frag_coord_rows.frag`, `vk_instance_cells.vert` and `vk_instance_step.vert`, and the tiles and instancing tests
+  drawing them, pass: the first xost programs to export through a scalar op on the console.
+- **`step7_vulkan4xenon_test_1.log`, `_2.log`:** 492 of 492 each.
+- **`probe_step7.log`:** Dusklight's pixel shaders take 50,610 us for a draw of each, 19.7% under the baseline's
+  63,053; its vertex shaders 12,198 us, 8.7% under 13,354 and 2.3% under step 6's 12,488. All 103 pixel pictures hash
+  as the baseline's, bit for bit, the 28 programs that change and `1510c05add37f2b3.frag`'s matrix among them.
+- **`probe_xsc_step7.log`:** 150 of 150 programs compile on the console as the pack holds them, the 150 in 1.349 s,
+  within 1.42, where step 6's took 1.382 s.
+- **`step7_dusklight.log`, `step7_dusklight_frames.log`:** the title scene at 29.7 to 29.9 fps once loaded; Link and
+  Epona, lit by the skinned `93d36ce5` and `c0ddfd45` that change, look as at step 6 (local/m48/frames_step6,
+  frames_step7).
+
+## The milestone
+
+Done on 2026-10-20, against step 1's baseline: Dusklight's pixel shaders take 19.7% less GPU time (the target 12%),
+its vertex shaders 8.7% less (the target 5%), every picture bit for bit, and the console's compile of its 150 programs
+1.349 s (at most 1.42). xsdk_test and vulkan4xenon_test pass with nothing hung.

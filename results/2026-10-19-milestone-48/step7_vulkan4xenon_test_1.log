@@ -1,0 +1,634 @@
+log: game:\v4x_test.log
+log: named after \Device\Harddisk0\Partition1\v4xtest\v4x_test.xex
+sbrk: the heap may grow to 471 MB from 0x00070000, the title's free memory
+vulkan4xenon test title
+open: NtCreateFile(game:\v4x_shader_cache\xsc-47ec0a1b4d47ed26) failed: 0xC0000034
+shader cache: game:\v4x_shader_cache\xsc-47ec0a1b4d47ed26
+PASS: shader cache: a folder for the layer's shaders, emptied of an earlier run's
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 19458 us
+PASS: setup: instance, device, command pool and fence made
+boot logo: XAM's surface 00000000, then 1F0F0000
+PASS: boot logo: the display shows a buffer of its own after vkCreateDevice
+display: Xbox 360 video output, 1280x720 at 59940 mHz
+PASS: boot logo: the swapchain made
+PASS: boot logo: still on screen once the swapchain exists
+boot logo: after the first present the display shows 1ED30000, image 0 at 1ED30000; pixel 00 60 00
+PASS: boot logo: the first present replaces it with the app's image
+PASS: objects: vkGetInstanceProcAddr finds global functions without an instance
+PASS: objects: vkGetInstanceProcAddr finds instance functions only with an instance
+PASS: objects: vkGetDeviceProcAddr finds device functions and not instance ones
+PASS: objects: an unknown name finds nothing
+PASS: objects: two memory types in one heap, the GPU's device-local, then the CPU's cached
+PASS: objects: a buffer's requirements round its size up to its alignment
+PASS: objects: the cached memory type is offered to buffers only copied to and from
+PASS: objects: an instance for Vulkan 1.1 is refused
+vulkan4xenon: xost refused SPIR-V 0806A8C99179CFC2, 20 bytes: list index out of range
+PASS: objects: SPIR-V the bundle doesn't hold and xost can't compile is refused
+vulkan4xenon: not supported: colour attachments with mips, or 16 texels or less on a side
+vulkan4xenon: not supported: colour attachments with mips, or 16 texels or less on a side
+PASS: objects: R8G8B8A8_UNORM is a blendable colour attachment, but not 16 texels across or with mips
+vulkan4xenon: not supported: depth and stencil attachments that clear one and load the other
+PASS: objects: a render pass that clears depth and loads stencil is refused
+PASS: commands: step 1's 22 commands are found by name
+PASS: commands: a pipeline cache's data is a header of 32 bytes, its words least significant byte first
+PASS: commands: a pipeline cache's data too small for its header writes nothing
+PASS: commands: a pipeline cache made from another's data merges into it
+PASS: commands: an event starts reset, and the host sets and resets it
+PASS: commands: a render pass's render area granularity is 8x8, the resolve's grid (milestone 27)
+PASS: commands: an allocation is committed in full
+PASS: commands: the sparse queries find nothing for an image or a format
+vulkan4xenon: not supported: compute pipelines
+vulkan4xenon: not supported: buffer views
+vulkan4xenon: not supported: sparse binding
+PASS: commands: compute pipelines, buffer views and sparse binding are refused
+vulkan4xenon: not supported: compute dispatches
+vulkan4xenon: not supported: compute dispatches
+vulkan4xenon: not supported: resolving multisampled images
+vulkan4xenon: not supported: depth bounds
+vulkan4xenon: not supported: line widths other than 1
+PASS: commands: dispatches, resolves, depth bounds and a line width of 2 fail their command buffer
+PASS: commands: a pipeline of dynamic line width ignores its own, and takes 1 from vkCmdSetLineWidth
+PASS: copies: the target, buffers and images made
+PASS: copies: an image the GPU drew reads back through vkCmdCopyImageToBuffer, its quad in place
+PASS: copies: a colour cleared on the CPU is what the next pass loads, around its quads
+PASS: copies: vkCmdDrawIndirect draws with the count a vkCmdUpdateBuffer before it wrote
+PASS: copies: vkCmdDrawIndexedIndirect draws with parameters the host wrote
+PASS: copies: vertices updated between two passes, the first pass's draw has the old and the second's the new
+PASS: copies: a pass that only clears, its image read back straight after, holds the clear
+PASS: copies: a chain blitted down linearly keeps its quadrants to 2x2, the 1x1 their mean
+PASS: copies: a nearest blit to twice the size repeats each texel two by two
+PASS: copies: a clear fills the levels asked, in the packed tail, and leaves level 0
+PASS: copies: a level copied between optimal images reads back the same
+PASS: copies: a linear image the host wrote at its row pitch copies to an optimal image and on to a linear one
+PASS: copies: buffers filled, updated and copied at unaligned offsets hold what was written, and no more
+vulkan4xenon: not supported: indirect draws of more than one draw
+vulkan4xenon: not supported: blits the GPU can't draw: part of a level, flipped, scaled in depth, between formats or of formats that don't blit
+vulkan4xenon: not supported: image copies of less than a whole level, or between compressed and uncompressed formats
+PASS: copies: two draws an indirect command, blits between formats and copies of part of a level are refused
+PASS: copies: formats of 8-bit channels blit and R32_SFLOAT doesn't; linear images of one level are copied, not sampled; an indirect command draws once
+PASS: copies: step 2's 10 commands are found by name
+PASS: triangle: render pass, shader modules, pipeline and vertex buffer made
+PASS: triangle: framebuffers made and command buffers recorded
+PASS: triangle: 120 frames acquired, drawn and presented
+PASS: triangle: every frame's image has red, green and blue corners on the clear colour
+triangle: the image on screen, 1ED30000, drew 259200 pixels
+triangle: 120 flips
+PASS: triangle: every presented frame reached the screen
+PASS: triangle: the image on screen has red, green and blue corners on the clear colour
+PASS: triangle: the image on screen covers the triangle's area
+vulkan4xenon: compiled SPIR-V F7C5845FB0756B82, 840 bytes, in 245 us
+vulkan4xenon: compiled SPIR-V 6CCE30CE458D7B89, 372 bytes, in 110 us
+triangle: the image on screen C28EA8898F514045 from the bundle's shaders, C28EA8898F514045 from those compiled here
+PASS: triangle: shaders the bundle doesn't hold, compiled on the console, draw the bundle's image
+PASS: packed_colour: A8B8G8R8_UNORM_PACK32 is a vertex buffer format
+PASS: packed_colour: a pipeline with 8-bit packed colours made
+PASS: packed_colour: framebuffers made and command buffers recorded
+PASS: packed_colour: every frame's image has yellow, cyan and magenta corners on the clear colour
+packed_colour: the image on screen, 1ED30000, drew 259200 pixels
+PASS: packed_colour: the image on screen has yellow, cyan and magenta corners
+PASS: packed_colour: the image on screen covers the triangle's area
+PASS: vertex_formats: a pipeline for each format's colours, its alpha and its positions made
+vertex_formats: 192 probes a frame, 0 frames held a wrong one
+PASS: vertex_formats: 30 frames drawn and presented
+PASS: vertex_formats: A8B8G8R8_UNORM_PACK32 colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: A8B8G8R8_SNORM_PACK32 colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: A8B8G8R8_USCALED_PACK32 colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: A8B8G8R8_SSCALED_PACK32 colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R8G8B8A8_UNORM colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R8G8B8A8_SNORM colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R8G8B8A8_USCALED colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R8G8B8A8_SSCALED colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: B8G8R8A8_UNORM colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16_UNORM colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16_SNORM colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16_USCALED colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16_SSCALED colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16_SFLOAT colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16B16A16_UNORM colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16B16A16_SNORM colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16B16A16_USCALED colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16B16A16_SSCALED colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: R16G16B16A16_SFLOAT colours drawn, each square's red, green, blue and alpha as stored
+PASS: vertex_formats: positions of bytes, shorts and halves place their triangles, x, y, z and w in place
+PASS: vertex_formats: each is a vertex buffer format, and the integer formats and those under 4 bytes aren't
+PASS: texture: three images, a sampler, descriptor sets and a pipeline made
+PASS: texture: a buffer copied into the three images
+PASS: texture: 60 frames drawn and presented
+PASS: texture: every frame shows each texel: R8G8B8A8, B8G8R8A8, then R32_SFLOAT's red clamped to 0 to 1
+PASS: texture: the image on screen shows them too
+PASS: formats: an image of each format, its views and the pipeline made, and the images copied in
+PASS: formats: each image copied back out to a buffer holds the bytes it was copied in from
+PASS: formats: each uncompressed image blitted from 4x4 to 2x2 holds the means of its texels, or the texels at its centres where it's sampled nearest
+PASS: formats: each uncompressed image cleared holds the colour in every texel, as its format packs it
+formats: 2620 probes a frame, 0 frames held a wrong one
+PASS: formats: 30 frames drawn and presented
+PASS: formats: BC1_RGB_UNORM_BLOCK sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: BC1_RGBA_UNORM_BLOCK sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: BC2_UNORM_BLOCK sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: BC3_UNORM_BLOCK sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R5G6B5_UNORM_PACK16 sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: B5G6R5_UNORM_PACK16 sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: A1R5G5B5_UNORM_PACK16 sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R4G4B4A4_UNORM_PACK16 sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: B4G4R4A4_UNORM_PACK16 sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: A2B10G10R10_UNORM_PACK32 sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: A2R10G10B10_UNORM_PACK32 sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R16_SFLOAT sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R16G16_SFLOAT sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R16G16B16A16_SFLOAT sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: BC4_UNORM_BLOCK sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: BC5_UNORM_BLOCK sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R16_UNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R16G16_UNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R16G16B16A16_UNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R16_SNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R16G16_SNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R16G16B16A16_SNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R8_SNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R8G8_SNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R8G8B8A8_SNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: B8G8R8A8_SNORM sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: A2B10G10R10_SNORM_PACK32 sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: A2R10G10B10_SNORM_PACK32 sampled nearest, every texel's red, green, blue and alpha as written
+PASS: formats: R8_SRGB sampled nearest, every texel's red, green, blue and alpha as written, its colours through Xenos's gamma curve
+PASS: formats: R8G8_SRGB sampled nearest, every texel's red, green, blue and alpha as written, its colours through Xenos's gamma curve
+PASS: formats: R8G8B8A8_SRGB sampled nearest, every texel's red, green, blue and alpha as written, its colours through Xenos's gamma curve
+PASS: formats: B8G8R8A8_SRGB sampled nearest, every texel's red, green, blue and alpha as written, its colours through Xenos's gamma curve
+PASS: formats: BC1_RGB_SRGB_BLOCK sampled nearest, every texel's red, green, blue and alpha as written, its colours through Xenos's gamma curve
+PASS: formats: BC1_RGBA_SRGB_BLOCK sampled nearest, every texel's red, green, blue and alpha as written, its colours through Xenos's gamma curve
+PASS: formats: BC2_SRGB_BLOCK sampled nearest, every texel's red, green, blue and alpha as written, its colours through Xenos's gamma curve
+PASS: formats: BC3_SRGB_BLOCK sampled nearest, every texel's red, green, blue and alpha as written, its colours through Xenos's gamma curve
+PASS: formats: every format but the half floats and 10-10-10-2 filtered linearly halfway between two texels gives their mean
+PASS: formats: BC2 and BC3 colour blocks whose first endpoint is below the second take four colours
+PASS: formats: sRGB images filtered linearly blend their texels after Xenos's curve, as Vulkan's do after decoding
+PASS: formats: the image on screen shows them too
+PASS: formats: each reports sampling, and filtering but the half floats and 10-10-10-2, the uncompressed blits and linear images too, colour attachments only A2B10G10R10_UNORM, R16G16_SFLOAT and R16G16B16A16_SFLOAT (milestone 25), and textureCompressionBC is off
+vulkan4xenon: not supported: colour clears of images other than uncompressed colour images
+vulkan4xenon: not supported: blits the GPU can't draw: part of a level, flipped, scaled in depth, between formats or of formats that don't blit
+vulkan4xenon: not supported: image copies of less than a whole level, or between compressed and uncompressed formats
+PASS: formats: a BC1 image's clear, blit, and copy to a 64-bit uncompressed image are refused
+PASS: cube and 3D: a cube of two levels, a 3D image and another cube made, with cube and 3D views
+PASS: cube and 3D: the device reports cubes of six layers with mips, and 3D images of one level
+vulkan4xenon: not supported: images other than 2D with one layer, cubes and 3D images
+vulkan4xenon: not supported: cube images other than one cube of six square faces
+vulkan4xenon: not supported: cube and 3D images other than optimal colour images, sampled and copied
+vulkan4xenon: not supported: image views other than the whole of an image in its format, a cube's as a cube
+PASS: cube and 3D: arrays of 2D images and of cubes, cubes drawn into and a 2D view of a face are refused
+PASS: cube and 3D: a buffer copied into the cube's six faces at each level, and the 3D image's slices in halves
+PASS: cube and 3D: 30 frames drawn and presented
+PASS: cube and 3D: every frame shows each cube face at levels 0 and 1, and each 3D slice, quadrant by quadrant
+PASS: cube and 3D: the image on screen shows them too
+PASS: cube and 3D: level 1's face 3 and slices 5 and 6 copied back out
+PASS: cube and 3D: a face copied into another cube's face 4, and its faces 0 and 1 cleared, read back
+PASS: addressing: VK_KHR_sampler_mirror_clamp_to_edge is listed
+PASS: addressing: an image, a sampler for each address mode and the pipelines made
+vulkan4xenon: not supported: border colours other than transparent black and opaque white
+vulkan4xenon: not supported: border colours other than transparent black and opaque white
+PASS: addressing: an opaque black border and the integer borders refused, where a mode reads the border
+PASS: addressing: 30 frames drawn and presented
+PASS: addressing: every frame shows repeat, mirrored repeat, clamp to edge, mirror clamp to edge and an opaque white border past 0 and 1
+PASS: addressing: the image on screen shows them too
+PASS: addressing: a transparent black border's alpha is 0, the clear colour showing through it blended
+PASS: shadow: a D24S8 image to sample, comparison samplers and their pipelines made
+PASS: shadow: the device reports D24S8 filtered linearly
+vulkan4xenon: not supported: comparison samplers that filter linearly
+PASS: shadow: comparison samplers that filter linearly are refused
+PASS: shadow: 30 frames drawn and presented
+PASS: shadow: every frame compares 0.5 with depths of 0.25 and 0.75 by less, greater, never and always
+PASS: shadow: the image on screen shows them too
+PASS: shadow: D24S8 filtered linearly across the edge between depths 0.25 and 0.75
+PASS: push constants: a pipeline with a vertex and a fragment range made
+PASS: push constants: 60 frames drawn and presented
+PASS: push constants: every frame places and colours each quad by its pushes
+PASS: push constants: the image on screen shows them too
+PASS: uniform buffers: two set layouts, a pipeline, buffers and descriptor sets made
+PASS: uniform buffers: 60 frames drawn and presented
+PASS: uniform buffers: every frame places each quad by its matrix, coloured and tinted
+PASS: uniform buffers: the image on screen shows them too
+PASS: indexed: a pipeline for each topology, a vertex buffer and an index buffer made
+PASS: indexed: 60 frames drawn and presented
+PASS: indexed: every frame has each shape in its cell: triangle lists, strips and fans, lines, points, and a list past 65535
+PASS: indexed: the image on screen shows them too
+PASS: instancing: the device has drawIndirectFirstInstance, and took it when made
+PASS: instancing: pipelines with a binding at the instance's rate made, with and without gl_InstanceIndex
+vulkan4xenon: compiled SPIR-V 3E70B06B8B0CF4B8, 1264 bytes, in 566 us
+vulkan4xenon: compiled SPIR-V 3E70B06B8B0CF4B8, 1264 bytes, instanced, in 648 us
+PASS: instancing: a list's pipeline from instanced_places.vert compiled on the console, its instanced variant compiled there too, a strip's and instance_grid.vert's made
+PASS: instancing: 30 frames drawn and presented
+PASS: instancing: every frame, vkCmdDraw draws 4 instances, each in the column gl_InstanceIndex gives and the colour its attributes give
+PASS: instancing: every frame, vkCmdDrawIndexed draws 3 from instance 2 and index 8, gl_InstanceIndex and the attributes both starting there
+PASS: instancing: every frame, vkCmdDrawIndirect draws the 4 instances from instance 3 it reads at replay
+PASS: instancing: every frame, vkCmdDrawIndexedIndirect draws the 2 instances from instance 5 and index 8 it reads at replay
+PASS: instancing: every frame, a shader without gl_InstanceIndex places 4 instances from instance 1 by their attributes alone
+PASS: instancing: every frame, a triangle strip draws 3 instances from instance 1, each a strip of its own in the column gl_InstanceIndex gives
+PASS: instancing: every frame, a list of 7 vertices an instance draws 3 instances from instance 1, each 2 triangles, the 7th vertex never drawn
+PASS: instancing: the image on screen shows them too
+instancing: the pass took 431 dwords, 409 without the 1,000 instances' draw
+instancing: 1,000 instances in one draw added 22 dwords to the stream
+PASS: instancing: 1,000 instances in one vkCmdDraw, each in the cell gl_InstanceIndex gives and the colour its attribute gives
+PASS: instancing: the 1,000 instances' draw adds fewer than 200 dwords to the stream, which a draw an instance can't
+PASS: strips: triangle strip, line strip and fan pipelines made, and strips of 70000 vertices
+PASS: strips: 30 frames drawn and presented
+PASS: strips: every frame, a triangle strip of 70000 vertices, culling back faces, draws its first quad, the quad over its split at vertex 65532 and its last
+PASS: strips: every frame, the same strip from 70000 32-bit indices draws them too
+PASS: strips: every frame, a line strip of 70000 vertices draws the lines over its split at vertex 65534 and its last two
+PASS: strips: the image on screen shows them too
+vulkan4xenon: not supported: triangle fans of more than 65535 vertices
+PASS: strips: a triangle fan of 70000 vertices still fails its command buffer, and one of 65535 doesn't
+PASS: depth and stencil: a D24S8 attachment, a render pass clearing it and five pipelines made
+PASS: depth and stencil: 60 frames drawn and presented
+PASS: depth and stencil: every frame tests depth both ways, without writing, against the clear, by stencil and with a bias
+PASS: depth and stencil: the image on screen shows them too
+PASS: raster: twelve pipelines of culling, blending, write masks and dynamic viewports made
+PASS: raster: 60 frames drawn and presented
+PASS: raster: every frame culls, blends, masks, follows the dynamic viewport and scissor, and has Vulkan's edges
+PASS: raster: the image on screen shows them too
+PASS: dynamic state: a D24S8 attachment, a render pass and eight pipelines made
+PASS: dynamic state: 30 frames drawn and presented
+PASS: dynamic state: every frame's stencil takes the write masks, references and compare masks commands set, and a static pipeline's own
+PASS: dynamic state: every frame's depth bias is what vkCmdSetDepthBias set, nearer then farther
+PASS: dynamic state: every frame blends by vkCmdSetBlendConstants's colours, and a static pipeline's own alpha
+vulkan4xenon: not supported: depth bias clamps
+vulkan4xenon: not supported: dynamic depth bounds, and dynamic state past Vulkan 1.0's
+PASS: dynamic state: depth bias clamps and dynamic depth bounds are refused
+PASS: dynamic state: step 3's 5 commands are found by name
+PASS: two-sided stencil: a D24S8 attachment, a render pass and five pipelines made
+PASS: two-sided stencil: 30 frames drawn and presented
+PASS: two-sided stencil: every frame's front and back faces pass the pipeline's own test for each, over what each wrote with its own op and write mask
+PASS: two-sided stencil: every frame's faces take the references and write masks commands set for each alone
+PASS: two-sided stencil: every frame's faces take the compare masks commands set for each alone
+PASS: clip distances: shaderClipDistance reported, maxClipDistances and maxCombinedClipAndCullDistances 6, no cull distances
+PASS: clip distances: a plane buffer, a render pass and three pipelines made
+PASS: clip distances: 30 frames drawn and presented
+PASS: clip distances: every frame's quads are cut at the lines of the planes pushed before each draw
+PASS: clip distances: every frame's quads are cut by distances 1 and 4, planes from a dynamic uniform buffer at each draw's offset
+PASS: clip distances: every frame cuts nothing of a pipeline without them nor of vkCmdClearAttachments's rectangle, and cuts the draw after the clear again
+PASS: point sprites: largePoints reported, pointSizeRange 0 to 8191.875, granularity 0.125
+PASS: point sprites: a point's buffer, a render pass and two pipelines made
+PASS: point sprites: 30 frames drawn and presented
+PASS: point sprites: every frame's sprites are as wide as their gl_PointSize, 16 and 48 pixels, gl_PointCoord across each from its top left
+PASS: point sprites: every frame's point without gl_PointSize is 1 pixel
+PASS: fill modes: fillModeNonSolid reported
+PASS: fill modes: a render pass and three pipelines made
+PASS: fill modes: 30 frames drawn and presented
+PASS: fill modes: every frame's LINE quad draws its triangles' edges, the diagonal between them too, and nothing inside
+PASS: fill modes: every frame's POINT quad draws its corners and nothing between them
+PASS: fill modes: every frame culls a back-facing LINE quad before its edges are drawn, and draws a front-facing one's
+PASS: clears: a D24S8 image to clear, a pass loading it and four pipelines made
+PASS: clears: 30 frames drawn and presented
+PASS: clears: every frame's pass loads the depth and stencil vkCmdClearDepthStencilImage set before it
+PASS: clears: every frame's colour cleared in a rectangle, and the pipeline's state after it as it was
+PASS: clears: every frame's depth cleared in a rectangle, alone
+PASS: clears: every frame's stencil cleared in a rectangle, alone
+PASS: clears: a sampled depth image cleared outside a pass holds the clear in its memory, for shaders
+vulkan4xenon: not supported: depth image clears of depth or stencil alone
+vulkan4xenon: not supported: attachment clears of layers past the first
+PASS: clears: a depth image's depth cleared alone and attachment clears of two layers are refused
+PASS: clears: step 4's 2 commands are found by name
+PASS: subpasses: three subpasses over two colour attachments and a depth, their pipelines and two secondary command buffers made
+PASS: subpasses: 30 frames drawn and presented
+PASS: subpasses: every frame's second subpass, drawn from two secondary command buffers, tests the first's depth
+PASS: subpasses: the first and third subpasses draw into the offscreen attachment, the third over the first's
+vulkan4xenon: not supported: subpasses other than one to four colour attachments and a depth attachment, and input attachments
+PASS: subpasses: input attachments are refused
+PASS: subpasses: step 5's 2 commands are found by name
+PASS: targets: images of the five formats, render passes of four colour attachments and of two, their framebuffers and pipelines made
+PASS: targets: 10 frames drawn and presented
+PASS: targets: every frame samples the five images back onto the screen, values past 1 scaled down
+PASS: targets: colour attachment 0, R8G8B8A8_UNORM, the second draw added onto the first's
+PASS: targets: colour attachment 1, A2B10G10R10_UNORM_PACK32, the second draw blended by its alpha, red, green and blue alone, and cleared in the corner
+PASS: targets: colour attachment 2, R16G16B16A16_SFLOAT, past 1, the second draw's red and alpha alone, and cleared in the corner below 0 and past 1; then drawn back by a second pass as its second target, past 1 and below 0, under its quad
+PASS: targets: colour attachment 3, R32_SFLOAT, past 1 from a float output, kept from the second draw
+PASS: targets: the second pass's R16G16_SFLOAT target, its clear and its quad past 1
+PASS: targets: four colour attachments a subpass and four outputs, independent blending, and the formats' features: A2B10G10R10 blending, the floats not, R16G16B16A16_UNORM sampled alone
+vulkan4xenon: not supported: blending into float colour attachments, which Xenos doesn't blend
+vulkan4xenon: not supported: subpasses other than one to four colour attachments and a depth attachment, and input attachments
+PASS: targets: blending into a float attachment and five colour attachments are refused
+PASS: tiles: images, render passes past eDRAM and their framebuffers, and pipelines made
+PASS: tiles: 3 frames of four attachments past eDRAM loaded and stored across two passes, then an untiled one, the first attachment on screen in every band
+tiles: attachment 0, R8G8B8A8_UNORM: 0 of 921600 texels wrong
+PASS: tiles: four attachments past eDRAM at 1280x720, attachment 0, R8G8B8A8_UNORM, every texel after a pass clearing all and one loading all and depth
+tiles: attachment 1, A2B10G10R10_UNORM_PACK32: 0 of 921600 texels wrong
+PASS: tiles: four attachments past eDRAM at 1280x720, attachment 1, A2B10G10R10_UNORM_PACK32, every texel after a pass clearing all and one loading all and depth
+tiles: attachment 2, R16G16B16A16_SFLOAT: 0 of 921600 texels wrong
+PASS: tiles: four attachments past eDRAM at 1280x720, attachment 2, R16G16B16A16_SFLOAT, every texel after a pass clearing all and one loading all and depth
+tiles: attachment 3, R32_SFLOAT: 0 of 921600 texels wrong
+PASS: tiles: four attachments past eDRAM at 1280x720, attachment 3, R32_SFLOAT, every texel after a pass clearing all and one loading all and depth
+tiles: the untiled pass after: 0 of 921600 texels wrong
+PASS: tiles: an untiled pass after them loads the depth they left whole at eDRAM's top, every texel
+vulkan4xenon: depth past eDRAM in bands comes back without its stencil
+PASS: tiles: 3 frames of a 2048x2048 shadow map in bands, then a pass loading its depth, its top left on screen
+tiles: shadow map: 0 of 4194304 texels' depth wrong
+PASS: tiles: a 2048x2048 shadow map past eDRAM, every texel's depth in its memory, stored a band at a time
+tiles: pass loading the shadow map: 0 of 4194304 texels wrong
+PASS: tiles: a 2048x2048 pass loading the shadow map's depth, drawn back a band at a time, every texel
+tiles: shadow map sampled: 0 of 4194304 texels wrong
+PASS: tiles: a 2048x2048 pass past eDRAM sampling the shadow map, every texel's red its depth
+vulkan4xenon: not supported: queries in a render pass past eDRAM
+vulkan4xenon: not supported: time stamps in a render pass past eDRAM
+vulkan4xenon: not supported: render areas smaller than the framebuffer past eDRAM
+vulkan4xenon: not supported: a subpass past eDRAM loading depth that doesn't fit whole, its image not sampled
+PASS: tiles: a query, a time stamp and a render area smaller than the framebuffer refused in a pass past eDRAM, depth in bands loaded from an image that isn't sampled refused, and framebuffers to 4096x4096
+vulkan4xenon: not supported: a shader's constants past its stage's: 256 a vertex shader's, 252 a fragment's
+tiles: the c252 pipeline returned -8; maxUniformBufferRange 4032
+PASS: tiles: a fragment shader's uniform block reaching c252, which xsdk keeps, refused, and maxUniformBufferRange 4032
+PASS: render areas: the targets, passes and buffers made
+render areas: 0, 0, 0 and 0 texels wrong
+PASS: render areas: a pass clearing an area inside the framebuffer clears and draws there alone, and stores no more
+PASS: render areas: a pass loading an area that reaches the framebuffer's edges, off the 8-pixel grid, loads and stores it alone, the area before it in place
+PASS: render areas: a pass clearing an area's depth leaves the depth around it
+PASS: render areas: a depth image's clear covers all of it, before a pass of a smaller area
+PASS: render areas: the granularity is 8 by 8
+vulkan4xenon: not supported: render areas off the 8-pixel grid inside the framebuffer
+vulkan4xenon: not supported: render areas off the 8-pixel grid inside the framebuffer
+vulkan4xenon: not supported: render areas off the 8-pixel grid inside the framebuffer
+PASS: render areas: areas off the 8-pixel grid inside the framebuffer are refused
+vulkan4xenon: not supported: render areas smaller than the framebuffer but for one 8-bit RGBA or BGRA colour attachment
+PASS: render areas: an area smaller than the framebuffer of a half float colour attachment is refused
+PASS: blits: the images, pass and buffers made
+PASS: blits: a region scaled up 2 times, nearest, fills its rectangle
+PASS: blits: a region scaled down 3 times, nearest
+PASS: blits: a region mirrored across by its destination and down by its source, nearest
+PASS: blits: a region scaled up 2 times, linear
+PASS: blits: a region at an odd offset scaled down 2 times, linear
+PASS: blits: a region reaching the destination's edges, off the 8-pixel grid
+PASS: blits: the destination around the rectangles keeps its texels
+PASS: blits: the source the GPU drew holds its cells
+blits: the replay took 92 us with the blit drawn on the GPU, 25187 us with it on the CPU; their submissions were done after 10019 us and 26947 us
+PASS: blits: a blit drawn on the GPU doesn't wait for it, a blit on the CPU does
+PASS: blits: into a level past the first, which stays on the CPU, the source's texels
+vulkan4xenon: not supported: blits the GPU can't draw: part of a level, flipped, scaled in depth, between formats or of formats that don't blit
+PASS: blits: a region off the 8-pixel grid inside the destination is refused
+PASS: render to texture: three images, seven render passes and four pipelines made
+PASS: render to texture: pass 1 alone leaves the scene's texels, read back
+PASS: render to texture: passes 1 to 4 leave every texel probed in the scene and its copy, read back
+PASS: render to texture: 60 frames of eight render passes drawn and presented
+PASS: render to texture: every frame: the scene, depth tested at 200x120, to its last column and row
+PASS: render to texture: every frame: its copy in B8G8R8A8, made before passes 3 and 4
+PASS: render to texture: every frame: the scene loaded after another pass: colour drawn back, depth kept in eDRAM
+PASS: render to texture: every frame: the scene loaded straight after
+PASS: render to texture: every frame: the swapchain image loaded after another pass, the third image over it
+PASS: render to texture: every frame: the swapchain image loaded straight after
+PASS: render to texture: the image on screen shows them too
+vulkan4xenon: compiled SPIR-V A35B08199CED40FE, 1716 bytes, in 1076 us
+PASS: run-time index: matrices, the shader compiled here: a set, a pipeline and buffers made
+PASS: run-time index: matrices, the shader compiled here: 60 frames drawn and presented
+PASS: run-time index: matrices, the shader compiled here: every frame places each quad by the matrix its vertices name, in that matrix's colour
+PASS: run-time index: matrices, the shader compiled here: the image on screen does too
+vulkan4xenon: compiled SPIR-V 67ED0271B77F173C, 880 bytes, in 329 us
+PASS: run-time index: pixel position, the shader compiled here: a set, a pipeline and buffers made
+PASS: run-time index: pixel position, the shader compiled here: 60 frames drawn and presented
+PASS: run-time index: pixel position, the shader compiled here: every frame colours each 128-pixel band by the pixel's column
+PASS: run-time index: pixel position, the shader compiled here: the image on screen does too
+PASS: run-time index: matrices picked per vertex: a set, a pipeline and buffers made
+PASS: run-time index: matrices picked per vertex: 60 frames drawn and presented
+PASS: run-time index: matrices picked per vertex: every frame places each quad by the matrix its vertices name, in that matrix's colour
+PASS: run-time index: matrices picked per vertex: the image on screen does too
+PASS: run-time index: pixel position: a set, a pipeline and buffers made
+PASS: run-time index: pixel position: 60 frames drawn and presented
+PASS: run-time index: pixel position: every frame colours each 128-pixel band by the pixel's column
+PASS: run-time index: pixel position: the image on screen does too
+PASS: uploads: four images, swizzled views, two samplers, a staging buffer in cached memory and two passes made
+PASS: uploads: the R8, R8G8 and filtered images copied in from cached memory
+PASS: uploads: 60 frames drawn and presented
+PASS: uploads: every frame shows R8 as intensity and R8G8 as green, red and 1, through swizzled views
+PASS: uploads: every frame shows R8 filtered linearly between its two texels
+PASS: uploads: every frame shows each draw the texels copied in just before it, two copies into one image
+PASS: uploads: the image on screen shows them too
+PASS: thin textures: four images one texel high made and copied in
+thin textures: frame 0: 16x1 at 66, 100 held 1E 1E 1E, not 00 FF 00
+PASS: thin textures: 30 frames drawn
+thin textures: 16x1: 0 of 16 texels wrong on screen
+PASS: thin textures: every texel of the 16x1 image shows on screen
+thin textures: 64x1: 0 of 64 texels wrong on screen
+PASS: thin textures: every texel of the 64x1 image shows on screen
+thin textures: 204x1: 0 of 204 texels wrong on screen
+PASS: thin textures: every texel of the 204x1 image shows on screen
+thin textures: 256x1: 0 of 256 texels wrong on screen
+PASS: thin textures: every texel of the 256x1 image shows on screen
+PASS: sampled depth: D24S8 reported sampled, an image of it both sampled and an attachment
+PASS: sampled depth: a sampled D24S8 attachment, a smaller one, the passes that keep, load and sample them made
+sampled depth: frame 0, the near quad at (40, 30): 4000005A, for depth 400000 above stencil 5A
+sampled depth: frame 0, the near quad over the far one at (96, 52): 4000005A, for depth 400000 above stencil 5A
+sampled depth: frame 0, the far quad at (150, 90): BFFFFFA5, for depth BFFFFF above stencil A5
+sampled depth: frame 0, the middle quad at (216, 40): 8000003C, for depth 800000 above stencil 3C
+sampled depth: frame 0, the middle quad's last texel at (255, 127): 8000003C, for depth 800000 above stencil 3C
+sampled depth: frame 0, the clear at (8, 120): FFFFFF00, for depth FFFFFF above stencil 00
+PASS: sampled depth: 30 frames drawn and presented
+PASS: sampled depth: every frame leaves each texel's depth above its stencil in the image's memory, to its last texel, a smaller pass with depth of its own between the pass that drew it and the one that loads it
+PASS: sampled depth: every frame's fetch of it returns its depth in red, green and blue 0
+PASS: sampled depth: the image on screen shows it too
+sampled depth: after the kept pass, the near quad at (40, 30): 4000005A, for depth 400000 above stencil 5A
+sampled depth: after the kept pass, the near quad over the far one at (96, 52): 4000005A, for depth 400000 above stencil 5A
+sampled depth: after the kept pass, the far quad at (150, 90): BFFFFFA5, for depth BFFFFF above stencil A5
+sampled depth: after the kept pass, the middle quad at (216, 40): 8000003C, for depth 800000 above stencil 3C
+sampled depth: after the kept pass, the middle quad's last texel at (255, 127): 8000003C, for depth 800000 above stencil 3C
+sampled depth: after the kept pass, the clear at (8, 120): FFFFFF00, for depth FFFFFF above stencil 00
+PASS: sampled depth: a pass that stores it but keeps it as an attachment leaves its memory as it was
+PASS: anisotropy: the device has samplerAnisotropy, at most 16
+PASS: anisotropy: a striped image with its levels copied in, and samplers without anisotropy and with 16
+anisotropy: frame 0, without anisotropy: stripes' contrast 0, mean 501, per mille
+anisotropy: frame 0, at most 16: stripes' contrast 1000, mean 500, per mille
+PASS: anisotropy: 30 frames drawn and presented
+PASS: anisotropy: every frame, at most 16, the stripes keep their contrast
+PASS: anisotropy: every frame, without, the level the GPU picks greys the stripes
+PASS: aurora points: the depth, layouts, map 0's gradient and its sampler made
+aurora points: emboss at (649, 362), wants 16 196 90
+PASS: aurora points: emboss: the point's middle holds the WGSL's colour
+aurora points: texgen_binormal at (649, 362), wants 92 176 90
+PASS: aurora points: texgen_binormal: the point's middle holds the WGSL's colour
+aurora points: texgen_tangent at (649, 362), wants 203 45 90
+PASS: aurora points: texgen_tangent: the point's middle holds the WGSL's colour
+aurora points: texgen_prior at (649, 362), wants 0 20 64
+PASS: aurora points: texgen_prior: the point's middle holds the WGSL's colour
+aurora points: texgen_prior_inline at (649, 362), wants 41 48 90
+PASS: aurora points: texgen_prior_inline: the point's middle holds the WGSL's colour
+aurora points: texgen_zero at (582, 351), wants 230 204 90
+PASS: aurora points: texgen_zero: the point's middle holds the WGSL's colour
+aurora points: texgen_q_zero at (649, 362), wants 82 126 90
+PASS: aurora points: texgen_q_zero: the point's middle holds the WGSL's colour
+aurora points: attr_defaults at (582, 351), wants 161 102 90
+PASS: aurora points: attr_defaults: the point's middle holds the WGSL's colour
+aurora points: ztex_replace_u24 at (649, 362), wants 158 116 90
+PASS: aurora points: ztex_replace_u24: the point's middle holds the WGSL's colour and depth
+aurora points: ztex_replace_u8 at (649, 362), wants 158 116 90
+PASS: aurora points: ztex_replace_u8: the point's middle holds the WGSL's colour and depth
+aurora points: ztex_add_u24 at (649, 362), wants 158 116 90
+PASS: aurora points: ztex_add_u24: the point's middle holds the WGSL's colour and depth
+aurora points: ztex_add_u8 at (649, 362), wants 158 116 90
+PASS: aurora points: ztex_add_u8: the point's middle holds the WGSL's colour and depth
+PASS: lod: images with a colour a level, and samplers with LOD biases and clamps
+PASS: lod: each cell shows the level its sampler's bias and clamps take at LOD 2, and one level for an image of one
+vulkan4xenon: compiled SPIR-V 2A03E25F6AC40030, 2304 bytes, in 2517 us
+PASS: branches: data in a vertex shader, the shader compiled here: pipelines and buffers made
+PASS: branches: data in a vertex shader, the shader compiled here: 30 frames drawn and presented
+PASS: branches: data in a vertex shader, the shader compiled here: every frame places and colours each quad by the arms its vertices take
+PASS: branches: data in a vertex shader, the shader compiled here: the image on screen does too
+vulkan4xenon: compiled SPIR-V 8AC4704F11E92499, 1768 bytes, in 1158 us
+PASS: branches: a push constant in a vertex shader, the shader compiled here: pipelines and buffers made
+PASS: branches: a push constant in a vertex shader, the shader compiled here: 30 frames drawn and presented
+PASS: branches: a push constant in a vertex shader, the shader compiled here: every frame places and colours each quad by the arm its push constant takes
+PASS: branches: a push constant in a vertex shader, the shader compiled here: the image on screen does too
+PASS: branches: data in a vertex shader: pipelines and buffers made
+PASS: branches: data in a vertex shader: 30 frames drawn and presented
+PASS: branches: data in a vertex shader: every frame places and colours each quad by the arms its vertices take
+PASS: branches: data in a vertex shader: the image on screen does too
+PASS: branches: a push constant in a vertex shader: pipelines and buffers made
+PASS: branches: a push constant in a vertex shader: 30 frames drawn and presented
+PASS: branches: a push constant in a vertex shader: every frame places and colours each quad by the arm its push constant takes
+PASS: branches: a push constant in a vertex shader: the image on screen does too
+PASS: branches: data in a loop's body: pipelines and buffers made
+PASS: branches: data in a loop's body: 30 frames drawn and presented
+PASS: branches: data in a loop's body: every frame colours each band by the passes its u passes
+PASS: branches: data in a loop's body: the image on screen does too
+PASS: branches: a push constant in a loop's body: pipelines and buffers made
+PASS: branches: a push constant in a loop's body: 30 frames drawn and presented
+PASS: branches: a push constant in a loop's body: every frame colours each half by its push constant
+PASS: branches: a push constant in a loop's body: the image on screen does too
+PASS: branches: gl_FragDepth stored in an if/else: pipelines and buffers made
+PASS: branches: gl_FragDepth stored in an if/else: 30 frames drawn and presented
+PASS: branches: gl_FragDepth stored in an if/else: every frame shows the green where the arms wrote 0.75 alone
+PASS: branches: gl_FragDepth stored in an if/else: the image on screen does too
+vulkan4xenon: compiled SPIR-V CD9839548172F693, 1344 bytes, in 354 us
+PASS: loops: counted by push constants, the shader compiled here: pipelines and buffers made
+PASS: loops: counted by push constants, the shader compiled here: 30 frames drawn and presented
+PASS: loops: counted by push constants, the shader compiled here: every frame colours each quad by its count's passes, 300 run as 255 and -5 as none
+PASS: loops: counted by push constants, the shader compiled here: the image on screen does too
+vulkan4xenon: compiled SPIR-V 344C6DDFE5B3D6DE, 2240 bytes, in 570 us
+PASS: loops: counted by a uniform buffer, the shader compiled here: pipelines and buffers made
+PASS: loops: counted by a uniform buffer, the shader compiled here: 30 frames drawn and presented
+PASS: loops: counted by a uniform buffer, the shader compiled here: every frame colours each band by the passes before the break
+PASS: loops: counted by a uniform buffer, the shader compiled here: the image on screen does too
+vulkan4xenon: compiled SPIR-V 27D09D4FA91624AE, 1560 bytes, in 519 us
+PASS: loops: a count from data, the shader compiled here: pipelines and buffers made
+PASS: loops: a count from data, the shader compiled here: 30 frames drawn and presented
+PASS: loops: a count from data, the shader compiled here: every frame colours each eighth by its count's passes, 295 run as 255
+PASS: loops: a count from data, the shader compiled here: the image on screen does too
+vulkan4xenon: compiled SPIR-V 93BE305DB3EC60DD, 1572 bytes, in 424 us
+PASS: loops: from 100 and by 2, the shader compiled here: pipelines and buffers made
+PASS: loops: from 100 and by 2, the shader compiled here: 30 frames drawn and presented
+PASS: loops: from 100 and by 2, the shader compiled here: every frame colours each quad by its loops' passes, ceil((count - start) / step) to 255
+PASS: loops: from 100 and by 2, the shader compiled here: the image on screen does too
+vulkan4xenon: compiled SPIR-V 3E72FAFD755C2C1B, 2636 bytes, in 583623 us
+PASS: loops: breaks and continues on data in an unrolled loop, the shader compiled here: pipelines and buffers made
+PASS: loops: breaks and continues on data in an unrolled loop, the shader compiled here: 30 frames drawn and presented
+PASS: loops: breaks and continues on data in an unrolled loop, the shader compiled here: every frame colours each pixel by the passes it continued past and left at
+PASS: loops: breaks and continues on data in an unrolled loop, the shader compiled here: the image on screen does too
+vulkan4xenon: compiled SPIR-V C7741FC9932A3762, 2696 bytes, in 896 us
+PASS: loops: breaks and continues on data in a hardware loop, the shader compiled here: pipelines and buffers made
+PASS: loops: breaks and continues on data in a hardware loop, the shader compiled here: 30 frames drawn and presented
+PASS: loops: breaks and continues on data in a hardware loop, the shader compiled here: every frame colours each pixel by the passes it continued past and left at, and its counter after
+PASS: loops: breaks and continues on data in a hardware loop, the shader compiled here: the image on screen does too
+vulkan4xenon: compiled SPIR-V D87648790513EA32, 3280 bytes, in 1163 us
+PASS: loops: nested 3 deep, two in an if/else on data, the shader compiled here: pipelines and buffers made
+PASS: loops: nested 3 deep, two in an if/else on data, the shader compiled here: 30 frames drawn and presented
+PASS: loops: nested 3 deep, two in an if/else on data, the shader compiled here: every frame colours each pixel by the passes it ran at each level
+PASS: loops: nested 3 deep, two in an if/else on data, the shader compiled here: the image on screen does too
+vulkan4xenon: compiled SPIR-V 79EE446020154A21, 2996 bytes, in 1249 us
+PASS: loops: samples in a pass, the shader compiled here: pipelines and buffers made
+PASS: loops: samples in a pass, the shader compiled here: 30 frames drawn and presented
+PASS: loops: samples in a pass, the shader compiled here: every frame colours each pixel by the levels it sampled and its passes, 297 run as 255
+PASS: loops: samples in a pass, the shader compiled here: the image on screen does too
+PASS: loops: counted by push constants: pipelines and buffers made
+PASS: loops: counted by push constants: 30 frames drawn and presented
+PASS: loops: counted by push constants: every frame colours each quad by its count's passes, 300 run as 255 and -5 as none
+PASS: loops: counted by push constants: the image on screen does too
+PASS: loops: counted by a dynamic uniform buffer in a vertex shader: pipelines and buffers made
+PASS: loops: counted by a dynamic uniform buffer in a vertex shader: 30 frames drawn and presented
+PASS: loops: counted by a dynamic uniform buffer in a vertex shader: every frame places and colours each row's quad by its count's passes
+PASS: loops: counted by a dynamic uniform buffer in a vertex shader: the image on screen does too
+PASS: loops: counted in both stages: pipelines and buffers made
+PASS: loops: counted in both stages: 30 frames drawn and presented
+PASS: loops: counted in both stages: every frame places each row's quad by the vertex shader's count and colours it by the pixel shader's
+PASS: loops: counted in both stages: the image on screen does too
+PASS: loops: counted by a uniform buffer, with an if/else and a break: pipelines and buffers made
+PASS: loops: counted by a uniform buffer, with an if/else and a break: 30 frames drawn and presented
+PASS: loops: counted by a uniform buffer, with an if/else and a break: every frame colours each band by the passes before the break
+PASS: loops: counted by a uniform buffer, with an if/else and a break: the image on screen does too
+PASS: loops: a count from data: pipelines and buffers made
+PASS: loops: a count from data: 30 frames drawn and presented
+PASS: loops: a count from data: every frame colours each eighth by its count's passes, 295 run as 255
+PASS: loops: a count from data: the image on screen does too
+PASS: loops: from 100 and by 2: pipelines and buffers made
+PASS: loops: from 100 and by 2: 30 frames drawn and presented
+PASS: loops: from 100 and by 2: every frame colours each quad by its loops' passes, ceil((count - start) / step) to 255
+PASS: loops: from 100 and by 2: the image on screen does too
+PASS: loops: breaks and continues on data in an unrolled loop: pipelines and buffers made
+PASS: loops: breaks and continues on data in an unrolled loop: 30 frames drawn and presented
+PASS: loops: breaks and continues on data in an unrolled loop: every frame colours each pixel by the passes it continued past and left at
+PASS: loops: breaks and continues on data in an unrolled loop: the image on screen does too
+PASS: loops: breaks and continues on data in a hardware loop: pipelines and buffers made
+PASS: loops: breaks and continues on data in a hardware loop: 30 frames drawn and presented
+PASS: loops: breaks and continues on data in a hardware loop: every frame colours each pixel by the passes it continued past and left at, and its counter after
+PASS: loops: breaks and continues on data in a hardware loop: the image on screen does too
+PASS: loops: nested 3 deep, two in an if/else on data: pipelines and buffers made
+PASS: loops: nested 3 deep, two in an if/else on data: 30 frames drawn and presented
+PASS: loops: nested 3 deep, two in an if/else on data: every frame colours each pixel by the passes it ran at each level
+PASS: loops: nested 3 deep, two in an if/else on data: the image on screen does too
+PASS: loops: samples in a pass: pipelines and buffers made
+PASS: loops: samples in a pass: 30 frames drawn and presented
+PASS: loops: samples in a pass: every frame colours each pixel by the levels it sampled and its passes, 297 run as 255
+PASS: loops: samples in a pass: the image on screen does too
+PASS: shader_lod: pipelines sampling at LODs, gradients and biases their shaders work out
+PASS: shader_lod: textureLod at a LOD each pixel works out shows its band's level in all eight bands
+PASS: shader_lod: textureGrad with gradients each pixel works out shows its band's level in all eight bands
+PASS: shader_lod: texture() biased from LOD 2 by an amount each pixel works out shows its band's level
+PASS: shader_lod: textureLod at 1.25 and 6.25 shows levels 1 and 6
+PASS: facing: three pipelines reading gl_FrontFacing, nothing culled
+PASS: facing: under a counter-clockwise frontFace, gl_FrontFacing holds on the counter-clockwise quad alone
+PASS: facing: under a clockwise frontFace, gl_FrontFacing holds on the clockwise quad alone
+PASS: facing: a discard on !gl_FrontFacing drops the back face and keeps the front, with no interpolator
+PASS: vertex textures: a pipeline sampling two textures in its vertex shader and one in its fragment shader
+PASS: vertex textures: each column moved up by the height its vertex shader read, none left where it was drawn
+PASS: vertex textures: each column the colour of the level its vertex shader's textureLod picked
+vulkan4xenon: not supported: 16 fragment and 16 vertex sampler slots with 1 vertex bindings, past the 32 fetch constants
+PASS: vertex textures: 16 samplers in each stage are refused, past the 32 fetch constants, and 15 and 16 made
+PASS: occlusion: the query pool, the pass with depth, its two pipelines and the results buffer made
+occlusion: quad 1, none 0, off screen 0, culled 0, hidden 1, clear 0, draw then clear 1, clear then draw 1
+PASS: occlusion: a query around a quad is nonzero
+PASS: occlusion: a query around no draw is 0
+PASS: occlusion: a query around a quad off screen, or one culled, is 0
+occlusion: the hidden quad's query is nonzero; nonzero is the documented deviation
+PASS: occlusion: a query around a quad hidden behind another is nonzero too, the documented deviation
+PASS: occlusion: vkCmdClearAttachments inside a query doesn't count, and a draw either side of it does
+occlusion: query 0 reused: 0, 1, 0
+PASS: occlusion: a query reused in later submissions is 0 around no draw and nonzero around a quad, each time
+occlusion: of 80 queries in one submission, 0 wrong; vkGetQueryPoolResults returned 0
+PASS: occlusion: 80 queries in one submission, quads nonzero and no draws 0, which a wait for results waits for
+PASS: occlusion: vkCmdCopyQueryPoolResults copies results at 64 bits with availability and at 32, an unwritten query unavailable and its value untouched
+PASS: occlusion: vkGetQueryPoolResults reads results with availability at 32 bits, an unwritten query unavailable and VK_NOT_READY
+PASS: occlusion: a query in a secondary command buffer continuing a render pass counts its quad
+vulkan4xenon: not supported: precise occlusion queries
+PASS: occlusion: occlusionQueryPrecise and inheritedQueries aren't reported, and a precise query is refused
+vulkan4xenon: not supported: occlusion queries begun outside a render pass
+PASS: occlusion: a query begun outside a render pass is refused
+PASS: events: step 6's 11 commands are found by name
+PASS: time stamps: 64 valid bits, a period of 2.005 ns, and graphics queues time stamp
+vulkan4xenon: not supported: pipeline statistics queries
+PASS: time stamps: pipeline statistics query pools are refused
+PASS: events: the events, the time stamp pool, the pass, its pipeline and the results buffer made
+PASS: events: vkCmdSetEvent and vkCmdResetEvent set and reset events as the GPU reaches them
+events: the wait held the GPU yes; once the host set the event, it passed yes
+PASS: events: vkCmdWaitEvents passes on an event the GPU set and holds the GPU till the host sets one
+time stamps: 31388021248 and 31414199295, the clock 31388018612 before and 31415194950 after, high word 7; 52487.3 us apart, 52488.0 by the CPU
+PASS: time stamps: each holds the GPU's 64-bit clock
+PASS: time stamps: two a CPU-timed 50 ms apart differ by it, within a percent
+time stamps: after the draw, 665 clocks at the top of the pipe and 134563 at the bottom
+PASS: time stamps: one at the bottom of the pipe waits for a draw, one at the top doesn't
+PASS: time stamps: vkCmdCopyQueryPoolResults copies them, at 64 bits with availability and at 32
+PASS: time stamps: a pool's queries are unavailable when it's made, and again once reset
+shader cache: 16 compiled, 0 read, 16 files kept, 0 others
+PASS: shader cache: each shader compiled here is kept in a file of its own, in the compiler's version's folder
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 19696 us
+display: Xbox 360 video output, 1280x720 at 59940 mHz
+PASS: shader cache: a second device and swapchain made
+vulkan4xenon: SPIR-V F7C5845FB0756B82 read from the shader cache
+vulkan4xenon: SPIR-V 6CCE30CE458D7B89 read from the shader cache
+triangle: the image on screen C28EA8898F514045 from the bundle's shaders, C28EA8898F514045 from those read back
+PASS: triangle: shaders read back from the layer's cache, on a second device, draw the bundle's image
+shader cache: the second device compiled 0 and read 2
+PASS: shader cache: the second device reads the triangle's shaders back and compiles none
+tests: 492 passed, 0 failed
+exit: status 0

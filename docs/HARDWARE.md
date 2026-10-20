@@ -4452,3 +4452,12 @@ throughout (logs: `results/2026-10-19-milestone-51/`, `probe_xam.log` and, under
   The loader took it: `XexGetModuleSection` found the 118 bytes under that name (`cmake_check.log`), and 0xC0000225
   with no name (`cmake_check_noname.log`). XAM didn't copy it into a save: the title name in each package's header
   (offset 0x1691) stayed empty, as for a title with no name (`probe_xam_name.log`, title ID 0x58534450).
+
+## Exports through the scalar unit, milestone 48 step 7 (2026-10-20)
+
+xost now writes one lane of an export with the scalar op beside the vector op that writes the export's other lanes,
+an alpha beside its colour, as Xenia's interpreter models an export's scalar op writing the vector op's register
+(xenia:src/xenia/gpu/ucode.h:2041-2059; shader_interpreter.cc:911-939). The console agreed
+(results/2026-10-19-milestone-48/, step 7): xsdk_test's tiles and instancing draws of `vk_frag_coord_rows.frag`,
+`vk_instance_cells.vert` and `vk_instance_step.vert` passed, and all 103 of Dusklight's pixel pictures, 28 of them from
+programs that changed, hashed as before, bit for bit.
