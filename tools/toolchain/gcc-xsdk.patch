@@ -703,6 +703,19 @@
      return rs6000_parallel_return (mode, 2, SImode, GP_ARG_RETURN, 1);
  
    if (DECIMAL_FLOAT_MODE_P (mode) && TARGET_HARD_FLOAT)
+@@ -28730,7 +28867,11 @@
+ static machine_mode
+ rs6000_preferred_doloop_mode (machine_mode)
+ {
+-  return word_mode;
++  /* Xbox 360 SDK: with -m32 -mpowerpc64 word_mode is DImode, but doloop_end
++     takes only Pmode (rs6000.md:13686-13696), so no counted loop got bdnz
++     (loop-doloop.cc:756-778).  Pmode is word_mode on every other target.
++     Worth reporting upstream.  */
++  return Pmode;
+ }
+ 
+ /* Implement TARGET_CANNOT_SUBSTITUTE_MEM_EQUIV_P.  */
 --- a/gcc/config/rs6000/rs6000-c.cc
 +++ b/gcc/config/rs6000/rs6000-c.cc
 @@ -743,6 +743,8 @@
