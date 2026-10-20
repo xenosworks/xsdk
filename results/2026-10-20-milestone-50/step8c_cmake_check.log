@@ -1,0 +1,15 @@
+log: game:\cmake_check.log
+log: named after \Device\Harddisk0\Partition1\xsdk\main\cmake_check.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+cmake check title
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 30337 us
+PASS: splash: the vulkan4xenon logo shown
+PASS: cmake: a static constructor ran before main
+PASS: cmake: an exception was thrown and caught
+PASS: cmake: a std::thread ran and joined
+cmake: XexGetModuleHandle 0x00000000, XexGetModuleSection(5853444F) 0x00000000, 118 bytes
+PASS: cmake: the .xex holds the title name xsdk_add_xex gave it
+PASS: cmake: an HLSL pair built by xsdk_add_shaders draws as D3D9 binds it, Ramp at s2 bound at slot 2, Swap at b1 set by name, Count at i3 at loop constant 19 and Step at c3, its table naming Ramp at fetch constant 2, Swap at boolean constant 129, Count at loop constant 19 and Step at float constant 3: 0 of 2048 pixels wrong
+tests: 6 passed, 0 failed
+exit: status 0

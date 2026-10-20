@@ -4574,7 +4574,11 @@ xsdk_test's HLSL grid (`tests/test_hlsl.c`), its shaders compiled by xost from H
   constant 17. A title's own CMake build (`step8_cmake_check.log`) drew `register(s2)`, `(b1)` at boolean constant
   129 and `(i3)` at loop constant 19, set as D3D9 sets them.
 - **A loop-free pixel shader's if/else,** an if with no else and nested if/else, merged by the unroller's selects,
-  drew what HLSL defines in every pixel (`step8_xsdk_test.log`).
+  drew what HLSL defines in every pixel (`step8_xsdk_test.log`). So did early returns put back where spirv-opt's
+  merge-return took them from, and a switch as an if/else chain (`step8b_xsdk_test.log`).
+- **A deferred kill:** `clip` before an if and a discard in an if inside another, each folded into one condition
+  killed on where the shader ends, `kill_gt` or the comparison's own kill, left the clear in every killed pixel and the
+  right colour in every live one (`step8c_xsdk_test.log`).
 - **Skinning from int4 BLENDINDICES** fetched as UBYTE4, a0 loaded from each index lane in turn times a bone's 3
   registers, picked each corner's four float4x3 bones: the quad landed and shaded as the CPU skins it, and a palette
   with two bones swapped, or the indices unscaled, drew elsewhere (`step5_probe_skin.log`).

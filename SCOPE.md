@@ -990,7 +990,9 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
     milestone 49"). vulkan4xenon's submit, the third cost measured that day, is vulkan4xenon's milestone 29
     (vulkan4xenon:docs/ROADMAP.md).
 
-50. **HLSL.** Agreed on 2026-10-19: docs/scope/50-hlsl.md, after 48, as both change xost.
+50. **HLSL.** Agreed on 2026-10-19 and done on 2026-10-20: docs/scope/50-hlsl.md, after 48, as both change xost
+    (results/2026-10-20-milestone-50/; HARDWARE.md, "HLSL on the console, milestone 50"). glslang-xenon carries
+    HLSL's `fmod` and D3D9's `b#` and `i#`.
 
 51. **Saves, profiles and XAM's asynchronous calls.** Agreed on 2026-10-19 and done on 2026-10-20:
     docs/scope/51-saves-and-profiles.md (results/2026-10-19-milestone-51/; HARDWARE.md, "XAM's saves, profiles and

@@ -998,8 +998,7 @@ if/else (src/xsc_lower_fragment.c, `plan`, `plan_kill`), which went wrong two wa
   `OpKill`, which the fragment lowering lowers as it always lowered a shader's one if/discard: `kill_gt killed,
   -killed` on a bool, or the comparison's own kill where `killed` is one comparison (`emit_kill`). Every pixel runs
   every instruction till then, and the kill comes after the samples and derivatives the fragment lowering gathers
-  first, so a killed pixel feeds its quad's derivatives, as D3D9's texkill leaves a pixel running and as Xenia kills
-  one once its derivatives are done (xenia:src/xenia/gpu/spirv_shader_translator_rb.cc:456-468) or demotes it to a
+  first, so a killed pixel feeds its quad's derivatives, as Xenia kills one once its derivatives are done (xenia:src/xenia/gpu/spirv_shader_translator_rb.cc:456-468) or demotes it to a
   helper (spirv_shader_translator_alu.cc:42-59).
 - **The kill-if where it sees every path** (src/xsc_lower_fragment.c, `kill_unseen`): only where the discard ends the
   first block of an arm of the module's one if/else, a block storing nothing, so the last store of each variable is a
@@ -1085,3 +1084,25 @@ returns', switch's and discards' shaders compile otherwise too, the first two si
 `local/m50/set10/`: `xsdk_test.xex` and `x_hlsl_discard.xex`.
 
 **Still refused:** a discard in a hardware loop, and as before a return in a loop the unroller walks.
+
+## Discards on the console, and the milestone done
+
+At f68895f, built clean with vulkan4xenon against it (local/m50/build.sh) and cmake_check, through the console agent
+on 2026-10-20 (`step8c_*.log`):
+- xsdk_test 533 of 535, the controller's two failing with the pad idle; the discard cell 0 of 28800 pixels wrong, its
+  killed columns holding the clear.
+- The discard break (each discard's kill replacing the ones before) failed that cell, 3600 of 28800 wrong, the clip's
+  10 columns drawn, and `xsc: hlsl/grid_discard_ps.hlsl compiles into the PC's container, literals and resources`.
+- The if break, made again against the unroller, failed the four cells whose shaders the unroller merges and their
+  four compile checks, as on the simulator: the if cell 28800 of 28800 wrong, the early returns' 14400, the switch's
+  28800, the discard cell's 18000.
+- cmake_check 6 of 6; vulkan4xenon_test 517 of 517 twice; vkbench 17 of 17, xsdk's draw+submit as before.
+
+bc7dd38's message says D3D9's texkill runs on after it kills; nothing here cites that. What the console shows is that
+a pixel killed at the end, as the unroller places it, leaves the clear and its live neighbours sample right.
+
+Every check of docs/scope/50-hlsl.md's "Done when" holds: the corpus and idioms compile, the corpus as its GLSL twins
+on the simulator, the HLSL grid passes on the console with each break failing what it names, and a title's CMake
+project builds `.hlsl` with one call and binds as D3D9 binds. What's still refused is named in
+xenos-toolchain/docs/xsc.md, "HLSL": a discard in a hardware loop, a return in a loop the unroller walks, a switch's
+case falling through or left from inside an if, shader model 4 and later, assembly shaders and Effects files.
