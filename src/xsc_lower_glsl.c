@@ -360,12 +360,15 @@ static int64_t power(XscLower *l, const XscInstr *ins, int64_t dst, bool export_
 		return XSC_NONE;
 	const int64_t size = xsdk_xsc_vec_size(l, arg(ins, 0));
 	const int64_t n = size > 1 ? size : 1;
+	const bool y_vector = xsdk_xsc_vec_size(l, arg(ins, 1)) > 1;
 	for (int64_t i = 0; i < n; i++) {
 		const int64_t li = xsdk_xsc_emit_scalar(l, XSC_SCALAR_LOG, xsdk_xsc_fresh(l), ox, i, 0xF);
 		if (li == XSC_NONE)
 			return XSC_NONE;
 		const int64_t mi = xsdk_xsc_fresh(l);
-		if (!xsc_emit2(l, XSC_VECTOR_MUL, xsc_temp(li), xsc_src(oy, false, xsdk_xsc_bsw(0)), mi, false, 0xF))
+		// Lane i's exponent: pow takes x and y alike, a component at a time (GLSL.std.450, Pow).
+		if (!xsc_emit2(l, XSC_VECTOR_MUL, xsc_temp(li), xsc_src(oy, false, xsdk_xsc_bsw(y_vector ? i : 0)), mi, false,
+				0xF))
 			return XSC_NONE;
 		const int64_t ri = xsdk_xsc_emit_scalar(l, XSC_SCALAR_EXP, xsdk_xsc_fresh(l), xsc_reg(mi), 3, 0xF);
 		if (ri == XSC_NONE || !xsc_emit2(l, XSC_VECTOR_MAX, xsc_temp(ri), xsc_temp(ri), dst, export_, (int64_t)1 << i))
