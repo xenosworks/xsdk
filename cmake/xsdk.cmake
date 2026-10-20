@@ -27,7 +27,8 @@ set(CMAKE_EXE_LINKER_FLAGS_INIT "-static -nostdlib -T ${XSDK_ROOT}/src/xsdk.ld")
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/xsdk_rules.cmake")
 
 # Every executable, try_compile's included, links the SDK's start-up and library, so checks see what titles get.
-set(XSDK_LINK_LIBRARIES "-Wl,--start-group <LINK_LIBRARIES> ${XSDK_ROOT}/build/libxsdk.a -lstdc++ -lc -lm -lgcc -Wl,--end-group")
+# libxsdk.a after libstdc++: what libstdc++ calls that xsdk replaces in newlib, rename among them, comes from xsdk.
+set(XSDK_LINK_LIBRARIES "-Wl,--start-group <LINK_LIBRARIES> -lstdc++ ${XSDK_ROOT}/build/libxsdk.a -lc -lm -lgcc -Wl,--end-group")
 set(CMAKE_C_LINK_EXECUTABLE
 	"<CMAKE_C_COMPILER> <FLAGS> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> ${XSDK_LINK_LIBRARIES}")
 set(CMAKE_CXX_LINK_EXECUTABLE

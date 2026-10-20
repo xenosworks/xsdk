@@ -19,7 +19,8 @@ CXXFLAGS := -mcpu=cell -fno-pic -std=c++23 -O2 -g $(WARNINGS) -Iinclude -MMD -MP
 HOST_CFLAGS := -std=gnu17 -O2 -g $(WARNINGS) -fPIC -Iinclude -MMD -MP
 ASFLAGS := -mcpu=cell -Wa,-mregnames -Iinclude -MMD -MP
 LDFLAGS := -static -nostdlib -T src/xsdk.ld
-LIBS := -Wl,--start-group $(BUILD)/libxsdk.a -lstdc++ -lc -lm -lgcc -Wl,--end-group
+# libxsdk.a after libstdc++: what libstdc++ calls that xsdk replaces in newlib, rename among them, comes from xsdk.
+LIBS := -Wl,--start-group -lstdc++ $(BUILD)/libxsdk.a -lc -lm -lgcc -Wl,--end-group
 
 SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/thread.c src/file.c src/path.c src/dir.c \
 	src/pthread.c src/lock.c src/reent.c src/time.c src/sysconf.c src/entropy.c src/exit.c src/gpu.c \
