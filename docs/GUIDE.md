@@ -155,6 +155,7 @@ until a resolve copies it out, and the resolve then clears eDRAM for the next fr
 | `xsdk_gpu_set_texture(slot, &texture, &state)` | texture fetch constant `slot` for the draws after | the next set; a resolve takes slot 0 | drawing |
 | `xsdk_gpu_set_target(w, h)` | the colour target, its depth after it in eDRAM, a viewport over it; no depth test, blending, culling, scissor or clip planes | a resolve | drawing |
 | `xsdk_gpu_set_depth_stencil(&state)` | the depth and stencil test, for the draws after | `xsdk_gpu_set_target`, a resolve | drawing |
+| `xsdk_gpu_set_blend(&state)`, `xsdk_gpu_set_blends(states, count)` | blending and write masks, for the draws after; with `XsdkBlend.alpha_to_coverage`, target 0's alpha also drawing the share of each pixel's samples nearest it, a tie rounding up, so at 1 sample from alpha 1/2 | `xsdk_gpu_set_target`, a resolve | drawing |
 | `xsdk_gpu_resolve(address, w, h, clear_argb)` | the colour target copied to `address`, tiled as the display reads it; eDRAM's colour cleared to `clear_argb` and its depth to far | | drawing |
 | `xsdk_gpu_resolve_texture(&texture, clear_argb)` | the same into a tiled 32-bit RGBA texture of the target's size | | drawing |
 | `xsdk_texture_download_rows(&texture, level, row, rows, data, row_bytes)` | rows copied out, untiled | | any, while the GPU doesn't write it |
