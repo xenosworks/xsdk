@@ -75,6 +75,8 @@ typedef struct {
 	size_t pool_count;
 	size_t pool_capacity;
 	size_t pool_key_capacity;
+	// By constant array id, the first of its elements' literal registers, or XSC_NONE; NULL till one is made.
+	int64_t *literal_arrays;
 	// By SSA or variable id, below m->id_limit.
 	XscOperand *op_cache;
 	const XscMatrix **matrix_cache;
@@ -229,6 +231,8 @@ bool xsdk_xsc_int_const(XscLower *l, uint32_t ssa, int64_t *value);
 bool xsdk_xsc_const_scalar(XscLower *l, uint32_t ssa, double *value);
 int64_t xsdk_xsc_literal_reg(XscLower *l, const double value[4]);
 int64_t xsdk_xsc_literal_splat(XscLower *l, double value);
+// A constant array's elements in literal registers of their own, one each, from the register it gives.
+int64_t xsdk_xsc_literal_array(XscLower *l, uint32_t array);
 bool xsdk_xsc_emit_alu(XscLower *l, const XscAlu *f);
 int64_t xsdk_xsc_emit_copy(
 	XscLower *l, XscOperand opnd, int64_t dst, bool export_, bool negate, int64_t swizzle, int64_t mask, bool clamp);
@@ -294,6 +298,8 @@ bool xsdk_xsc_block_access(XscLower *l, uint32_t ptr_id, XscBlockAccess *access,
 XscOperand xsdk_xsc_block_register(XscLower *l, const XscBlockAccess *access, int64_t extra);
 XscOperand xsdk_xsc_block_value(XscLower *l, uint32_t ssa, const XscBlockAccess *access);
 const XscMatrix *xsdk_xsc_block_matrix(XscLower *l, uint32_t ssa, const XscBlockAccess *access);
+// A constant array's element at an index, a run-time one read at a0 from the array's literal registers.
+XscOperand xsdk_xsc_constant_element(XscLower *l, uint32_t array, uint32_t index);
 XscOperand xsdk_xsc_int_operand(XscLower *l, uint32_t ssa);
 
 // Samples (xsc_lower_sample.c).

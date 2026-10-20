@@ -599,8 +599,9 @@ static const Pointer *pointer(const Unroller *u, uint32_t chain)
 	return chain < u->env_limit && u->pointer_of[chain] >= 0 ? &u->pointers[u->pointer_of[chain]] : NULL;
 }
 
-// A chain of constant indices into a local vector, or into an output: a member of gl_PerVertex, then a component.
-// done says it was one; any other chain is a value like the rest.
+// A chain of constant indices into a local vector or array, or into an output: a member of gl_PerVertex, then a
+// component. done says it was one; any other chain is a value like the rest, as one into a local array at a run-time
+// index is, its base the array's value (xsc_lower.c, constant_array).
 static bool interpret_chain(Unroller *u, const XscInstr *ins, bool *done)
 {
 	const uint32_t base = xsdk_xsc_operand(ins, 0);
@@ -611,7 +612,13 @@ static bool interpret_chain(Unroller *u, const XscInstr *ins, bool *done)
 	const XscInstr *const shape = xsdk_xsc_by_result(u->m, pointee(u, base));
 	const bool vector = shape && shape->opcode == SPV_TYPE_VECTOR;
 	const bool member = shape && shape->opcode == SPV_TYPE_STRUCT && !is_func_var(u, base);
-	if (count < 2 || count > (member ? 3u : 2u) || (!vector && !member))
+	const bool array = shape && shape->opcode == SPV_TYPE_ARRAY && is_func_var(u, base);
+	int64_t index;
+	if (array && count == 2 && !constant_int(u, xsdk_xsc_operand(ins, 1), &index)) {
+		*done = false;
+		return true;
+	}
+	if (count < 2 || count > (member ? 3u : 2u) || (!vector && !member && !array))
 		return refuse(u, "indexed access into a local or output not supported");
 	int64_t first, second = XSC_NONE;
 	if (!constant_int(u, xsdk_xsc_operand(ins, 1), &first) ||
@@ -629,6 +636,24 @@ static bool interpret_chain(Unroller *u, const XscInstr *ins, bool *done)
 static uint32_t *held(Unroller *u, const Pointer *p)
 {
 	return p->local ? &u->env[p->target] : &u->slot_value[p->target];
+}
+
+// Whether a pointer is into a local array.
+static bool is_array(const Unroller *u, const Pointer *p)
+{
+	const XscInstr *const shape = p->local ? xsdk_xsc_by_result(u->m, pointee(u, p->target)) : NULL;
+	return shape && shape->opcode == SPV_TYPE_ARRAY;
+}
+
+// An array's element, folded from the constant or construct that made it whole, the module's or one the walk
+// emitted; 0 for any other.
+static uint32_t element(const Unroller *u, uint32_t whole, int64_t index)
+{
+	const XscInstr *made = whole < u->m->bound ? xsdk_xsc_by_result(u->m, whole) : NULL;
+	for (size_t i = u->emitted_count; !made && i-- > 0;)
+		made = u->emitted[i].result_id == whole ? &u->emitted[i] : NULL;
+	const bool parts = made && (made->opcode == SPV_CONSTANT_COMPOSITE || made->opcode == SPV_COMPOSITE_CONSTRUCT);
+	return parts && index >= 0 && index < xsdk_xsc_operand_count(made) ? xsdk_xsc_operand(made, (uint32_t)index) : 0;
 }
 
 static bool interpret_load(Unroller *u, const XscInstr *ins, LocalMap *lm)
@@ -654,6 +679,12 @@ static bool interpret_load(Unroller *u, const XscInstr *ins, LocalMap *lm)
 			return refuse_id(u, "%%%u read before write", ptr);
 		if (p->component == XSC_NONE)
 			return map_set(u, lm, ins->result_id, whole);
+		if (is_array(u, p)) {
+			const uint32_t part = element(u, whole, p->component);
+			return part ? map_set(u, lm, ins->result_id, part)
+						: refuse_id(u, "an element of local array %%%u, which no constant or construct made whole (v1)",
+							  p->target);
+		}
 		const uint32_t operands[2] = { whole, (uint32_t)p->component };
 		uint32_t id;
 		return emit_value(u, SPV_COMPOSITE_EXTRACT, ins->result_type, operands, 2, &id) &&
@@ -702,6 +733,8 @@ static bool interpret_store(Unroller *u, const XscInstr *ins, LocalMap *lm)
 		}
 		if (!*whole)
 			return refuse_id(u, "part of %%%u stored before the whole of it", target);
+		if (is_array(u, p))
+			return refuse_id(u, "a store into an element of local array %%%u (v1)", p->target);
 		const uint32_t operands[3] = { value, *whole, (uint32_t)p->component };
 		return emit_value(u, SPV_COMPOSITE_INSERT, held_type(u, p), operands, 3, whole);
 	}

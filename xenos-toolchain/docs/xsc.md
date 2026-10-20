@@ -46,16 +46,18 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | `mod()` (OpFMod) | `a − b·floor(a/b)` |
 | `vec * float` (VectorTimesScalar) | mul, scalar `.xxxx` broadcast |
 | scalar int -> float | folded literals or float-backed `trunc` + add/mul |
+| int vertex inputs, an int vector's components, HLSL's ints and bools in a block | the fetch's floats, an int in x, a component spread over a register; a block's int or bool its register's float, as D3D9 sets HLSL's constants, HLSL alone, as a Vulkan block holds an int's bits (`tests/test_hlsl_rest.py`) |
+| unary `-v` (FNegate) | a copy with the negate modifier, a scalar spread |
 | `dot()` / `cross()` | `dp2add` with a zero third source (vec2), `dp3`, `dp4`, broadcast / yzx·zxy mad |
 | `mix` / `max` / `min` / `clamp(x,0,1)` (GLSL.std.450) | sub+mad / max / min / `_sat` modifier (free) |
 | `step` / `smoothstep` | `kSge` / `t·t·(3−2t)`, `t=sat((x−e0)/(e1−e0))` |
 | `normalize` / `length` / `distance` | dp3·rsq·mul / dp+sqrt / sub+dp+sqrt (scalar pipe) |
-| `sqrt` `inversesqrt` `exp2` `log2` `exp` `log` | scalar-pipe `kSqrt`/`kRsq`/`kExp`/`kLog` (+const for natural) |
+| `sqrt` `inversesqrt` `exp2` `log2` `exp` `log` | scalar-pipe `kSqrt`/`kRsq`/`kExp`/`kLog` (+const for natural), a vector's a component at a time, each result masked into its lane |
 | `pow(x,y)` | per-component `exp2(y·log2 x)` (scalar pipe) |
 | `reflect(i,n)` | `i - 2·dot(n,i)·n` (dp + mad) |
-| `sin` / `cos` / `tan` | scalar `kSin`/`kCos`; `tan = sin·rcp(cos)` — **range-limited ~[-π,π]** (see below) |
+| `sin` / `cos` / `tan` | scalar `kSin`/`kCos`, a vector's a component at a time; `tan = sin·rcp(cos)` — **range-limited ~[-π,π]** (see below) |
 | `asin` / `acos` / `atan` | polynomial approx (A-S sqrt form / π/2−asin / odd poly); ~7e-5 over [-1,1], atan range [-1,1] (see below) |
-| `.rgb` `.xy` (identity) / `.bgra` (reorder) / two-source `vec4(a.xy,b.zw)` | same regs / swizzled mov / per-component masked movs |
+| `.rgb` `.xy` (identity) / `.bgra` (reorder) / two-source `vec4(a.xy,b.zw)` | same regs / swizzled mov / per-component masked movs; an OpVectorShuffle reading its second vector, as spirv-opt folds a select on a constant bool vector, a masked mov a lane |
 | `v.x` (CompositeExtract), `vec4(a,b,c,d)` (CompositeConstruct) | masked exports |
 | `floor` / `ceil` / `trunc` / `round` / `fract` | `kFloor` / `-floor(-x)` / `kTrunc` / `floor(x+.5)` / `kFrc` |
 | `abs()` / `sign()` | `max(x,-x)` / `sgt(x,-x)−sgt(-x,x)` |
@@ -76,6 +78,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | Vulkan uniform / push constant block members at any std140 offset | the member's register, swizzled from its first component |
 | block matrix (column-major, std140) `M * v` / `v * M` / `A * B` | `mul`+`mad` over columns / 4x `dp4` with columns / columns of A times each column of B |
 | block array at a run-time index, `rows[int(f) + k]`, `m[i]` | `movasf` (`int(f)`) or `movas` sets a0, then `c[a0 + base + k]` is copied into a temp; reads at one index share the `movas` (`tests/test_dynamic_index.py`) |
+| constant array, `const float w[5]`, HLSL's `static const` | at an unrolled loop's counter or another constant index, the element itself; at a run-time index, a hardware loop's counter among them, its elements in literal registers of their own, one each, a float's in every component, read at a0 as a block's array is (`tests/test_hlsl_rest.py`); a local array of other values at a run-time index, or stored by element, refused |
 | fragment `gl_FragCoord.xy`, `gl_FrontFacing` | the pixel parameters in the register past the interpolators, `\|r.xy\| + c255`, the constant xsdk keeps at 0.5 and a tiled pass's band's top row plus 0.5 (see Interface conventions), `.zw` refused; facing from x's sign (see Facing) |
 | fragment `gl_PointCoord` | the same parameters' `\|r.zw\|`, a point sprite's coordinates (`tests/test_point_sprite.py`) |
 | fragment HLSL `VPOS` and `VFACE`, by their semantics | the same parameters: VPOS `\|r.xy\| + c255.zw`, which xsdk keeps at 0 and a tiled pass's band's top row, the pixel's whole column and row, its z and w 0; VFACE a `cndge` on x's sign, +1 on a front face and -1 on a back one (see Interface conventions and Facing; `tests/test_hlsl_semantics.py`) |
@@ -94,6 +97,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | `refract(I,N,eta)` | Snell vector + total-internal-reflection (`k<0`) mask |
 | runtime int `/` `%` (SDiv/SMod/U*) | `trunc(a·rcp(b)+ε)`; remainder `a−b·q` — **approximate, non-negative domain** |
 | `mat3` / `mat2` × vec | per-row `dp3` / `dp2add` (matrix uploaded as rows, same as mat4) |
+| a matrix built of columns, `mat3(t, b, n)`, `mat3(m4)`, HLSL's `(float3x3)M` | its columns' registers, read as columns; a leading block of one matrix's columns, as a cast takes, that matrix's first registers as they are, columns or rows; a matrix's rows dotted as wide as the vector, so HLSL's float4x3 by rows takes `dp4`s |
 | `textureLod`, `texture(…,bias)`, `textureGrad` (2D), and their projective forms | a LOD the fetch's own LOD-bias field holds (1/16 steps, -4 to 3.9375), any other through `setTexLOD`; an explicit LOD turns the computed one off; gradients through `setGradientH` and `setGradientV` (see LOD and gradients) |
 | `textureProj` | perspective divide `uv·rcp(w)` then `tfetch2D` |
 | `texture()` with a computed coord | coord expression emitted, then tfetch (not just bare interpolators); a coord from another sample (a dependent read) has that sample fetched first; in a pixel shader the coords' work goes first and the fetches together (see Fetch layout) |
@@ -134,7 +138,15 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
     FOG 11, DEPTH 12 and SAMPLE 13 (libxenon:drivers/xenos/xe.h:159-172), at
     an index to 15, which a vertex element holds in 4 bits; any other refused.
   - Outputs POSITION and PSIZE are oPos and oPts.x, DEPTH oDepth, and COLOR*n*
-    oC*n*, struct members and return values too.
+    oC*n*, struct members and return values too, and PSIZE an out parameter,
+    which glslang makes a PointSize of its own.
+  - A matrix varying takes an interpolator a column, at its semantic's index
+    and those after it, as a location a column (Vulkan 1.0, "Location
+    Assignment"):
+    glslang gives HLSL's row *r* column *r*, so a `float3x3` at TEXCOORD2 is
+    TEXCOORD2 to 4, a row each. A pixel shader reads them as its columns; a
+    vertex shader writes one built of columns, and one held by rows, as a cast
+    of a block's matrix, is refused.
   - Each stage packs its interpolators from 0 in the order of their semantics,
     usage, then index, D3D9's usages any of them; any other semantic, two
     variables of one, or a varying without one beside one with, refused. So a

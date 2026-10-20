@@ -12,6 +12,7 @@ enum {
 	SC_OUTPUT = 3,
 	SC_PUSH_CONSTANT = 9,
 	BUILTIN_POSITION = 0,
+	BUILTIN_POINT_SIZE = 1,
 	BUILTIN_VERTEX_ID = 5,
 	BUILTIN_INSTANCE_ID = 6,
 	BUILTIN_FRAG_COORD = 15,
@@ -312,6 +313,24 @@ static bool pack_semantics(Xsc *x, XscInterface *si, XscVarUse *uses, size_t cou
 	return true;
 }
 
+// A varying's interpolators, a semantic's one, or a matrix's one a column at the semantic's index and those after it,
+// as a location a column (Vulkan 1.0, "Location Assignment") and glslang gives HLSL's row c column c: so TEXCOORD2's
+// float3x3 is TEXCOORD2 to 4.
+static bool add_varying(Xsc *x, const XscModule *m, const XscType *types, XscVarUse **list, size_t *count,
+	size_t *capacity, const XscVar *v, uint32_t r, uint32_t semantic)
+{
+	const XscType *const t = v->pointee == XSC_NONE ? NULL : xsdk_xsc_type(m, types, (uint64_t)v->pointee);
+	const uint32_t columns = t && t->kind == XSC_TYPE_MATRIX && (semantic & XSC_SEMANTIC) ? t->count : 1;
+	if (columns > 1 && (semantic & XSC_SEMANTIC_FIELD_MASK) + columns - 1 > MAX_USAGE_INDEX)
+		return xsdk_xsc_fail(
+			x, XSDK_XSC_REFUSED, "matrix %s's columns past semantic index %u", v->name, (unsigned)MAX_USAGE_INDEX);
+	for (uint32_t c = 0; c < columns; c++) {
+		if (!add_use(x, list, count, capacity, (XscVarUse){ v, r + c, semantic + c }))
+			return false;
+	}
+	return true;
+}
+
 typedef struct {
 	size_t vfetch;
 	size_t interp_out;
@@ -490,7 +509,7 @@ static bool resolve_input(
 	if (hlsl && !interpolator_semantic(x, v, &s, &semantic))
 		return false;
 	const uint32_t r = hlsl ? semantic : location_or_zero(v);
-	if (!add_use(x, &si->interp_in, &si->interp_in_count, &capacity->interp_in, (XscVarUse){ v, r, semantic }))
+	if (!add_varying(x, m, types, &si->interp_in, &si->interp_in_count, &capacity->interp_in, v, r, semantic))
 		return false;
 	return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_INTERP_IN, r, 0, 0 });
 }
@@ -520,10 +539,13 @@ static bool resolve_output(
 	}
 	if (v->builtin == BUILTIN_FRAG_DEPTH && si->pixel)
 		si->frag_depth = v;
-	if (v->builtin != XSC_NONE)
-		return true;
 	Semantic s;
 	const bool hlsl = semantic_of(m, v->vid, &s);
+	// A PSIZE out parameter, which glslang makes a PointSize of its own, outside gl_PerVertex.
+	if (hlsl && !si->pixel && v->builtin == BUILTIN_POINT_SIZE)
+		si->point_size = v;
+	if (v->builtin != XSC_NONE)
+		return true;
 	// D3D9's POSITION, PSIZE and DEPTH, which glslang makes built-ins only as out parameters.
 	if (hlsl && !si->pixel && is_semantic(&s, "POSITION")) {
 		si->position_out = v->vid;
@@ -543,7 +565,7 @@ static bool resolve_output(
 		if (hlsl && !interpolator_semantic(x, v, &s, &semantic))
 			return false;
 		loc = hlsl ? semantic : loc;
-		if (!add_use(x, &si->interp_out, &si->interp_out_count, &capacity->interp_out, (XscVarUse){ v, loc, semantic }))
+		if (!add_varying(x, m, types, &si->interp_out, &si->interp_out_count, &capacity->interp_out, v, loc, semantic))
 			return false;
 		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_INTERP_OUT, loc, 0, 0 });
 	}

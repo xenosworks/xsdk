@@ -257,34 +257,60 @@ static int64_t distance(XscLower *l, const XscInstr *ins, int64_t dst, bool expo
 	return d == XSC_NONE ? XSC_NONE : scalar_result(l, XSC_SCALAR_SQRT, xsc_reg(d), 3, dst, export_);
 }
 
+// A scalar op on each of a vector's n components, each result in its lane of dst, as power takes them: the scalar
+// unit reads one component (xenia:src/xenia/gpu/ucode.h:954-960).
+static int64_t each_lane(XscLower *l, int64_t sop, XscOperand src, int64_t n, int64_t dst, bool export_)
+{
+	for (int64_t i = 0; i < n; i++) {
+		const int64_t r = xsdk_xsc_emit_scalar(l, sop, xsdk_xsc_fresh(l), src, i, 0xF);
+		if (r == XSC_NONE || !xsc_emit2(l, XSC_VECTOR_MAX, xsc_temp(r), xsc_temp(r), dst, export_, (int64_t)1 << i))
+			return XSC_NONE;
+	}
+	return dst;
+}
+
 static int64_t scalar_op(XscLower *l, const XscInstr *ins, int64_t sop, int64_t dst, bool export_)
 {
 	XscOperand ox;
 	if (!arg_operand(l, ins, 0, &ox))
 		return XSC_NONE;
-	return scalar_result(l, sop, ox, 3, dst, export_);
+	const int64_t n = xsdk_xsc_vec_size(l, arg(ins, 0));
+	return n > 1 ? each_lane(l, sop, ox, n, dst, export_) : scalar_result(l, sop, ox, 3, dst, export_);
 }
 
 // exp(x) = exp2(x * log2(e)).
 static int64_t natural_exp(XscLower *l, const XscInstr *ins, int64_t dst, bool export_)
 {
-	ScalarSource s;
+	const int64_t n = xsdk_xsc_vec_size(l, arg(ins, 0));
+	ScalarSource s = { .swizzle = 0 };
 	XscOperand ck;
-	if (!scalar_source(l, arg(ins, 0), &s) || !splat(l, 1.4426950408, &ck))
+	if (n > 1 ? !arg_operand(l, ins, 0, &s.o) : !scalar_source(l, arg(ins, 0), &s))
+		return XSC_NONE;
+	if (!splat(l, 1.4426950408, &ck))
 		return XSC_NONE;
 	const int64_t mm = xsdk_xsc_fresh(l);
 	if (!xsc_emit2(l, XSC_VECTOR_MUL, xsc_src(s.o, false, s.swizzle), xsc_plain(ck), mm, false, 0xF))
 		return XSC_NONE;
+	if (n > 1)
+		return each_lane(l, XSC_SCALAR_EXP, xsc_reg(mm), n, dst, export_);
 	return scalar_result(l, XSC_SCALAR_EXP, xsc_reg(mm), 3, dst, export_);
 }
 
 // log(x) = log2(x) * ln(2).
 static int64_t natural_log(XscLower *l, const XscInstr *ins, int64_t dst, bool export_)
 {
+	const int64_t n = xsdk_xsc_vec_size(l, arg(ins, 0));
 	ScalarSource s;
-	if (!scalar_source(l, arg(ins, 0), &s))
-		return XSC_NONE;
-	const int64_t lg = xsdk_xsc_emit_scalar(l, XSC_SCALAR_LOG, xsdk_xsc_fresh(l), s.o, s.comp, 0xF);
+	int64_t lg;
+	if (n > 1) {
+		if (!arg_operand(l, ins, 0, &s.o))
+			return XSC_NONE;
+		lg = each_lane(l, XSC_SCALAR_LOG, s.o, n, xsdk_xsc_fresh(l), false);
+	} else {
+		if (!scalar_source(l, arg(ins, 0), &s))
+			return XSC_NONE;
+		lg = xsdk_xsc_emit_scalar(l, XSC_SCALAR_LOG, xsdk_xsc_fresh(l), s.o, s.comp, 0xF);
+	}
 	XscOperand ck;
 	if (lg == XSC_NONE || !splat(l, 0.6931471805, &ck))
 		return XSC_NONE;
@@ -293,6 +319,10 @@ static int64_t natural_log(XscLower *l, const XscInstr *ins, int64_t dst, bool e
 
 static int64_t sin_cos(XscLower *l, const XscInstr *ins, int64_t sop, int64_t dst, bool export_)
 {
+	const int64_t n = xsdk_xsc_vec_size(l, arg(ins, 0));
+	XscOperand ox;
+	if (n > 1)
+		return arg_operand(l, ins, 0, &ox) ? each_lane(l, sop, ox, n, dst, export_) : XSC_NONE;
 	ScalarSource s;
 	if (!scalar_source(l, arg(ins, 0), &s))
 		return XSC_NONE;

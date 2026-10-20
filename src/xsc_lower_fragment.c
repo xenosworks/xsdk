@@ -802,7 +802,8 @@ static bool lower_body(Fragment *f, int64_t param_reg, XscConstants *constants, 
 {
 	XscLower *const l = &f->l;
 	const XscInterface *const si = l->si;
-	for (size_t i = 0; i < si->interp_in_count; i++)
+	// A matrix's columns follow its first (xsc_resolve.c, add_varying).
+	for (size_t i = si->interp_in_count; i-- > 0;)
 		l->inputs[si->interp_in[i].var->vid] = si->interp_in[i].a;
 	if (si->frag_coord && !frag_coord_register(l, si, param_reg))
 		return false;

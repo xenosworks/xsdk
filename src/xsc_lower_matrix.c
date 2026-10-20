@@ -55,6 +55,15 @@ static const XscMatrix *load_matrix(XscLower *l, uint32_t ssa, const XscInstr *i
 	if (src < l->m->id_limit && l->local_store[src])
 		return xsdk_xsc_matrix_operands(l, l->local_store[src]);
 	const XscRole *const role = xsdk_xsc_role(l->si, src);
+	// A pixel shader's matrix input, a column an interpolator from its first (xsc_resolve.c, add_varying).
+	if (role->kind == XSC_ROLE_INTERP_IN) {
+		const XscType *const t = xsdk_xsc_result_type(l, ssa);
+		XscMatrix *const mat = t ? new_matrix(l, t->count) : NULL;
+		for (size_t i = 0; mat && i < mat->count; i++)
+			mat->rows[i] = xsc_reg(l->inputs[src] + (int64_t)i);
+		l->col_major[ssa] = mat != NULL;
+		return mat;
+	}
 	if (role->kind != XSC_ROLE_CONSTANT) {
 		xsdk_xsc_lower_refuse(l, "matrix operand must be a uniform Load");
 		return NULL;
@@ -207,15 +216,16 @@ static const XscMatrix *emit_inverse(XscLower *l, uint32_t mat_ssa)
 	return NULL;
 }
 
-// (M * v)[i] = dot(v, row i), a dot product a component.
-static int64_t mat_vec_ops(XscLower *l, const XscMatrix *mat, XscOperand vec_op, int64_t dst, bool export_position)
+// (M * v)[i] = dot(v, row i), a dot product a component, as wide as v: a float4x3 by rows holds 4 in each of its 3.
+static int64_t mat_vec_ops(
+	XscLower *l, const XscMatrix *mat, XscOperand vec_op, int64_t width, int64_t dst, bool export_position)
 {
 	const size_t n = mat->count;
-	if (!square(n)) {
+	if (!square(n) || width < 2 || width > XSC_MATRIX_ROWS) {
 		xsdk_xsc_lower_refuse(l, "matrix-vector expects mat2/3/4, got %zu rows", n);
 		return XSC_NONE;
 	}
-	const int64_t dp = n == 4 ? XSC_VECTOR_DP4 : n == 3 ? XSC_VECTOR_DP3 : XSC_VECTOR_DP2_ADD;
+	const int64_t dp = width == 4 ? XSC_VECTOR_DP4 : width == 3 ? XSC_VECTOR_DP3 : XSC_VECTOR_DP2_ADD;
 	const XscOperand v = xsdk_xsc_to_reg(l, vec_op);
 	if (xsc_failed(l))
 		return XSC_NONE;
@@ -236,7 +246,7 @@ static int64_t mat_vec_ops(XscLower *l, const XscMatrix *mat, XscOperand vec_op,
 		f.src_reg[1] = row.value;
 		f.src_is_temp[1] = row.kind == XSC_OPERAND_REG;
 		// dp2add adds src3: zero.
-		if (n == 2) {
+		if (width == 2) {
 			static const double zero[4] = { 0, 0, 0, 0 };
 			const int64_t z = xsdk_xsc_literal_reg(l, zero);
 			if (z == XSC_NONE)
@@ -286,7 +296,8 @@ int64_t xsdk_xsc_emit_mat_vec(XscLower *l, uint32_t mat, uint32_t vec, int64_t d
 	const XscOperand v = xsdk_xsc_lower_operand(l, vec);
 	if (xsc_failed(l))
 		return XSC_NONE;
-	return col ? vec_mat_ops(l, v, m, dst, export_position) : mat_vec_ops(l, m, v, dst, export_position);
+	const int64_t width = xsdk_xsc_vec_size(l, vec);
+	return col ? vec_mat_ops(l, v, m, dst, export_position) : mat_vec_ops(l, m, v, width, dst, export_position);
 }
 
 int64_t xsdk_xsc_emit_vec_mat(XscLower *l, uint32_t vec, uint32_t mat, int64_t dst, bool export_position)
@@ -298,7 +309,8 @@ int64_t xsdk_xsc_emit_vec_mat(XscLower *l, uint32_t vec, uint32_t mat, int64_t d
 	const XscOperand v = xsdk_xsc_lower_operand(l, vec);
 	if (xsc_failed(l))
 		return XSC_NONE;
-	return col ? mat_vec_ops(l, m, v, dst, export_position) : vec_mat_ops(l, v, m, dst, export_position);
+	const int64_t width = xsdk_xsc_vec_size(l, vec);
+	return col ? mat_vec_ops(l, m, v, width, dst, export_position) : vec_mat_ops(l, v, m, dst, export_position);
 }
 
 // Rows of A times B; over columns, column k of A * B is A times column k of B.
@@ -327,11 +339,68 @@ static const XscMatrix *emit_mat_mat(XscLower *l, uint32_t a, uint32_t b)
 	return out;
 }
 
+// Column c of a construct, through a shuffle taking a prefix of one vector, as (float3x3)M takes M's: the matrix it's
+// column c of, or 0.
+static uint32_t column_of(XscLower *l, uint32_t column, uint32_t c)
+{
+	const XscInstr *ins = xsdk_xsc_by_result(l->m, column);
+	uint32_t count;
+	const uint32_t *const ops = ins ? xsdk_xsc_operands(ins, &count) : NULL;
+	bool prefix = ins && ins->opcode == SPV_VECTOR_SHUFFLE && ops[0] == ops[1];
+	for (uint32_t i = 2; prefix && i < count; i++)
+		prefix = ops[i] == i - 2;
+	if (prefix)
+		ins = xsdk_xsc_by_result(l->m, ops[0]);
+	if (!ins || ins->opcode != SPV_COMPOSITE_EXTRACT || xsdk_xsc_operand_count(ins) != 2 ||
+		xsdk_xsc_operand(ins, 1) != c)
+		return 0;
+	const XscType *const from = xsdk_xsc_result_type(l, xsdk_xsc_operand(ins, 0));
+	return from && from->kind == XSC_TYPE_MATRIX ? xsdk_xsc_operand(ins, 0) : 0;
+}
+
+// A matrix built of its columns (SPIR-V 1.0, section 3.32.12, OpCompositeConstruct): a leading block of one matrix's
+// columns and rows, as a (float3x3) cast takes, is that matrix's first registers, its columns or rows as they are;
+// any other, its columns' values, marked as columns.
+static const XscMatrix *construct_matrix(XscLower *l, uint32_t ssa, const XscInstr *ins)
+{
+	uint32_t count;
+	const uint32_t *const columns = xsdk_xsc_operands(ins, &count);
+	uint32_t from = count ? column_of(l, columns[0], 0) : 0;
+	for (uint32_t c = 1; from && c < count; c++)
+		from = column_of(l, columns[c], c) == from ? from : 0;
+	const XscMatrix *const whole = from ? xsdk_xsc_matrix_operands(l, from) : NULL;
+	XscMatrix *const mat = count && count <= XSC_MATRIX_ROWS ? new_matrix(l, count) : NULL;
+	if (!mat || xsc_failed(l))
+		return NULL;
+	if (whole) {
+		const bool col = l->col_major[from];
+		mat->count = col ? count : (size_t)xsdk_xsc_vec_size(l, columns[0]);
+		if (mat->count > whole->count) {
+			xsdk_xsc_fail(
+				l->x, XSDK_XSC_MALFORMED, "%%%u takes more of %%%u than it holds", (unsigned)ssa, (unsigned)from);
+			return NULL;
+		}
+		for (size_t i = 0; i < mat->count; i++)
+			mat->rows[i] = whole->rows[i];
+		l->col_major[ssa] = col;
+		return mat;
+	}
+	for (uint32_t c = 0; c < count; c++) {
+		mat->rows[c] = xsdk_xsc_lower_operand(l, columns[c]);
+		if (xsc_failed(l))
+			return NULL;
+	}
+	l->col_major[ssa] = true;
+	return mat;
+}
+
 static const XscMatrix *resolve_matrix(XscLower *l, uint32_t ssa, const XscInstr *ins)
 {
 	const uint32_t a = xsdk_xsc_operand(ins, 0);
 	if (ins->opcode == SPV_LOAD)
 		return load_matrix(l, ssa, ins);
+	if (ins->opcode == SPV_COMPOSITE_CONSTRUCT)
+		return construct_matrix(l, ssa, ins);
 	if (ins->opcode == SPV_MATRIX_TIMES_MATRIX) {
 		const XscMatrix *const res = emit_mat_mat(l, a, xsdk_xsc_operand(ins, 1));
 		if (res && l->col_major[a])

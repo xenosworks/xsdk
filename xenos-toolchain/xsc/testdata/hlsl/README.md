@@ -18,5 +18,8 @@ makes of it, `glslang -D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stag
 - **`semantics_*`, `vpos_*` and `refused_*`**: `tests/test_hlsl_semantics.py`'s, D3D9's semantics, step 4.
 - **`loops/`**: `tests/test_hlsl_loops.py`'s, loops in SSA form, step 3, each `<name>_ps.hlsl` beside its GLSL twin
   `<name>.frag` with the SPIR-V `glslang -V` makes of it, and three refusals, `refused_*`.
+- **`rest/`**: `tests/test_hlsl_rest.py`'s, step 5's constructs: constant arrays, matrices built of columns and
+  matrix varyings, bools, ints, vector transcendentals and a lone PSIZE, each `<name>_ps.hlsl` or `<name>_vs.hlsl`
+  beside its GLSL twin where one is written, `grid_skin.vert` `grid_skin_vs.hlsl`'s, and two refusals, `refused_*`.
 - **`grid_*`**: xsdk_test's HLSL grid (xsdk:tests/test_hlsl.c), compiled on the console from this SPIR-V;
-  `tests/test_hlsl_link.py` links `grid_gaps_*` on the PC.
+  `tests/test_hlsl_link.py` links `grid_gaps_*` on the PC, and `tests/test_hlsl_rest.py` runs `grid_skin_vs`.

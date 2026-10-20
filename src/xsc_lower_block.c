@@ -182,6 +182,10 @@ static bool set_a0(XscLower *l, uint32_t part, int64_t scale)
 	if (ins->opcode == SPV_CONVERT_F_TO_S && scale == 1) {
 		origin = xsdk_xsc_scalar_origin(l, xsdk_xsc_operand(ins, 0));
 		sop = XSC_SCALAR_MAX_ASF;
+	} else if (ins->opcode == SPV_COMPOSITE_EXTRACT) {
+		// An int vector's component, read in its lane, as skinning's int4 indices are.
+		origin = (XscOrigin){ xsdk_xsc_int_operand(l, xsdk_xsc_operand(ins, 0)), xsdk_xsc_operand(ins, 1) };
+		sop = XSC_SCALAR_MAX_AS;
 	} else {
 		origin = (XscOrigin){ xsdk_xsc_int_operand(l, part), 0 };
 		sop = XSC_SCALAR_MAX_AS;
@@ -275,6 +279,28 @@ XscOperand xsdk_xsc_block_value(XscLower *l, uint32_t ssa, const XscBlockAccess 
 	const int64_t r = xsdk_xsc_fresh(l);
 	const XscSrc s = xsc_src(src, false, swizzle);
 	return xsc_emit2(l, XSC_VECTOR_MAX, s, s, r, false, 0xF) ? xsc_reg(r) : (XscOperand){ 0 };
+}
+
+XscOperand xsdk_xsc_constant_element(XscLower *l, uint32_t array, uint32_t index)
+{
+	uint32_t part;
+	int64_t k;
+	if (!split_index(l, index, &part, &k))
+		return (XscOperand){ 0 };
+	uint32_t count;
+	const uint32_t *const elements = xsdk_xsc_operands(xsdk_xsc_by_result(l->m, array), &count);
+	if (!part && (k < 0 || k >= count)) {
+		xsdk_xsc_lower_refuse(
+			l, "element %lld of constant array %%%u, past its %u", (long long)k, (unsigned)array, (unsigned)count);
+		return (XscOperand){ 0 };
+	}
+	if (!part)
+		return xsdk_xsc_lower_operand(l, elements[k]);
+	const int64_t first = xsdk_xsc_literal_array(l, array);
+	if (first == XSC_NONE)
+		return (XscOperand){ 0 };
+	const XscBlockAccess access = { .reg = first + k, .dynamic = true, .dyn_part = part, .dyn_scale = 1 };
+	return xsdk_xsc_block_register(l, &access, 0);
 }
 
 // A block matrix's registers: its columns, marked so, unless it's row-major.

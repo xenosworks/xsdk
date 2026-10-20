@@ -147,6 +147,20 @@ static bool export_point_size(XscLower *l, const PerVertex *pv, const XscStores 
 	return xsdk_xsc_emit_copy(l, origin.o, XSC_EXPORT_POINT_SIZE, true, false, swizzle, 0x1, false) != XSC_NONE;
 }
 
+static uint32_t stored_value(const XscLower *l, uint32_t ssa);
+
+// A matrix output's column, an interpolator each from its first (xsc_resolve.c, add_varying).
+static XscOperand column(XscLower *l, const XscInterface *si, size_t use, uint32_t value)
+{
+	const XscMatrix *const mat = xsdk_xsc_matrix_operands(l, value);
+	size_t c = 0;
+	for (size_t i = 0; i < use; i++)
+		c += si->interp_out[i].var == si->interp_out[use].var;
+	if (mat && (!l->col_major[stored_value(l, value)] || c >= mat->count))
+		xsdk_xsc_lower_refuse(l, "interpolator %s, a matrix held by rows (v1)", si->interp_out[use].var->name);
+	return mat && !xsc_failed(l) ? mat->rows[c] : (XscOperand){ 0 };
+}
+
 static bool export_interpolators(XscLower *l, const XscInterface *si, const XscStores *stores)
 {
 	for (size_t i = 0; i < si->interp_out_count; i++) {
@@ -154,7 +168,9 @@ static bool export_interpolators(XscLower *l, const XscInterface *si, const XscS
 		const uint32_t value = stores->value[use->var->vid];
 		if (!value)
 			return xsdk_xsc_lower_refuse(l, "interpolator %s never written", use->var->name);
-		const XscOperand r = xsdk_xsc_lower_operand(l, value);
+		const XscType *const t = xsdk_xsc_result_type(l, value);
+		const XscOperand r =
+			t && t->kind == XSC_TYPE_MATRIX ? column(l, si, i, value) : xsdk_xsc_lower_operand(l, value);
 		if (xsc_failed(l))
 			return false;
 		if (r.kind == XSC_OPERAND_MAT)
@@ -316,12 +332,14 @@ static bool clip_planes(XscLower *l, const PerVertex *pv, const XscStores *store
 	return true;
 }
 
-// An output decorated as a gl_PerVertex member but standing alone would be dropped, so it's refused.
-static bool check_lone_outputs(Xsc *x, const XscModule *m)
+// An output decorated as a gl_PerVertex member but standing alone would be dropped, so it's refused; HLSL's PSIZE is
+// exported (xsc_resolve.c).
+static bool check_lone_outputs(Xsc *x, const XscModule *m, const XscInterface *si)
 {
 	for (size_t i = 0; i < m->instr_count; i++) {
 		const XscInstr *const ins = &m->instrs[i];
-		if (ins->opcode != SPV_VARIABLE || xsdk_xsc_operand(ins, 0) != STORAGE_OUTPUT)
+		if (ins->opcode != SPV_VARIABLE || xsdk_xsc_operand(ins, 0) != STORAGE_OUTPUT ||
+			(si->point_size && ins->result_id == si->point_size->vid))
 			continue;
 		const int64_t builtin =
 			xsdk_xsc_decoration_arg(xsdk_xsc_decoration(m, ins->result_id, SPV_DEC_BUILTIN), XSC_NONE);
@@ -340,7 +358,7 @@ bool xsdk_xsc_lower_vertex(Xsc *x, const XscModule *m, const XsdkXscOptions *opt
 		return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "lower_vertex called on non-vertex module");
 	if (has_branches(m))
 		return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "vertex shader control flow the unroller left isn't lowered");
-	if (!check_lone_outputs(x, m))
+	if (!check_lone_outputs(x, m, si))
 		return false;
 	const XscType *const types = xsdk_xsc_resolve_types(x, m);
 	XscStores stores;

@@ -27,6 +27,9 @@ enum {
 	FETCH_ONE = 5,
 };
 
+// A shuffle's component with no value (SPIR-V 1.0, section 3.32.12, OpVectorShuffle).
+static const uint32_t UNDEFINED_COMPONENT = 0xFFFFFFFFu;
+
 bool xsdk_xsc_lower_refuse(XscLower *l, const char *format, ...)
 {
 	char text[XSDK_XSC_MESSAGE_BYTES];
@@ -442,6 +445,25 @@ int64_t xsdk_xsc_bsw(int64_t c)
 	return out;
 }
 
+// The next literal register, holding value, its 32-bit floats key.
+static int64_t new_literal(XscLower *l, const double value[4], const double key[4])
+{
+	size_t capacity = l->pool_capacity;
+	if (!xsdk_xsc_room(l->x, &l->pool, l->pool_count, &capacity, sizeof *l->pool))
+		return XSC_NONE;
+	l->pool_capacity = capacity;
+	if (!xsdk_xsc_room(l->x, &l->pool_keys, l->pool_count, &l->pool_key_capacity, 4 * sizeof *l->pool_keys))
+		return XSC_NONE;
+	const int64_t reg = l->lit_base++;
+	memcpy(&l->pool_keys[4 * l->pool_count], key, 4 * sizeof *key);
+	l->pool[l->pool_count].reg = reg;
+	memcpy(l->pool[l->pool_count].value, value, sizeof l->pool[l->pool_count].value);
+	l->pool_count++;
+	l->p->literals = l->pool_keys;
+	l->p->literal_count = l->pool_count;
+	return reg;
+}
+
 // A register holding value4, pooled by the 32-bit floats the register holds, bit for bit: values folding in doubles
 // left a hair apart share one, and values the register tells apart, 1e-10 and 0 or -0 and 0, don't.
 int64_t xsdk_xsc_literal_reg(XscLower *l, const double value[4])
@@ -453,26 +475,53 @@ int64_t xsdk_xsc_literal_reg(XscLower *l, const double value[4])
 		if (!memcmp(&l->pool_keys[4 * i], key, sizeof key))
 			return l->pool[i].reg;
 	}
-	size_t capacity = l->pool_capacity;
-	if (!xsdk_xsc_room(l->x, &l->pool, l->pool_count, &capacity, sizeof *l->pool))
-		return XSC_NONE;
-	l->pool_capacity = capacity;
-	if (!xsdk_xsc_room(l->x, &l->pool_keys, l->pool_count, &l->pool_key_capacity, 4 * sizeof *l->pool_keys))
-		return XSC_NONE;
-	const int64_t reg = l->lit_base++;
-	memcpy(&l->pool_keys[4 * l->pool_count], key, sizeof key);
-	l->pool[l->pool_count].reg = reg;
-	memcpy(l->pool[l->pool_count].value, value, sizeof l->pool[l->pool_count].value);
-	l->pool_count++;
-	l->p->literals = l->pool_keys;
-	l->p->literal_count = l->pool_count;
-	return reg;
+	return new_literal(l, value, key);
 }
 
 int64_t xsdk_xsc_literal_splat(XscLower *l, double value)
 {
 	const double four[4] = { value, value, value, value };
 	return xsdk_xsc_literal_reg(l, four);
+}
+
+// One literal register for each element of a constant array, in order, so a0 can index them as a block's array: a
+// float's or an int's in every component, a vector's in its own. Made once an array.
+int64_t xsdk_xsc_literal_array(XscLower *l, uint32_t array)
+{
+	if (!l->literal_arrays) {
+		l->literal_arrays = xsdk_xsc_alloc(l->x, (size_t)l->m->id_limit * sizeof *l->literal_arrays);
+		for (uint32_t id = 0; l->literal_arrays && id < l->m->id_limit; id++)
+			l->literal_arrays[id] = XSC_NONE;
+		if (!l->literal_arrays)
+			return XSC_NONE;
+	}
+	if (l->literal_arrays[array] != XSC_NONE)
+		return l->literal_arrays[array];
+	uint32_t count;
+	const uint32_t *const elements = xsdk_xsc_operands(xsdk_xsc_by_result(l->m, array), &count);
+	const int64_t first = l->lit_base;
+	for (uint32_t i = 0; i < count; i++) {
+		double value[4] = { 0, 0, 0, 0 };
+		int64_t whole;
+		int n = const_vector(l, elements[i], value, 4);
+		if (n < 0 && xsdk_xsc_int_const(l, elements[i], &whole)) {
+			value[0] = (double)whole;
+			n = 1;
+		}
+		if (n < 1 || n > 4) {
+			xsdk_xsc_lower_refuse(l, "a constant array of other than floats, ints or their vectors (v1)");
+			return XSC_NONE;
+		}
+		for (int k = n; n == 1 && k < 4; k++)
+			value[k] = value[0];
+		double key[4];
+		for (int k = 0; k < 4; k++)
+			key[k] = (float)value[k];
+		if (new_literal(l, value, key) == XSC_NONE)
+			return XSC_NONE;
+	}
+	l->literal_arrays[array] = first;
+	return first;
 }
 
 static bool operand_equal(XscOperand a, XscOperand b)
@@ -665,6 +714,21 @@ static bool const_val(XscLower *l, uint32_t ssa, int64_t *value)
 
 // ---- integers as floats (lower.py int_operand) ----
 
+enum {
+	OP_SOURCE = 3,
+	SOURCE_HLSL = 5,
+};
+
+// Whether glslang read HLSL, OpSource's language (SPIR-V 1.0, section 3.2).
+static bool hlsl_source(const XscModule *m)
+{
+	for (size_t i = 0; i < m->instr_count && m->instrs[i].opcode != SPV_FUNCTION; i++) {
+		if (m->instrs[i].opcode == OP_SOURCE)
+			return xsdk_xsc_operand(&m->instrs[i], 0) == SOURCE_HLSL;
+	}
+	return false;
+}
+
 static XscOperand int_arith(XscLower *l, const XscInstr *ins)
 {
 	const uint32_t op = ins->opcode;
@@ -734,6 +798,37 @@ static XscOperand int_divide(XscLower *l, const XscInstr *ins)
 	return xsc_reg(r);
 }
 
+// An int Load: a local's value; gl_InstanceIndex, which the prologue holds as a float in every component
+// (xsc_lower_vertex.c); an input's ints, which its fetch makes floats as UBYTE4's are, a scalar's in x and a
+// component's spread; or an int or bool in HLSL's blocks, whose registers D3D9 sets as floats (docs/scope/50-hlsl.md).
+static XscOperand int_load(XscLower *l, uint32_t ssa, const XscInstr *ins)
+{
+	const uint32_t src = xsdk_xsc_operand(ins, 0);
+	const uint32_t limit = l->m->id_limit;
+	if (src < limit && l->local_store[src])
+		return xsdk_xsc_int_operand(l, l->local_store[src]);
+	if (xsdk_xsc_role(l->si, src)->kind == XSC_ROLE_INSTANCE_INDEX)
+		return xsc_reg(l->instance);
+	if (src < limit && l->inputs[src] != XSC_NONE)
+		return xsc_reg(l->inputs[src]);
+	const XscInstr *const chain = xsdk_xsc_by_result(l->m, src);
+	const uint32_t base = chain && chain->opcode == SPV_ACCESS_CHAIN ? xsdk_xsc_operand(chain, 0) : limit;
+	int64_t comp;
+	if (base < limit && l->inputs[base] != XSC_NONE && xsdk_xsc_int_const(l, xsdk_xsc_operand(chain, 1), &comp)) {
+		const int64_t r =
+			xsdk_xsc_emit_copy(l, xsc_reg(l->inputs[base]), XSC_NONE, false, false, xsdk_xsc_bsw(comp), 0xF, false);
+		return r == XSC_NONE ? (XscOperand){ 0 } : xsc_reg(r);
+	}
+	XscBlockAccess access;
+	bool found = false;
+	if (hlsl_source(l->m) && !xsdk_xsc_block_access(l, src, &access, &found))
+		return (XscOperand){ 0 };
+	if (found)
+		return xsdk_xsc_block_value(l, ssa, &access);
+	xsdk_xsc_lower_refuse(l, "integer Load must be a foldable local");
+	return (XscOperand){ 0 };
+}
+
 static XscOperand int_operand_of(XscLower *l, uint32_t ssa)
 {
 	int64_t cv;
@@ -745,16 +840,15 @@ static XscOperand int_operand_of(XscLower *l, uint32_t ssa)
 	if (!ins)
 		return (XscOperand){ 0 };
 	const uint32_t op = ins->opcode;
-	if (op == SPV_LOAD) {
-		const uint32_t src = xsdk_xsc_operand(ins, 0);
-		if (src < l->m->id_limit && l->local_store[src])
-			return xsdk_xsc_int_operand(l, l->local_store[src]);
-		// gl_InstanceIndex, which the prologue holds as a float in every component (xsc_lower_vertex.c).
-		const XscRole *const role = xsdk_xsc_role(l->si, src);
-		if (role->kind == XSC_ROLE_INSTANCE_INDEX)
-			return xsc_reg(l->instance);
-		xsdk_xsc_lower_refuse(l, "integer Load must be a foldable local");
-		return (XscOperand){ 0 };
+	if (op == SPV_LOAD)
+		return int_load(l, ssa, ins);
+	if (op == SPV_COMPOSITE_EXTRACT) {
+		// An int vector's component, spread over a register of its own, as a scalar's is.
+		const XscOperand v = xsdk_xsc_int_operand(l, xsdk_xsc_operand(ins, 0));
+		const int64_t r = xsc_failed(l)
+			? XSC_NONE
+			: xsdk_xsc_emit_copy(l, v, XSC_NONE, false, false, xsdk_xsc_bsw(xsdk_xsc_operand(ins, 1)), 0xF, false);
+		return r == XSC_NONE ? (XscOperand){ 0 } : xsc_reg(r);
 	}
 	if (op == SPV_CONVERT_F_TO_S) {
 		const XscOperand ov = xsdk_xsc_lower_operand(l, xsdk_xsc_operand(ins, 0));
@@ -1238,10 +1332,36 @@ static XscOperand scalar_value(XscLower *l, uint32_t ssa)
 	return xsdk_xsc_emit(l, XSC_VECTOR_MAX, ops, 2, r, false, 0xF, false) ? xsc_reg(r) : (XscOperand){ 0 };
 }
 
+// The constant array a chain indexes: its base the array, as the unroller leaves a local array at a run-time index, or
+// a local stored with it once; 0 for any other, refused for another local array at a run-time index.
+static uint32_t constant_array(XscLower *l, const XscInstr *chain)
+{
+	if (!chain || chain->opcode != SPV_ACCESS_CHAIN || xsdk_xsc_operand_count(chain) != 2)
+		return 0;
+	uint32_t base = xsdk_xsc_operand(chain, 0);
+	if (base < l->m->id_limit && l->local_store[base])
+		base = l->local_store[base];
+	const XscInstr *const made = xsdk_xsc_by_result(l->m, base);
+	const XscType *t = made ? xsdk_xsc_type(l->m, l->types, made->result_type) : NULL;
+	if (t && t->kind == XSC_TYPE_POINTER)
+		t = xsdk_xsc_type(l->m, l->types, t->comp);
+	if (!t || t->kind != XSC_TYPE_ARRAY || xsdk_xsc_role(l->si, base)->kind != XSC_ROLE_NONE)
+		return 0;
+	if (made->opcode == SPV_CONSTANT_COMPOSITE)
+		return base;
+	int64_t index;
+	if (!xsdk_xsc_int_const(l, xsdk_xsc_operand(chain, 1), &index))
+		xsdk_xsc_lower_refuse(l, "a run-time index into a local array other than a constant one (v1)");
+	return 0;
+}
+
 static XscOperand load_operand(XscLower *l, uint32_t ssa, const XscInstr *ins)
 {
 	const uint32_t src = xsdk_xsc_operand(ins, 0);
 	const XscInstr *const ptr = xsdk_xsc_by_result(l->m, src);
+	const uint32_t array = constant_array(l, ptr);
+	if (array || xsc_failed(l))
+		return array ? xsdk_xsc_constant_element(l, array, xsdk_xsc_operand(ptr, 1)) : (XscOperand){ 0 };
 	XscBlockAccess access;
 	bool found;
 	if (!xsdk_xsc_block_access(l, src, &access, &found))
@@ -1299,20 +1419,43 @@ static XscOperand composite_insert(XscLower *l, const XscInstr *ins)
 																						: (XscOperand){ 0 };
 }
 
+// A shuffle reading the second vector (SPIR-V 1.0, section 3.32.12, OpVectorShuffle), as spirv-opt folds a select on
+// a constant bool vector to: a masked copy of each lane from its source; an undefined lane is left.
+static XscOperand two_source_shuffle(XscLower *l, const uint32_t *ops, uint32_t n, uint32_t first_size)
+{
+	const XscOperand sources[2] = { xsdk_xsc_lower_operand(l, ops[0]), xsdk_xsc_lower_operand(l, ops[1]) };
+	if (xsc_failed(l))
+		return (XscOperand){ 0 };
+	const int64_t r = xsdk_xsc_fresh(l);
+	for (uint32_t i = 0; i < n; i++) {
+		const uint32_t k = ops[2 + i];
+		if (k == UNDEFINED_COMPONENT)
+			continue;
+		const bool second = k >= first_size;
+		const XscSrc s = xsc_src(sources[second], false, component_swizzle(second ? k - first_size : k, i));
+		if (!xsc_emit2(l, XSC_VECTOR_MAX, s, s, r, false, (int64_t)1 << i))
+			return (XscOperand){ 0 };
+	}
+	return xsc_reg(r);
+}
+
 static XscOperand vector_shuffle(XscLower *l, const XscInstr *ins)
 {
 	uint32_t count;
 	const uint32_t *const ops = xsdk_xsc_operands(ins, &count);
 	const uint32_t n = count > 2 ? count - 2 : 0;
-	bool identity = true;
+	const uint32_t first_size = (uint32_t)xsdk_xsc_vec_size(l, ops[0]);
+	bool identity = n <= first_size;
 	bool first_source = true;
 	for (uint32_t i = 0; i < n; i++) {
 		identity = identity && ops[2 + i] == i;
-		first_source = first_source && ops[2 + i] < 4;
+		first_source = first_source && ops[2 + i] < first_size;
 	}
 	if (identity)
 		return xsdk_xsc_lower_operand(l, ops[0]);
-	if (!first_source || n > 4) {
+	if (!first_source && n <= 4)
+		return two_source_shuffle(l, ops, n, first_size);
+	if (n > 4) {
 		char text[TEXT_BYTES];
 		size_t length = (size_t)snprintf(text, sizeof text, "[");
 		for (uint32_t i = 0; i < n && length < sizeof text; i++)
@@ -1342,7 +1485,12 @@ static XscOperand constant_operand(XscLower *l, const XscInstr *ins, uint32_t ss
 		uint32_t count;
 		const uint32_t *const ops = xsdk_xsc_operands(ins, &count);
 		for (uint32_t i = 0; i < count; i++) {
-			const double v = xsdk_xsc_scalar_const(l, ops[i]);
+			const XscInstr *const lane = xsdk_xsc_by_result(l->m, ops[i]);
+			// A bool vector's lanes 1.0 and 0.0, as the lowering holds bools.
+			const uint32_t op = lane ? lane->opcode : 0;
+			const double v = op == SPV_CONSTANT_TRUE ? 1.0
+				: op == SPV_CONSTANT_FALSE           ? 0.0
+													 : xsdk_xsc_scalar_const(l, ops[i]);
 			if (xsc_failed(l))
 				return (XscOperand){ 0 };
 			if (i < 4)
@@ -1403,6 +1551,15 @@ static XscOperand value_operand(XscLower *l, uint32_t ssa, const XscInstr *ins)
 	case SPV_F_SUB:
 	case SPV_F_MUL:
 		return from_reg(xsdk_xsc_binop(l, op, a, b, XSC_NONE, false, false));
+	case SPV_F_NEGATE: {
+		// A source's negate modifier on a copy, a scalar's spread over the register, as scalar_value does.
+		if (result_kind(l, ssa) != XSC_TYPE_FLOAT)
+			return from_reg(copy_of(l, a, XSC_NONE, false, true, false));
+		const XscOrigin o = xsdk_xsc_scalar_origin(l, a);
+		const int64_t swizzle = o.comp == XSC_BROADCAST ? 0 : xsdk_xsc_bsw(o.comp);
+		return xsc_failed(l) ? (XscOperand){ 0 }
+							 : from_reg(xsdk_xsc_emit_copy(l, o.o, XSC_NONE, false, true, swizzle, 0xF, false));
+	}
 	case SPV_VECTOR_TIMES_SCALAR:
 		return from_reg(vts(l, a, b, XSC_NONE, false));
 	case SPV_DOT:
@@ -1561,6 +1718,10 @@ static XscOrigin load_origin(XscLower *l, uint32_t ssa, const XscInstr *ins, boo
 	*resolved = true;
 	const uint32_t src = xsdk_xsc_operand(ins, 0);
 	const XscInstr *const ptr = xsdk_xsc_by_result(l->m, src);
+	const uint32_t array = constant_array(l, ptr);
+	if (array || xsc_failed(l))
+		return origin(
+			array ? xsdk_xsc_constant_element(l, array, xsdk_xsc_operand(ptr, 1)) : (XscOperand){ 0 }, XSC_BROADCAST);
 	XscBlockAccess access;
 	bool found;
 	if (!xsdk_xsc_block_access(l, src, &access, &found))
@@ -1624,7 +1785,7 @@ static XscOrigin scalar_origin_of(XscLower *l, uint32_t ssa)
 		return origin(xsdk_xsc_lower_operand(l, ssa), 0);
 	const bool broadcast = op == SPV_DOT || op == SPV_CONSTANT || op == SPV_CONSTANT_TRUE || op == SPV_CONSTANT_FALSE ||
 		op == SPV_F_ADD || op == SPV_F_SUB || op == SPV_F_MUL || op == SPV_F_DIV || op == SPV_F_MOD ||
-		op == SPV_EXT_INST || boolean_op(op) || is_comparison(op);
+		op == SPV_F_NEGATE || op == SPV_EXT_INST || boolean_op(op) || is_comparison(op);
 	if (broadcast)
 		return origin(xsdk_xsc_lower_operand(l, ssa), XSC_BROADCAST);
 	xsdk_xsc_lower_refuse(l, "cannot resolve scalar %%%u", (unsigned)ssa);
