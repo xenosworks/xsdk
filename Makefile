@@ -75,7 +75,7 @@ PROBE_FAULT_OBJECTS := $(BUILD)/tests/probe_fault.o $(BUILD)/tests/probe_fault_s
 UNROLL_O2_FLAGS := -munroll-only-small-loops -fno-rename-registers
 UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_loops_unrolled.o
 
-.PHONY: all clean cmake_check occlusion_tries tiles_probe loop_break_probes instancing_probes
+.PHONY: all clean cmake_check occlusion_tries tiles_probe loop_break_probes instancing_probes cpu_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -247,6 +247,9 @@ $(INSTANCING_BREAKS:%=$(BUILD)/tests/probe_instancing_%.o): $(BUILD)/tests/probe
 	$(CC) $(CFLAGS) -I$(BUILD)/probe -DINSTANCING_BREAK_$(shell echo $* | tr a-z A-Z) -c $< -o $@
 
 instancing_probes: $(BUILD)/probe_instancing.xex $(INSTANCING_BREAKS:%=$(BUILD)/probe_instancing_%.xex)
+
+# Milestone 52 step 1's probes of how bdnz counts CTR and of what atomics cost; outside all.
+cpu_probes: $(BUILD)/probe_ctr.xex $(BUILD)/probe_atomics.xex
 
 $(BUILD)/host/libxsc.so: $(XSC_SOURCES:src/%.c=$(BUILD)/host/%.o)
 	$(HOST_CC) -shared -o $@ $^
