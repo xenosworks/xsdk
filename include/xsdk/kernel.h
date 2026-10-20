@@ -381,6 +381,9 @@ void VdSwap(volatile uint32_t *ring_space, const uint32_t *fetch_constant, volat
 void XeCryptRandom(void *buffer, uint32_t length_bytes);
 // Returns 0 if a module like "xboxkrnl.exe" is loaded (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_modules.cc:42-62).
 uint32_t XexGetModuleHandle(const char *module_name, HANDLE *module);
+// A resource the .xex names, such as the title's name under its title ID in hex (xenia:src/xenia/kernel/xboxkrnl/
+// xboxkrnl_modules.cc:64-84).
+NTSTATUS XexGetModuleSection(HANDLE module, const char *name, const void **data, uint32_t *size);
 NTSTATUS XexGetProcedureAddress(HANDLE module, uint32_t ordinal, void **address);
 
 // XAM's sockets are Winsock's calls with the caller's type first, a title's XNCALLER_TITLE
