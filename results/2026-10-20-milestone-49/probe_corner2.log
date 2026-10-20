@@ -1,0 +1,36 @@
+log: game:\probe_hiz_pass.log
+log: named after \Device\Harddisk0\Partition1\hizpass\probe_hiz_pass.xex
+sbrk: the heap may grow to 470 MB from 0x00070000, the title's free memory
+hiz pass probe: case corner2, the pass over the top right 2 blocks, 64x8
+PASS: hiz pass: GPU open
+PASS: hiz pass: shaders and buffers
+hiz pass: the first depth clear with the case, where a hang stops the log
+hiz pass: cleared to 0.25 from far, a full-screen draw at 0.4 hidden: 0 of 921600 pixels wrong, in (1280, 720) to (0, 0)
+PASS: hiz pass: cleared to 0.25 from far, a full-screen draw at 0.4 hidden, every pixel right
+hiz pass: cleared far from 0.25, a full-screen draw at 0.9 shown: 199 of 921600 pixels wrong, in (1248, 0) to (1278, 7)
+FAIL: hiz pass: cleared far from 0.25, a full-screen draw at 0.9 shown, every pixel right
+hiz pass: cleared to 0.25 from far, a 200x200 draw at 0.4 hidden: 0 of 40000 pixels wrong, in (1280, 720) to (0, 0)
+PASS: hiz pass: cleared to 0.25 from far, a 200x200 draw at 0.4 hidden, every pixel right
+hiz pass: cleared far from 0.25, a 200x200 draw at 0.9 shown: 0 of 40000 pixels wrong, in (1280, 720) to (0, 0)
+PASS: hiz pass: cleared far from 0.25, a 200x200 draw at 0.9 shown, every pixel right
+hiz pass: 16 1280x720 resolves clearing colour took 2154394 clocks, 269.97 us each; clearing colour and depth 2158863 clocks, 270.53 us each: 0.56 us each for depth
+PASS: hiz pass: GPU close
+PASS: hiz: GPU open
+PASS: hiz: shaders load
+PASS: hiz: vertex and resolve buffers
+hiz: 8 hidden full-screen quads through the long shader took 238 us, 8 drawn ones 20064 us
+PASS: hiz: hidden pixels through a long shader cost under an eighth of drawn ones
+hiz: frame 0: (1248, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1249, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1250, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1251, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1252, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1253, 0) held 202020FF, not C02030FF
+hiz: 1 of 12 frames held a wrong pixel, 199 pixels in all
+PASS: hiz: every frame's fence landed
+FAIL: hiz: near and far drawn both ways over depth clears, less-than and greater-than, every pixel right
+hiz: of 921600 pixels, 0 hid a draw writing nearer depth, 160 a draw over one writing farther
+FAIL: hiz: draws whose pixel shader writes depth are tested and leave depth by what it writes
+PASS: hiz: GPU close
+hiz pass probe: corner2: 12 checks passed, 3 failed
+exit: status 3

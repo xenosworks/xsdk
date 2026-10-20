@@ -1,0 +1,61 @@
+log: game:\probe_hiz_pass.log
+log: named after \Device\Harddisk0\Partition1\hizpass\probe_hiz_pass.xex
+sbrk: the heap may grow to 470 MB from 0x00070000, the title's free memory
+hiz pass probe: case none, no pass, the control, which must leave pixels wrong
+PASS: hiz pass: GPU open
+PASS: hiz pass: shaders and buffers
+hiz pass: the first depth clear with the case, where a hang stops the log
+hiz pass: cleared to 0.25 from far, a full-screen draw at 0.4 hidden: 0 of 921600 pixels wrong, in (1280, 720) to (0, 0)
+PASS: hiz pass: cleared to 0.25 from far, a full-screen draw at 0.4 hidden, every pixel right
+hiz pass: cleared far from 0.25, a full-screen draw at 0.9 shown: 199 of 921600 pixels wrong, in (1248, 0) to (1278, 7)
+FAIL: hiz pass: cleared far from 0.25, a full-screen draw at 0.9 shown, every pixel right
+hiz pass: cleared to 0.25 from far, a 200x200 draw at 0.4 hidden: 0 of 40000 pixels wrong, in (1280, 720) to (0, 0)
+PASS: hiz pass: cleared to 0.25 from far, a 200x200 draw at 0.4 hidden, every pixel right
+hiz pass: cleared far from 0.25, a 200x200 draw at 0.9 shown: 22 of 40000 pixels wrong, in (592, 300) to (598, 303)
+FAIL: hiz pass: cleared far from 0.25, a 200x200 draw at 0.9 shown, every pixel right
+hiz pass: scattered 364x290 at (740, 242): 169 pixels wrong, in (1072, 242) to (1102, 247)
+hiz pass: scattered 191x36 at (196, 275): 188 pixels wrong, in (336, 275) to (383, 279)
+hiz pass: scattered 264x59 at (63, 488): 168 pixels wrong, in (288, 488) to (324, 495)
+hiz pass: scattered 361x74 at (552, 240): 236 pixels wrong, in (864, 240) to (910, 247)
+hiz pass: scattered 24x53 at (586, 371): 196 pixels wrong, in (592, 371) to (609, 383)
+hiz pass: scattered 328x208 at (278, 327): 13 pixels wrong, in (592, 327) to (604, 327)
+hiz pass: scattered 189x172 at (292, 517): 45 pixels wrong, in (464, 517) to (479, 519)
+hiz pass: scattered 315x256 at (463, 42): 37 pixels wrong, in (768, 42) to (776, 47)
+hiz pass: 64 scattered rectangles: 64 with wrong pixels, 6560 pixels in all
+FAIL: hiz pass: rectangles scattered after clears, every pixel right
+hiz pass: top row 32x8 at (0, 0): 256 pixels wrong, in (0, 0) to (31, 7)
+hiz pass: top row 32x8 at (32, 0): 256 pixels wrong, in (32, 0) to (63, 7)
+hiz pass: top row 32x8 at (64, 0): 256 pixels wrong, in (64, 0) to (95, 7)
+hiz pass: top row 32x8 at (608, 0): 256 pixels wrong, in (608, 0) to (639, 7)
+hiz pass: top row 32x8 at (640, 0): 256 pixels wrong, in (640, 0) to (671, 7)
+hiz pass: top row 32x8 at (1216, 0): 256 pixels wrong, in (1216, 0) to (1247, 7)
+hiz pass: top row 32x8 at (1248, 0): 256 pixels wrong, in (1248, 0) to (1279, 7)
+hiz pass: top row 64x8 at (0, 0): 512 pixels wrong, in (0, 0) to (63, 7)
+hiz pass: top row 640x8 at (0, 0): 24 pixels wrong, in (576, 0) to (599, 0)
+hiz pass: top row 64x100 at (0, 0): 174 pixels wrong, in (48, 0) to (63, 15)
+hiz pass: top row 1x1 at (0, 0): 1 pixels wrong, in (0, 0) to (0, 0)
+hiz pass: top row 1x1 at (1279, 0): 1 pixels wrong, in (1279, 0) to (1279, 0)
+hiz pass: top row 1x1 at (1279, 7): 1 pixels wrong, in (1279, 7) to (1279, 7)
+hiz pass: 16 rectangles starting in the top rows: 13 with wrong pixels
+FAIL: hiz pass: rectangles starting in the top rows after clears, every pixel right
+hiz pass: 16 1280x720 resolves clearing colour took 2154661 clocks, 270.00 us each; clearing colour and depth 2154968 clocks, 270.04 us each: 0.04 us each for depth
+PASS: hiz pass: GPU close
+PASS: hiz: GPU open
+PASS: hiz: shaders load
+PASS: hiz: vertex and resolve buffers
+hiz: 8 hidden full-screen quads through the long shader took 238 us, 8 drawn ones 20065 us
+PASS: hiz: hidden pixels through a long shader cost under an eighth of drawn ones
+hiz: frame 0: (1248, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1249, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1250, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1251, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1252, 0) held 202020FF, not C02030FF
+hiz: frame 0: (1253, 0) held 202020FF, not C02030FF
+hiz: 8 of 12 frames held a wrong pixel, 835 pixels in all
+PASS: hiz: every frame's fence landed
+FAIL: hiz: near and far drawn both ways over depth clears, less-than and greater-than, every pixel right
+hiz: of 921600 pixels, 0 hid a draw writing nearer depth, 0 a draw over one writing farther
+PASS: hiz: draws whose pixel shader writes depth are tested and leave depth by what it writes
+PASS: hiz: GPU close
+hiz pass probe: none: 12 checks passed, 5 failed
+exit: status 5

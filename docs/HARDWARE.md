@@ -4479,3 +4479,20 @@ an alpha beside its colour, as Xenia's interpreter models an export's scalar op 
 (results/2026-10-19-milestone-48/, step 7): xsdk_test's tiles and instancing draws of `vk_frag_coord_rows.frag`,
 `vk_instance_cells.vert` and `vk_instance_step.vert` passed, and all 103 of Dusklight's pixel pictures, 28 of them from
 programs that changed, hashed as before, bit for bit.
+
+## The pass after a depth clear, milestone 49 (2026-10-20)
+
+`tests/probe_hiz_pass.c` drew xsdk's pass after a depth clear over other rectangles, one case a boot (logs:
+`results/2026-10-20-milestone-49/`). Each case was checked with milestone 30's sequences after a clear and xsdk_test's
+12 frames, and the last rounds added 64 rectangles of scattered sizes and places and 16 whose first block lies in the
+top two rows of blocks, each the first draw after its own clear.
+- **With no pass,** every scattered rectangle went wrong in the top right block of its first row of blocks, 6,560
+  pixels over the 64, and 13 of the 16 in the top rows went wrong.
+- **Where the pass lies decides which draws it puts right.** The top right block alone fixed nothing. Two blocks
+  there fixed the 200x200 draw but left the full-screen draw's 199 pixels, whose first block they cover. Two at the top
+  left passed the scattered rectangles but left 174 pixels wrong in a 64x100 draw starting in them.
+- **The top 8 rows, the whole target's width,** put every pixel right in every check, for 0.99 to 1.13 us over a
+  resolve clearing colour alone (269.9 us at 1280x720), where the whole target's pass took 29.4 to 29.5. xsdk draws the
+  pass there since.
+- **Skipped where the buffer stays off:** multisampled targets and targets past 1280x1024 get no pass
+  (`xsdk_gpu_hiz_fits`).

@@ -983,8 +983,9 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
     (results/2026-10-19-milestone-48/; HARDWARE.md, "The scalar unit's constant forms, milestone 48 step 5" and
     "Exports through the scalar unit, milestone 48 step 7").
 
-49. **The pass after a depth clear.** Agreed on 2026-10-19: docs/scope/49-hiz-clear-pass.md, worth
-    about 29 us a frame. vulkan4xenon's submit, the third cost measured that day, is vulkan4xenon's milestone 29
+49. **The pass after a depth clear.** Agreed on 2026-10-19 and done on 2026-10-20: docs/scope/49-hiz-clear-pass.md,
+    worth about 29 us a frame, now 1 (results/2026-10-20-milestone-49/; HARDWARE.md, "The pass after a depth clear,
+    milestone 49"). vulkan4xenon's submit, the third cost measured that day, is vulkan4xenon's milestone 29
     (vulkan4xenon:docs/ROADMAP.md).
 
 50. **HLSL.** Agreed on 2026-10-19: docs/scope/50-hlsl.md, after 48, as both change xost.

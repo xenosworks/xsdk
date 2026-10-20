@@ -1,0 +1,30 @@
+log: game:\probe_hiz_pass.log
+log: named after \Device\Harddisk0\Partition1\hizpass\probe_hiz_pass.xex
+sbrk: the heap may grow to 470 MB from 0x00070000, the title's free memory
+hiz pass probe: case quarter, the pass over the top left quarter, which holds the small rectangle's first block
+PASS: hiz pass: GPU open
+PASS: hiz pass: shaders and buffers
+hiz pass: the first depth clear with the case, where a hang stops the log
+hiz pass: cleared to 0.25 from far, a full-screen draw at 0.4 hidden: 0 of 921600 pixels wrong, in (1280, 720) to (0, 0)
+PASS: hiz pass: cleared to 0.25 from far, a full-screen draw at 0.4 hidden, every pixel right
+hiz pass: cleared far from 0.25, a full-screen draw at 0.9 shown: 0 of 921600 pixels wrong, in (1280, 720) to (0, 0)
+PASS: hiz pass: cleared far from 0.25, a full-screen draw at 0.9 shown, every pixel right
+hiz pass: cleared to 0.25 from far, a 200x200 draw at 0.4 hidden: 0 of 40000 pixels wrong, in (1280, 720) to (0, 0)
+PASS: hiz pass: cleared to 0.25 from far, a 200x200 draw at 0.4 hidden, every pixel right
+hiz pass: cleared far from 0.25, a 200x200 draw at 0.9 shown: 0 of 40000 pixels wrong, in (1280, 720) to (0, 0)
+PASS: hiz pass: cleared far from 0.25, a 200x200 draw at 0.9 shown, every pixel right
+hiz pass: 16 1280x720 resolves clearing colour took 2153443 clocks, 269.85 us each; clearing colour and depth 2216116 clocks, 277.70 us each: 7.85 us each for depth
+PASS: hiz pass: GPU close
+PASS: hiz: GPU open
+PASS: hiz: shaders load
+PASS: hiz: vertex and resolve buffers
+hiz: 8 hidden full-screen quads through the long shader took 238 us, 8 drawn ones 20064 us
+PASS: hiz: hidden pixels through a long shader cost under an eighth of drawn ones
+hiz: 0 of 12 frames held a wrong pixel, 0 pixels in all
+PASS: hiz: every frame's fence landed
+PASS: hiz: near and far drawn both ways over depth clears, less-than and greater-than, every pixel right
+hiz: of 921600 pixels, 0 hid a draw writing nearer depth, 0 a draw over one writing farther
+PASS: hiz: draws whose pixel shader writes depth are tested and leave depth by what it writes
+PASS: hiz: GPU close
+hiz pass probe: quarter: 15 checks passed, 0 failed
+exit: status 0
