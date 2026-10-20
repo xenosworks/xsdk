@@ -777,20 +777,24 @@ the console has read other vertices' rows. Its break builds, from this commit wi
 load line taken out and `tests/xsc_shaders.h` made by that compiler, so the compiler check holds, are
 `build/xsdk_test_break_allocs.xex` and `build/xsdk_test_break_loads.xex`.
 
-**On the console, to run,** built clean from the M48 pair at `d3203de` (`make` builds `build/xsdk_test.xex` and the
-break builds stay beside it; `make build/probe_relative_constants.xex build/probe_a0_predicated.xex` the probes):
-- **xsdk_test,** `build/xsdk_test.xex`: the compiler check, 3 of 47 shaders new; the raster test's indexed grid,
-  `vk_dynamic_interpolator.vert` now `mul oPos, r1, c[0+a0]` and, after the reload, `mul o0, c[16+a0], c[0+a0].wwww`,
-  two rows at a0 in one instruction, and its `vk_dynamic_texcoord.frag` and `vk_dynamic_if.frag` grids; and the indexed
-  reads check. 468 should pass, the 2 controller checks failing with no pad.
-- **The break builds:** `build/xsdk_test_break_allocs.xex` and `build/xsdk_test_break_loads.xex`, each failing the
-  indexed reads check alone besides the pad's, the loads' with 1728 quads a frame off their place.
-- **vulkan4xenon_test,** twice, built against this xsdk: `test_run_time_index.c` compiles `matrix_index.vert`, dot
-  products of rows at a0 as Dusklight's skinning reads them, and `band.frag` on the console with the optimiser on.
-- **`probe_relative_constants`,** its stress mode among it, and **`probe_a0_predicated`**: shaders built by hand,
-  which the optimiser doesn't see, their headers as at step 5; they show the console's a0 as milestone 45 found it.
-- **With Dusklight's pack rebuilt with this xost** (its three skinned vertex shaders change): `probe_shader_cost`
-  (`make build/probe_shader_cost.xex XSC_PACK=...`), the vertex shaders' time and the 100 pixel pictures as the
-  baseline's; `probe_xsc`, 150 of 150 programs as the pack holds them, the 150 within 1.42 s; Dusklight's title scene;
-  and frame captures of Link and Epona, lit by the skinned shaders' normal matrix, `c[152..154+a0]`, read past the
-  interpolators' alloc.
+**On the console,** built clean from the M48 pair, Dusklight's pack rebuilt with this xost
+(local/m48/step6_build.sh), the break builds as this step's agent built them:
+- **`probe_step6.log`:** Dusklight's vertex shaders take 12,488 us for a draw of each, 6.5% under the baseline's
+  13,354, and 1.1% under step 5's; its pixel shaders 51,700 us, as at step 5. All 103 pixel pictures hash as the
+  baseline's, bit for bit.
+- **`probe_xsc_step6.log`:** 150 of 150 programs compile on the console as the pack holds them, the 150 in 1.382 s,
+  within 1.42.
+- **`step6_xsdk_test.log`:** 468 passed, 2 failed, the controller's checks with no pad; the indexed reads check and
+  the raster grids of `vk_dynamic_interpolator.vert`, `vk_dynamic_texcoord.frag` and `vk_dynamic_if.frag` compiled on
+  the console pass.
+- **Broken on purpose,** `step6_xsdk_test_broken_allocs.log` (spans ignoring allocs) and
+  `step6_xsdk_test_broken_loads.log` (spans ignoring a0 loads): each failed the indexed reads check alone besides the
+  pad's.
+- **`step6_vulkan4xenon_test_1.log`, `_2.log`:** 492 of 492 each, `matrix_index.vert` and `band.frag` compiled on the
+  console among them.
+- **`probe_relative_constants_step6.log`:** 32 PASS, 46 DIFFERS, and in its stress mode 15 and 15, as on
+  2026-10-17. **`probe_a0_predicated_step6.log`:** every case passes or differs as it did then, but case 4 (true over
+  the top half, false below, indices per quad), 9215 of 9216 quads right then and 9216 now; the cases that differ
+  differ by a few dozen quads from run to run, as the console's a0 in predicated code does.
+- **`step6_dusklight_frames.log`:** Dusklight's title scene, its frames captured every 150th; Link and Epona, lit by
+  the skinned shaders, look as at step 5 (local/m48/frames_step5, frames_step6).
