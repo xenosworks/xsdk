@@ -78,6 +78,7 @@ int main(int argc, char **argv)
 	test_tiles();
 	test_vertex();
 	test_instancing();
+	test_indexed_reads();
 	test_replay();
 	test_microcode();
 	test_registers();

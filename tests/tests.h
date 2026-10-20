@@ -154,6 +154,9 @@ void test_vertex(void);
 // Instanced draws (milestone 47).
 void test_instancing(void);
 
+// Constants read at run-time indices through xost's optimiser (milestone 48 step 6).
+void test_indexed_reads(void);
+
 // Recorded command buffers (milestone 18).
 void test_replay(void);
 
