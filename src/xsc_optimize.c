@@ -1352,12 +1352,26 @@ static bool plain_export(const XscOp *op)
 		!op->alu.is_scalar_dest_relative && op->alu.vector_write_mask != 0;
 }
 
+static bool is_export_op(const XscOp *op)
+{
+	return is_alu(op) && op->alu.is_export;
+}
+
 // The lanes of its register an export writes, its 0s and 1s among them (xenia:src/xenia/gpu/ucode.h:2025-2035).
 static int64_t export_lanes(const XscOp *op)
 {
-	if (!is_alu(op) || !op->alu.is_export)
+	if (!is_export_op(op))
 		return 0;
 	return op->alu.vector_write_mask | op->alu.scalar_write_mask | (op->alu.is_scalar_dest_relative ? ALL : 0);
+}
+
+// Whether two ops can share an instruction as exports do: neither an export, or both of one register in lanes apart.
+// An export's scalar op writes the vector op's register (xenia:src/xenia/gpu/ucode.h:2041-2059), both 1 in a lane.
+static bool share_export(const XscOp *x, const XscOp *y)
+{
+	if (!is_export_op(x) || !is_export_op(y))
+		return is_export_op(x) == is_export_op(y);
+	return x->alu.vector_dest == y->alu.vector_dest && !(export_lanes(x) & export_lanes(y));
 }
 
 static bool vector_only(const XscOp *op)
@@ -1497,16 +1511,14 @@ static bool scalar_ready(const XscProgram *p, const XscOp *op, bool convert, Xsc
 // where it works in the vector one (optimize.py merge).
 static bool merge(const XscProgram *p, XscOp *y, const XscOp *x, bool convert)
 {
+	if (!share_export(x, y))
+		return false;
 	XscOp form;
 	const bool x_vector = vector_only(x) && scalar_ready(p, y, convert, &form);
 	if (!x_vector && !(vector_only(y) && scalar_ready(p, x, convert, &form)))
 		return false;
 	const XscOp *const vec = x_vector ? x : y;
 	const XscAlu *const sca = &form.alu;
-	// An export's scalar op writes the vector op's export register (xenia:src/xenia/gpu/ucode.h:2041-2059).
-	if (vec->alu.is_export != sca->is_export ||
-		(sca->is_export && (sca->vector_dest != vec->alu.vector_dest || (sca->scalar_write_mask & export_lanes(vec)))))
-		return false;
 	// A scalar op's constant could take the vector op's index (xenia:src/xenia/gpu/ucode.h:1945-1964).
 	const bool reads_constant = !sca->src_is_temp[2] || with_constant(sca->scalar_opcode);
 	if (addresses_constants(sca) || (reads_constant && addresses_constants(&vec->alu)))
@@ -1554,6 +1566,16 @@ static void stage_bounds(const XscProgram *p, size_t j, size_t *first, size_t *e
 	}
 }
 
+// Whether export j has another in its stage it could share an instruction with, which the scan for one needs.
+static bool export_partner(const Optimizer *o, size_t j, size_t first, size_t end)
+{
+	for (size_t k = first; k < end; k++) {
+		if (k != j && is_export_op(o->ops[k]) && share_export(o->ops[j], o->ops[k]))
+			return true;
+	}
+	return false;
+}
+
 // Whether op j joined an op before or after it in its stage (optimize.py co_issue's inner loop, both ways): the nearest
 // it can, or one that needn't take its scalar form before one that must.
 static bool join(Optimizer *o, size_t j, bool later, bool nearest)
@@ -1564,6 +1586,8 @@ static bool join(Optimizer *o, size_t j, bool later, bool nearest)
 	defs(x, &x_defs);
 	size_t first, end;
 	stage_bounds(o->p, j, &first, &end);
+	if (is_export_op(x) && !export_partner(o, j, first, end))
+		return false;
 	const size_t reach = later ? end - 1 - j : j - first;
 	XscOp *converting = NULL;
 	bool merged = false;
