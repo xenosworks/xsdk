@@ -72,7 +72,7 @@ which implements what the games it runs need:
 | Files and folders beside the `.xex` (`game:`) | Yes | POSIX `open`, `read`, `stat`, `opendir`, `mkdir`, `rename`, `unlink`; `std::filesystem` | `tests/test_files.c`, `test_cpp_filesystem.cpp` | Asynchronous I/O; files open sharing nothing, so `remove_all` fails on nested folders (TODO.md) |
 | Other drives: the hard disk, USB, memory units, the DVD | Partial | `hdd:`, `usb:` to `usb2:`, `mu:` to `mu1:` and `dvd:`, each its device's root (`src/path.c`); a path starting with `\` goes to the kernel as written | `tests/test_files.c`'s drive checks, not yet on the console; the device paths, `tests/probe_drives.c` (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | A memory unit and a disc, with none on hand yet |
 | Writing at an offset, flushing, free space | Yes | `pwrite`, `fsync`, `fdatasync`, `statvfs`, `fstatvfs` (`src/file.c`, `src/path.c`) | `tests/test_files.c` | |
-| Setting a file's size | Partial | `truncate`, `ftruncate` | `tests/test_files.c`'s `ftruncate` check failed on the console, which call or value isn't known yet | Why it fails |
+| Setting a file's size | Partial | `truncate`, `ftruncate`, writing the zeros a file grows by themselves, as the hard disk brings its old bytes back (docs/HARDWARE.md) | `tests/test_files.c`'s `ftruncate` check, not yet passed on the console | The console run with the zeros written |
 | The DVD drive's tray | No | | | `HalOpenCloseODDTray`, which Xenia doesn't implement |
 
 ## Save data, content and profiles

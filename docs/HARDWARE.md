@@ -4631,8 +4631,10 @@ memory unit (results/2026-10-20-milestone-54/):
 - **Their sizes,** `NtQueryVolumeInformationFile`'s size class: the hard disk's data partition has 16,384-byte units,
   9,453,636 of them; the USB stick 32,768-byte units; `Partition0` 512-byte sectors. A file of 65,537 bytes, written
   and flushed, took 5 units of `game:`'s (`step1_xsdk_test.log`).
-- **`pwrite`, `fsync` and `statvfs` passed** their checks. `ftruncate`'s check failed with no call failing, so a size
-  or the bytes it added came back wrong; which isn't known yet.
+- **`pwrite`, `fsync` and `statvfs` passed** their checks. `ftruncate`'s failed with no call failing: a 16-byte file
+  cut to 9 bytes and set to 16 again read back its old bytes 9 to 15, `line 2\n`, not zeros, its sizes right
+  (`step2_xsdk_test.log`). The hard disk's file system moves the end without clearing what's past it, so `truncate`
+  and `ftruncate` now write the zeros themselves.
 - **The console's time zone isn't in `ExGetXConfigSetting`'s user category:** with the dashboard set to US Eastern,
   its settings 1-7, the time zone's biases, names and dates, all read 0, while its language, 1, and country, 103, the
   US, were right. `XGetLanguage` gave 1 and `XamGetLocaleEx(111, 43)` 36, the US in XAM's locales.

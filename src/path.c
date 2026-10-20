@@ -349,12 +349,10 @@ int truncate(const char *path, off_t length_bytes)
 	NTSTATUS status = open_resolved(resolved, GENERIC_WRITE, FILE_OPEN, FILE_NON_DIRECTORY_FILE, &handle);
 	if (!NT_SUCCESS(status))
 		return fail_with_status("truncate: NtCreateFile", resolved, status);
-	const FILE_END_OF_FILE_INFORMATION end = { .end_of_file = (uint64_t)length_bytes };
-	IO_STATUS_BLOCK io_status;
-	status = NtSetInformationFile(handle, &io_status, &end, sizeof(end), FILE_END_OF_FILE_INFORMATION_CLASS);
+	status = xsdk_file_set_size(handle, (uint64_t)length_bytes);
 	const NTSTATUS close_status = NtClose(handle);
 	if (!NT_SUCCESS(status))
-		return fail_with_status("truncate: NtSetInformationFile", resolved, status);
+		return fail_with_status("truncate: setting the size", resolved, status);
 	if (!NT_SUCCESS(close_status))
 		return fail_with_status("truncate: NtClose", resolved, close_status);
 	return 0;

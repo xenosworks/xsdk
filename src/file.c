@@ -21,6 +21,7 @@
 enum {
 	FILE_SLOTS = 32,
 	FIRST_FILE_FD = 3,
+	ZERO_CHUNK_BYTES = 4096,
 };
 
 // A slot whose handle is being opened.
@@ -156,6 +157,26 @@ static NTSTATUS query_size(HANDLE handle, uint64_t *size_bytes)
 	const NTSTATUS status = query_information(handle, &information);
 	if (NT_SUCCESS(status))
 		*size_bytes = information.end_of_file;
+	return status;
+}
+
+NTSTATUS xsdk_file_set_size(HANDLE handle, uint64_t size_bytes)
+{
+	uint64_t old_size;
+	NTSTATUS status = query_size(handle, &old_size);
+	if (!NT_SUCCESS(status))
+		return status;
+	const FILE_END_OF_FILE_INFORMATION end = { .end_of_file = size_bytes };
+	IO_STATUS_BLOCK io_status;
+	status = NtSetInformationFile(handle, &io_status, &end, sizeof(end), FILE_END_OF_FILE_INFORMATION_CLASS);
+	// A file grown again reads back its old bytes, not zeros (results/2026-10-20-milestone-54/step2_xsdk_test.log).
+	static const uint8_t zeros[ZERO_CHUNK_BYTES];
+	for (uint64_t position = old_size; NT_SUCCESS(status) && position < size_bytes;) {
+		const uint32_t chunk_bytes =
+			size_bytes - position < sizeof(zeros) ? (uint32_t)(size_bytes - position) : sizeof(zeros);
+		status = NtWriteFile(handle, 0, NULL, NULL, &io_status, zeros, chunk_bytes, &position);
+		position += chunk_bytes;
+	}
 	return status;
 }
 
@@ -350,10 +371,7 @@ int ftruncate(int fd, off_t length_bytes)
 		errno = EINVAL;
 		return -1;
 	}
-	const FILE_END_OF_FILE_INFORMATION end = { .end_of_file = (uint64_t)length_bytes };
-	IO_STATUS_BLOCK io_status;
-	const NTSTATUS status =
-		NtSetInformationFile(file->handle, &io_status, &end, sizeof(end), FILE_END_OF_FILE_INFORMATION_CLASS);
+	const NTSTATUS status = xsdk_file_set_size(file->handle, (uint64_t)length_bytes);
 	return NT_SUCCESS(status) ? 0 : fail_with_status("ftruncate", fd, status);
 }
 

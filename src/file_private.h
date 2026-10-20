@@ -18,6 +18,8 @@ HANDLE xsdk_file_handle(int fd);
 // Copies the kernel path of a descriptor opened with O_DIRECTORY; returns 0 or an errno.
 int xsdk_file_directory_path(int fd, char path[XSDK_PATH_BYTES]);
 void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, struct stat *info);
+// Sets a file's size, writing zeros over the bytes it adds.
+NTSTATUS xsdk_file_set_size(HANDLE handle, uint64_t size_bytes);
 // Fills info with the sizes of the volume handle is on.
 NTSTATUS xsdk_file_statvfs(HANDLE handle, struct statvfs *info);
 
