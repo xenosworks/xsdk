@@ -512,13 +512,6 @@ static void check_frame(const Grid *g, volatile const uint32_t *buffer, uint32_t
 			wrong->vpos += !pixel_right("VPOS", x, y, buffer[tiled_index(x, y, WIDTH)], vpos, TOLERANCE, frame, logged);
 			y = VFACE_Y + dy;
 			wrong->faces[x >= CELL_X + CELL_WIDTH / 2][face_sign(buffer[tiled_index(x, y, WIDTH)])]++;
-			y = DEPTH_Y + dy;
-			const uint32_t middle = CELL_X + CELL_WIDTH / 2;
-			if (x + DEPTH_MARGIN > middle && x < middle + DEPTH_MARGIN)
-				continue;
-			const uint32_t depth = x < middle ? stored(0, 255, 0) : stored(255, 0, ramp(x));
-			wrong->depth +=
-				!pixel_right("DEPTH", x, y, buffer[tiled_index(x, y, WIDTH)], depth, RAMP_TOLERANCE, frame, logged);
 			y = GAPS_Y + dy;
 			wrong->gaps +=
 				!pixel_right("gaps", x, y, buffer[tiled_index(x, y, WIDTH)], link, RAMP_TOLERANCE, frame, logged);
@@ -529,6 +522,14 @@ static void check_frame(const Grid *g, volatile const uint32_t *buffer, uint32_t
 			y = SKIN_Y + dy;
 			wrong->skin += !pixel_right("skinning", sx, y, buffer[tiled_index(sx, y, WIDTH)], skin_colour(g, sx, y),
 				RAMP_TOLERANCE, frame, logged);
+			// Last, so the columns DEPTH leaves out are the only ones skipped.
+			y = DEPTH_Y + dy;
+			const uint32_t middle = CELL_X + CELL_WIDTH / 2;
+			if (x + DEPTH_MARGIN > middle && x < middle + DEPTH_MARGIN)
+				continue;
+			const uint32_t depth = x < middle ? stored(0, 255, 0) : stored(255, 0, ramp(x));
+			wrong->depth +=
+				!pixel_right("DEPTH", x, y, buffer[tiled_index(x, y, WIDTH)], depth, RAMP_TOLERANCE, frame, logged);
 		}
 	}
 }
