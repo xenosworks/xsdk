@@ -102,7 +102,7 @@ It prints a line as each stage starts, and the stages' own output goes to logs i
 == gcc (02:47:12)
 == check: the linker refuses objects of another calling convention (02:51:30)
 == check: no float register load at memory not known to be aligned (02:51:31)
-== done: /home/<you>/xsdk-gcc/bin/powerpc-xsdk-elf-gcc
+== done: /home/<you>/xsdk-gcc/bin/powerpc-xsdk-elf-gcc (02:51:31)
 ```
 
 That's 9 minutes with 32 threads, once the sources are downloaded. A stage that fails stops the script; its log says
@@ -272,7 +272,8 @@ The broken builds of section 5 each log a `FAIL:` line where the working one log
 
 ## 8. A title of your own
 
-Copy the template out of xsdk and build it there:
+A title links `~/xsdk/build/libxsdk.a`, so build xsdk first, as section 5 does, with the same toolchain. Then copy the
+template out of xsdk and build it there:
 
 ```
 cp -r ~/xsdk/samples/template ~/mytitle

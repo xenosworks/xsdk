@@ -115,8 +115,9 @@ call. The header holds, for each file:
 
 - **Vertex inputs by location:** 0 is `XSDK_USAGE_POSITION`, 1 `XSDK_USAGE_COLOR`, 2 `XSDK_USAGE_TEXCOORD` index 0, 3
   `TEXCOORD` index 1 and so on; each `XsdkVertexElement` names its format, stream and offset
-  (xenos-toolchain/docs/xsc.md, "Interface conventions"). An input the shader never uses has no fetch, and its
-  element is ignored.
+  (xenos-toolchain/docs/xsc.md, "Interface conventions"). Each location gives its usage alone, so locations can skip,
+  0 and 2 without 1 (src/xsc_resolve.c, `resolve_input`). An input the shader never uses has no fetch, and its element
+  is ignored.
 - **Push constants and uniform blocks** take consecutive float constants, push constants first, then the blocks by set
   and binding: a member at byte `o` of a block at constant `b` is in `b + o / 16`, std140's layout. A `mat4` is
   column-major, a column a constant, so a C array of 16 floats, column after column, goes in as it is. Each stage has
@@ -167,6 +168,9 @@ until a resolve copies it out, and the resolve then clears eDRAM for the next fr
   and `xsdk_gpu_set_targets`.
 - **Depth runs from 0, near, to 1, far,** and a resolve clears it to far unless `xsdk_gpu_set_depth_clear` says
   otherwise; `xsdk_gpu_set_resolve_clears` turns either clear off. Clip space is y up, as D3D's.
+- **Texture coordinates** run as D3D's: v = 0 is the texture's first row, the one an upload writes first, so a quad
+  whose top corners take v = 0 shows it at the top (tests/test_texture.c checks every texel lands so). A point-sampled
+  `XSDK_FORMAT_A8R8G8B8` texel drawn without blending reaches the resolved frame exactly as uploaded.
 - **Reading a frame back,** as the samples check themselves: the front buffer is laid out as a tiled
   `XSDK_FORMAT_A8R8G8B8` texture of the display's size, so `xsdk_texture_init` and `xsdk_texture_attach` over
   `xsdk_present_pixels(address)` give a texture to download rows from, once the frame's fence has passed. Its words are
@@ -205,6 +209,10 @@ start a thread on its creator's hardware thread, so every thread a title starts 
 - **Priorities** are refused, `pthread_setschedparam` returning `ENOTSUP`.
 - **Mutexes, condition variables, read-write locks, `once` and keys** are pthreads', and `std::mutex` and the rest on
   them. Free a mutex only once no thread can lock it again (docs/PITFALLS.md).
+- **Atomics** cost by their order: a relaxed `__atomic_fetch_add` 55 ns, acquire or release 70, seq_cst 125, against
+  16 ns for a plain increment (docs/HARDWARE.md, "Counted loops end in bdnz, milestone 52"). C++'s `operator++` on a
+  `std::atomic` and the `__sync_*` calls are seq_cst, so ask for `memory_order_relaxed` where a counter orders nothing,
+  and acquire and release for a flag that hands data over.
 - **Callbacks the kernel makes** run on its threads: the audio render driver's on its audio thread, the vblank one,
   xsdk's own, in its interrupt handling. Keep them short.
 - **`xsdk_thread_wait_counts`** counts yields and blocking waits, to tell sleeping from spinning.
@@ -251,8 +259,15 @@ ported in mbedtls-xenon.
   triggers 0 to 255, buttons `INPUT_GAMEPAD_*` bits (docs/HARDWARE.md, "Runtime, milestone 2").
 - **Audio:** a frame is 256 samples of each of 6 channels at 48 kHz, big-endian floats a channel after another, in
   5.1's order, front left first (docs/HARDWARE.md, "Runtime, milestone 2"), in memory from
-  `MmAllocatePhysicalMemoryEx`. The driver reads the frame it took last until it asks for the next, so a callback fills
-  another. samples/sound keeps its frames to the end, as a call can outlast unregistering.
+  `MmAllocatePhysicalMemoryEx(0, bytes, PAGE_READWRITE, 0, UINT32_MAX, 0)`. That memory is cached, and frames written
+  into it with plain stores play as written, with no flush (docs/HARDWARE.md, "Runtime, milestone 2"). The driver
+  reads the frame it took last until it asks for the next, so a callback fills another. samples/sound keeps its frames
+  to the end, as a call can outlast unregistering.
+- **Submit a frame in every call,** a silent one when there's nothing to play, as SDL-xenon's driver does: what the
+  driver plays after a call that submits none hasn't been measured.
+- **Work samples out away from the callback.** No callback xsdk has run does floating point, and whether the kernel's
+  audio thread may hasn't been checked. samples/sound copies a wave table's float bits as words, and SDL-xenon mixes on
+  a thread of its own and hands the callback a finished frame.
 - **SDL3** has both, as gamepads and audio streams, through SDL-xenon (docs/PARITY.md, "Libraries ported to xsdk").
 
 ## Porting: the C and POSIX calls

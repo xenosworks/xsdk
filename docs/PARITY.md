@@ -194,10 +194,10 @@ Each in its own repository under xenosworks.
 | Capability | Status | Where | Missing |
 |---|---|---|---|
 | How the SDK was built, and every fact the console settled | Yes | SCOPE.md, docs/HARDWARE.md | It's a lab notebook, not a guide |
-| Getting started | Partial | README.md's Building and Testing, for working on xsdk itself | Toolchain to a title running on the console, for someone new |
-| An API guide: call order, lifetimes, what undoes what | Partial | the headers' one-line comments | |
-| Pitfalls: big-endian data, stores to GPU memory, the Xenia differences | Partial | spread through docs/HARDWARE.md and CLAUDE.md | One page |
-| Samples to start from | No | `tests/` only | |
+| Getting started: toolchain to a title running on the console | Yes | docs/GETTING_STARTED.md | |
+| An API guide: call order, lifetimes, what undoes what | Yes | docs/GUIDE.md, a task at a time, with the headers' comments | |
+| Pitfalls: big-endian data, stores to GPU memory, the Xenia differences | Yes | docs/PITFALLS.md | |
+| Samples to start from | Yes | `samples/`: hello, triangle, cube, sound, sdl3 and a template, each checking itself (`make samples`) | |
 
 ## Out of xsdk
 
