@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "terminate_private.h"
 #include "xsdk/display.h"
 #include "xsdk/gpu.h"
 #include "xsdk/kernel.h"
@@ -15,6 +16,8 @@ enum { TITLE_PID = 1 };
 // newlib's exit() ends here after running atexit handlers and static destructors.
 void _exit(int status)
 {
+	// xsdk_on_terminate's routine is for an end from outside, and a registration left in place froze the console.
+	xsdk_terminate_close();
 	// The callback, the display and the GPU go back to XAM before the title ends (docs/HARDWARE.md).
 	xsdk_present_close();
 	xsdk_display_close();

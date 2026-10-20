@@ -23,6 +23,9 @@
 #   mktime takes it back" alone, wherever the console's time is off UTC as the test runs.
 # - hdd_device: hdd: names the USB stick's device; fails "drives: hdd: lists its root and holds the .xex game: runs
 #   from" alone, where the .xex runs from the hard disk.
+# - terminate_noregister, of terminate_check: xsdk_on_terminate never registers; the read case after a run fails
+#   "terminate check: the routine ran as the title was ended from outside" and "the routine that ran is the one
+#   registered last". It takes nothing out, as a registration left in place freezes the console.
 set -eu
 cd "$(dirname "$0")/../.."
 build_break()
@@ -40,3 +43,4 @@ for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 
 	pwrite_position tz_sign hdd_device; do
 	build_break "$name" xsdk_test
 done
+build_break terminate_noregister terminate_check

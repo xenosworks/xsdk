@@ -26,7 +26,7 @@ SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/thread.c src/file.c src/path
 	src/pthread.c src/lock.c src/reent.c src/time.c src/sysconf.c src/entropy.c src/exit.c src/gpu.c \
 	src/gpu_setup.c src/gpu_resolve.c src/gpu_draw.c src/gpu_constants.c src/gpu_tiles.c src/display.c src/shader.c \
 	src/microcode.c src/texture.c src/texture_layout.c src/tiled.c src/present.c src/splash.c src/copy.c src/socket.c \
-	src/netdb.c src/xam.c src/save.c src/system_ui.c src/system.c
+	src/netdb.c src/xam.c src/save.c src/system_ui.c src/system.c src/terminate.c
 # xost's compiler, in the SDK for titles and built for the PC as libxsc.so for the shader tools.
 XSC_SOURCES := src/xsc_memory.c src/xsc_spirv.c src/xsc_resolve.c src/xsc_unroll.c src/xsc_encode.c src/xsc_container.c \
 	src/xsc_program.c src/xsc_optimize.c src/xsc_lower.c src/xsc_lower_block.c src/xsc_lower_matrix.c \
@@ -87,7 +87,8 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
-	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(PROBES:%=$(BUILD)/%.xex)
+	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(BUILD)/terminate_check.xex \
+	$(PROBES:%=$(BUILD)/%.xex)
 
 # Configures CMake project $(1) in $(2) with this toolchain, afresh when $(2) was configured with another, whose
 # compiler a configure would keep.
@@ -137,6 +138,10 @@ $(BUILD)/pacing_test.elf: $(PACING_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 
 $(BUILD)/guide_check.elf: $(GUIDE_CHECK_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(GUIDE_CHECK_OBJECTS) $(LIBS)
+
+# Milestone 54's check of xsdk_on_terminate, ended from outside by hand or by the console agent.
+$(BUILD)/terminate_check.elf: $(BUILD)/tests/terminate_check.o $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/terminate_check.o $(LIBS)
 
 $(BUILD)/save_check.elf: $(SAVE_CHECK_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(SAVE_CHECK_OBJECTS) $(LIBS)

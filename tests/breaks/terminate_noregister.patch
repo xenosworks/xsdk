@@ -1,0 +1,13 @@
+--- a/src/terminate.c
++++ b/src/terminate.c
+@@ -41,9 +41,7 @@
+ 		return;
+ 	registration.notification_routine = on_terminate;
+ 	registration.priority = NOTIFY_PRIORITY;
+-	// Marked first, so the routine takes the registration out even if it runs as soon as it's in.
+-	__atomic_store_n(&registered, true, __ATOMIC_RELEASE);
+-	ExRegisterTitleTerminateNotification(&registration, 1);
++	// Broken on purpose: never registered, so the routine never runs; nothing is left in place to take out.
+ }
+ 
+ void xsdk_terminate_close(void)
