@@ -793,7 +793,8 @@ void test_hlsl(void)
 		const int32_t *const b = g.bound;
 		(void)snprintf(name, sizeof name,
 			"hlsl: grid_binding_ps.hlsl's table names Low at fetch constant %d and High at %d, as their s3 and s7, "
-			"Step at float constant %d, Bright at boolean constant %d and Count at loop constant %d, as their b2 and i1",
+			"Step at float constant %d, Bright at boolean constant %d and Count at loop constant %d, "
+			"as their b2 and i1",
 			(int)b[BOUND_LOW], (int)b[BOUND_HIGH], (int)b[BOUND_STEP], (int)b[BOUND_BRIGHT], (int)b[BOUND_COUNT]);
 		check(name,
 			b[BOUND_LOW] == LOW_SLOT && b[BOUND_HIGH] == HIGH_SLOT && b[BOUND_STEP] >= 0 &&
