@@ -15,8 +15,9 @@
 #include "xsdk/xsc.h"
 
 // D3D9's semantics through glslang's HLSL (docs/scope/50-hlsl.md, step 4): xost's grid_*.hlsl, compiled on the console
-// with the optimiser on, drawn as four cells where the raster test's frame has nothing, each checked by pixel. One
-// vertex shader's TEXCOORD0 and COLOR0 meet a pixel shader's by semantic, with a TEXCOORD1 declared first; VPOS is each
+// with the optimiser on, each pixel shader drawn behind a vertex shader loaded for it and linked to it by semantic
+// (xsdk_shader_link), as four cells where the raster test's frame has nothing, each checked by pixel. One vertex
+// shader's TEXCOORD0 and COLOR0 meet a pixel shader's by semantic, with a TEXCOORD1 declared first; VPOS is each
 // pixel's whole column and row; VFACE's sign on a clockwise and a counter-clockwise quad, front faces clockwise as on
 // D3D9, is reported; DEPTH from TEXCOORD0's x leaves a nearer quad in front of half a cell.
 
@@ -100,7 +101,9 @@ static const float corners[QUAD_VERTICES][2] = { { 0, 0 }, { 1, 0 }, { 0, 1 }, {
 
 typedef struct {
 	XsdkXscShader compiled[SHADERS];
+	// The pixel shaders, and each one's vertex shader, loaded for it and linked to it.
 	XsdkShader shaders[SHADERS];
+	XsdkShader linked[SHADERS];
 	volatile uint32_t *vertices;
 	volatile uint32_t *buffers[BUFFERS];
 	XsdkRasterState raster;
@@ -150,26 +153,38 @@ static void put_vertices(volatile uint32_t *vertices)
 	xsdk_gpu_invalidate(xsdk_gpu_address(vertices), VERTEX_WORDS * 4);
 }
 
-static bool load_shader(Grid *g, uint32_t i)
+static bool compile_shader(Grid *g, uint32_t i)
 {
 	const XscTestShader *const source = xsc_shader(shader_names[i]);
 	XsdkXscOptions options;
 	xsdk_xsc_default_options(&options);
 	options.optimize = true;
-	if (!source || xsdk_xsc_compile(source->spirv, source->spirv_words, &options, &g->compiled[i]) != XSDK_XSC_OK)
-		return false;
-	if (!NT_SUCCESS(xsdk_shader_load(
-			&g->shaders[i], (const uint32_t *)g->compiled[i].container, g->compiled[i].container_bytes)))
-		return false;
-	return i != SHADER_VERTEX ||
-		NT_SUCCESS(xsdk_shader_set_vertex_layout(&g->shaders[i], layout, 3, (const uint32_t[]){ STRIDE_BYTES }));
+	return source && xsdk_xsc_compile(source->spirv, source->spirv_words, &options, &g->compiled[i]) == XSDK_XSC_OK;
+}
+
+static NTSTATUS load(XsdkShader *shader, const XsdkXscShader *compiled)
+{
+	return xsdk_shader_load(shader, (const uint32_t *)compiled->container, compiled->container_bytes);
+}
+
+// The pixel shader, and the vertex shader loaded for it and linked to it.
+static bool load_pair(Grid *g, uint32_t pixel, uint32_t vertex)
+{
+	return NT_SUCCESS(load(&g->shaders[pixel], &g->compiled[pixel])) &&
+		NT_SUCCESS(load(&g->linked[pixel], &g->compiled[vertex])) &&
+		NT_SUCCESS(xsdk_shader_set_vertex_layout(&g->linked[pixel], layout, 3, (const uint32_t[]){ STRIDE_BYTES })) &&
+		NT_SUCCESS(xsdk_shader_link(&g->linked[pixel], &g->shaders[pixel]));
 }
 
 // The shaders compiled on the console as the raster test compiles its own, the vertices and the frames' buffers.
 static bool make_grid(Grid *g)
 {
 	for (uint32_t i = 0; i < SHADERS; i++) {
-		if (!load_shader(g, i))
+		if (!compile_shader(g, i))
+			return false;
+	}
+	for (uint32_t i = SHADER_LINK; i <= SHADER_DEPTH; i++) {
+		if (!load_pair(g, i, SHADER_VERTEX))
 			return false;
 	}
 	xsdk_gpu_raster_state(&g->raster, &(XsdkRaster){ .cull = XSDK_CULL_NONE, .front_clockwise = true });
@@ -201,7 +216,7 @@ static void set_literals(const XsdkXscShader *compiled, bool pixel)
 
 static void draw_quads(const Grid *g, uint32_t pixel, uint32_t first, uint32_t count)
 {
-	xsdk_gpu_set_shaders(&g->shaders[SHADER_VERTEX], &g->shaders[pixel]);
+	xsdk_gpu_set_shaders(&g->linked[pixel], &g->shaders[pixel]);
 	set_literals(&g->compiled[pixel], true);
 	xsdk_gpu_set_vertices(
 		0, xsdk_gpu_address(g->vertices) + first * QUAD_VERTICES * STRIDE_BYTES, count * QUAD_VERTICES * STRIDE_BYTES);
@@ -338,9 +353,12 @@ static void free_grid(Grid *g)
 	for (uint32_t i = 0; i < SHADERS; i++) {
 		if (g->shaders[i].microcode)
 			xsdk_shader_free(&g->shaders[i]);
-		// The shader's fetch patch records point into the container (src/shader.c), so it goes after.
-		xsdk_xsc_free(&g->compiled[i]);
+		if (g->linked[i].microcode)
+			xsdk_shader_free(&g->linked[i]);
 	}
+	// A shader's records point into its container (src/shader.c), so the containers go after.
+	for (uint32_t i = 0; i < SHADERS; i++)
+		xsdk_xsc_free(&g->compiled[i]);
 }
 
 static void run(Grid *g)

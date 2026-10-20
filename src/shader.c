@@ -41,6 +41,7 @@
 #include "xsdk/gpu.h"
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
+#include "xsdk/xsc.h"
 
 // Container dwords: the header's magic, microcode base, constant table and record offset (xe.h:111-121, xe.c:614-629;
 // XenosRecomp:XenosRecomp/shader.h:96-107).
@@ -74,16 +75,27 @@ enum {
 static const char instance_name[] = "_instance";
 
 // Shader record dwords, then a vertex shader's skip count, fetch count and patch table (xe.h:123-129, xe.c:808-814).
+// Interpolator records follow a pixel shader's outputs and a vertex shader's patch table, as many as the record's
+// interpolator info counts (XenosRecomp:XenosRecomp/shader.h:29-37, 72-78, 89-94); xost puts a vertex shader's export
+// slots after them, up to the microcode (xsc_container.c).
 enum {
 	RECORD_MICROCODE_OFFSET = 0,
 	RECORD_MICROCODE_BYTES = 1,
 	RECORD_PROGRAM_CONTROL = 2,
 	RECORD_CONTEXT_MISC = 3,
 	PIXEL_RECORD_DWORDS = 4,
+	RECORD_INTERPOLATOR_INFO = 5,
+	INTERPOLATOR_COUNT_SHIFT = 5,
+	INTERPOLATOR_COUNT_MASK = 0x1F,
 	RECORD_SKIP = 6,
 	RECORD_FETCH_COUNT = 7,
+	PIXEL_INTERPOLATORS = 8,
 	VERTEX_RECORD_DWORDS = 8,
 	SLOT_DWORDS = 3,
+	EXPORT_SLOT_MASK = 0xFFF,
+	// SQ_PROGRAM_CNTL's vs_export_count, the interpolators less 1 (xenia:src/xenia/gpu/registers.h:142-143).
+	EXPORT_COUNT_SHIFT = 20,
+	EXPORT_COUNT_MASK = 0xF << EXPORT_COUNT_SHIFT,
 };
 
 // Vertex fetch fields (xenia:src/xenia/gpu/ucode.h:745-777) and a patch record's (xe.c:821-823).
@@ -241,6 +253,12 @@ NTSTATUS xsdk_shader_load(XsdkShader *shader, const uint32_t *container, uint32_
 		if (fetch_dword + fetch_count > container_dwords)
 			return reject("fetch patch records out of bounds");
 	}
+	const uint32_t interpolator_dword = is_vertex ? fetch_dword + fetch_count : record_dword + PIXEL_INTERPOLATORS;
+	const uint32_t counted = record[RECORD_INTERPOLATOR_INFO] >> INTERPOLATOR_COUNT_SHIFT & INTERPOLATOR_COUNT_MASK;
+	// Records past the container's end count as none, as only xsdk_shader_link reads them.
+	const uint32_t interpolator_count = interpolator_dword + counted <= container_dwords ? counted : 0;
+	const uint32_t slot_dword = interpolator_dword + interpolator_count;
+	const uint32_t slot_count = is_vertex && slot_dword < microcode_offset / 4 ? microcode_offset / 4 - slot_dword : 0;
 
 	uint32_t instance_constant = 0;
 	const bool instanced = is_vertex && find_instance_group(container, size_bytes, &instance_constant);
@@ -260,6 +278,10 @@ NTSTATUS xsdk_shader_load(XsdkShader *shader, const uint32_t *container, uint32_
 		.context_misc = record[RECORD_CONTEXT_MISC],
 		.fetches = fetch_count ? &container[fetch_dword] : NULL,
 		.fetch_count = fetch_count,
+		.interpolators = &container[interpolator_dword],
+		.interpolator_count = interpolator_count,
+		.export_slots = &container[slot_dword],
+		.export_slot_count = slot_count,
 		.source = &container[microcode_offset / 4],
 		.instanced = instanced,
 		.instance_constant = instance_constant,
@@ -389,6 +411,42 @@ NTSTATUS xsdk_shader_move_textures(XsdkShader *shader, uint32_t first_slot)
 		}
 	}
 	__asm__ volatile("sync" ::: "memory");
+	xsdk_gpu_forget_shaders();
+	return STATUS_SUCCESS;
+}
+
+// Each export from the source, linked; the microcode is written only where it changes, so a pair linked already costs
+// no reload.
+NTSTATUS xsdk_shader_link(XsdkShader *vertex, const XsdkShader *pixel)
+{
+	assert(vertex->type == XSDK_SHADER_VERTEX && pixel->type == XSDK_SHADER_PIXEL);
+	uint8_t links[XSDK_XSC_INTERPOLATORS];
+	const int32_t exported = xsdk_xsc_link(
+		vertex->interpolators, vertex->interpolator_count, pixel->interpolators, pixel->interpolator_count, links);
+	if (exported == XSDK_XSC_BY_LOCATION)
+		return STATUS_SUCCESS;
+	if (exported == XSDK_XSC_UNLINKABLE)
+		return reject("one shader's interpolators link by semantic and the other's by location");
+	for (uint32_t i = 0; i < vertex->export_slot_count; i++) {
+		if (((vertex->export_slots[i] & EXPORT_SLOT_MASK) + 1) * SLOT_DWORDS > vertex->dword_count)
+			return reject("export slot out of range");
+	}
+	const uint32_t control = (vertex->program_control & ~(uint32_t)EXPORT_COUNT_MASK) |
+		(uint32_t)(exported ? exported - 1 : 0) << EXPORT_COUNT_SHIFT;
+	bool changed = control != vertex->program_control;
+	vertex->program_control = control;
+	for (uint32_t i = 0; i < vertex->export_slot_count; i++) {
+		const uint32_t at = (vertex->export_slots[i] & EXPORT_SLOT_MASK) * SLOT_DWORDS;
+		const uint32_t word = xsdk_xsc_link_export(vertex->source[at], links);
+		if (vertex->microcode[at] != word) {
+			vertex->microcode[at] = word;
+			changed = true;
+		}
+	}
+	if (!changed)
+		return STATUS_SUCCESS;
+	__asm__ volatile("sync" ::: "memory");
+	// The GPU may hold the shader as it was, and its export count goes with the program registers.
 	xsdk_gpu_forget_shaders();
 	return STATUS_SUCCESS;
 }

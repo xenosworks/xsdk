@@ -164,7 +164,7 @@ static bool export_interpolators(XscLower *l, const XscInterface *si, const XscS
 			f.src_reg[n] = r.value;
 			f.src_is_temp[n] = r.kind == XSC_OPERAND_REG;
 		}
-		if (!xsdk_xsc_program_export(l->x, l->p, use->a, use->b, 0, &f))
+		if (!xsdk_xsc_program_export(l->x, l->p, use->a, use->b, &f))
 			return false;
 	}
 	return true;

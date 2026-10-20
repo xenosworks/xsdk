@@ -9,7 +9,9 @@ xost refuses is sorted by cause.
 A corpus shader beside its GLSL twin, <name>.frag for <name>_ps.hlsl and <name>.vert for <name>_vs.hlsl, is compared
 with it: the twin goes through glslang -V and xost as GLSL does today, and both programs run on xdis/simulate.py on
 the same random inputs, constants and textures, matched by name: a pixel shader's interpolators, and VPOS and
-gl_FragCoord the same pixel; a vertex shader's fetches, each told apart by the input its element names. HLSL's
+gl_FragCoord the same pixel; a vertex shader's fetches, each told apart by the input its element names. Each stage is
+compared alone, a varying at the interpolator xost gives it in that stage (xsc/resolve.py), an HLSL one packed by
+semantic, so the pair's link at bind (xsdk:src/shader.c, xsdk_shader_link) doesn't enter. HLSL's
 constants sit at their registers, as D3D9's SetPixelShaderConstantF sets them (glslang's $Global block, which xost
 lays from c0), the GLSL's in its blocks; a uniform <block>_<member> of the HLSL is member <member> of the GLSL's block
 instance <block>, as SPIRV-Cross names them. Each comparison is exact, every export component the shader's type has,
@@ -119,7 +121,7 @@ CAUSES = (
     (r"integer Load must be a foldable local", None, "an int or bool constant (step 5)"),
     (r"unhandled matrix op", None, "a matrix not loaded from uniforms (step 5)"),
     (r"unsupported integer op", None, "an int vector (step 5)"),
-    (r"interpolators link|not one of D3D9's declaration usages|share semantic", None,
+    (r"not one of D3D9's declaration usages|share semantic|without a semantic beside|more than \d+ interpolators", None,
      "D3D9 semantics: one xost doesn't link"),
     (r"with an initializer", None, "a local with an initializer"),
 )

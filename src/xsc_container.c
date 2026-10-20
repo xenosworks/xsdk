@@ -18,7 +18,21 @@ enum {
 	// XenosRecomp's mask of a pixel shader's outputs, oC0 alone unless the parts say (shader.h:80-92).
 	PIXEL_OUTPUTS = 0x1,
 	EXPORT_SLOT = 0x1000,
+	// An interpolator record: its semantic, usage and index, in the low byte, its register in bits 8 to 11 and its
+	// flags from bit 12 (shader_record).
+	RECORD_SEMANTIC_MASK = 0xFF,
+	RECORD_REG_SHIFT = 8,
+	RECORD_REG_MASK = 0xF,
+	RECORD_FLAGS_SHIFT = 12,
+	// An ALU instruction's first word: its vector destination, the scalar destination's relative bit, the export bit,
+	// then the vector and scalar write masks (xenia:src/xenia/gpu/ucode.h:2046-2062).
+	ALU_VECTOR_DEST_MASK = 0x3F,
+	ALU_SCALAR_DEST_RELATIVE = 1 << 14,
+	ALU_EXPORT = 1 << 15,
+	ALU_WRITE_MASKS = 0xFF << 16,
 };
+
+static const uint32_t RECORD_SEMANTIC = (uint32_t)XSC_INTERPOLATOR_SEMANTIC << RECORD_FLAGS_SHIFT;
 
 static const char creator[] = "xost";
 
@@ -155,7 +169,8 @@ static bool shader_record(const XscContainerParts *parts, Bytes *rec)
 	}
 	for (size_t i = 0; i < parts->interpolator_count; i++) {
 		const XscInterpolator *const it = &parts->interpolators[i];
-		if (!put_word(rec, it->flags << 12 | it->reg << 8 | it->usage << 4 | it->usage_index))
+		if (!put_word(
+				rec, it->flags << RECORD_FLAGS_SHIFT | it->reg << RECORD_REG_SHIFT | it->usage << 4 | it->usage_index))
 			return false;
 	}
 	for (size_t i = 0; !parts->pixel && i < parts->export_slot_count; i++) {
@@ -187,4 +202,49 @@ bool xsdk_xsc_container(Xsc *x, const XscContainerParts *parts, uint8_t **out, s
 	*out = all.bytes;
 	*out_bytes = all.length;
 	return true;
+}
+
+static uint32_t semantic_records(const uint32_t *records, uint32_t count)
+{
+	uint32_t marked = 0;
+	for (uint32_t i = 0; i < count; i++)
+		marked += (records[i] & RECORD_SEMANTIC) != 0;
+	return marked;
+}
+
+static uint8_t record_reg(uint32_t record)
+{
+	return (uint8_t)(record >> RECORD_REG_SHIFT & RECORD_REG_MASK);
+}
+
+int32_t xsdk_xsc_link(const uint32_t *vertex, uint32_t vertex_count, const uint32_t *pixel, uint32_t pixel_count,
+	uint8_t links[XSDK_XSC_INTERPOLATORS])
+{
+	const uint32_t marked = semantic_records(vertex, vertex_count) + semantic_records(pixel, pixel_count);
+	if (!marked)
+		return XSDK_XSC_BY_LOCATION;
+	if (marked != vertex_count + pixel_count)
+		return XSDK_XSC_UNLINKABLE;
+	memset(links, XSDK_XSC_UNLINKED, XSDK_XSC_INTERPOLATORS);
+	int32_t exported = 0;
+	for (uint32_t p = 0; p < pixel_count; p++) {
+		exported = record_reg(pixel[p]) >= exported ? record_reg(pixel[p]) + 1 : exported;
+		for (uint32_t v = 0; v < vertex_count; v++) {
+			if (!((vertex[v] ^ pixel[p]) & RECORD_SEMANTIC_MASK))
+				links[record_reg(vertex[v])] = record_reg(pixel[p]);
+		}
+	}
+	return exported;
+}
+
+uint32_t xsdk_xsc_link_export(uint32_t word, const uint8_t links[XSDK_XSC_INTERPOLATORS])
+{
+	const uint32_t dest = word & ALU_VECTOR_DEST_MASK;
+	if (!(word & ALU_EXPORT) || dest >= XSDK_XSC_INTERPOLATORS)
+		return word;
+	// No write mask and an absolute scalar destination leave every component as it was; the XNA assembler puts such an
+	// export at interpolator 0 (xenia:src/xenia/gpu/ucode.h:2041-2059).
+	if (links[dest] == XSDK_XSC_UNLINKED)
+		return word & ~(uint32_t)(ALU_VECTOR_DEST_MASK | ALU_SCALAR_DEST_RELATIVE | ALU_WRITE_MASKS);
+	return (word & ~(uint32_t)ALU_VECTOR_DEST_MASK) | links[dest];
 }

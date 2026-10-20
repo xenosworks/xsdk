@@ -3,19 +3,20 @@
 xsc/testdata/hlsl on xdis/simulate.py, the optimiser off and on, every export exact:
 
 - semantics_vs.hlsl: each input fetched by the usage and index its semantic names; POSITION and PSIZE, struct members,
-  the position and the point's size, with the sprite's export mode; COLOR0, FOG, TEXCOORD1, TEXCOORD0 and COLOR1 at
-  interpolators 1, 14, 2, 0 and 13, and the exports counted to the highest.
-- semantics_ps.hlsl: TEXCOORD1, COLOR1, FOG and COLOR0 read from those interpolators; COLOR1, DEPTH and COLOR0,
+  the position and the point's size, with the sprite's export mode; COLOR0, FOG, TEXCOORD1, TEXCOORD0 and COLOR1
+  packed from interpolator 0 in their semantics' order, usage then index, at 2, 4, 1, 0 and 3, and 5 exported.
+- semantics_ps.hlsl: TEXCOORD1, COLOR1, FOG and COLOR0 packed so too, read from 0, 2, 3 and 1; COLOR1, DEPTH and COLOR0,
   declared in that order, to oC1, the depth and oC0.
-- The two linked: the vertex shader's exports, as many as it counts, are the pixel shader's registers, as the GPU
-  hands them over, and the pixel shader's results are the vertex shader's inputs' by semantic.
+- The two linked as xsdk_shader_link links them (xsc/native.py, link): the linked vertex shader's exports, as many as
+  it counts, are the pixel shader's registers, as the GPU hands them over, and the pixel shader's results are the
+  vertex shader's inputs' by semantic.
 - vpos_vface_ps.hlsl: VPOS the pixel parameters' |xy| plus c255's zw, which xsdk keeps at 0 and a band's top row, so
   the pixel's whole column and row; VFACE +1 where the parameters' x is positive or +0 and -1 where it's negative or
   -0, the facing gl_FrontFacing reads (xsdk:docs/HARDWARE.md, "LODs, facing and vertex textures, vulkan4xenon
   milestone 22").
 - vpos_wide_ps.hlsl: a float4 VPOS's z and w read 0, whatever the parameters' z and w hold.
-- refused_*.hlsl: a vertex input of a semantic that's no D3D9 usage, an interpolator of one xost doesn't link, and two
-  inputs of one semantic, each refused with its reason.
+- refused_*.hlsl: a vertex input and an interpolator of a semantic that's no D3D9 usage, and two inputs of one
+  semantic, each refused with its reason.
 """
 import sys
 from pathlib import Path
@@ -83,26 +84,26 @@ def vertex_semantics(optimize, tag):
         fail(f"semantics_vs.hlsl, {tag}: elements {usages}, not {sorted(INPUTS)}")
     i = {k: v for k, v in INPUTS.items()}
     want = {POSITION: add(i[(U_POSITION, 0)], OFFSET), POINT_SIZE: [i[(U_BLENDINDICES, 0)][1] + 1.0],
-            1: scale(i[(U_COLOR, 1)], 2.0), 14: [i[(U_BLENDWEIGHT, 0)][0]],
-            2: add(i[(U_NORMAL, 0)], i[(U_TANGENT, 0)]), 0: i[(U_TEXCOORD, 3)],
-            13: add(i[(U_BINORMAL, 0)], i[(U_BLENDWEIGHT, 0)], -1.0)}
+            2: scale(i[(U_COLOR, 1)], 2.0), 4: [i[(U_BLENDWEIGHT, 0)][0]],
+            1: add(i[(U_NORMAL, 0)], i[(U_TANGENT, 0)]), 0: i[(U_TEXCOORD, 3)],
+            3: add(i[(U_BINORMAL, 0)], i[(U_BLENDWEIGHT, 0)], -1.0)}
     for reg, values in want.items():
         if exports.get(reg, [None])[:len(values)] != values:
             fail(f"semantics_vs.hlsl, {tag}: export {reg} {exports.get(reg)}, not {values}")
     control = container.Container(blob).program_control
     count, mode = (control >> EXPORT_COUNT_SHIFT & 0xF) + 1, control >> EXPORT_MODE_SHIFT & 7
-    if count != 15 or mode != SPRITE:
-        fail(f"semantics_vs.hlsl, {tag}: {count} interpolators exported, mode {mode}; not 15 and the sprite's")
+    if count != 5 or mode != SPRITE:
+        fail(f"semantics_vs.hlsl, {tag}: {count} interpolators exported, mode {mode}; not 5 and the sprite's")
     print(f"  PASS semantics_vs.hlsl, {tag}: inputs by usage, POSITION, PSIZE and 5 interpolators by semantic")
-    return blob, exports, count
+    return blob, literals
 
 
-PS_IN = {2: [0.5, 1.5, -2.0, 0.25], 13: [0.125, -0.25, 0.5, 1.0], 14: [3.0, 0.0, 0.0, 0.0],
-         1: [1.0, 0.5, 0.25, 0.75]}
+# TEXCOORD1, COLOR0, COLOR1 and FOG, in the order they pack.
+PS_IN = {0: [0.5, 1.5, -2.0, 0.25], 1: [1.0, 0.5, 0.25, 0.75], 2: [0.125, -0.25, 0.5, 1.0], 3: [3.0, 0.0, 0.0, 0.0]}
 
 
 def pixel_want(r):
-    return {0: add(r[1], r[13]), 1: scale(r[2], r[14][0]), DEPTH: [r[1][3] * 0.5]}
+    return {0: add(r[1], r[2]), 1: scale(r[0], r[3][0]), DEPTH: [r[1][3] * 0.5]}
 
 
 def check_pixel(name, tag, exports, want):
@@ -119,7 +120,12 @@ def pixel_semantics(optimize, tag):
 
 
 def linked(vertex, pixel, tag):
-    _, exports, count = vertex
+    blob = native.link(vertex[0], pixel[0])
+    _, exports = run_vertex(blob, vertex[1])
+    count = (container.Container(blob).program_control >> EXPORT_COUNT_SHIFT & 0xF) + 1
+    if count != 4:
+        fail(f"semantics_vs.hlsl into semantics_ps.hlsl, {tag}: {count} interpolators exported, not the pixel "
+             f"shader's 4")
     registers = {n: exports[n] for n in range(count) if n in exports}
     got = simulate.run(pixel[0], registers, pixel[1]).exports
     i = INPUTS
@@ -153,7 +159,7 @@ def vpos_vface(optimize, tag):
 
 
 REFUSED = {"refused_input_vs.hlsl": "semantic MYDATA0: not one of D3D9's declaration usages",
-           "refused_interpolator_ps.hlsl": "semantic NORMAL0: interpolators link",
+           "refused_interpolator_ps.hlsl": "semantic MYDATA0: not one of D3D9's declaration usages",
            "refused_shared_ps.hlsl": "share semantic TEXCOORD0"}
 def refusals():
     for name, reason in REFUSED.items():
@@ -164,7 +170,7 @@ def refusals():
                 fail(f"{name}: {e.status}, {e}; not refused for {reason!r}")
             continue
         fail(f"{name} compiled")
-    print("  PASS an unknown input semantic, an unlinked interpolator and a shared semantic refused")
+    print("  PASS an unknown input semantic, an unknown interpolator semantic and a shared semantic refused")
 
 
 def main():

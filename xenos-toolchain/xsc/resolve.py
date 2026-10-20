@@ -23,8 +23,9 @@ Conventions for the GLSL<->Xenos mapping (documented; v1):
   - FS output Location 0 -> oC0.
   - HLSL's semantics, where glslang's -fhlsl_functionality1 keeps them (xsdk:docs/scope/50-hlsl.md, step 4): a VS
     input's usage and index are its semantic's; POSITION, PSIZE, DEPTH and COLORn outputs are oPos, the point's
-    size, oDepth and oCn; VPOS and VFACE come from the pixel parameters; TEXCOORD0, COLOR0, TEXCOORD1-11, COLOR1 and
-    FOG are interpolators 0, 1, 2-12, 13 and 14 in both stages, so a pair links by semantic.
+    size, oDepth and oCn; VPOS and VFACE come from the pixel parameters; each stage packs its interpolators from 0 in
+    its semantics' order, usage then index, and xsdk links a pair by semantic when it binds them (xsdk:src/shader.c,
+    xsdk_shader_link).
 """
 from __future__ import annotations
 

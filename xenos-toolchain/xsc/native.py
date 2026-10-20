@@ -5,6 +5,7 @@ make builds the library, build/host/libxsc.so, in WSL; the tools that compile sh
 from __future__ import annotations
 
 import ctypes
+import struct
 from pathlib import Path
 
 LIBRARY = Path(__file__).resolve().parents[2] / "build" / "host" / "libxsc.so"
@@ -17,6 +18,10 @@ MESSAGE_BYTES = 512
 # The pixel constant gl_FragCoord.xy adds to the pixel parameters, which xsdk keeps at 0.5 and 0.5 more than a tiled
 # pass's band's top row (xsdk:include/xsdk/xsc.h, XSDK_XSC_FRAG_COORD_CONSTANT).
 FRAG_COORD_CONSTANT = 255
+# xsdk_xsc_link's (xsdk:include/xsdk/xsc.h), and SQ_PROGRAM_CNTL's vs_export_count, the interpolators less 1
+# (xenia:src/xenia/gpu/registers.h:142-143).
+INTERPOLATORS, UNLINKED, BY_LOCATION, UNLINKABLE = 16, 0xFF, -1, -2
+EXPORT_COUNT_SHIFT, EXPORT_COUNT_MASK = 20, 0xF << 20
 
 
 class Options(ctypes.Structure):
@@ -121,6 +126,12 @@ def _load():
         _library.xsdk_xsc_resolve_interface.restype = ctypes.c_bool
         _library.xsdk_xsc_release.argtypes = [ctypes.POINTER(_Xsc)]
         _library.xsdk_xsc_release.restype = None
+        _library.xsdk_xsc_link.argtypes = [ctypes.POINTER(ctypes.c_uint32), ctypes.c_uint32,
+                                           ctypes.POINTER(ctypes.c_uint32), ctypes.c_uint32,
+                                           ctypes.POINTER(ctypes.c_uint8)]
+        _library.xsdk_xsc_link.restype = ctypes.c_int32
+        _library.xsdk_xsc_link_export.argtypes = [ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint8)]
+        _library.xsdk_xsc_link_export.restype = ctypes.c_uint32
     return _library
 
 
@@ -231,3 +242,42 @@ def compile_spirv(spirv: bytes, pixel_registers: int, vertex_registers: int, opt
     finally:
         library.xsdk_xsc_free(ctypes.byref(shader))
     return container, manifest, resources
+
+
+def records(blob: bytes):
+    """A container's interpolator records and a vertex shader's export slots, read where xsdk:src/shader.c's
+    xsdk_shader_load finds them: the records after a pixel shader's outputs or a vertex shader's patch table, as many
+    as the record's interpolator info counts, then the slots up to the microcode."""
+    words = struct.unpack(f">{len(blob) // 4}I", blob)
+    record = words[6] // 4
+    vertex = words[0] & 0xFF == 1
+    first = record + 8 + (words[record + 6] * 2 + words[record + 7] if vertex else 0)
+    count = words[record + 5] >> 5 & 0x1F
+    code = (words[1] + words[record]) // 4
+    return list(words[first:first + count]), list(words[first + count:code]) if vertex else []
+
+
+def link(vertex: bytes, pixel: bytes) -> bytes:
+    """The vertex shader's container as xsdk_shader_link leaves it linked to the pixel shader's on the console
+    (xsdk:src/shader.c), through the same xsdk_xsc_link and xsdk_xsc_link_export: each export to an interpolator
+    rewritten from the container's, and SQ_PROGRAM_CNTL's export count the pixel shader's interpolators. The container
+    as it is for a pair linked by location, as GLSL's are; CompileError, REFUSED, for one of each."""
+    library = _load()
+    vertex_records, slots = records(vertex)
+    pixel_records, _ = records(pixel)
+    links = (ctypes.c_uint8 * INTERPOLATORS)()
+    exported = library.xsdk_xsc_link((ctypes.c_uint32 * len(vertex_records))(*vertex_records), len(vertex_records),
+                                     (ctypes.c_uint32 * len(pixel_records))(*pixel_records), len(pixel_records), links)
+    if exported == BY_LOCATION:
+        return vertex
+    if exported == UNLINKABLE:
+        raise CompileError(REFUSED, "one shader's interpolators link by semantic and the other's by location")
+    out = bytearray(vertex)
+    record = struct.unpack_from(">I", vertex, 24)[0]
+    control = struct.unpack_from(">I", vertex, record + 8)[0]
+    struct.pack_into(">I", out, record + 8, control & ~EXPORT_COUNT_MASK | max(exported - 1, 0) << EXPORT_COUNT_SHIFT)
+    code = struct.unpack_from(">I", vertex, 4)[0] + struct.unpack_from(">I", vertex, record)[0]
+    for slot in slots:
+        at = code + (slot & 0xFFF) * 12
+        struct.pack_into(">I", out, at, library.xsdk_xsc_link_export(struct.unpack_from(">I", vertex, at)[0], links))
+    return bytes(out)

@@ -58,12 +58,12 @@ def holds(m, what):
     return any(op == 23 and ops[0] == pointee and ops[2] == 2 for op, ops in opcodes)
 
 
-# name -> (what it holds, interpolators and pixel parameters, constants, exports wanted). TEXCOORD1 is interpolator 2,
-# past COLOR0's (xsdk:src/xsc_resolve.c, interpolator_of).
+# name -> (what it holds, interpolators and pixel parameters, constants, exports wanted). Interpolators pack from 0 in
+# their semantics' order (xsdk:src/xsc_resolve.c, pack_semantics).
 CASES = {
-    "static_globals_ps.hlsl": ("private", {0: UV, 2: COLOUR}, {0: K},
+    "static_globals_ps.hlsl": ("private", {0: UV, 1: COLOUR}, {0: K},
                                {0: [2.0 * K[i] * UV[0] + 2.0 * UV[i % 2] - 0.5 * COLOUR[i] for i in range(4)]}),
-    "splat_clamp_ps.hlsl": ("splat", {0: V, 2: W}, {},
+    "splat_clamp_ps.hlsl": ("splat", {0: V, 1: W}, {},
                             {0: [clamp(V[i], -0.5, 0.75) + clamp(W[i % 2], 0.25, 2.0) for i in range(4)]}),
     "undefined_ps.hlsl": ("undefined", {0: UV}, {0: K},
                           {0: [UV[0] * K[0], UV[1] * K[1], 0.0, 0.0], 1: [0.0] * 4}),

@@ -164,8 +164,8 @@ static bool front_facing_register(XscLower *l, const XscInterface *si, int64_t p
 	return true;
 }
 
-// D3D9's VFACE, VFACE_FRONT on a front face and its negative on a back one, by the sign gl_FrontFacing reads: rcpc keeps
-// the parameters' x's, column 0's -0.0 as -FLT_MAX, for cndge (xenia:src/xenia/gpu/registers.h:224-227).
+// D3D9's VFACE, VFACE_FRONT on a front face and its negative on a back one, by the sign gl_FrontFacing reads: rcpc
+// keeps the parameters' x's, column 0's -0.0 as -FLT_MAX, for cndge (xenia:src/xenia/gpu/registers.h:224-227).
 static bool vface_register(XscLower *l, const XscInterface *si, int64_t param_reg)
 {
 	const int64_t sign = xsdk_xsc_emit_scalar(l, XSC_SCALAR_RCPC, xsdk_xsc_fresh(l), xsc_reg(param_reg), 0, WRITE_X);
@@ -781,11 +781,6 @@ static bool declare_inputs(Xsc *x, const XscModule *m, const XscType *types, Xsc
 	*param_reg = XSC_NONE;
 	for (size_t i = 0; i < si->interp_in_count; i++) {
 		const XscVarUse *const use = &si->interp_in[i];
-		// A semantic's interpolator may leave some below it unread, which arrive all the same (xsc_resolve.c).
-		while (p->interpolator_count < use->a) {
-			if (!xsdk_xsc_program_input(x, p, (int64_t)p->interpolator_count, XSC_USAGE_TEXCOORD))
-				return false;
-		}
 		if (!xsdk_xsc_program_input(x, p, use->a, use->b))
 			return false;
 		if ((int64_t)use->a > *highest)

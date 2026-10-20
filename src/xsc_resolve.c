@@ -226,12 +226,6 @@ enum {
 	SEMANTIC_BYTES = 32,
 	// A usage's index takes 4 bits of a vertex element (xsc_container.c; src/shader.c, PATCH_FIELD_MASK).
 	MAX_USAGE_INDEX = 15,
-	// The semantics' interpolators: TEXCOORD0, COLOR0, TEXCOORD1 to 11, COLOR1, then FOG, r15 left to the pixel
-	// parameters.
-	LAST_TEXCOORD = 11,
-	COLOR0_INTERPOLATOR = 1,
-	COLOR1_INTERPOLATOR = 13,
-	FOG_INTERPOLATOR = 14,
 };
 
 // An HLSL semantic as glslang writes it, in capitals, and the digits that end it: COLOR is COLOR0.
@@ -280,33 +274,41 @@ static int64_t usage_of(const Semantic *s)
 	return XSC_NONE;
 }
 
-// Where a semantic links, the same in both stages, as D3D9 links them by semantic; a sprite's TEXCOORD0 and COLOR0
-// take two, as each interpolator costs a pixel time (docs/HARDWARE.md, "xost's code quality, milestone 45").
-static int64_t interpolator_of(const Semantic *s)
+// An interpolator's semantic, its usage and index as its record holds them (xsc_private.h, XSC_SEMANTIC); refused where
+// it isn't one of D3D9's usages.
+static bool interpolator_semantic(Xsc *x, const XscVar *v, const Semantic *s, uint32_t *semantic)
 {
 	const int64_t usage = usage_of(s);
-	if (usage == XSC_USAGE_TEXCOORD && s->index <= LAST_TEXCOORD)
-		return s->index ? s->index + 1 : 0;
-	if (usage == XSC_USAGE_COLOR && s->index <= 1)
-		return s->index ? COLOR1_INTERPOLATOR : COLOR0_INTERPOLATOR;
-	return is_semantic(s, "FOG") ? FOG_INTERPOLATOR : XSC_NONE;
+	if (usage == XSC_NONE)
+		return xsdk_xsc_fail(x, XSDK_XSC_REFUSED,
+			"interpolator %s's semantic %s%u: not one of D3D9's declaration usages at an index to %u", v->name, s->name,
+			(unsigned)s->index, (unsigned)MAX_USAGE_INDEX);
+	*semantic = XSC_SEMANTIC | (uint32_t)usage << XSC_SEMANTIC_USAGE_SHIFT | s->index;
+	return true;
 }
 
-// An interpolator linked by semantic, refused where D3D9's has none here or another variable has it.
-static bool semantic_interpolator(
-	Xsc *x, const XscVar *v, const Semantic *s, const XscVarUse *uses, size_t count, uint32_t *r)
+// A stage's interpolators with semantics, sorted by them, take interpolators from 0 in that order, so it declares only
+// those it reads or writes; xsdk links the two stages by semantic when a title pairs them (src/shader.c,
+// xsdk_shader_link). One with a semantic beside one without, or two of one semantic, is refused.
+static bool pack_semantics(Xsc *x, XscInterface *si, XscVarUse *uses, size_t count)
 {
-	const int64_t found = interpolator_of(s);
-	if (found == XSC_NONE)
-		return xsdk_xsc_fail(x, XSDK_XSC_REFUSED,
-			"%s's semantic %s%u: interpolators link TEXCOORD0 to TEXCOORD%u, COLOR0, COLOR1 and FOG", v->name, s->name,
-			(unsigned)s->index, (unsigned)LAST_TEXCOORD);
 	for (size_t i = 0; i < count; i++) {
-		if (uses[i].a == found)
-			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "%s and %s share semantic %s%u", uses[i].var->name, v->name,
-				s->name, (unsigned)s->index);
+		const bool semantic = uses[i].b & XSC_SEMANTIC;
+		if (semantic != ((uses[0].b & XSC_SEMANTIC) != 0))
+			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "%s and %s: an interpolator without a semantic beside one with",
+				uses[0].var->name, uses[i].var->name);
+		if (!semantic)
+			continue;
+		if (i && uses[i].b == uses[i - 1].b)
+			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "%s and %s share semantic %s%u", uses[i - 1].var->name,
+				uses[i].var->name, usages[uses[i].b >> XSC_SEMANTIC_USAGE_SHIFT & XSC_SEMANTIC_FIELD_MASK],
+				(unsigned)(uses[i].b & XSC_SEMANTIC_FIELD_MASK));
+		if (i >= XSDK_XSC_INTERPOLATORS)
+			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "%s: more than %u interpolators", uses[i].var->name,
+				(unsigned)XSDK_XSC_INTERPOLATORS);
+		uses[i].a = (uint32_t)i;
+		si->roles[uses[i].var->vid].a = (int64_t)i;
 	}
-	*r = (uint32_t)found;
 	return true;
 }
 
@@ -483,11 +485,12 @@ static bool resolve_input(
 		si->point_coord = v;
 		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_POINT_COORD, 0, 0, 0 });
 	}
-	uint32_t r = location_or_zero(v);
-	if (hlsl && !semantic_interpolator(x, v, &s, si->interp_in, si->interp_in_count, &r))
+	// A semantic sorts by itself until pack_semantics numbers them.
+	uint32_t semantic = usage_for_vector(m, types, v->pointee);
+	if (hlsl && !interpolator_semantic(x, v, &s, &semantic))
 		return false;
-	if (!add_use(x, &si->interp_in, &si->interp_in_count, &capacity->interp_in,
-			(XscVarUse){ v, r, usage_for_vector(m, types, v->pointee) }))
+	const uint32_t r = hlsl ? semantic : location_or_zero(v);
+	if (!add_use(x, &si->interp_in, &si->interp_in_count, &capacity->interp_in, (XscVarUse){ v, r, semantic }))
 		return false;
 	return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_INTERP_IN, r, 0, 0 });
 }
@@ -536,10 +539,11 @@ static bool resolve_output(
 	}
 	uint32_t loc = location_or_zero(v);
 	if (!si->pixel) {
-		if (hlsl && !semantic_interpolator(x, v, &s, si->interp_out, si->interp_out_count, &loc))
+		uint32_t semantic = usage_for_vector(m, types, v->pointee);
+		if (hlsl && !interpolator_semantic(x, v, &s, &semantic))
 			return false;
-		if (!add_use(x, &si->interp_out, &si->interp_out_count, &capacity->interp_out,
-				(XscVarUse){ v, loc, usage_for_vector(m, types, v->pointee) }))
+		loc = hlsl ? semantic : loc;
+		if (!add_use(x, &si->interp_out, &si->interp_out_count, &capacity->interp_out, (XscVarUse){ v, loc, semantic }))
 			return false;
 		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_INTERP_OUT, loc, 0, 0 });
 	}
@@ -772,5 +776,6 @@ bool xsdk_xsc_resolve_interface(Xsc *x, const XscModule *m, XscInterface *si)
 	sort_uses(si->vfetch, si->vfetch_count, true);
 	sort_uses(si->interp_in, si->interp_in_count, false);
 	sort_uses(si->interp_out, si->interp_out_count, false);
-	return true;
+	return pack_semantics(x, si, si->interp_in, si->interp_in_count) &&
+		pack_semantics(x, si, si->interp_out, si->interp_out_count);
 }

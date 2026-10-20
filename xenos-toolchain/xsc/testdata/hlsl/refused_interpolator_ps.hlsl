@@ -1,5 +1,5 @@
-// An interpolator whose semantic xost doesn't link: NORMAL0.
-float4 ps_main(float4 n : NORMAL0) : COLOR0
+// An interpolator whose semantic is none of D3D9's declaration usages.
+float4 ps_main(float4 n : MYDATA0) : COLOR0
 {
     return n;
 }

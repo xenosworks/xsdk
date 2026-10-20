@@ -15,10 +15,21 @@ extern "C" {
 enum {
 	XSDK_SHADER_VERTEX = 0,
 	XSDK_SHADER_PIXEL = 1,
-	// Declaration usages, numbered as D3D does (libxenon:drivers/xenos/xe.h:159-169).
+	// D3D9's declaration usages, numbered as libxenon has them (libxenon:drivers/xenos/xe.h:159-172).
 	XSDK_USAGE_POSITION = 0,
+	XSDK_USAGE_BLENDWEIGHT = 1,
+	XSDK_USAGE_BLENDINDICES = 2,
+	XSDK_USAGE_NORMAL = 3,
+	XSDK_USAGE_PSIZE = 4,
 	XSDK_USAGE_TEXCOORD = 5,
+	XSDK_USAGE_TANGENT = 6,
+	XSDK_USAGE_BINORMAL = 7,
+	XSDK_USAGE_TESSFACTOR = 8,
+	XSDK_USAGE_POSITIONT = 9,
 	XSDK_USAGE_COLOR = 10,
+	XSDK_USAGE_FOG = 11,
+	XSDK_USAGE_DEPTH = 12,
+	XSDK_USAGE_SAMPLE = 13,
 	// Each takes a vertex fetch constant, 95 down.
 	XSDK_VERTEX_STREAMS = 16,
 };
@@ -57,9 +68,14 @@ typedef struct {
 	// SQ_PROGRAM_CNTL and SQ_CONTEXT_MISC bits the shader needs.
 	uint32_t program_control;
 	uint32_t context_misc;
-	// The container's vertex fetch patch records and microcode; the container must outlive the shader.
+	// The container's vertex fetch patch records, interpolator records, export slots and microcode; the container must
+	// outlive the shader.
 	const uint32_t *fetches;
 	uint32_t fetch_count;
+	const uint32_t *interpolators;
+	uint32_t interpolator_count;
+	const uint32_t *export_slots;
+	uint32_t export_slot_count;
 	const uint32_t *source;
 	// An instanced vertex shader's group, the float constant its instanced draws write (include/xsdk/xsc.h,
 	// XSDK_XSC_INSTANCE), from the _instance its container's constant table names.
@@ -100,6 +116,12 @@ NTSTATUS xsdk_shader_set_vertex_layout(
 // Moves the shader's texture fetches up by first_slot fetch constants, from the container's, so both stages' textures
 // fit among the 32 slots; not while it may run.
 NTSTATUS xsdk_shader_move_textures(XsdkShader *shader, uint32_t first_slot);
+// Links an HLSL vertex shader's outputs to a pixel shader's inputs by semantic, as D3D9 does: each goes to the pixel
+// shader's interpolator for its semantic, those it doesn't read nowhere, and an input no output feeds reads what the
+// GPU holds. Not while the vertex shader may run; one linked already to the same interpolators is left as it is, so
+// a vertex shader drawn with pixel shaders that read different semantics is loaded for each. GLSL's link by location
+// and need none; one of each is refused.
+NTSTATUS xsdk_shader_link(XsdkShader *vertex, const XsdkShader *pixel);
 void xsdk_shader_free(XsdkShader *shader);
 
 #ifdef __cplusplus

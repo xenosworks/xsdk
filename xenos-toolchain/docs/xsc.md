@@ -135,18 +135,29 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
     an index to 15, which a vertex element holds in 4 bits; any other refused.
   - Outputs POSITION and PSIZE are oPos and oPts.x, DEPTH oDepth, and COLOR*n*
     oC*n*, struct members and return values too.
-  - Interpolators link by semantic, the same in both stages, as D3D9 links a
-    pair: TEXCOORD0 at 0, COLOR0 at 1, TEXCOORD1 to 11 at 2 to 12, COLOR1 at 13
-    and FOG at 14, r15 left for the pixel parameters; any other semantic, or two
-    variables of one, refused. A pixel shader declares the interpolators below
-    its highest that it doesn't read, and a vertex shader's SQ_PROGRAM_CNTL
-    counts its exports to its highest, so a gap costs an interpolator: a
-    sprite's TEXCOORD0 and COLOR0 take two, TEXCOORD0 and TEXCOORD1 three, and
-    each interpolator costs a pixel time (xsdk:docs/HARDWARE.md, "xost's code
-    quality, milestone 45").
+  - Each stage packs its interpolators from 0 in the order of their semantics,
+    usage, then index, D3D9's usages any of them; any other semantic, two
+    variables of one, or a varying without one beside one with, refused. So a
+    pixel shader declares only the interpolators it reads and a vertex shader
+    exports only those it writes, as each interpolator costs a pixel time
+    (xsdk:docs/HARDWARE.md, "xost's code quality, milestone 45"). Each
+    interpolator record carries its semantic, usage in bits 4 to 7 and index in
+    0 to 3, and bit 31 marks it a semantic's (XenosRecomp:XenosRecomp/shader.h:
+    64-70 names the low 12 bits).
+  - The two stages link by semantic when a title pairs them, as D3D9 links
+    a pair: xsdk_shader_link (xsdk:src/shader.c) points each of the vertex
+    shader's exports at the pixel shader's interpolator for its semantic, makes
+    those the pixel shader doesn't read write nothing (no write mask, at
+    interpolator 0, as xenia:src/xenia/gpu/ucode.h:2041-2059 has it), and sets
+    SQ_PROGRAM_CNTL's export count to the pixel shader's interpolators, through
+    `xsdk_xsc_link` and `xsdk_xsc_link_export` (xsdk:include/xsdk/xsc.h). An
+    interpolator the pixel shader reads and the vertex shader doesn't write is
+    undefined, whatever the GPU holds there, unverified on the console
+    (`tests/test_hlsl_link.py`).
   - VPOS and VFACE come from the pixel parameters (see the table and Facing).
 
-  GLSL, which has no semantics, keeps its locations.
+  GLSL, which has no semantics, keeps its locations, and a GLSL pair needs no
+  link; one stage of each is refused.
 - With the optimiser, a vertex input or a texture sample nothing exported, killed
   or tested reads takes no fetch (`xsdk:src/xsc_optimize.c`, remove_dead). The
   input's vertex element goes with its fetch, so a host's layout needn't hold it,

@@ -233,24 +233,28 @@ XscOp *xsdk_xsc_program_vfetch(Xsc *x, XscProgram *p, uint32_t usage, uint32_t u
 	return op;
 }
 
-static bool add_interpolator(Xsc *x, XscProgram *p, XscInterpolator it)
+// An interpolator's record: an HLSL semantic's usage and index, marked, or GLSL's usage (xsc_private.h, XSC_SEMANTIC).
+static bool add_interpolator(Xsc *x, XscProgram *p, uint32_t reg, uint32_t semantic, uint32_t flags)
 {
 	if (!xsdk_xsc_room(
 			x, &p->interpolators, p->interpolator_count, &p->interpolator_capacity, sizeof *p->interpolators))
 		return false;
+	XscInterpolator it = { reg, semantic, 0, flags | usage_nibble(semantic) };
+	if (semantic & XSC_SEMANTIC) {
+		const uint32_t usage = semantic >> XSC_SEMANTIC_USAGE_SHIFT & XSC_SEMANTIC_FIELD_MASK;
+		it = (XscInterpolator){ reg, usage, semantic & XSC_SEMANTIC_FIELD_MASK,
+			flags | usage_nibble(usage) | XSC_INTERPOLATOR_SEMANTIC };
+	}
 	p->interpolators[p->interpolator_count++] = it;
 	return true;
 }
 
-XscOp *xsdk_xsc_program_export(Xsc *x, XscProgram *p, int64_t o, uint32_t usage, uint32_t usage_index, const XscAlu *f)
+XscOp *xsdk_xsc_program_export(Xsc *x, XscProgram *p, int64_t o, uint32_t semantic, const XscAlu *f)
 {
 	XscAlu fields = *f;
 	fields.vector_dest = o;
 	XscOp *const op = xsdk_xsc_program_alu(x, p, &fields);
-	if (!op)
-		return NULL;
-	const uint32_t flags = (uint32_t)p->interpolator_count << 4 | usage_nibble(usage);
-	if (!add_interpolator(x, p, (XscInterpolator){ (uint32_t)o, usage, usage_index, flags }))
+	if (!op || !add_interpolator(x, p, (uint32_t)o, semantic, (uint32_t)p->interpolator_count << 4))
 		return NULL;
 	return op;
 }
@@ -270,11 +274,11 @@ bool xsdk_xsc_program_alloc_interpolators(Xsc *x, XscProgram *p)
 	return true;
 }
 
-bool xsdk_xsc_program_input(Xsc *x, XscProgram *p, int64_t r, uint32_t usage)
+bool xsdk_xsc_program_input(Xsc *x, XscProgram *p, int64_t r, uint32_t semantic)
 {
 	if (r != (int64_t)p->interpolator_count)
 		return xsdk_xsc_fail(x, XSDK_XSC_MALFORMED, "declare inputs in r0,r1,... order");
-	if (!add_interpolator(x, p, (XscInterpolator){ (uint32_t)r, usage, 0, usage_nibble(usage) }))
+	if (!add_interpolator(x, p, (uint32_t)r, semantic, 0))
 		return false;
 	p->max_reg = highest(p->max_reg, r);
 	return true;
@@ -1366,7 +1370,7 @@ static bool optimize(Xsc *x, XscProgram *p)
 	return true;
 }
 
-// The interpolators to the highest exported: an HLSL shader's semantics may leave some between unwritten.
+// The interpolators to the highest exported: a GLSL shader's locations may leave some between unwritten.
 static uint32_t exported_interpolators(const XscProgram *p)
 {
 	uint32_t count = 0;

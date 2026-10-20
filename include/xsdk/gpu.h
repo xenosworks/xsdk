@@ -280,8 +280,8 @@ void xsdk_gpu_set_draw_rows(uint32_t top, uint32_t bottom);
 // Fails as xsdk_gpu_record_end does, queuing nothing.
 NTSTATUS xsdk_gpu_end_tiles(const XsdkTileResolve *resolves, uint32_t count);
 
-// Loads both shaders with IM_LOAD and sets the program registers; a resolve replaces the vertex shader. An instanced
-// vertex shader's group is kept for the instanced draws.
+// Loads both shaders with IM_LOAD and sets the program registers, an HLSL pair as xsdk_shader_link linked it; a resolve
+// replaces the vertex shader. An instanced vertex shader's group is kept for the instanced draws.
 void xsdk_gpu_set_shaders(const XsdkShader *vertex, const XsdkShader *pixel);
 // After the CPU writes vertices, indices or texels, xsdk_texture_upload's included, and before the draws that read
 // them: the GPU's caches drop what they hold of that memory, as libxenon's unlock does. A resolve does it for itself.

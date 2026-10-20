@@ -30,6 +30,13 @@ enum {
 	// pass's band's top row, as xsdk keeps it (include/xsdk/gpu.h, tiled passes); D3D9's VPOS adds its zw, 0 and the
 	// top row. A shader reading gl_FragCoord or VPOS leaves its group of 4 to xsdk.
 	XSDK_XSC_FRAG_COORD_CONSTANT = 255,
+	// The interpolators, as SQ_PROGRAM_CNTL's vs_export_count counts them (xenia:src/xenia/gpu/registers.h:142-143).
+	XSDK_XSC_INTERPOLATORS = 16,
+	// xsdk_xsc_link's: an interpolator the pixel shader doesn't read; a pair linked by location, as GLSL's are; and one
+	// linked by semantic with one by location.
+	XSDK_XSC_UNLINKED = 0xFF,
+	XSDK_XSC_BY_LOCATION = -1,
+	XSDK_XSC_UNLINKABLE = -2,
 };
 
 typedef struct {
@@ -121,6 +128,16 @@ void xsdk_xsc_free(XsdkXscShader *shader);
 uint32_t xsdk_xsc_loop_passes(int32_t start, int32_t step, int32_t n);
 // A hash of the compiler's sources, so what it compiled can be told from what a changed compiler would.
 const char *xsdk_xsc_version(void);
+// How a vertex shader's interpolators meet a pixel shader's, from their containers' interpolator records, for
+// xsdk_shader_link. By semantic, as D3D9 links HLSL's: links[r] is the pixel shader's interpolator for the semantic of
+// the vertex shader's r, or XSDK_XSC_UNLINKED, and the result the interpolators the vertex shader is to export, the
+// pixel shader's. XSDK_XSC_BY_LOCATION for GLSL's, which meet at their locations as they are, and XSDK_XSC_UNLINKABLE
+// for one of each.
+int32_t xsdk_xsc_link(const uint32_t *vertex, uint32_t vertex_count, const uint32_t *pixel, uint32_t pixel_count,
+	uint8_t links[XSDK_XSC_INTERPOLATORS]);
+// An instruction's first word with its export to an interpolator moved where links says, or writing nothing where it
+// says XSDK_XSC_UNLINKED; any other instruction's as it is.
+uint32_t xsdk_xsc_link_export(uint32_t word, const uint8_t links[XSDK_XSC_INTERPOLATORS]);
 
 #ifdef __cplusplus
 }

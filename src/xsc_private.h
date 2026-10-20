@@ -375,8 +375,8 @@ typedef struct {
 
 typedef struct {
 	bool pixel;
-	// vfetch: (var, usage, usage index); interp_out: (var, o, usage); interp_in: (var, r, usage); color_out: (var,
-	// location); samplers: (var, slot).
+	// vfetch: (var, usage, usage index); interp_out: (var, o, semantic); interp_in: (var, r, semantic), a semantic as
+	// XSC_SEMANTIC says; color_out: (var, location); samplers: (var, slot).
 	XscVarUse *vfetch;
 	size_t vfetch_count;
 	XscVarUse *interp_out;
@@ -636,6 +636,14 @@ enum {
 	XSC_USAGE_POSITION = 0,
 	XSC_USAGE_TEXCOORD = 5,
 	XSC_USAGE_COLOR = 10,
+	// An interpolator's semantic: GLSL's a usage by its type; HLSL's XSC_SEMANTIC, its usage from bit 4 and its usage
+	// index, as its record holds them (xsc_container.c), sorting by usage, then index.
+	XSC_SEMANTIC = 1 << 8,
+	XSC_SEMANTIC_USAGE_SHIFT = 4,
+	XSC_SEMANTIC_FIELD_MASK = 0xF,
+	// An interpolator record's flags' top bit, the record's bit 31: its usage and index are HLSL's semantic, which
+	// xsdk_xsc_link links by.
+	XSC_INTERPOLATOR_SEMANTIC = 1 << 19,
 	XSC_REGISTER_SET_FLOAT4 = 2,
 	XSC_REGISTER_SET_SAMPLER = 3,
 	XSC_CLASS_VECTOR = 1,
@@ -786,10 +794,10 @@ bool xsdk_xsc_program_init(Xsc *x, XscProgram *p, bool pixel, uint32_t registers
 XscOp *xsdk_xsc_program_alu(Xsc *x, XscProgram *p, const XscAlu *f);
 XscOp *xsdk_xsc_program_tfetch(Xsc *x, XscProgram *p, const XscFetch *f);
 XscOp *xsdk_xsc_program_vfetch(Xsc *x, XscProgram *p, uint32_t usage, uint32_t usage_index, const XscFetch *f);
-XscOp *xsdk_xsc_program_export(Xsc *x, XscProgram *p, int64_t o, uint32_t usage, uint32_t usage_index, const XscAlu *f);
+XscOp *xsdk_xsc_program_export(Xsc *x, XscProgram *p, int64_t o, uint32_t semantic, const XscAlu *f);
 bool xsdk_xsc_program_alloc(Xsc *x, XscProgram *p, int64_t alloc_type);
 bool xsdk_xsc_program_alloc_interpolators(Xsc *x, XscProgram *p);
-bool xsdk_xsc_program_input(Xsc *x, XscProgram *p, int64_t r, uint32_t usage);
+bool xsdk_xsc_program_input(Xsc *x, XscProgram *p, int64_t r, uint32_t semantic);
 bool xsdk_xsc_program_pixel_parameters(Xsc *x, XscProgram *p, int64_t r);
 bool xsdk_xsc_program_begin_loop(Xsc *x, XscProgram *p, uint32_t loop_id);
 bool xsdk_xsc_program_end_loop(Xsc *x, XscProgram *p, bool predicated_break, bool break_condition);
