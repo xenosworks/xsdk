@@ -4408,5 +4408,5 @@ Logs: `results/2026-10-19-milestone-52/`.
   which Xenia skips). It stays off, as milestone 35 left it.
 - **What an atomic costs** (`probe_atomics`), one thread: a relaxed `__atomic_fetch_add` 54.7 ns, acquire or release
   69.5, acq_rel 84.7, seq_cst 124.5; `sync` alone 53 ns, `lwsync` and `isync` 12. C++'s `operator++` on an atomic and
-  `__sync_*` are seq_cst, so a counter that needs no ordering costs less than half as much as relaxed. Two threads on
-  one core contending: 146 to 173 ns relaxed, 285 seq_cst.
+  `__sync_*` are seq_cst, so a counter that needs no ordering costs less than half as much asked for as relaxed. Two
+  threads on one core contending: 146 to 173 ns relaxed, 285 seq_cst.
