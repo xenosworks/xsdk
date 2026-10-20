@@ -4566,3 +4566,15 @@ xsdk_test's HLSL grid (`tests/test_hlsl.c`), its shaders compiled by xost from H
   2041-2059).
 - **A hardware loop an int in `$Global` counts,** from HLSL's loop in SSA form put back in the shape GLSL's takes, ran
   as its GLSL twin with each pixel leaving at its own pass.
+
+## A band's depth clear goes on a colour resolve, milestone 44 step 5 (2026-10-20)
+
+vulkan4xenon's 720p pass tiled at 4 samples with depth in bands, the hierarchical buffer on in its 256-row bands, came
+out right in band 0 and wrong from band 1 on, the first pass's draws missing, while the layer resolved each band's
+stored depth last, so the band's depth clear, and the buffer's, went on a resolve of depth. Resolving depth first, so
+the last colour resolve clears, put every pixel right; with depth last again the two checks failed alone, and with the
+buffer off in every tiled pass nothing failed either way (vulkan4xenon:results/2026-10-20-milestone-17-part-2/). xsdk's
+tiled passes resolve a band's depth before its colour since (`runs_at`, src/gpu_tiles.c). Milestone 17's first part's
+2048x2048 shadow map with the buffer on lost pixels from its band 1 too, and cleared on a depth resolve the same way,
+so its 2048 pitch, blamed above ("Render passes past eDRAM in the layer, milestone 44"), may not have been the cause;
+it hasn't been run again, and the buffer stays off past 1280 wide.
