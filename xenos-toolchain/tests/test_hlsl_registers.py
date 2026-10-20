@@ -129,11 +129,11 @@ def refused():
 
 
 def main():
-    refused()
     for optimize in (False, True):
         tag = f"optimiser {'on' if optimize else 'off'}"
         registers_ps(optimize, tag)
         registers_vs(optimize, tag)
+    refused()
     print("OK")
 
 
