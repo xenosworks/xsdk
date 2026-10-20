@@ -529,8 +529,9 @@ def run(draw, words, sample_point):
             level = min(max(math.floor(level + 0.5), 0), TEXTURE_LEVELS - 1)
             return [simulate.single(c / 255) for c in texel(level)]
 
+        # Xenia's model, which keeps a0 past the colours' alloc: the noa0 break reads the a0 it starts with.
         result = simulate.run(blob, {INTERP: [u, py + 0.5, base + 0.5, 1.5]}, constants(draw), loops=loops,
-                              texture_lod=texture_lod)
+                              texture_lod=texture_lod, keep_a0=True)
         point_break = (draw.k[0] * px + draw.k[1] * py + draw.k[2] * base + draw.k[3] +
                        (draw.j if (px + py) % 2 else 0.0))
     value = result.exports.get(tri.EXPORT_COLOR_0)
