@@ -19,7 +19,8 @@ Each sample's log, then each broken on purpose (`*_brk.log`):
 | template | passes | |
 
 sdl3's gamepad check fails both ways, as no controller was connected (as xsdk_test's controller checks fail without
-one), so its break isn't shown yet. That, and what each sample shows and plays, waits for the user at the console.
+one), so its break isn't shown apart from that. The user took the passing checks as the milestone's console run, with
+no look at what the samples show and play.
 
 ## The fresh agents
 
