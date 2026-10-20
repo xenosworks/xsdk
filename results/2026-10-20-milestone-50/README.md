@@ -91,3 +91,61 @@ null made 1.0 on its exports; without the float2 `gl_FragCoord.zw`.
 `bench/shaders` (95) and Dusklight's pack sources (150), the optimiser off and on, 900 programs, compiled by 70b2f2f
 and by this step: 870 containers, manifests and resources the same byte for byte, and the 30 refused refused alike.
 `tests/xsc_shaders.h` regenerates as it is.
+
+## Step 4: D3D9's semantics
+
+`step4.txt`, `step4.json` (docs/scope/50-hlsl.md, step 4). check_hlsl.py now passes glslang `-fhlsl_functionality1`,
+which keeps each varying's semantic as an OpDecorateString of UserSemantic; the counts with it alone, before xost read
+them, were step 2's. xost reads them where glslang left a location (src/xsc_resolve.c; xenos-toolchain/docs/xsc.md,
+"Interface conventions"):
+- **A vertex input's usage and index** are its semantic's, D3D9's usages as libxenon numbers them; any other is refused.
+- **POSITION, PSIZE, DEPTH and COLORn outputs** are the position, the point's size, the depth and target n, struct
+  members and return values too.
+- **VPOS** is the pixel parameters' |xy| plus c255's zw, which xsdk now keeps at 0 and a tiled band's top row
+  (src/gpu_constants.c): gl_FragCoord less 0.5, the pixel's whole column and row. A float4 VPOS, as SPIRV-Cross
+  declares the corpus's, reads 0 in z and w.
+- **VFACE** is +1 on a front face and -1 on a back one, from the sign gl_FrontFacing reads, one constant
+  (`VFACE_FRONT`, src/xsc_lower_fragment.c) until xsdk_test's `hlsl: VFACE` check settles which sign a front face gets.
+- **Linking:** each semantic has one interpolator in both stages, TEXCOORD0 at 0, COLOR0 at 1, TEXCOORD1 to 11 at 2
+  to 12, COLOR1 at 13 and FOG at 14, r15 left for the pixel parameters. The runtime does nothing new: a pixel shader
+  declares the interpolators below its highest that it doesn't read, and a vertex shader's export count runs to its
+  highest. A gap costs an interpolator; a sprite's TEXCOORD0 and COLOR0 take two.
+- **The guard:** a Function or Private variable with an initializer, which xost would drop, is refused
+  (src/xsc_compile.c). Nothing here has one; glslang writes a static's value as a store.
+
+| | Corpus, 157 | Idioms, 21 |
+|---|---|---|
+| Compiled | 157 | 13 |
+| A loop in SSA form (step 3) | 0 | 5 |
+| A matrix not loaded from uniforms (step 5) | 0 | 1 |
+| An int vector (step 5) | 0 | 1 |
+| An int or bool constant (step 5) | 0 | 1 |
+
+Against step 2: the corpus's 50 vertex shaders and 25 VPOS pixel shaders compile, and in the idioms `i02` (FOG and
+PSIZE), `i04` (VPOS and VFACE) and `i08` (DEPTH and four targets). `i01` and `i09` compile past POSITION now and stop at
+step 5's causes, a `(float3x3)` cast and `D3DCOLORtoUBYTE4`'s int4.
+
+**Against the GLSL path:** 151 exact, 6 inexact, every shader comparable. The vertex shaders are compared now: each
+input's fetch is told apart by its element's input, every input the same random values from 0 to 2, so an index a
+shader works out from one stays in its array, as GX's matrix indices do; the position and every interpolator are
+compared. All 50 are exact. The 6 inexact are VPOS pixel shaders off by an ulp in alpha, at most 8.9e-8: their
+`x * 255.0 / 256.0` is one multiply by 0.99609375 in glslang's HLSL, which its optimiser folds, and two in the GLSL.
+check_hlsl.py now rounds its random constants and inputs to singles, as the GPU holds them; with doubles, a constant
+read straight into a multiply made 1-ulp differences the console can't. Broken on purpose, the HLSL's vertex inputs
+given values apart from the GLSL's (3 trials), all 50 vertex shaders went inexact.
+
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, `test_scalar_unit.py` with its corpus at
+`/mnt/z/vulkan4xenon`. `tests/test_hlsl_semantics.py` runs `semantics_vs.hlsl`, `semantics_ps.hlsl`, the two linked
+(the vertex shader's exports as the pixel shader's registers), `vpos_vface_ps.hlsl` (columns 3 and 0 of each face, in
+a band from row 0 and 64), `vpos_wide_ps.hlsl` and three refusals, the optimiser off and on; `tests/test_hlsl_front.py`
+the guard. Each change broken on purpose failed them: usages by location `KeyError: (5, 5)`; POSITION not read
+`interpolators link`; PSIZE not exported `export 63 None`; inputs by location `export 0 [1.0, 0.5, 0.25, 0.75]` (and
+test_hlsl_front.py); outputs by location `export 1 [0.125, ...]`; COLORn by location `export 0 [1.5, 4.5, -6.0,
+0.75]`; DEPTH not read `two colour outputs at location 1`; VPOS from c255's xy `[3.5, 7.5, ...]`; a float4 VPOS's z
+and w not cleared `[5.0, 9.0, 5.0, 9.0]`; VFACE_FRONT -1 `[3.0, 7.0, -1.0, ...]`; the gaps not declared `declare
+inputs in r0,r1,... order`; the export count by exports `5 interpolators exported`; a shared semantic not refused
+`declare inputs in r0,r1,... order`; OpDecorateString not read `no write to gl_Position`; the guard off `a Private
+variable with an initializer compiled`.
+
+**GLSL unchanged:** the 900 programs of step 2, compiled by 5047f51 and by this step: the same containers, manifests
+and resources byte for byte, and the 30 refused refused alike.
