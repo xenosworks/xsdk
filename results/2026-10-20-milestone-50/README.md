@@ -735,12 +735,43 @@ docs/scope/50-hlsl.md, step 8 and "Done when", built on the PC on 2026-10-20; no
     twins, left every committed `.spv` as it is, and check_hlsl.py's run gives `step7.json` and `step7.txt` byte for
     byte.
 - **xenos-toolchain/docs/xsc.md, "HLSL",** gives the flags, the names, D3D9's semantics, binding, `fmod` and every
-  construct xost refuses with HLSL. One is new here: a pixel shader without a loop refuses an `if` that spirv-opt keeps
-  a branch, as it does any that changes a value, `if (c) x *= 0.5;` among them (`if/else arm does not assign
-  o_color`): its values meet in Phis, which the pixel shader's if/else lowering, written for GLSL's stores, doesn't
-  read. A `?:`, `clip` and an `if` around `discard` compile, and with a loop in the shader the unroller takes such an
-  if; no shader of the corpus or the idioms has one. TODO.md lists it. docs/PARITY.md, docs/GUIDE.md, README.md and the
-  template name HLSL beside GLSL.
+  construct xost refuses with HLSL, an early `return`, which spirv-opt makes a switch of, among them. docs/PARITY.md,
+  docs/GUIDE.md, README.md and the template name HLSL beside GLSL.
+
+**A loop-free pixel shader's if/else.** Writing the docs turned up a refusal no step had met: a pixel shader without a
+loop refused an `if` that changes a value, `if (uv.x > 0.5) c.rgb *= 0.5;` among them (`if/else arm does not assign
+o_color`). In HLSL spirv-opt leaves the arms' values in a Phi where they meet, and in GLSL glslang stores the local in
+one arm alone; the fragment lowering, which merges if/else arms that each store the same variable, takes neither. No
+shader of the corpus or the idioms has one; with a loop in the shader the unroller took it. It's basic shader model 3,
+so it's in this step, not TODO.md:
+- **The change** (src/xsc_compile.c, `lower_pixel`): where the fragment lowering refuses a pixel shader the unroller
+  didn't run on and it branches, the unroller runs on it, as on a vertex shader's if/else (its `every_branch`), the
+  arms' values merged by selects, and the fragment lowering lowers what it leaves; refused both ways, both reasons. The
+  retry starts from a fresh result, the interface resolved again.
+- **Compiled before, compiled as before:** the 623 GLSL programs and 234 HLSL testdata shaders above, the optimiser
+  off and on, compiled by 4d44b23 and by this change: the same containers, manifests and resources byte for byte, or
+  refused alike, but three of xost's GLSL testdata the fragment lowering refused as guards, which now compile:
+  `vk_local_branch_reassign.frag` (a local stored twice beside an if/else), `vk_local_merged_early.frag` (the
+  if/else's variable read before it) and `vk_outputs_branch.frag` (a second colour output stored in an if/else).
+  `test_local_stores.py` and `test_color_outputs.py`, which wanted them refused, now check both arms of each, each
+  what the GLSL says. check_hlsl.py's corpus and idioms give `step7.json` and `step7.txt` byte for byte, and no HLSL
+  testdata shader refused before compiles now.
+- **On the simulator:** `tests/test_hlsl_if.py`, new, runs `xsc/testdata/hlsl/if`, the optimiser off and on: an if
+  with no else (`if_only_ps`) and its GLSL twin `if_only.frag`, an else alone, nested if/else changing a component
+  each, an if on a texture sample's alpha at fetch constant 1, and an if on a bool at `register(b2)`, boolean constant
+  130 through `cexec b130` and `cexec !b130`, each value of it; and xsdk_test's `grid_if_ps`, all 80 columns. Every
+  result is exactly what HLSL and GLSL define. With the retry off it fails, `if/else arm does not assign o_color`;
+  with the merges' select arms swapped, `if_only_ps.hlsl, optimiser off, uv [0.25, 0.25]: [0.3125, -0.1875, 0.4375,
+  0.75], not [0.625, -0.375, 0.875, 0.75]`.
+- **xsdk_test:** `tests/test_hlsl.c` draws `grid_if_ps.hlsl` in a cell left of DEPTH's, at column 860, row 555: an if
+  with no else and nested if/else on TEXCOORD0's x, each pixel checked against the CPU's colour for its column:
+  `hlsl: a pixel shader without a loop, its if with no else and nested if/else each changing a value on TEXCOORD0's
+  x, draws what HLSL defines at every column: %u of %u pixels wrong`, 0 of 28800. `tests/breaks/hlsl/if.patch` swaps
+  the arms of those selects where the unroller runs for an if/else the fragment lowering refused: of xsdk_test's 58
+  shaders compiled on the console only `grid_if_ps.hlsl` compiles otherwise, and on the simulator all 80 of its
+  columns go wrong. It must fail that check and `xsc: hlsl/grid_if_ps.hlsl compiles into the PC's container,
+  literals and resources`. `tests/xsc_shaders.h` regenerates with `grid_if_ps.hlsl` added and nothing else changed.
+- **Still refused:** an early `return`, which spirv-opt makes a switch of (`a switch`).
 
 **The check:** `tests/cmake/cmake_check.cpp`, CMake's title, builds `quad_vs.hlsl` and `quad_ps.hlsl` through
 `xsdk_add_shaders` and draws them, linked, as two quads across a 64x32 target: Ramp at `register(s2)` sampled from
@@ -770,8 +801,10 @@ Windows glslang and with glslang-xenon: every header the same byte for byte, the
 message. `make samples` regenerates `triangle_shaders.h` and `cube_shaders.h` as they were. cmake_check had no
 shaders before.
 
-**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, 59, `test_scalar_unit.py` with its corpus
-at `/mnt/z/vulkan4xenon`.
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, 60 with `test_hlsl_if.py`,
+`test_scalar_unit.py` with its corpus at `/mnt/z/vulkan4xenon`.
 
-**Builds:** `make clean` and `make -j32`, then cmake_check and its break: 0 warnings; vulkan4xenon against it, clean,
-0 warnings. The console set is in `local/m50/set8/`: `xsdk_test.xex`, `cmake_check.xex` and `cmake_check_hlsl_brk.xex`.
+**Builds:** at f93e7ae, `make clean` and `make -j32`, the HLSL breaks (`tests/breaks/hlsl/build.sh`, if among them),
+then cmake_check and its break: 0 warnings; vulkan4xenon against it, clean, 0 warnings. The console set is in
+`local/m50/set8/`: `xsdk_test.xex`, `x_hlsl_if.xex` (the if break), `cmake_check.xex` and `cmake_check_hlsl_brk.xex`.
+`local/m50/build.sh` builds and copies the if break with the others.
