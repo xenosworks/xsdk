@@ -24,6 +24,8 @@ enum {
 	CONSTANT_GROUP = 4,
 	DEFAULT_STRIDE = 16,
 	NAME_BYTES = 32,
+	// A texture fetch names one of 32 fetch constants (xenia:src/xenia/gpu/ucode.h:849).
+	TEXTURE_SLOTS = 32,
 };
 
 static const char *const type_names[] = { "none", "void", "bool", "int", "float", "vector", "matrix", "image",
@@ -414,8 +416,9 @@ static bool assign_blocks(Xsc *x, const XscModule *m, const XscType *types, XscI
 				if (!name)
 					return false;
 			}
-			if (!add_constant(x, si, &capacity->constants,
-					(XscConstantSlot){ name, (uint32_t)(reg + off / 16), (uint32_t)mregs, (int32_t)mi }))
+			const XscConstantSlot slot = { name, (uint32_t)(reg + off / 16), (uint32_t)mregs, (int32_t)mi,
+				(int32_t)si->block_count - 1, false };
+			if (!add_constant(x, si, &capacity->constants, slot))
 				return false;
 		}
 		reg += regs;
@@ -636,7 +639,8 @@ static bool resolve_uniform_constant(Xsc *x, const XscModule *m, const XscType *
 		if (!name)
 			return false;
 	}
-	if (!add_constant(x, si, &capacity->constants, (XscConstantSlot){ name, (uint32_t)reg, (uint32_t)regs, -1 }))
+	if (!add_constant(
+			x, si, &capacity->constants, (XscConstantSlot){ name, (uint32_t)reg, (uint32_t)regs, -1, -1, false }))
 		return false;
 	if (st->kind == XSC_TYPE_ARRAY)
 		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_ARRAY, reg, regs, elem_regs });
@@ -666,6 +670,40 @@ static bool vulkan_sampler_before(const XscVar *a, const XscVar *b)
 	return (a->binding == XSC_NONE ? 0 : a->binding) < (b->binding == XSC_NONE ? 0 : b->binding);
 }
 
+static uint32_t binding_of(const XscVar *v)
+{
+	return v->binding == XSC_NONE ? 0 : (uint32_t)v->binding;
+}
+
+// HLSL's register(sN) is binding N and a sampler without one binding 0 (glslang:glslang/HLSL/hlslParseHelper.cpp:
+// 6402-6412), so each takes its binding as its fetch constant, as D3D9's SetTexture(N) binds it; one whose binding a
+// sampler before it took, as a sampler without a register beside one at s0 or another without, takes the lowest no
+// binding names.
+static bool hlsl_slots(Xsc *x, const XscVar **samplers, size_t count, int64_t *slots)
+{
+	uint32_t taken = 0;
+	for (size_t i = 0; i < count; i++) {
+		const uint32_t b = binding_of(samplers[i]);
+		if (b >= TEXTURE_SLOTS)
+			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "sampler %s at s%u, past the %d fetch constants",
+				samplers[i]->name, (unsigned)b, TEXTURE_SLOTS);
+		slots[i] = taken >> b & 1 ? XSC_NONE : (int64_t)b;
+		taken |= 1u << b;
+	}
+	for (size_t i = 0; i < count; i++) {
+		uint32_t s = 0;
+		while (slots[i] == XSC_NONE && s < TEXTURE_SLOTS && taken >> s & 1)
+			s++;
+		if (s == TEXTURE_SLOTS)
+			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "more samplers than the %d fetch constants", TEXTURE_SLOTS);
+		if (slots[i] == XSC_NONE) {
+			slots[i] = s;
+			taken |= 1u << s;
+		}
+	}
+	return true;
+}
+
 static bool add_vulkan_samplers(Xsc *x, const XscModule *m, const XscType *types, XscInterface *si,
 	const XscVar **samplers, size_t count, ListCapacities *capacity)
 {
@@ -676,15 +714,23 @@ static bool add_vulkan_samplers(Xsc *x, const XscModule *m, const XscType *types
 			samplers[j] = samplers[j - 1];
 		samplers[j] = moving;
 	}
-	for (size_t slot = 0; slot < count; slot++) {
-		const XscVar *const v = samplers[slot];
+	int64_t *const slots = xsdk_xsc_alloc(x, (count + 1) * sizeof *slots);
+	if (!slots)
+		return false;
+	for (size_t i = 0; i < count; i++)
+		slots[i] = (int64_t)i;
+	if (xsdk_xsc_hlsl(m) && !hlsl_slots(x, samplers, count, slots))
+		return false;
+	for (size_t i = 0; i < count; i++) {
+		const XscVar *const v = samplers[i];
 		const XscType *const st = xsdk_xsc_type(m, types, (uint64_t)v->pointee);
 		const int64_t dim = image_dim(m, types, st);
-		if (!add_use(x, &si->samplers, &si->sampler_count, &capacity->samplers, (XscVarUse){ v, (uint32_t)slot, 0 }))
+		if (!add_use(
+				x, &si->samplers, &si->sampler_count, &capacity->samplers, (XscVarUse){ v, (uint32_t)slots[i], 0 }))
 			return false;
-		if (!add_sampler_dim(x, si, &capacity->sampler_dims, (int64_t)slot, dim))
+		if (!add_sampler_dim(x, si, &capacity->sampler_dims, slots[i], dim))
 			return false;
-		if (!set_role(x, si, v->vid, (XscRole){ XSC_ROLE_SAMPLER, (int64_t)slot, dim, XSC_NONE }))
+		if (!set_role(x, si, v->vid, (XscRole){ XSC_ROLE_SAMPLER, slots[i], dim, XSC_NONE }))
 			return false;
 	}
 	return true;
@@ -705,11 +751,49 @@ static bool assign_comparisons(
 		char text[NAME_BYTES];
 		const int length = snprintf(text, sizeof text, "_compare%u", (unsigned)use->a);
 		const char *const name = xsdk_xsc_copy_text(x, text, (size_t)length);
-		if (!name || !add_constant(x, si, &capacity->constants, (XscConstantSlot){ name, reg, 1, -1 }) ||
+		if (!name || !add_constant(x, si, &capacity->constants, (XscConstantSlot){ name, reg, 1, -1, -1, false }) ||
 			!add_use(x, &si->comparisons, &si->comparison_count, &capacity->comparisons,
 				(XscVarUse){ use->var, reg, use->a }))
 			return false;
 		si->roles[use->var->vid].c = reg;
+	}
+	return true;
+}
+
+// Whether a block member is an int or a bool, which glslang makes an unsigned int, or a vector of them.
+static bool integral(const XscModule *m, const XscType *types, const XscInterface *si, const XscConstantSlot *c)
+{
+	const XscType *const st = xsdk_xsc_type(m, types, si->blocks[c->block].struct_type);
+	const XscType *t =
+		st && (uint32_t)c->member < st->member_count ? xsdk_xsc_type(m, types, st->members[c->member]) : NULL;
+	t = t && t->kind == XSC_TYPE_VECTOR ? xsdk_xsc_type(m, types, t->comp) : t;
+	return t && (t->kind == XSC_TYPE_INT || t->kind == XSC_TYPE_BOOL);
+}
+
+// An HLSL bool or int glslang packed into a register another member of its block holds, as i10's b0 and i0 over c0's
+// array, takes a register of its own past the blocks, as glslang drops the b# and i# that D3D9 keeps apart
+// (glslang:glslang/HLSL/hlslParseHelper.cpp:6396-6431): the float D3D9 sets for it lands on no other constant. One
+// alone in its register stays there, as a register(cN) puts it.
+static bool move_shared(Xsc *x, const XscModule *m, const XscType *types, XscInterface *si)
+{
+	bool *const shared = xsdk_xsc_alloc(x, si->constant_count + 1);
+	if (!shared)
+		return false;
+	for (size_t i = 0; i < si->constant_count; i++) {
+		const XscConstantSlot *const c = &si->constants[i];
+		for (size_t j = 0; c->block >= 0 && j < si->constant_count; j++) {
+			const XscConstantSlot *const o = &si->constants[j];
+			shared[i] =
+				shared[i] || (j != i && o->block == c->block && o->reg < c->reg + c->regs && c->reg < o->reg + o->regs);
+		}
+	}
+	for (size_t i = 0; i < si->constant_count; i++) {
+		XscConstantSlot *const c = &si->constants[i];
+		if (!shared[i] || !integral(m, types, si, c))
+			continue;
+		c->reg = si->constant_end++;
+		c->regs = 1;
+		c->moved = true;
 	}
 	return true;
 }
@@ -792,6 +876,8 @@ bool xsdk_xsc_resolve_interface(Xsc *x, const XscModule *m, XscInterface *si)
 		!assign_instance_index(x, si, vars, var_count, &end))
 		return false;
 	si->constant_end = (uint32_t)end;
+	if (xsdk_xsc_hlsl(m) && !move_shared(x, m, types, si))
+		return false;
 	if (!add_vulkan_samplers(x, m, types, si, vulkan_samplers, vulkan_count, &capacity) ||
 		!assign_comparisons(x, m, types, si, &capacity))
 		return false;

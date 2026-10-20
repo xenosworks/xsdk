@@ -110,7 +110,8 @@ static bool constant_table(Xsc *x, const XscContainerParts *parts, Bytes *body)
 			return false;
 		type_off[i] = body->length;
 		if (!put_half(body, c->param_class) || !put_half(body, c->param_type) || !put_half(body, c->rows) ||
-			!put_half(body, c->columns) || !put_half(body, 1) || !put_half(body, 0) || !put_word(body, 0))
+			!put_half(body, c->columns) || !put_half(body, c->elements ? c->elements : 1) || !put_half(body, 0) ||
+			!put_word(body, 0))
 			return false;
 	}
 	const size_t target_off = body->length;

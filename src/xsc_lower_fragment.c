@@ -7,8 +7,6 @@ enum {
 	// getGradients' .xzxz is ddx(src.xy) and .ywyw ddy(src.xy).
 	GRADIENT_X = 0xE4,
 	GRADIENT_Y = 0x39,
-	// The parameter type xost's containers give a sampler.
-	SAMPLER_PARAMETER = 0xC,
 	// A pixel shader's depth goes to export 61, its x alone (xenia:src/xenia/gpu/ucode.h:1842,
 	// dxbc_shader_translator.cc:1591-1594).
 	EXPORT_DEPTH = 61,
@@ -731,19 +729,11 @@ static bool add_constants(Fragment *f, XscConstants *constants)
 		f->slots[j] = slot;
 	}
 	for (size_t i = 0; i < f->slot_count; i++) {
-		const int64_t slot = f->slots[i];
-		const char *const name = xsdk_xsc_format(l->x, "tex%lld", (long long)slot);
-		const XscConstant c = { name, XSC_REGISTER_SET_SAMPLER, (uint32_t)slot, 1, XSC_CLASS_OBJECT, SAMPLER_PARAMETER,
-			1, 1 };
-		if (!name || !xsdk_xsc_add_constant(l->x, constants, c))
+		const XscConstant c = xsdk_xsc_sampler_constant(l, f->slots[i]);
+		if (!c.name || !xsdk_xsc_add_constant(l->x, constants, c))
 			return false;
 	}
-	for (size_t i = 0; i < l->si->constant_count; i++) {
-		const XscConstantSlot *const cs = &l->si->constants[i];
-		if (!xsdk_xsc_add_constant(l->x, constants, xsdk_xsc_vector_constant(cs->name, cs->reg, cs->regs)))
-			return false;
-	}
-	return xsdk_xsc_literal_constants(l, constants);
+	return xsdk_xsc_uniform_constants(l, constants, false) && xsdk_xsc_literal_constants(l, constants);
 }
 
 // The colour outputs in order of location, each its export, and the container's mask of them

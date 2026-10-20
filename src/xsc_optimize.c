@@ -2194,6 +2194,9 @@ static bool can_optimize(const XscProgram *p, bool *unmodelled)
 	if (!p->whole_sources || p->loop_count)
 		return false;
 	for (size_t si = 0; si < p->stage_count; si++) {
+		// An exec on a boolean constant may not run, and its ops say nothing of it.
+		if (p->stages[si].boolean != XSC_NONE)
+			return false;
 		for (size_t i = 0; i < p->stages[si].count; i++) {
 			const XscOp *const op = p->stages[si].ops[i];
 			if (!is_alu(op)) {

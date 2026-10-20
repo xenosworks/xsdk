@@ -353,7 +353,8 @@ def _control_flow(blob):
 
 
 def run(blob: bytes, registers: dict | None = None, constants: dict | None = None, vertex_fetch=None,
-        texture_fetch=None, loops: dict | None = None, texture_lod=None, keep_a0: bool = False) -> Result:
+        texture_fetch=None, loops: dict | None = None, texture_lod=None, keep_a0: bool = False,
+        bools: set | None = None) -> Result:
     """Runs the program in the container blob.
 
     registers: temp -> 4 floats at the start (a pixel shader's interpolators and pixel parameters; a vertex shader's
@@ -362,18 +363,20 @@ def run(blob: bytes, registers: dict | None = None, constants: dict | None = Non
     texture_fetch(slot, coordinates) the 4 a texture fetch from fetch constant slot samples at the 3 coordinates its
     source swizzle picks; texture_lod(slot, coordinates, lod), given in its place, the same with the fetch's Lod.
     loops: loop constant -> its count of passes; without it each loop's body runs once. keep_a0 keeps a0 past an
-    alloc, as Xenia's model does, for a probe that asks whether the console reads what that model says.
+    alloc, as Xenia's model does, for a probe that asks whether the console reads what that model says. bools: the
+    boolean constants that are true, as a cexec reads them (xenia:src/xenia/gpu/shader_interpreter.cc:66-78).
     """
     return run_group(blob, [registers or {}], constants, vertex_fetch, texture_fetch, loops, texture_lod,
-                     keep_a0=keep_a0)[0]
+                     keep_a0=keep_a0, bools=bools)[0]
 
 
 def run_group(blob: bytes, registers: list, constants: dict | None = None, vertex_fetch=None, texture_fetch=None,
-              loops: dict | None = None, texture_lod=None, quads: bool = False, keep_a0: bool = False) -> list:
+              loops: dict | None = None, texture_lod=None, quads: bool = False, keep_a0: bool = False,
+              bools: set | None = None) -> list:
     """Runs the program for a group of vertices or pixels in lockstep, each one's registers at the start in the list
     registers, the rest as run gives them; a Result for each, in order. With quads, each four lanes are a 2x2 quad of
     pixels, top left, top right, bottom left and bottom right, whose getGradients and computed LODs read each other,
-    and whose fetches at register gradients all take the top left's. keep_a0 as run's."""
+    and whose fetches at register gradients all take the top left's. keep_a0 and bools as run's."""
     if quads and len(registers) % 4:
         raise ValueError("simulate: quads of a group that isn't whole quads")
     consts = constants or {}
@@ -389,9 +392,9 @@ def run_group(blob: bytes, registers: list, constants: dict | None = None, verte
         d = cf[pc].detail
         following = pc + 1
         if isinstance(d, xu.ParsedExecInstruction):
-            if d.type == xu._ExecType.kConditional:
-                raise NotImplementedError("simulate: an exec on a boolean constant")
-            on = [d.type == xu._ExecType.kUnconditional or d.condition == s["p0"] for _, _, s in lanes]
+            boolean = d.bool_constant_index in (bools or ())
+            on = [d.type == xu._ExecType.kUnconditional or d.condition == (
+                boolean if d.type == xu._ExecType.kConditional else s["p0"]) for _, _, s in lanes]
             runs = any(on)
             for rec in body[pc] if runs else ():
                 if quads and rec.kind == "tfetch":

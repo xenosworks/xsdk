@@ -134,6 +134,13 @@ typedef struct {
 	XsdkXscNeed *loop_needs;
 	size_t loop_need_count;
 	size_t loop_need_capacity;
+	// HLSL's constant table: by interface constant, whether the shader reads a bool or int as its register's float; and
+	// the table's entries for the bools it reads as boolean constants and the ints as loop constants.
+	bool *slot_read;
+	XscConstant *integers;
+	size_t integer_count;
+	size_t integer_capacity;
+	uint32_t boolean_count;
 } XscLower;
 
 // Enters one level of recursion, false with the error set past the bound.
@@ -295,6 +302,10 @@ typedef struct {
 	int64_t dyn_scale;
 } XscBlockAccess;
 bool xsdk_xsc_block_access(XscLower *l, uint32_t ptr_id, XscBlockAccess *access, bool *found);
+// The interface constant of the block member an access chain reads first, -1 for none.
+int64_t xsdk_xsc_member_slot(const XscLower *l, uint32_t ptr_id);
+// An HLSL bool or int read as its register's float: marked read, for the table, and at its register if it moved.
+void xsdk_xsc_integral_place(XscLower *l, uint32_t ptr_id, XscBlockAccess *access);
 XscOperand xsdk_xsc_block_register(XscLower *l, const XscBlockAccess *access, int64_t extra);
 XscOperand xsdk_xsc_block_value(XscLower *l, uint32_t ssa, const XscBlockAccess *access);
 const XscMatrix *xsdk_xsc_block_matrix(XscLower *l, uint32_t ssa, const XscBlockAccess *access);
@@ -351,6 +362,15 @@ int64_t xsdk_xsc_literal_base(const XscInterface *si);
 const char *xsdk_xsc_format(Xsc *x, const char *format, ...) __attribute__((format(printf, 2, 3)));
 XscConstant xsdk_xsc_vector_constant(const char *name, int64_t reg, int64_t regs);
 bool xsdk_xsc_add_constant(Xsc *x, XscConstants *constants, XscConstant c);
+// A sampler's entry: GLSL's named tex<slot>, a 2D sampler; HLSL's by its name and dimension. Its name NULL without
+// memory.
+XscConstant xsdk_xsc_sampler_constant(XscLower *l, int64_t slot);
+// The interface's constants' entries: GLSL's as vectors, or, with matrices, 4x4 matrices of columns where they take
+// several registers; HLSL's as their types, a bool or int only where read as its register's float, then the bools
+// read as boolean constants and the ints as loop constants.
+bool xsdk_xsc_uniform_constants(XscLower *l, XscConstants *constants, bool matrices);
+// The boolean or loop constant an HLSL bool or int at interface constant slot takes, index where it has none yet.
+bool xsdk_xsc_integer_constant(XscLower *l, int64_t slot, uint32_t set, uint32_t index, uint32_t *found);
 bool xsdk_xsc_add_need(Xsc *x, XscLowered *out, XsdkXscNeed need);
 // The literal pool as constants named _lit<register>, and as needs.
 bool xsdk_xsc_literal_constants(XscLower *l, XscConstants *constants);

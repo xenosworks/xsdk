@@ -336,3 +336,38 @@ const XscMatrix *xsdk_xsc_block_matrix(XscLower *l, uint32_t ssa, const XscBlock
 	mat->count = (size_t)count;
 	return mat;
 }
+
+int64_t xsdk_xsc_member_slot(const XscLower *l, uint32_t ptr_id)
+{
+	const XscInstr *const ptr = xsdk_xsc_by_result(l->m, ptr_id);
+	if (!ptr || (ptr->opcode != SPV_ACCESS_CHAIN && ptr->opcode != SPV_IN_BOUNDS_ACCESS_CHAIN))
+		return -1;
+	const XscRole *const role = xsdk_xsc_role(l->si, xsdk_xsc_operand(ptr, 0));
+	const XscInstr *const index = xsdk_xsc_by_result(l->m, xsdk_xsc_operand(ptr, 1));
+	if (role->kind != XSC_ROLE_BLOCK || !index || index->opcode != SPV_CONSTANT)
+		return -1;
+	for (size_t i = 0; i < l->si->constant_count; i++) {
+		const XscConstantSlot *const c = &l->si->constants[i];
+		if (c->block == role->a && c->member == (int64_t)xsdk_xsc_operand(index, 0))
+			return (int64_t)i;
+	}
+	return -1;
+}
+
+void xsdk_xsc_integral_place(XscLower *l, uint32_t ptr_id, XscBlockAccess *access)
+{
+	const int64_t slot = xsdk_xsc_member_slot(l, ptr_id);
+	if (slot < 0)
+		return;
+	l->slot_read[slot] = true;
+	const XscConstantSlot *const c = &l->si->constants[slot];
+	if (!c->moved)
+		return;
+	// The member's lane, counted from where glslang put it, in the register past the blocks it moved to.
+	const XscBlock *const block = &l->si->blocks[c->block];
+	const int64_t first = REGISTER_BYTES * block->reg +
+		xsdk_xsc_decoration_arg(
+			xsdk_xsc_member_decoration(l->m, block->struct_type, (uint32_t)c->member, SPV_DEC_OFFSET), 0);
+	access->comp = (REGISTER_BYTES * access->reg + MEMBER_BYTES * access->comp - first) / MEMBER_BYTES;
+	access->reg = c->reg;
+}

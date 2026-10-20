@@ -251,6 +251,8 @@ uint32_t xsdk_xsc_operand_count(const XscInstr *ins);
 const XscInstr *xsdk_xsc_by_result(const XscModule *m, uint32_t id);
 // Whether instruction i declares a local: a Function variable between first and end, or a Private one anywhere.
 bool xsdk_xsc_declares_local(const XscModule *m, size_t i, size_t first, size_t end);
+// Whether glslang read HLSL.
+bool xsdk_xsc_hlsl(const XscModule *m);
 // The last OpName for id, or fallback.
 const char *xsdk_xsc_name(const XscModule *m, uint32_t id, const char *fallback);
 const char *xsdk_xsc_member_name(const XscModule *m, uint32_t target, uint32_t member);
@@ -358,11 +360,15 @@ typedef struct {
 	uint32_t b;
 } XscVarUse;
 
+// A block member's block is its index in blocks, -1 for a bare uniform's or a comparison's; moved, an HLSL bool or int
+// put in a register of its own past the blocks, as glslang packs one into a register another member holds.
 typedef struct {
 	const char *name;
 	uint32_t reg;
 	uint32_t regs;
 	int32_t member;
+	int32_t block;
+	bool moved;
 } XscConstantSlot;
 
 typedef struct {
@@ -538,11 +544,14 @@ enum {
 	XSC_EXPORT_POINT_SIZE = 63,
 	XSC_CF_EXEC = 1,
 	XSC_CF_EXEC_END = 2,
+	// An exec on a boolean constant, and the same with its predicate clean (xenia:src/xenia/gpu/ucode.h:97-162).
+	XSC_CF_COND_EXEC = 3,
 	XSC_CF_COND_EXEC_PRED = 5,
 	XSC_CF_COND_EXEC_PRED_END = 6,
 	XSC_CF_LOOP_START = 7,
 	XSC_CF_LOOP_END = 8,
 	XSC_CF_ALLOC = 12,
+	XSC_CF_COND_EXEC_PRED_CLEAN = 13,
 };
 
 // An ALU instruction's fields, as xasm.encode.build_alu names them.
@@ -625,6 +634,9 @@ bool xsdk_xsc_build_cf_exec(Xsc *x, uint32_t opcode, int64_t address, int64_t co
 // An exec that runs where the predicate is condition (xenia:src/xenia/gpu/ucode.h:300-332).
 bool xsdk_xsc_build_cf_exec_pred(Xsc *x, uint32_t opcode, int64_t address, int64_t count, int64_t sequence, int64_t vc,
 	bool is_predicate_clean, bool condition, uint32_t pair[2]);
+// An exec that runs where boolean constant boolean is condition (xenia:src/xenia/gpu/ucode.h:265-297).
+bool xsdk_xsc_build_cf_cond_exec(Xsc *x, uint32_t opcode, int64_t address, int64_t count, int64_t sequence, int64_t vc,
+	int64_t boolean, bool condition, uint32_t pair[2]);
 bool xsdk_xsc_build_cf_alloc(Xsc *x, int64_t alloc_type, uint32_t pair[2]);
 bool xsdk_xsc_build_cf_loop_start(Xsc *x, int64_t address, int64_t loop_id, uint32_t pair[2]);
 bool xsdk_xsc_build_cf_loop_end(
@@ -650,14 +662,24 @@ enum {
 	// An interpolator record's flags' top bit, the record's bit 31: its usage and index are HLSL's semantic, which
 	// xsdk_xsc_link links by.
 	XSC_INTERPOLATOR_SEMANTIC = 1 << 19,
+	// The constant table's register sets, classes and types (XenosRecomp:XenosRecomp/constant_table.h).
+	XSC_REGISTER_SET_BOOL = 0,
+	XSC_REGISTER_SET_INT4 = 1,
 	XSC_REGISTER_SET_FLOAT4 = 2,
 	XSC_REGISTER_SET_SAMPLER = 3,
+	XSC_CLASS_SCALAR = 0,
 	XSC_CLASS_VECTOR = 1,
+	XSC_CLASS_MATRIX_ROWS = 2,
 	XSC_CLASS_MATRIX_COLUMNS = 3,
 	XSC_CLASS_OBJECT = 4,
+	XSC_TYPE_BOOL_PARAMETER = 1,
+	XSC_TYPE_INT_PARAMETER = 2,
 	XSC_TYPE_FLOAT_PARAMETER = 3,
+	XSC_TYPE_SAMPLER_PARAMETER = 10,
+	XSC_TYPE_SAMPLER_1D_PARAMETER = 11,
 };
 
+// A constant table entry; elements 0 is 1.
 typedef struct {
 	const char *name;
 	uint32_t register_set;
@@ -667,6 +689,7 @@ typedef struct {
 	uint32_t param_type;
 	uint32_t rows;
 	uint32_t columns;
+	uint32_t elements;
 } XscConstant;
 
 typedef struct {
@@ -732,8 +755,10 @@ typedef struct {
 	size_t capacity;
 	// The alloc after it, or XSC_NONE.
 	int64_t alloc_after;
-	// Where its ops run: everywhere, or where the predicate is true or false (XSC_PREDICATE_*).
+	// Where its ops run: everywhere, or where the predicate is true or false (XSC_PREDICATE_*); or, with boolean, where
+	// that boolean constant is, the ops not predicated.
 	uint8_t predicate;
+	int64_t boolean;
 } XscStage;
 
 typedef struct {
@@ -809,6 +834,9 @@ bool xsdk_xsc_program_begin_loop(Xsc *x, XscProgram *p, uint32_t loop_id);
 bool xsdk_xsc_program_end_loop(Xsc *x, XscProgram *p, bool predicated_break, bool break_condition);
 // The ops after run where the predicate is true or false, or everywhere again (XSC_PREDICATE_*), a stage of their own.
 bool xsdk_xsc_program_predicate(Xsc *x, XscProgram *p, uint8_t predicate);
+// The ops after run where boolean constant boolean is true or false (XSC_PREDICATE_TRUE or _FALSE), a stage of their
+// own.
+bool xsdk_xsc_program_boolean(Xsc *x, XscProgram *p, int64_t boolean, uint8_t condition);
 bool xsdk_xsc_program_finish(Xsc *x, XscProgram *p, const XscConstant *constants, size_t constant_count,
 	uint8_t **container, size_t *container_bytes);
 // Whether an ALU op writes the predicate (program.py _modifies_predicate).

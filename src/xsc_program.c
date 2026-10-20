@@ -43,7 +43,7 @@ static bool add_stage(Xsc *x, XscProgram *p)
 {
 	if (!xsdk_xsc_room(x, &p->stages, p->stage_count, &p->stage_capacity, sizeof *p->stages))
 		return false;
-	p->stages[p->stage_count++] = (XscStage){ .alloc_after = XSC_NONE };
+	p->stages[p->stage_count++] = (XscStage){ .alloc_after = XSC_NONE, .boolean = XSC_NONE };
 	return true;
 }
 
@@ -182,7 +182,8 @@ static XscOp *declare(Xsc *x, XscProgram *p, XscOpKind kind, const XscAlu *alu, 
 		candidate.alu = *alu;
 	if (fetch)
 		candidate.fetch = *fetch;
-	const uint8_t predicate = p->stages[p->stage_count - 1].predicate;
+	const XscStage *const stage = &p->stages[p->stage_count - 1];
+	const uint8_t predicate = stage->boolean == XSC_NONE ? stage->predicate : XSC_PREDICATE_NONE;
 	if (predicate && alu) {
 		candidate.alu.is_predicated = true;
 		candidate.alu.predicate_condition = predicate == XSC_PREDICATE_TRUE;
@@ -310,6 +311,15 @@ bool xsdk_xsc_program_predicate(Xsc *x, XscProgram *p, uint8_t predicate)
 	if ((last->count || last->alloc_after != XSC_NONE) && !add_stage(x, p))
 		return false;
 	p->stages[p->stage_count - 1].predicate = predicate;
+	p->stages[p->stage_count - 1].boolean = XSC_NONE;
+	return true;
+}
+
+bool xsdk_xsc_program_boolean(Xsc *x, XscProgram *p, int64_t boolean, uint8_t condition)
+{
+	if (!xsdk_xsc_program_predicate(x, p, condition))
+		return false;
+	p->stages[p->stage_count - 1].boolean = boolean;
 	return true;
 }
 
@@ -376,8 +386,9 @@ typedef struct {
 	int64_t sequence;
 	int64_t vc;
 	bool pred_clean;
-	// An exec on the predicate, and the predicate it runs on.
+	// An exec on the predicate or, past XSC_NONE, on a boolean constant, and the condition it runs on.
 	bool predicated;
+	int64_t boolean;
 	bool condition;
 	int64_t alloc_type;
 	uint32_t loop_id;
@@ -481,10 +492,15 @@ static CfEntry exec_entry(
 	const int64_t vc = vertex_fetches ? ((int64_t)1 << vertex_fetches) - 1 : 0;
 	// a0 doesn't reach into an exec on the predicate (docs/HARDWARE.md, "a0 and the predicate's execs").
 	const bool predicated = stage->predicate != XSC_PREDICATE_NONE && !stage_uses_a0(stage);
-	const uint32_t opcode = predicated ? XSC_CF_COND_EXEC_PRED : last ? XSC_CF_EXEC_END : XSC_CF_EXEC;
+	uint32_t opcode = predicated ? XSC_CF_COND_EXEC_PRED : last ? XSC_CF_EXEC_END : XSC_CF_EXEC;
+	// A cexec on a boolean constant, its predicate clean form where nothing in it writes the predicate, as the XNA
+	// assembler writes one (xenia:src/xenia/gpu/ucode.h:146-162).
+	if (stage->boolean != XSC_NONE)
+		opcode = pred_clean ? XSC_CF_COND_EXEC_PRED_CLEAN : XSC_CF_COND_EXEC;
 	return (CfEntry){ .type = CF_EXEC,
 		.opcode = opcode,
 		.predicated = predicated,
+		.boolean = stage->boolean,
 		.condition = stage->predicate == XSC_PREDICATE_TRUE,
 		.address = chunk->ops[0]->slot,
 		.count = (int64_t)chunk->count,
@@ -550,6 +566,10 @@ static bool control_flow(Xsc *x, const XscProgram *p, CfEntry **cf, size_t *cf_c
 			}
 		}
 		const XscStage *const stage = &p->stages[si];
+		// a0 doesn't reach into an exec on the predicate (docs/HARDWARE.md, "a0 and the predicate's execs"); one on a
+		// boolean constant isn't known.
+		if (stage->boolean != XSC_NONE && stage_uses_a0(stage))
+			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "an arm on a boolean constant that uses a0 (v1)");
 		Chunk *const chunks = xsdk_xsc_alloc(x, (exec_chunks(p, stage, NULL) + 1) * sizeof *chunks);
 		if (!chunks)
 			return false;
@@ -589,6 +609,9 @@ static bool cf_pair(Xsc *x, const CfEntry *d, uint32_t pair[2])
 {
 	switch (d->type) {
 	case CF_EXEC:
+		if (d->boolean != XSC_NONE)
+			return xsdk_xsc_build_cf_cond_exec(
+				x, d->opcode, d->address, d->count, d->sequence, d->vc, d->boolean, d->condition, pair);
 		if (d->predicated)
 			return xsdk_xsc_build_cf_exec_pred(
 				x, d->opcode, d->address, d->count, d->sequence, d->vc, d->pred_clean, d->condition, pair);

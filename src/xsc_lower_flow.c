@@ -17,6 +17,14 @@ enum {
 	LOOPS_A_STAGE = 16,
 	// A loop whose count is data runs the most passes a loop constant counts (xenia:src/xenia/gpu/xenos.h:1086-1097).
 	FIXED_PASSES = 255,
+	// libxenon gives vertex shaders the first 128 boolean constants and pixel shaders the rest
+	// (libxenon:drivers/xenos/xe.c:2038-2064), as a retail pixel shader's cexece b130 reads past 128
+	// (xenia:src/xenia/gpu/ucode.h:103-111).
+	PIXEL_FIRST_BOOLEAN = 128,
+	BOOLEANS_A_STAGE = 128,
+	SPV_LOGICAL_NOT = 168,
+	SPV_I_EQUAL = 170,
+	SPV_I_NOT_EQUAL = 171,
 	REGISTER_BYTES = 16,
 	MEMBER_BYTES = 4,
 	IMAGE_SAMPLE_FIRST = SPV_IMAGE_SAMPLE_IMPLICIT_LOD,
@@ -357,6 +365,45 @@ static bool emit_setp(XscLower *l, uint32_t cond)
 	return setp_on(l, op, src);
 }
 
+// The interface constant of the HLSL bool a load reads from a block, which glslang makes an unsigned int and tests
+// against 0; -1 for any other value.
+static int64_t bool_member(XscLower *l, uint32_t value)
+{
+	const XscInstr *const load = xsdk_xsc_by_result(l->m, value);
+	const XscInstr *const type = load && load->opcode == SPV_LOAD ? xsdk_xsc_by_result(l->m, load->result_type) : NULL;
+	if (!type || type->opcode != SPV_TYPE_INT || xsdk_xsc_operand(type, 1))
+		return -1;
+	return xsdk_xsc_member_slot(l, xsdk_xsc_operand(load, 0));
+}
+
+// An if on an HLSL bool in a pixel shader reads the bool's boolean constant, as D3D9's static branches read b#, its
+// arms run where it is when and where it isn't; boolean XSC_NONE for any other condition, which a setp tests.
+static bool boolean_condition(XscLower *l, uint32_t cond, int64_t *boolean, bool *when)
+{
+	*boolean = XSC_NONE;
+	*when = true;
+	const XscInstr *ins = xsdk_xsc_by_result(l->m, cond);
+	for (; ins && ins->opcode == SPV_LOGICAL_NOT; ins = xsdk_xsc_by_result(l->m, xsdk_xsc_operand(ins, 0)))
+		*when = !*when;
+	int64_t zero = 1;
+	if (l->vertex || !xsdk_xsc_hlsl(l->m) || !ins || (ins->opcode != SPV_I_NOT_EQUAL && ins->opcode != SPV_I_EQUAL) ||
+		!xsdk_xsc_int_const(l, xsdk_xsc_operand(ins, 1), &zero) || zero)
+		return !xsc_failed(l);
+	const int64_t slot = bool_member(l, xsdk_xsc_operand(ins, 0));
+	if (slot < 0)
+		return true;
+	*when = *when == (ins->opcode == SPV_I_NOT_EQUAL);
+	const uint32_t next = PIXEL_FIRST_BOOLEAN + l->boolean_count;
+	uint32_t index;
+	if (l->boolean_count == BOOLEANS_A_STAGE)
+		return xsdk_xsc_lower_refuse(l, "more than %d bools in ifs (v1)", BOOLEANS_A_STAGE);
+	if (!xsdk_xsc_integer_constant(l, slot, XSC_REGISTER_SET_BOOL, next, &index))
+		return false;
+	l->boolean_count += index == next;
+	*boolean = index;
+	return true;
+}
+
 static bool reached(XscLower *l, uint32_t id)
 {
 	if (l->walked[id])
@@ -457,15 +504,20 @@ static bool emit_predicated(XscLower *l, uint32_t branch)
 {
 	const XscModule *const m = l->m;
 	int64_t *const regs = xsdk_xsc_alloc(l->x, (m->merge_count + 1) * sizeof *regs);
-	if (!regs || !lower_arms_inputs(l, branch) || !emit_setp(l, m->branches[branch].condition) ||
-		!save_caches(l, &l->saved))
+	const uint32_t cond = m->branches[branch].condition;
+	int64_t boolean;
+	bool when;
+	if (!regs || !lower_arms_inputs(l, branch) || !boolean_condition(l, cond, &boolean, &when) ||
+		(boolean == XSC_NONE && !emit_setp(l, cond)) || !save_caches(l, &l->saved))
 		return false;
 	for (size_t i = 0; i < m->merge_count; i++)
 		regs[i] = m->merges[i].branch == branch && l->used[m->merges[i].select] ? xsdk_xsc_fresh(l) : XSC_NONE;
 	l->in_arm = true;
 	bool moved = false;
 	for (int arm = 0; arm < 2; arm++) {
-		if (!xsdk_xsc_program_predicate(l->x, l->p, arm ? XSC_PREDICATE_FALSE : XSC_PREDICATE_TRUE))
+		const uint8_t on = !arm == (boolean == XSC_NONE || when) ? XSC_PREDICATE_TRUE : XSC_PREDICATE_FALSE;
+		if (!(boolean == XSC_NONE ? xsdk_xsc_program_predicate(l->x, l->p, on)
+								  : xsdk_xsc_program_boolean(l->x, l->p, boolean, on)))
 			return false;
 		for (size_t i = 0; i < m->merge_count; i++) {
 			const XscInstr *const ins = regs[i] == XSC_NONE ? NULL : xsdk_xsc_lower_result(l, m->merges[i].select);
@@ -536,6 +588,9 @@ static bool block_count(XscLower *l, const XscHardwareLoop *loop, XsdkXscNeed *n
 	const XscType *const type = found ? xsdk_xsc_type(l->m, l->types, access.tid) : NULL;
 	if (!found || access.dynamic || !type || type->kind != XSC_TYPE_INT)
 		return xsdk_xsc_lower_refuse(l, "a loop's count other than an int a block holds at a fixed place (v1)");
+	if (xsdk_xsc_hlsl(l->m) && (loop->start || loop->step != 1))
+		return xsdk_xsc_lower_refuse(
+			l, "a loop an HLSL int counts from other than 0 by 1, which a title sets by name to its passes (v1)");
 	const XscInstr *const chain = xsdk_xsc_by_result(l->m, loop->count);
 	const XscBlock *const block = &l->si->blocks[xsdk_xsc_role(l->si, xsdk_xsc_operand(chain, 0))->a];
 	*need = (XsdkXscNeed){ .kind = XSDK_XSC_BLOCK_LOOP,
@@ -564,6 +619,13 @@ static bool count_constant(XscLower *l, const XscHardwareLoop *loop, uint32_t *l
 			return true;
 		}
 	}
+	// An HLSL int's entry in the table, D3D9's i# as the loop constant its loops read.
+	const int64_t slot = loop->count && xsdk_xsc_hlsl(l->m) ? xsdk_xsc_member_slot(l, loop->count) : -1;
+	const uint32_t next = (l->vertex ? VERTEX_FIRST_LOOP : PIXEL_FIRST_LOOP) + (uint32_t)l->loop_need_count;
+	uint32_t index;
+	if (slot >= 0 && l->loop_need_count < LOOPS_A_STAGE &&
+		!xsdk_xsc_integer_constant(l, slot, XSC_REGISTER_SET_INT4, next, &index))
+		return false;
 	if (l->loop_need_count == LOOPS_A_STAGE)
 		return xsdk_xsc_lower_refuse(l, "loops of more than %d counts (v1)", LOOPS_A_STAGE);
 	need.reg = *loop_constant = (l->vertex ? VERTEX_FIRST_LOOP : PIXEL_FIRST_LOOP) + (uint32_t)l->loop_need_count;

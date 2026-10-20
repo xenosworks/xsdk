@@ -137,10 +137,12 @@ bool xsdk_xsc_lower_init(Xsc *x, XscLower *l, const XscModule *m, const XscInter
 	l->branch_cnd = xsdk_xsc_alloc(x, branches * sizeof *l->branch_cnd);
 	l->branch_swap = xsdk_xsc_alloc(x, branches);
 	l->branch_done = xsdk_xsc_alloc(x, branches);
-	return fill_operands(x, &l->op_cache, n) && fill_operands(x, &l->local_values, n) && fill_regs(x, &l->inputs, n) &&
-		fill_regs(x, &l->sample_reg, n) && fill_regs(x, &l->deriv_reg, n) && l->matrix_cache && l->col_major &&
-		l->local_store && l->seen && l->merge_branch && fill_operands(x, &l->branch_test, branches) && l->branch_cnd &&
-		l->branch_swap && l->branch_done && l->loop_of && l->carried_of && l->loop_done &&
+	l->slot_read = xsdk_xsc_alloc(x, si->constant_count + 1);
+	return l->slot_read && fill_operands(x, &l->op_cache, n) && fill_operands(x, &l->local_values, n) &&
+		fill_regs(x, &l->inputs, n) && fill_regs(x, &l->sample_reg, n) && fill_regs(x, &l->deriv_reg, n) &&
+		l->matrix_cache && l->col_major && l->local_store && l->seen && l->merge_branch &&
+		fill_operands(x, &l->branch_test, branches) && l->branch_cnd && l->branch_swap && l->branch_done &&
+		l->loop_of && l->carried_of && l->loop_done &&
 		(!(m->branch_count || m->loop_count) || xsdk_xsc_find_varying(l)) && (!m->loop_count || mark_pass_work(x, l));
 }
 
@@ -714,21 +716,6 @@ static bool const_val(XscLower *l, uint32_t ssa, int64_t *value)
 
 // ---- integers as floats (lower.py int_operand) ----
 
-enum {
-	OP_SOURCE = 3,
-	SOURCE_HLSL = 5,
-};
-
-// Whether glslang read HLSL, OpSource's language (SPIR-V 1.0, section 3.2).
-static bool hlsl_source(const XscModule *m)
-{
-	for (size_t i = 0; i < m->instr_count && m->instrs[i].opcode != SPV_FUNCTION; i++) {
-		if (m->instrs[i].opcode == OP_SOURCE)
-			return xsdk_xsc_operand(&m->instrs[i], 0) == SOURCE_HLSL;
-	}
-	return false;
-}
-
 static XscOperand int_arith(XscLower *l, const XscInstr *ins)
 {
 	const uint32_t op = ins->opcode;
@@ -821,10 +808,12 @@ static XscOperand int_load(XscLower *l, uint32_t ssa, const XscInstr *ins)
 	}
 	XscBlockAccess access;
 	bool found = false;
-	if (hlsl_source(l->m) && !xsdk_xsc_block_access(l, src, &access, &found))
+	if (xsdk_xsc_hlsl(l->m) && !xsdk_xsc_block_access(l, src, &access, &found))
 		return (XscOperand){ 0 };
-	if (found)
+	if (found) {
+		xsdk_xsc_integral_place(l, src, &access);
 		return xsdk_xsc_block_value(l, ssa, &access);
+	}
 	xsdk_xsc_lower_refuse(l, "integer Load must be a foldable local");
 	return (XscOperand){ 0 };
 }

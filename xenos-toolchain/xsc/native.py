@@ -64,7 +64,7 @@ class _VarUse(ctypes.Structure):
 
 class _ConstantSlot(ctypes.Structure):
     _fields_ = [("name", ctypes.c_char_p), ("reg", ctypes.c_uint32), ("regs", ctypes.c_uint32),
-                ("member", ctypes.c_int32)]
+                ("member", ctypes.c_int32), ("block", ctypes.c_int32), ("moved", ctypes.c_bool)]
 
 
 class _Block(ctypes.Structure):
@@ -255,6 +255,24 @@ def records(blob: bytes):
     count = words[record + 5] >> 5 & 0x1F
     code = (words[1] + words[record]) // 4
     return list(words[first:first + count]), list(words[first + count:code]) if vertex else []
+
+
+# The constant table's register sets (XenosRecomp:XenosRecomp/constant_table.h, RegisterSet).
+REGISTER_SETS = ("bool", "int4", "float4", "sampler")
+
+
+def constant_table(blob: bytes):
+    """A container's constant table, where xsdk:src/shader.c's xsdk_shader_constant reads it: each entry's name,
+    register set, register index and count, and its type's class, type, rows, columns and elements
+    (XenosRecomp:XenosRecomp/constant_table.h)."""
+    table = struct.unpack_from(">I", blob, 16)[0] + 4
+    count, first = struct.unpack_from(">II", blob, table + 12)
+    out = []
+    for i in range(count):
+        name, set_, index, regs, _, type_info, _ = struct.unpack_from(">IHHHHII", blob, table + first + 20 * i)
+        text = blob[table + name:blob.index(b"\0", table + name)].decode()
+        out.append((text, REGISTER_SETS[set_], index, regs) + struct.unpack_from(">5H", blob, table + type_info))
+    return out
 
 
 def link(vertex: bytes, pixel: bytes) -> bytes:

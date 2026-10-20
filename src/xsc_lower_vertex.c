@@ -3,12 +3,8 @@
 // A vertex shader, lowered as lower.py's lower_vertex lowers it.
 
 enum {
-	// The rows and columns a matrix constant declares.
-	MATRIX_SIZE = 4,
 	// A texture fetch names one of 32 fetch constants (xenia:src/xenia/gpu/ucode.h:789-790).
 	FETCH_SLOTS = 32,
-	// The parameter type xost's containers give a sampler.
-	SAMPLER_PARAMETER = 0xC,
 	// gl_PerVertex's members by their BuiltIn decoration, and outputs' storage class (SPIR-V 1.0's enums).
 	BUILTIN_POINT_SIZE = 1,
 	BUILTIN_CLIP_DISTANCE = 3,
@@ -213,25 +209,15 @@ static bool sample_all(XscLower *l, bool used[FETCH_SLOTS])
 }
 
 // The samplers first, as a pixel shader's container has them, then the uniforms, the instance group and the literals.
-static bool add_constants(
-	XscLower *l, const XscInterface *si, const bool used[FETCH_SLOTS], int64_t group, XscConstants *constants)
+static bool add_constants(XscLower *l, const bool used[FETCH_SLOTS], int64_t group, XscConstants *constants)
 {
 	for (int64_t slot = 0; slot < FETCH_SLOTS; slot++) {
-		const char *const name = used[slot] ? xsdk_xsc_format(l->x, "tex%lld", (long long)slot) : NULL;
-		const XscConstant c = { name, XSC_REGISTER_SET_SAMPLER, (uint32_t)slot, 1, XSC_CLASS_OBJECT, SAMPLER_PARAMETER,
-			1, 1 };
-		if (used[slot] && (!name || !xsdk_xsc_add_constant(l->x, constants, c)))
+		const XscConstant c = used[slot] ? xsdk_xsc_sampler_constant(l, slot) : (XscConstant){ 0 };
+		if (used[slot] && (!c.name || !xsdk_xsc_add_constant(l->x, constants, c)))
 			return false;
 	}
-	for (size_t i = 0; i < si->constant_count; i++) {
-		const XscConstantSlot *const cs = &si->constants[i];
-		XscConstant c = xsdk_xsc_vector_constant(cs->name, cs->reg, 1);
-		if (cs->regs > 1)
-			c = (XscConstant){ cs->name, XSC_REGISTER_SET_FLOAT4, cs->reg, cs->regs, XSC_CLASS_MATRIX_COLUMNS,
-				XSC_TYPE_FLOAT_PARAMETER, MATRIX_SIZE, MATRIX_SIZE };
-		if (!xsdk_xsc_add_constant(l->x, constants, c))
-			return false;
-	}
+	if (!xsdk_xsc_uniform_constants(l, constants, true))
+		return false;
 	if (group != XSC_NONE && !xsdk_xsc_add_constant(l->x, constants, xsdk_xsc_vector_constant("_instance", group, 1)))
 		return false;
 	return xsdk_xsc_literal_constants(l, constants);
@@ -389,7 +375,7 @@ bool xsdk_xsc_lower_vertex(Xsc *x, const XscModule *m, const XsdkXscOptions *opt
 	const PerVertex pv = per_vertex(m, types, si);
 	const uint32_t position = position_value(&l, &pv, &stores);
 	return !xsc_failed(&l) && sample_all(&l, used) && lower_body(&l, si, &pv, &stores, position) &&
-		add_constants(&l, si, used, out->instance, &constants) &&
+		add_constants(&l, used, out->instance, &constants) &&
 		xsdk_xsc_program_finish(x, &p, constants.items, constants.count, &out->container, &out->container_bytes) &&
 		xsdk_xsc_literal_needs(&l, out) && xsdk_xsc_loop_needs(&l, out) && clip_planes(&l, &pv, &stores, position, out);
 }

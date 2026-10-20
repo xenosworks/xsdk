@@ -94,6 +94,18 @@ bool xsdk_xsc_build_cf_exec_pred(Xsc *x, uint32_t opcode, int64_t address, int64
 	return true;
 }
 
+// The boolean constant is word 1's bits 2 to 9, where an exec's predicate clean bit sits, and the condition bit 10
+// (xenia:src/xenia/gpu/ucode.h:265-297).
+bool xsdk_xsc_build_cf_cond_exec(Xsc *x, uint32_t opcode, int64_t address, int64_t count, int64_t sequence, int64_t vc,
+	int64_t boolean, bool condition, uint32_t pair[2])
+{
+	if (!xsdk_xsc_build_cf_exec(x, opcode, address, count, sequence, vc, false, pair) ||
+		!field(x, &pair[1], boolean, 2, 8, "bool_address"))
+		return false;
+	flag(&pair[1], condition, 10);
+	return true;
+}
+
 bool xsdk_xsc_build_cf_alloc(Xsc *x, int64_t alloc_type, uint32_t pair[2])
 {
 	uint32_t d1 = 0;

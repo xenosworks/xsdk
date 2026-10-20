@@ -365,6 +365,21 @@ bool xsdk_xsc_declares_local(const XscModule *m, size_t i, size_t first, size_t 
 	return storage == SPV_STORAGE_PRIVATE || (storage == SPV_STORAGE_FUNCTION && i >= first && i < end);
 }
 
+enum {
+	OP_SOURCE = 3,
+	SOURCE_HLSL = 5,
+};
+
+// OpSource's language (SPIR-V 1.0, section 3.2).
+bool xsdk_xsc_hlsl(const XscModule *m)
+{
+	for (size_t i = 0; i < m->instr_count && m->instrs[i].opcode != SPV_FUNCTION; i++) {
+		if (m->instrs[i].opcode == OP_SOURCE)
+			return xsdk_xsc_operand(&m->instrs[i], 0) == SOURCE_HLSL;
+	}
+	return false;
+}
+
 const char *xsdk_xsc_name(const XscModule *m, uint32_t id, const char *fallback)
 {
 	const char *name = fallback;
