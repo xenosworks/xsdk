@@ -1,0 +1,26 @@
+17:54:01 net_log: listening on UDP port 7371
+17:54:20 net_log: 192.168.0.152: a run starts, written to local/m53/net/20261020-175420-192.168.0.152.log
+17:59:56 net_log: 192.168.0.152: 952 lines, 0 never came
+17:59:56 net_log: 192.168.0.152: a run starts, written to local/m53/net/20261020-175956-192.168.0.152.log
+18:00:01 net_log: 192.168.0.152: lines 99 to 99 never came
+18:00:03 net_log: 192.168.0.152: lines 199 to 199 never came
+18:00:06 net_log: 192.168.0.152: lines 299 to 299 never came
+18:00:15 net_log: 192.168.0.152: lines 399 to 399 never came
+18:00:21 net_log: 192.168.0.152: lines 499 to 499 never came
+18:00:34 net_log: 192.168.0.152: lines 599 to 599 never came
+18:00:44 net_log: 192.168.0.152: lines 699 to 699 never came
+18:00:48 net_log: 192.168.0.152: lines 799 to 799 never came
+18:01:03 net_log: 192.168.0.152: lines 899 to 899 never came
+18:09:49 net_log: 192.168.0.152: 943 lines, 9 never came
+18:09:49 net_log: 192.168.0.152: a run starts, written to local/m53/net/20261020-180949-192.168.0.152.log
+18:11:07 net_log: 192.168.0.152: 963 lines, 0 never came
+18:11:07 net_log: 192.168.0.152: a run starts, written to local/m53/net/20261020-181107-192.168.0.152.log
+18:11:11 net_log: 192.168.0.152: lines 99 to 99 never came
+18:11:11 net_log: 192.168.0.152: lines 199 to 199 never came
+18:11:15 net_log: 192.168.0.152: lines 299 to 299 never came
+18:11:22 net_log: 192.168.0.152: lines 399 to 399 never came
+18:11:27 net_log: 192.168.0.152: lines 499 to 499 never came
+18:11:36 net_log: 192.168.0.152: lines 599 to 599 never came
+18:11:48 net_log: 192.168.0.152: lines 699 to 699 never came
+18:11:52 net_log: 192.168.0.152: lines 799 to 799 never came
+18:12:06 net_log: 192.168.0.152: lines 899 to 899 never came

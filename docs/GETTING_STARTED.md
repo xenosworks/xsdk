@@ -284,6 +284,23 @@ exit: status 0
 
 The broken builds of section 5 each log a `FAIL:` line where the working one logs `PASS:`.
 
+**Over the network, as the title writes it.** Put a `net_log.txt` beside the `.xex` holding your PC's address and a
+port, such as `192.168.0.125 7371`, and run `tools/net_log.py` on the PC:
+
+```
+python tools/net_log.py --out net_log
+```
+
+Every line of the log also comes to the PC as it's written, from the first, and the script prints it and writes each
+run to a file of its own in `net_log/`, byte for byte the log on the console. It goes over UDP, so the title never
+waits on the PC: with nothing listening the title runs as it would without the file, and a line lost on the way is
+reported as `lines <n> to <m> never came`. Allow UDP on that port through the PC's firewall. A line costs about 0.3 ms
+to the file and up to 0.13 ms more over the network.
+
+**DbgPrint** gets the log too only where a `dbgprint.txt` is beside the `.xex`, or the title calls
+`xsdk_log_set_dbgprint(true)`: it reaches a kernel debugger or Xenia's `xenia.log`, and on the console it cost 3 to
+7 ms a line.
+
 ## 8. A title of your own
 
 A title links `~/xsdk/build/libxsdk.a`, so build xsdk first, as section 5 does, with the same toolchain. Then copy the

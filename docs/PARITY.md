@@ -186,8 +186,9 @@ Each in its own repository under xenosworks.
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
-| A log file per title, readable while it runs; `stdout` and `stderr` into it | Yes | `xsdk_log_*` (`log.h`) | `tests/test_files.c` | The log over the network |
-| `DbgPrint` | Yes | `kernel.h` | | |
+| A log file per title, readable while it runs; `stdout` and `stderr` into it | Yes | `xsdk_log_*` (`log.h`) | `tests/test_files.c` | |
+| The log over the network, as the title writes it | Yes | `net_log.txt` beside the `.xex`, `tools/net_log.py` on the PC | results/2026-10-20-milestone-53 | A reliable stream: UDP drops what the network drops, and says where |
+| `DbgPrint` | Yes | `kernel.h`; the log's lines too with `dbgprint.txt` or `xsdk_log_set_dbgprint` | | |
 | Crash reports with function names | No | | | Milestone 40, paused after its probe (SCOPE.md) |
 | Counters: the ring, presents, thread waits | Yes | `xsdk_gpu_stats`, `xsdk_present_stats`, `xsdk_thread_wait_counts` | xsdk_test | A CPU profiler; a GPU capture tool |
 
@@ -215,7 +216,7 @@ What a porter would hit first, as proposed on 2026-10-15, each a milestone agree
    title ended back at the dashboard (SCOPE.md, milestone 40). Open: paused after its probe.
 2. **Docs and samples,** which make everything after them easier to use, for people and for the AI assistants most of
    them will work through. Done, milestone 41.
-3. **The log over the network,** so a title's failure can be seen without copying files back. Open.
+3. **The log over the network,** so a title's failure can be seen without copying files back. Done, milestone 53.
 4. **XAM's asynchronous calls, then save data and drives.** XAM's calls and saves on the hard disk done, milestone 51.
    Open: memory units and USB drives, the device selector, `hdd:`, `usb:` and `dvd:`.
 5. **Profiles and system UI.** The signed-in user and gamertag, the keyboard, message boxes and pausing for the Guide

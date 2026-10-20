@@ -4606,3 +4606,14 @@ Logs: results/2026-10-20-milestone-44-step-5/.
   where only the EFB's passes tile, 11 and 13 ms of replay and 4 and 6 ms more GPU a frame than at 1 sample.
 - **At 2 samples Dusklight dips under 30 fps:** the title scene 28.8 to 29.9 fps, Ordon's village 27 to 28 against 29
   to 30 at 1 sample. Its edges come out blended. Dusklight stays at 1 sample.
+
+## The log over the network, milestone 53 (2026-10-20)
+
+xsdk_test's log over UDP to `tools/net_log.py` (results/2026-10-20-milestone-53/):
+- **Every line arrived,** in order, the whole log byte for byte, 67,379 bytes from the first line to `exit:`, including
+  the lines written as the title ended. A build dropping every 100th datagram showed each gap on the PC.
+- **A port nobody listens on** costs nothing: no `sendto` failed, and the title ran as without the network log.
+- **What a line costs,** 100 lines timed: 0.31 ms to the file, up to 0.13 ms more over UDP.
+- **`DbgPrint` costs 3 to 7 ms a line** on this console, and was 5.6 ms of a line's 5.9 while every line went to it,
+  so the log leaves it off unless `dbgprint.txt` or `xsdk_log_set_dbgprint` turns it on. Why it's slow here isn't
+  known.

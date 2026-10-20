@@ -247,7 +247,9 @@ calls take `/` or `\`:
 `std::filesystem` all work there (tests/test_files.c, tests/test_cpp_filesystem.cpp). Files open sharing nothing, so a
 file already open can't be opened again (docs/PITFALLS.md). Permissions can't change, and there are no links. Other
 drives, `hdd:`, `usb:` and the DVD, aren't named yet (docs/PARITY.md, "Files, drives and storage"). The log,
-`xsdk_log_write` from any thread, is `<title>.log` in `game:\`; `stdout` and `stderr` go there too.
+`xsdk_log_write` from any thread, is `<title>.log` in `game:\`; `stdout` and `stderr` go there too. With a
+`net_log.txt` beside the `.xex` each line also goes to a PC running `tools/net_log.py`, and with a `dbgprint.txt`, or
+after `xsdk_log_set_dbgprint(true)`, to `DbgPrint` (docs/GETTING_STARTED.md, "Reading the log").
 
 ## Sockets
 

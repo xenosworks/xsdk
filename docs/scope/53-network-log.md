@@ -1,6 +1,8 @@
 # Milestone 53: the log over the network
 
-Proposed on 2026-10-20, not yet agreed.
+Agreed on 2026-10-20, over UDP and with `net_log.txt`. Measuring the cost a line showed `DbgPrint` costing about
+5.6 ms of a line's 5.9 on the console, so on the user's choice it's off unless `dbgprint.txt` is beside the `.xex` or
+the title calls `xsdk_log_set_dbgprint`.
 
 ## Why
 

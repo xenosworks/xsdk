@@ -13,8 +13,8 @@ enum {
 	HOLD_MS = 50,
 	LOG_COST_LINES = 100,
 	LOG_COST_DBGPRINT_LINES = 10,
-	// About 2.5 times a line to the file and over the network, 0.31 ms and 0.24 (docs/HARDWARE.md, "The log over the
-	// network, milestone 53"); a line went to DbgPrint as well before, about 5.6 ms.
+	// About 3.5 times a line to the file and over the network, 0.31 ms and up to 0.13 more (docs/HARDWARE.md, "The log
+	// over the network, milestone 53"); DbgPrint's 3 to 7 ms, which every line paid before, fails it.
 	LOG_COST_BAR_US = 1500,
 	CHECK_NAME_BYTES = 64,
 };

@@ -18,7 +18,7 @@ layer that drives Xenos directly. Scope, sources and milestones are in SCOPE.md.
 - Xenia Canary (`C:\Users\Mena\Downloads\xenia_canary\xenia_canary.exe`, which may be moved) is for crash and smoke
   checks only. Launch it with the `.xex` path; it stays open after the title exits, so stop it after a few seconds.
   A title's log lands in its `cache` folder, named after the `.xex` (`cache\xsdk_test.log`), and `DbgPrint` output
-  in its `xenia.log`. For the GPU tests add
+  in its `xenia.log`; the log goes to `DbgPrint` only with a `dbgprint.txt` beside the `.xex`. For the GPU tests add
   `--readback_resolve=full`, so the CPU sees what resolves write, and `--async_shader_compilation=false`, or Xenia
   skips draws while it compiles a new shader. Xenia has no display controller, so the display checks fail there. It
   runs the time base at the 50 MHz the kernel reports, not the console's 49.875 MHz, so the check that the SDK's
