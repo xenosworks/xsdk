@@ -77,16 +77,15 @@ work begins.
 - **Several targets at once, multisampled.** vulkan4xenon milestone 25 drew up to four colour targets at once at one
   sample, each blended and masked on its own (`xsdk_gpu_set_targets`, `xsdk_gpu_set_blends`), and xost exports
   fragment outputs at locations 1 to 3 to oC1 to oC3, ps_export_mode counting them (docs/HARDWARE.md, "Float, 10-bit
-  and 64-bit targets and four at once"). Left: several targets at 2 or 4 samples (vulkan4xenon milestone 17).
+  and 64-bit targets and four at once"). Since milestone 44 step 3 xsdk draws them at 2 and 4 samples too
+  (`xsdk_gpu_set_targets_samples`); left: the layer's (vulkan4xenon milestone 17).
 - **More target formats.** vulkan4xenon milestone 25 added 2_10_10_10, its 7e3 float, 16_16_16_16 and the 16- and
   32-bit floats at one sample, each resolved into a texture of the format it converts to (`xsdk_gpu_set_targets`,
   `xsdk_gpu_resolve_target`). Left: 16_16, 32_32_FLOAT, 8_8_8_8_GAMMA and the two AS_ formats
-  (xenia:src/xenia/gpu/xenos.h:299-313); and any of them but 8_8_8_8 at 2 or 4 samples (vulkan4xenon milestone 17).
-  7e3 and 16_16_16_16 blend; the 16- and 32-bit floats don't (docs/HARDWARE.md).
-- **Predicated tiling at 2 and 4 samples,** for multisampled targets larger than eDRAM. Milestone 44's first part
-  tiles passes at one sample (`xsdk_gpu_begin_tiles`; docs/HARDWARE.md, "Tiled passes at one sample, milestone 44
-  step 2"), and refuses 2 and 4 with `STATUS_NOT_IMPLEMENTED`; its second part brings them
-  (docs/scope/44-tiling-and-msaa.md).
+  (xenia:src/xenia/gpu/xenos.h:299-313). At 2 and 4 samples 2_10_10_10, 7e3 and 16_16_16_16 draw since milestone 44
+  step 3, and the 16- and 32-bit floats are refused, as their resolves don't average on the console
+  (results/2026-10-20-milestone-44-step-3). 7e3 and 16_16_16_16 blend; the 16- and 32-bit floats don't
+  (docs/HARDWARE.md).
 - **Cube and 3D textures, the rest.** vulkan4xenon milestone 23 brought tiled cubes with their mips and tiled 3D
   textures of one level (include/xsdk/texture.h), right on the console (docs/HARDWARE.md). Left: linear cubes and
   3D textures; a 3D texture's mips, which Xenia sizes by the base's depth at every level
