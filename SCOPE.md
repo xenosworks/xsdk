@@ -1005,6 +1005,10 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
     ranks after the crash handler, which comes last (results/2026-10-20-milestone-53/; HARDWARE.md, "The log over the
     network, milestone 53").
 
+54. **What porters hit first, files and the system.** Agreed on 2026-10-20: docs/scope/54-porters-files-and-system.md,
+    the next gap docs/PARITY.md ranks: file calls that don't link, drive names, the console's time zone and language,
+    Xbox Home, and letterboxing on 4:3.
+
 **Networking**, a scope of its own rather than a numbered milestone: sockets, and TLS 1.2 in the title's own code.
 Agreed and done on 2026-10-14: docs/scope/networking.md.
 
