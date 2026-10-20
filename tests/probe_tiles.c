@@ -126,6 +126,12 @@ typedef enum { SCENE_FILL, SCENE_VERTEX, SCENE_EMPTY } CostScene;
 static const char *const cost_tiling_names[COST_TILINGS] = { "untiled", "1 band", "2 bands", "3 bands" };
 // 0 untiled, else a band's rows.
 static const uint32_t cost_band_rows[COST_TILINGS] = { 0, 736, 384, 256 };
+// The multisampled frames the scope times (docs/scope/44-tiling-and-msaa.md, "Done when"): 2 samples in 2 and 3 bands,
+// 4 in 3; 1280x720 doesn't fit eDRAM untiled at either.
+static const struct {
+	uint32_t samples;
+	uint32_t band_rows;
+} cost_multisampled[] = { { 2, 384 }, { 2, 256 }, { 4, 256 } };
 
 // Type-3 opcodes (xenia:src/xenia/gpu/xenos.h:1601, 1618-1619, 1630-1633).
 enum {
@@ -965,12 +971,15 @@ static uint32_t clock_span_us(void)
 	return clock_us(xsdk_gpu_clock_value(clock_words + XSDK_GPU_CLOCK_WORDS) - xsdk_gpu_clock_value(clock_words));
 }
 
+// The samples the cost's tiled passes take.
+static uint32_t cost_samples = 1;
+
 // A 1280x720 tiled pass of the scene, band_rows a band, with depth, resolved into cost_frame.
 static bool queue_tiled(CostScene scene, uint32_t band_rows)
 {
 	const XsdkTiling tiling = { .width = COST_WIDTH,
 		.height = COST_HEIGHT,
-		.samples = 1,
+		.samples = cost_samples,
 		.targets = { { .format = XSDK_TARGET_8_8_8_8 } },
 		.count = 1,
 		.depth = true,
@@ -1083,6 +1092,20 @@ static bool run_cost(const ProbeCase *c)
 		!log_scene("one pixel", SCENE_EMPTY, empty) || !time_predicated(false, &skipped) ||
 		!time_predicated(true, &drawn))
 		return false;
+	for (uint32_t i = 0; i < sizeof cost_multisampled / sizeof cost_multisampled[0]; i++) {
+		uint32_t fill_us = 0;
+		uint32_t vertex_us = 0;
+		cost_samples = cost_multisampled[i].samples;
+		const bool timed = time_frame(SCENE_FILL, cost_multisampled[i].band_rows, &fill_us) &&
+			time_frame(SCENE_VERTEX, cost_multisampled[i].band_rows, &vertex_us);
+		cost_samples = 1;
+		if (!timed)
+			return false;
+		xsdk_log_write(
+			"tiles probe: case 11 cost, at %u samples in bands of %u rows: fill-bound %u us, vertex-bound %u us",
+			(unsigned)cost_multisampled[i].samples, (unsigned)cost_multisampled[i].band_rows, (unsigned)fill_us,
+			(unsigned)vertex_us);
+	}
 	// Each pixel is copied once whatever the bands, so what a band adds past one band is its fixed cost.
 	const uint32_t fixed = empty[3] > empty[1] ? (empty[3] - empty[1]) / 2 : 0;
 	xsdk_log_write("tiles probe: case 11 cost, a band's fixed cost: (%u - %u) / 2 = %u us; under %u us: %s",
