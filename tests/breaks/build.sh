@@ -1,6 +1,7 @@
 #!/bin/sh
-# xsdk_test's breaks: xsdk_test built with each patch here applied, as build/breaks/xsdk_test_<break>.xex. Run in WSL
-# from anywhere: sh tests/breaks/build.sh. Each patch is taken back out after its build, even a failed one.
+# The breaks: xsdk_test, or the title a break names, built with each patch here applied, as
+# build/breaks/<title>_<break>.xex. Run in WSL from anywhere: sh tests/breaks/build.sh. Each patch is taken back out
+# after its build, even a failed one.
 # Milestone 51's:
 # - noflush: xsdk_save_unmount closes with no flush; fails "xam: a save is flushed before it's unmounted" alone.
 # - nowait: xsdk_xam_wait never waits on the event; fails "xam: an overlapped call completes through its event" alone
@@ -20,14 +21,22 @@
 #   read back by pread, the position and size unchanged" alone.
 # - tz_sign: TZ's offsets get the wrong sign; fails "settings: localtime is UTC moved by the console's time zone, and
 #   mktime takes it back" alone, wherever the console's time is off UTC as the test runs.
+# - hdd_device: hdd: names the USB stick's device; fails "drives: hdd: lists its root and holds the .xex game: runs
+#   from" alone, where the .xex runs from the hard disk.
 set -eu
 cd "$(dirname "$0")/../.."
-for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0 \
-	pwrite_position tz_sign; do
+build_break()
+{
+	name=$1
+	title=$2
 	patch -p1 --forward --quiet < "tests/breaks/$name.patch"
 	trap 'patch -p1 -R --quiet < "tests/breaks/$name.patch"' EXIT INT TERM
-	make -j32 BUILD="build/breaks/$name" "build/breaks/$name/xsdk_test.xex"
+	make -j32 BUILD="build/breaks/$name" "build/breaks/$name/$title.xex"
 	patch -p1 -R --quiet < "tests/breaks/$name.patch"
 	trap - EXIT INT TERM
-	cp "build/breaks/$name/xsdk_test.xex" "build/breaks/xsdk_test_$name.xex"
+	cp "build/breaks/$name/$title.xex" "build/breaks/${title}_$name.xex"
+}
+for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0 \
+	pwrite_position tz_sign hdd_device; do
+	build_break "$name" xsdk_test
 done

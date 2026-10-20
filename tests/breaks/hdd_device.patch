@@ -1,0 +1,12 @@
+--- a/src/path.c
++++ b/src/path.c
+@@ -35,7 +35,8 @@
+ // The drives xsdk names, each its device's root, which opens as a folder only with its closing backslash
+ // (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54"). The kernel knows the rest, such as game:.
+ static const DriveName drive_names[] = {
+-	{ "hdd", "\\Device\\Harddisk0\\Partition1\\" },
++	// Broken on purpose: hdd: names the USB stick.
++	{ "hdd", "\\Device\\Mass0\\" },
+ 	{ "usb", "\\Device\\Mass0\\" },
+ 	{ "usb0", "\\Device\\Mass0\\" },
+ 	{ "usb1", "\\Device\\Mass1\\" },

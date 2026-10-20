@@ -7,6 +7,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
 #include <unistd.h>
@@ -26,15 +27,56 @@ static bool is_separator(char c)
 	return c == '/' || c == '\\';
 }
 
-// The bytes up to and including the separator after the drive: "game:\" or "\".
+typedef struct {
+	const char *name;
+	const char *device;
+} DriveName;
+
+// The drives xsdk names, each its device's root, which opens as a folder only with its closing backslash
+// (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54"). The kernel knows the rest, such as game:.
+static const DriveName drive_names[] = {
+	{ "hdd", "\\Device\\Harddisk0\\Partition1\\" },
+	{ "usb", "\\Device\\Mass0\\" },
+	{ "usb0", "\\Device\\Mass0\\" },
+	{ "usb1", "\\Device\\Mass1\\" },
+	{ "usb2", "\\Device\\Mass2\\" },
+	{ "mu", "\\Device\\Mu0\\" },
+	{ "mu0", "\\Device\\Mu0\\" },
+	{ "mu1", "\\Device\\Mu1\\" },
+	{ "dvd", "\\Device\\Cdrom0\\" },
+};
+
+enum { DRIVE_NAMES = sizeof(drive_names) / sizeof(drive_names[0]) };
+
+// The device root a drive's name stands for, any case, as the kernel's drives take any; NULL for the kernel's own.
+static const char *drive_device(const char *name, size_t name_bytes)
+{
+	for (size_t i = 0; i < DRIVE_NAMES; i++) {
+		if (strlen(drive_names[i].name) == name_bytes && strncasecmp(name, drive_names[i].name, name_bytes) == 0)
+			return drive_names[i].device;
+	}
+	return NULL;
+}
+
+// The bytes up to and including the root's closing separator: a named device's root, "game:\" or "\".
 static size_t root_bytes(const char *resolved)
 {
+	for (size_t i = 0; i < DRIVE_NAMES; i++) {
+		const size_t device_bytes = strlen(drive_names[i].device);
+		if (strncasecmp(resolved, drive_names[i].device, device_bytes) == 0)
+			return device_bytes;
+	}
 	return (size_t)(strchr(resolved, '\\') - resolved) + 1;
 }
 
-// Starts resolved at a drive: "game:" becomes "game:\".
+// Starts resolved at a drive: "game:" becomes "game:\", and "usb:" its device's root.
 static bool start_at_drive(char resolved[XSDK_PATH_BYTES], const char *drive, size_t drive_bytes)
 {
+	const char *const device = drive_device(drive, drive_bytes - 1);
+	if (device) {
+		strcpy(resolved, device);
+		return true;
+	}
 	if (drive_bytes + 2 > XSDK_PATH_BYTES)
 		return false;
 	memcpy(resolved, drive, drive_bytes);
@@ -73,7 +115,7 @@ static int append_names(char resolved[XSDK_PATH_BYTES], const char *path)
 			// A drive starts over, as in "game:\/game:\file", std::filesystem's absolute() of "game:\file".
 			if (!start_at_drive(resolved, path, name_bytes))
 				return ENAMETOOLONG;
-			root = name_bytes + 1;
+			root = root_bytes(resolved);
 			length = root;
 		} else if (name_bytes == 2 && path[0] == '.' && path[1] == '.') {
 			while (length > root && resolved[length - 1] != '\\')

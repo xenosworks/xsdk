@@ -45,6 +45,9 @@ int xsdk_file_errno(NTSTATUS status)
 	case STATUS_OBJECT_NAME_NOT_FOUND:
 	case STATUS_OBJECT_PATH_NOT_FOUND:
 	case STATUS_NO_SUCH_FILE:
+	// A drive with nothing in it.
+	case STATUS_NO_MEDIA_IN_DEVICE:
+	case STATUS_DEVICE_REMOVED:
 		return ENOENT;
 	case STATUS_OBJECT_NAME_COLLISION:
 		return EEXIST;

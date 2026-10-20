@@ -219,10 +219,13 @@ enum {
 
 // File statuses Xenia doesn't list; the values are NT's.
 enum {
+	STATUS_NO_MEDIA_IN_DEVICE = (int32_t)0xC0000013,
 	STATUS_OBJECT_PATH_NOT_FOUND = (int32_t)0xC000003A,
 	STATUS_SHARING_VIOLATION = (int32_t)0xC0000043,
 	STATUS_DIRECTORY_NOT_EMPTY = (int32_t)0xC0000101,
 	STATUS_NOT_A_DIRECTORY = (int32_t)0xC0000103,
+	// A drive with nothing in it: a USB port or memory unit slot (results/2026-10-20-milestone-54/probe_drives.log).
+	STATUS_DEVICE_REMOVED = (int32_t)0xC00002B6,
 };
 
 // Win32 errors that XAM returns (xenia:src/xenia/xbox.h:86-104).

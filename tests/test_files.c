@@ -1,8 +1,10 @@
+#include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
@@ -27,6 +29,9 @@ enum {
 	STATVFS_UNITS_TAKEN = STATVFS_FILE_UNITS + 1,
 	STATVFS_FOLDER_UNITS = 1,
 	WRITE_CHUNK_BYTES = 16384,
+	// NT's MAX_PATH; ExLoadedImageName holds up to 256 bytes.
+	DRIVE_PATH_BYTES = 260,
+	DRIVE_CHECK_NAME_BYTES = 128,
 };
 
 // game: is the launch folder on the console; Xenia mounts it read-only but lets titles write to cache:.
@@ -272,6 +277,68 @@ static void check_statvfs(const char *folder, const char *path)
 		read_after && taken >= STATVFS_UNITS_TAKEN && taken <= STATVFS_UNITS_TAKEN + STATVFS_FOLDER_UNITS);
 }
 
+// The entries in a folder, or -1 with errno set where it doesn't open.
+static int count_entries(const char *folder)
+{
+	DIR *const dir = opendir(folder);
+	if (!dir)
+		return -1;
+	int entries = 0;
+	while (readdir(dir))
+		entries++;
+	(void)closedir(dir);
+	return entries;
+}
+
+// hdd: lists its root and holds the .xex game: runs from, the same file through both, where it's on the hard disk.
+static void check_hdd(void)
+{
+	static const char partition[] = "\\Device\\Harddisk0\\Partition1\\";
+	const char *const image = ExLoadedImageName ? ExLoadedImageName : "";
+	if (strncasecmp(image, partition, sizeof(partition) - 1) != 0) {
+		xsdk_log_write("drives: SKIP the hdd: check, as the .xex runs from %s, not the hard disk", image);
+		return;
+	}
+	char on_hdd[DRIVE_PATH_BYTES];
+	char in_game[DRIVE_PATH_BYTES];
+	(void)snprintf(on_hdd, sizeof(on_hdd), "hdd:\\%s", image + sizeof(partition) - 1);
+	(void)snprintf(in_game, sizeof(in_game), "game:\\%s", strrchr(image, '\\') + 1);
+	const int entries = count_entries("hdd:/");
+	struct stat by_hdd;
+	struct stat by_game;
+	const bool same = stat(on_hdd, &by_hdd) == 0 && stat(in_game, &by_game) == 0 && by_hdd.st_size == by_game.st_size &&
+		by_hdd.st_mtime == by_game.st_mtime;
+	xsdk_log_write("drives: hdd:\\ lists %d entries; %s and %s %s", entries, on_hdd, in_game,
+		same ? "are the same file" : "aren't the same file");
+	check("drives: hdd: lists its root and holds the .xex game: runs from", entries > 0 && same);
+}
+
+// A drive lists its root and gives statvfs where there's something in it, and fails both with ENOENT where not.
+static void check_drive(const char *drive)
+{
+	char root[DRIVE_PATH_BYTES];
+	(void)snprintf(root, sizeof(root), "%s/", drive);
+	errno = 0;
+	const int entries = count_entries(root);
+	const int open_errno = errno;
+	struct statvfs info = { 0 };
+	errno = 0;
+	const int sized = statvfs(drive, &info);
+	const int statvfs_errno = errno;
+	if (entries >= 0) {
+		xsdk_log_write("drives: %s lists %d entries; statvfs %d (errno %d): %lu-byte units, %llu of %llu free", drive,
+			entries, sized, statvfs_errno, info.f_bsize, (unsigned long long)info.f_bfree,
+			(unsigned long long)info.f_blocks);
+	} else {
+		xsdk_log_write(
+			"drives: %s has nothing in it: opendir errno %d, statvfs errno %d", drive, open_errno, statvfs_errno);
+	}
+	char name[DRIVE_CHECK_NAME_BYTES];
+	(void)snprintf(
+		name, sizeof(name), "drives: %s lists its root and gives statvfs, or both fail with ENOENT, empty", drive);
+	check(name, entries >= 0 ? sized == 0 && info.f_bsize > 0 : open_errno == ENOENT && statvfs_errno == ENOENT);
+}
+
 // The test file, renamed over another, takes its place, and its own name is gone.
 static void check_rename(const char *path)
 {
@@ -356,4 +423,9 @@ void test_files(void)
 	check_ftruncate(other);
 	check_fsync(other);
 	check_statvfs(folder, other);
+
+	check_hdd();
+	check_drive("usb:");
+	check_drive("dvd:");
+	check_drive("mu:");
 }
