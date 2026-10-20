@@ -1,12 +1,12 @@
 # Milestone 41: docs and samples
 
 Proposed on 2026-10-15, with docs/PARITY.md, as the second of the gaps it ranks, after milestone 40's fault
-handler. Not yet agreed.
+handler. Brought up to date and agreed on 2026-10-19, to run beside milestones 48 to 52.
 
 ## Why
 
 xsdk is meant for other people's titles, and today it explains itself only to the people building it:
-- **Its knowledge is a lab notebook.** SCOPE.md is the plan, and docs/HARDWARE.md, 3,236 lines, records each fact in
+- **Its knowledge is a lab notebook.** SCOPE.md is the plan, and docs/HARDWARE.md, 4,348 lines, records each fact in
   the order the console settled it. The rules that keep a title right on the console are in xsdk's CLAUDE.md, which a
   title's own project won't have: volatile 32-bit stores to GPU memory, big-endian data, what Xenia gets wrong.
 - **Its only examples are tests,** written to check xsdk, not to teach it.
@@ -114,7 +114,9 @@ the docs give it:
 
 ## Not in it
 
-- **Crash reports,** which are milestone 40, and **the log over the network,** a gap of its own in docs/PARITY.md.
+- **Crash reports,** which the user is building apart from xsdk (milestone 40 paused after its probe), and **the log
+  over the network,** a gap of its own in docs/PARITY.md.
+- **HLSL,** milestone 50, which adds `.hlsl` files to `tools/build_shaders.py` once this milestone has made it.
 - **New xsdk calls** for input, audio or the Guide's notifications. The samples use the raw calls that exist, and
   change when those milestones come.
 - **A prebuilt toolchain to download.** It's a release to decide on its own.

@@ -959,7 +959,8 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
     ranks. Paused the same day after its probe (HARDWARE.md, "How the kernel hands a title its faults, milestone
     40's probe").
 
-41. **Docs and samples.** Proposed on 2026-10-15, not yet agreed: docs/scope/41-docs-and-samples.md, the second.
+41. **Docs and samples.** Proposed on 2026-10-15; brought up to date and agreed on 2026-10-19:
+    docs/scope/41-docs-and-samples.md.
 
 42. **Render target formats.** Proposed on 2026-10-15, not yet agreed: docs/scope/42-target-formats.md, the first
     of three toward HDR and deferred rendering, before multiple render targets (43) and predicated tiling (44).
@@ -983,6 +984,12 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
 49. **The pass after a depth clear.** Agreed on 2026-10-19: docs/scope/49-hiz-clear-pass.md, worth
     about 29 us a frame. vulkan4xenon's submit, the third cost measured that day, is vulkan4xenon's milestone 29
     (vulkan4xenon:docs/ROADMAP.md).
+
+50. **HLSL.** Agreed on 2026-10-19: docs/scope/50-hlsl.md, after 48, as both change xost.
+
+51. **Saves, profiles and XAM's asynchronous calls.** Agreed on 2026-10-19: docs/scope/51-saves-and-profiles.md.
+
+52. **Compiled CPU code.** Agreed on 2026-10-19: docs/scope/52-compiled-cpu-code.md.
 
 **Networking**, a scope of its own rather than a numbered milestone: sockets, and TLS 1.2 in the title's own code.
 Agreed and done on 2026-10-14: docs/scope/networking.md.
