@@ -47,6 +47,11 @@ enum {
 	// The GPU's clock counts 498.75 a microsecond (docs/HARDWARE.md, "Queries and events").
 	CLOCKS_IN_4_US = 1995,
 	NAME_BYTES = 16,
+	// Rectangles each first drawn after a clear, scattered, as the pass's place decided which draws it put right.
+	SCATTERED = 64,
+	SCATTERED_MOST_WIDTH = 400,
+	SCATTERED_MOST_HEIGHT = 300,
+	SCATTERED_LOGGED = 8,
 	TEXT_BYTES = 160,
 };
 
@@ -76,6 +81,10 @@ static const PassCase cases[] = {
 	{ "strip8", "the pass over the top left 8 blocks, 256x8", true, 0, { 0, 0, 8 * BLOCK_WIDTH, BLOCK_HEIGHT } },
 	{ "strip20", "the pass over the top left 20 blocks, 640x8", true, 0, { 0, 0, 20 * BLOCK_WIDTH, BLOCK_HEIGHT } },
 	{ "column", "the pass over the left column of blocks, 32x720", true, 0, { 0, 0, BLOCK_WIDTH, HEIGHT } },
+	// Whether one block is too few, or the corner fails as it's the block the next draw goes wrong in.
+	{ "left1", "the pass over the top left block, 32x8", true, 0, { 0, 0, BLOCK_WIDTH, BLOCK_HEIGHT } },
+	{ "corner2", "the pass over the top right 2 blocks, 64x8", true, 0,
+		{ WIDTH - 2 * BLOCK_WIDTH, 0, 2 * BLOCK_WIDTH, BLOCK_HEIGHT } },
 	{ "event4", "EVENT_WRITE CACHE_FLUSH_TS (4) in place of the pass", true, 4, { 0, 0, 0, 0 } },
 	{ "event10", "EVENT_WRITE MPASS_PS_CP_REFETCH (10) in place of the pass", true, 10, { 0, 0, 0, 0 } },
 	{ "event20", "EVENT_WRITE CACHE_FLUSH_AND_INV_TS_EVENT (20) in place of the pass", true, 20, { 0, 0, 0, 0 } },
@@ -197,36 +206,50 @@ static bool drawn(uint32_t x, uint32_t y)
 	return true;
 }
 
+typedef struct {
+	uint32_t wrong;
+	uint32_t left;
+	uint32_t top;
+	uint32_t right;
+	uint32_t bottom;
+} Wrong;
+
 // Draws over the rectangle after the clears before, reads it back through a resolve that leaves depth and the buffer
-// alone, and logs how many of its pixels aren't as the depth test has them: drawn everywhere if shown, else nowhere.
-static void check_draw(const char *name, uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, float depth, bool shown)
+// alone, and counts its pixels that aren't as the depth test has them: drawn everywhere if shown, else nowhere.
+static bool count_wrong(
+	const char *name, uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, float depth, bool shown, Wrong *found)
 {
+	*found = (Wrong){ .left = WIDTH, .top = HEIGHT };
 	if (stopped)
-		return;
+		return false;
 	draw_probe(x0, y0, w, h, depth);
 	xsdk_gpu_set_resolve_clears(true, false);
 	xsdk_gpu_resolve(xsdk_gpu_address(image), WIDTH, HEIGHT, CLEAR_ARGB);
 	xsdk_gpu_set_resolve_clears(true, true);
 	if (!wait_gpu(name))
-		return;
-	uint32_t wrong = 0;
-	uint32_t left = WIDTH;
-	uint32_t top = HEIGHT;
-	uint32_t right = 0;
-	uint32_t bottom = 0;
+		return false;
 	for (uint32_t y = y0; y < y0 + h; y++) {
 		for (uint32_t x = x0; x < x0 + w; x++) {
 			if (drawn(x, y) == shown)
 				continue;
-			wrong++;
-			left = x < left ? x : left;
-			top = y < top ? y : top;
-			right = x > right ? x : right;
-			bottom = y > bottom ? y : bottom;
+			found->wrong++;
+			found->left = x < found->left ? x : found->left;
+			found->top = y < found->top ? y : found->top;
+			found->right = x > found->right ? x : found->right;
+			found->bottom = y > found->bottom ? y : found->bottom;
 		}
 	}
+	return true;
+}
+
+static void check_draw(const char *name, uint32_t x0, uint32_t y0, uint32_t w, uint32_t h, float depth, bool shown)
+{
+	Wrong found;
+	if (!count_wrong(name, x0, y0, w, h, depth, shown, &found))
+		return;
+	const uint32_t wrong = found.wrong;
 	xsdk_log_write("hiz pass: %s: %u of %u pixels wrong, in (%u, %u) to (%u, %u)", name, (unsigned)wrong,
-		(unsigned)(w * h), (unsigned)left, (unsigned)top, (unsigned)right, (unsigned)bottom);
+		(unsigned)(w * h), (unsigned)found.left, (unsigned)found.top, (unsigned)found.right, (unsigned)found.bottom);
 	char text[TEXT_BYTES];
 	snprintf(text, sizeof text, "hiz pass: %s, every pixel right", name);
 	check(text, wrong == 0);
@@ -248,6 +271,42 @@ static void check_after_clears(void)
 	clear(1.0f);
 	check_draw(
 		"cleared far from 0.25, a 200x200 draw at 0.9 shown", SMALL_X, SMALL_Y, SMALL_SIZE, SMALL_SIZE, 0.9f, true);
+}
+
+// Milestone 30's small sequence at rectangles of every size and place, from a fixed seed so every case draws the same.
+static void check_scattered(void)
+{
+	uint32_t seed = 49;
+	uint32_t wrong_rects = 0;
+	uint32_t wrong_pixels = 0;
+	for (uint32_t i = 0; i < SCATTERED && !stopped; i++) {
+		seed = seed * 1664525 + 1013904223;
+		const uint32_t w = 1 + (seed >> 8) % SCATTERED_MOST_WIDTH;
+		seed = seed * 1664525 + 1013904223;
+		const uint32_t h = 1 + (seed >> 8) % SCATTERED_MOST_HEIGHT;
+		seed = seed * 1664525 + 1013904223;
+		const uint32_t x = (seed >> 8) % (WIDTH - w + 1);
+		seed = seed * 1664525 + 1013904223;
+		const uint32_t y = (seed >> 8) % (HEIGHT - h + 1);
+		Wrong hidden;
+		Wrong shown;
+		clear(1.0f);
+		clear(0.25f);
+		(void)count_wrong("a scattered draw at 0.4", x, y, w, h, 0.4f, false, &hidden);
+		clear(1.0f);
+		if (!count_wrong("a scattered draw at 0.9", x, y, w, h, 0.9f, true, &shown))
+			break;
+		if (!shown.wrong)
+			continue;
+		if (wrong_rects++ < SCATTERED_LOGGED)
+			xsdk_log_write("hiz pass: scattered %ux%u at (%u, %u): %u pixels wrong, in (%u, %u) to (%u, %u)",
+				(unsigned)w, (unsigned)h, (unsigned)x, (unsigned)y, (unsigned)shown.wrong, (unsigned)shown.left,
+				(unsigned)shown.top, (unsigned)shown.right, (unsigned)shown.bottom);
+		wrong_pixels += shown.wrong;
+	}
+	xsdk_log_write("hiz pass: %u scattered rectangles: %u with wrong pixels, %u pixels in all", (unsigned)SCATTERED,
+		(unsigned)wrong_rects, (unsigned)wrong_pixels);
+	check("hiz pass: rectangles scattered after clears, every pixel right", !stopped && wrong_rects == 0);
 }
 
 // Hundredths of a microsecond a resolve.
@@ -322,6 +381,7 @@ int main(void)
 	if (made) {
 		xsdk_log_write("hiz pass: the first depth clear with the case, where a hang stops the log");
 		check_after_clears();
+		check_scattered();
 		time_resolves();
 	}
 	check("hiz pass: GPU close", NT_SUCCESS(xsdk_gpu_close()));
