@@ -292,9 +292,9 @@ static void resolve(uint32_t source, uint32_t target, uint32_t address, const Ar
 	const uint32_t flush_fetch[] = { 0, 0, 0 };
 	const uint32_t depth_clears[] = { depth_clear >> HIZ_CLEAR_SHIFT, depth_clear };
 	const bool clears_depth = copy_clears & COPY_CONTROL_DEPTH_CLEAR;
-	// The hierarchical buffer bounds the surface's depth after a clear of all of it, so a part's clear turns it off.
+	// The hierarchical buffer bounds the surface's depth only after a clear of all of it, and only where it fits.
 	const bool whole = !area->x && !area->y && area->width == width && area->height == height;
-	const bool clears_hiz = clears_depth && whole;
+	const bool clears_hiz = clears_depth && whole && xsdk_gpu_hiz_fits(width, height);
 	uint32_t dwords[RESOLVE_MAX_DWORDS];
 	GpuPackets packets = { .dwords = dwords, .count = 0, .capacity = RESOLVE_MAX_DWORDS };
 	put_window(&packets, area);

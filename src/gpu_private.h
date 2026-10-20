@@ -260,6 +260,8 @@ uint32_t xsdk_gpu_copy_sample_select(void);
 void xsdk_gpu_undo_target(void);
 // Whether calls go into a command buffer, not the ring.
 bool xsdk_gpu_recording(void);
+// Whether the hierarchical buffer can bound the depth of a surface this size at the last target's samples.
+bool xsdk_gpu_hiz_fits(uint32_t width, uint32_t height);
 // After a resolve that cleared depth to RB_DEPTH_CLEAR's depth_clear: the hierarchical buffer bounds that surface's.
 void xsdk_gpu_hiz_cleared(uint32_t width, uint32_t height, uint32_t depth_clear);
 // Leaves the hierarchical buffer off until depth is next cleared.

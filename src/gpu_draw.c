@@ -252,11 +252,16 @@ static bool is_hiz_surface(uint32_t width, uint32_t height)
 		surface.samples == hiz_surface.samples && surface.depth_tile == hiz_surface.depth_tile;
 }
 
+bool xsdk_gpu_hiz_fits(uint32_t width, uint32_t height)
+{
+	// Multisampled targets haven't been tried with the buffer on the console.
+	return target_samples == 1 && width <= HIZ_MOST_WIDTH && height <= HIZ_MOST_HEIGHT;
+}
+
 void xsdk_gpu_hiz_cleared(uint32_t width, uint32_t height, uint32_t depth_clear)
 {
 	hiz_surface = surface_of(width, height);
-	// Multisampled targets haven't been tried with the buffer on the console.
-	hiz_kept = target_samples == 1 && width <= HIZ_MOST_WIDTH && height <= HIZ_MOST_HEIGHT;
+	hiz_kept = xsdk_gpu_hiz_fits(width, height);
 	// Reversed depth clears to 0 and tests greater-than.
 	hiz_greater = depth_clear < DEPTH_CLEAR_HALF;
 }
