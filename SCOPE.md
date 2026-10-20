@@ -1001,8 +1001,9 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
 52. **Compiled CPU code.** Agreed and done on 2026-10-19: docs/scope/52-compiled-cpu-code.md (HARDWARE.md, "Counted
     loops end in bdnz, milestone 52"; what atomics cost in docs/GUIDE.md, "Threads and where they run").
 
-53. **The log over the network.** Agreed on 2026-10-20: docs/scope/53-network-log.md, the gap docs/PARITY.md ranks
-    after the crash handler, which comes last.
+53. **The log over the network.** Agreed and done on 2026-10-20: docs/scope/53-network-log.md, the gap docs/PARITY.md
+    ranks after the crash handler, which comes last (results/2026-10-20-milestone-53/; HARDWARE.md, "The log over the
+    network, milestone 53").
 
 **Networking**, a scope of its own rather than a numbered milestone: sockets, and TLS 1.2 in the title's own code.
 Agreed and done on 2026-10-14: docs/scope/networking.md.
