@@ -462,6 +462,105 @@ compiled by 5dd03e9 and by this step: 902 containers, manifests and resources th
 refused alike. `tests/xsc_shaders.h` regenerates with `grid_binding_ps.hlsl`; of the others only HLSL tables change,
 grid_loop_ps's Count an int at loop constant 16, grid_skin_vs's bones 8 float4x3s.
 
+## Step 7: glslang-xenon
+
+`step7.txt`, `step7.json` (docs/scope/50-hlsl.md, step 7), check_hlsl.py run with
+`--glslang ~/build/m50g/build/glslang/StandAlone/glslang`, glslang-xenon on branch M50g: 40a553d5, 026e7416 and
+a607c3a9 on `xenon`'s 9bc57aec, which is Khronos's 16.3.0 and the console port. HLSL's testdata is now its SPIR-V:
+- **fmod** (glslang-xenon 40a553d5): HLSL's `fmod(x, y)` has the sign of x, x - y * trunc(x / y): Cg's "same sign as
+  x" (NVIDIA Cg 3.1 Toolkit documentation, `fmod`), Wine's vkd3d-shader (libs/vkd3d-shader/hlsl.y, `intrinsic_fmod`,
+  and tests/hlsl/fmod.shader_test, `fmod(-0.5, 6.5)` -0.5), clang's `OpFRem` (llvm/llvm-project#99118). glslang made it
+  GLSL's `mod` (glslang/HLSL/hlslParseables.cpp:1074), `OpFMod`, the sign of y. `decomposeIntrinsic`
+  (hlslParseHelper.cpp:4903-4957) now writes x - y * trunc(x / y), each argument in a temporary, a matrix a column at
+  a time as `Trunc` takes no matrix; constant arguments, folded before that, truncate in `TIntermediate::fold` for HLSL
+  (glslang/MachineIndependent/Constant.cpp:955-957). GLSL's `mod` and HLSL's `%` are as they were.
+- **`register(bN)` and `register(iN)`** (026e7416): under `--hlsl-dx9-compatible -fhlsl_functionality1`,
+  `handleRegister` keeps a `b#` or `i#` in a new `TQualifier` field, and `decorateStructType` writes it on the
+  `$Global` member as a second UserSemantic (HlslSemanticGOOGLE), `"register(b3)"`. That is the decoration
+  `-fhlsl_functionality1` already gives a member's semantic, a string, which spirv-opt's legalisation keeps on a live
+  member, which spirv-val allows more than once a member (SPIRV-Tools source/val/validate_decorations.cpp,
+  `AtMostOncePerMember`), so a member keeps a semantic beside it, and whose `register(` can't be a semantic's, an
+  identifier. spirv-val refuses a Binding on a member (validate_annotation.cpp:85), an Offset is the float's place,
+  and separate variables would have moved glslang's `$Global` layout. A cbuffer's `register(b0)` stays its binding.
+  xost reads it (src/xsc_resolve.c, `d3d9_registers`; xsc_spirv.c indexes OpMemberDecorateString): a bool an if
+  reads at bN is boolean constant 128 + N, where libxenon's `Xe_SetPixelShaderConstantB` puts b#
+  (libxenon:drivers/xenos/xe.c:2051-2063); an int a loop counts at iN loop constant 16 + N in a pixel shader and N in
+  a vertex shader, the halves xost's loops took already; one without a register the lowest no other bool or count and
+  no member's register takes (src/xsc_lower_flow.c, `d3d9_constant`), which for GLSL is the next as before. Refused:
+  a `b#` on other than a bool, an `i#` on other than an int, two members in one register, one past its stage's 128 or
+  16. A bool or int read as a value stays the float register step 6 gave it, i10's UseTexture at c8 among them: a
+  title sets those by name.
+- **The PC build** (README-xsdk.md in glslang-xenon), in WSL in ~/build/m50g: SPIRV-Tools 2ec8457a and SPIRV-Headers
+  1a22b167, glslang 16.3.0's known_good.json revisions, built and installed there, then glslang-xenon with
+  `-DENABLE_OPT=ON -DALLOW_EXTERNAL_SPIRV_TOOLS=ON -DCMAKE_PREFIX_PATH=~/build/m50g/install`, Release, with googletest
+  v1.14.0 for glslang's tests. Nothing went into ~/xsdk-gcc. That had no `bin/glslang` here; Khronos's 16.3.0 compared
+  against is ~/fresh41/glslang-16.3.0's, `ENABLE_OPT=OFF`, the same binary as ~/fresh41/xsdk-gcc/bin/glslang and
+  ~/build/glslang-host.
+
+| | Corpus, 157 | Idioms, 21 |
+|---|---|---|
+| Compiled | 157 | 21 |
+
+Every result is step 6's, shader by shader: 151 exact and the same 6 inexact. Only i05's table changes, a literal more.
+
+**glslang-xenon against Khronos's 16.3.0:**
+- **GLSL**, `-V` as build_shaders.py runs it, every `.vert` and `.frag` of xost's testdata, vulkan4xenon's
+  `tests/shaders`, `src/shaders` and `bench/shaders` and Dusklight's pack sources, 623: 596 the same SPIR-V byte for
+  byte, the 27 others refused alike, with the same messages. The optimiser doesn't run on GLSL: glslang runs it for
+  HLSL or `-Os` alone (16.3.0's SPIRV/GlslangToSpv.cpp:12045-12051), and `-Os` changes 148 of Dusklight's 150.
+- **HLSL**, check_hlsl.py's flags, xost's 228 `.hlsl`: glslang-xenon at 9bc57aec built so gives every committed `.spv`
+  byte for byte, the Windows build's. With step 7, 6 change: i05, its `OpFMod` now `OpFMul` by 3.5 (spirv-opt's fold
+  of `* 7.0 / 2.0`), `Trunc`, `OpFMul` and `OpFSub`; and i10, `binding/`'s integers_ps, unrolled_ps and
+  refused_step_ps and grid_binding_ps, a UserSemantic a register and nothing else. All of them pass spirv-val.
+- **glslang's tests:** 1908 gtests and `Test/runtests` pass. `hlsl.intrinsics.frag` and `.vert`'s results change only
+  where they call `fmod`; `hlsl.intrinsics.fmod.frag` (folded -1.5 and 1.5, a matrix's columns) and
+  `hlsl.dx9.registers.frag` (the strings, one beside a semantic, a cbuffer's binding) are new.
+
+**On the simulator,** the optimiser off and on: `tests/test_hlsl_fmod.py` runs `fmod/fmod_ps.hlsl`, a vector's lanes
+from two interpolators, x and y negative, and scalars by a constant y, folded constants and a register's y, each the C
+library's truncating fmod exactly, and i05 at uv.y * 7.0 = -2.5, whose step(1.0, fmod(...)) gives an alpha of 0, the
+floor's 0.5. `tests/test_hlsl_registers.py` runs `registers/`: registers_ps's Low at b0 boolean constant 128, Tint at
+b1 a value at c6, keeping 129, Plain without a register 130, Outer at i0 loop constant 16 and Inner without one 17,
+each drawn with every value; registers_vs's Count at i2 loop constant 2 and Flag a value; and three refusals.
+`tests/test_hlsl_binding.py`'s integers_ps now has Flip at b3 131 and Count at i2 18, where step 6 made them 128 and 16.
+Each broken on purpose failed it:
+- glslang's SPIR-V, Khronos's: fmod_ps `lanes [0.5, -0.5, -1.5, -0.75] and scalars [-0.5, 0.5, -0.5, -0.75], not
+  [-1.5, 1.5, -1.5, 0.75] and [1.5, -1.5, 1.5, 0.75]`; i05 `alpha 0.5, killed False, not 0.0`; registers_ps
+  `{'Low': (129, ...), 'Plain': (128, ...), 'Outer': (16, ...), 'Inner': (17, ...)}, not Low at boolean 128, Plain
+  130, ...`;
+- the registers ignored by xost: `'Low': (131, ...), 'Plain': (130, ...), 'Outer': (17, ...), 'Inner': (18, ...)`;
+  OpMemberDecorateString not indexed: as Khronos's SPIR-V;
+- registers not reserved for those without: `'Low': (128, ...), 'Plain': (128, ...)`;
+- vertex loops in the pixel half: `registers_vs ... Count ('Count', 'int4', 18, ...), not loop constant 2`;
+- each refusal taken out: `refused_type_ps compiled`, `refused_same_ps compiled`, and past 128
+  `refused_past_ps: 3, bool_address=258 does not fit in 8 unsigned bits`, the encoder's.
+
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, 59, `test_scalar_unit.py` with its corpus
+at `/mnt/z/vulkan4xenon`.
+
+**GLSL unchanged:** the 623 GLSL programs above, the optimiser off and on, compiled by 701289c and by this step: 1216
+containers, manifests and resources the same byte for byte, the 30 refused refused alike. Of the HLSL testdata only
+integers_ps, grid_binding_ps and `registers/` compile otherwise. `tests/xsc_shaders.h` regenerates with
+grid_binding_ps's member strings, and its Bright at 130 and Count at 17.
+
+**xsdk_test:** `tests/test_hlsl.c`'s table check wants Bright at boolean constant 130 and Count at loop constant 17,
+their b2 and i1, where it took any index; the cell, set by name, draws as before. `tests/breaks/hlsl/registers.patch`
+has xost take the lowest constant left for every bool and int, as step 6 did: on the PC its compile names Bright 128
+and Count 16. On the console it must fail `hlsl: grid_binding_ps.hlsl's table names ... as their b2 and i1` and `xsc:
+hlsl/grid_binding_ps.hlsl compiles into the PC's container ...`, the cell still right. None of this has run on the
+console: xsdk_test at a5788ca, the registers break, and `cexec b130`, the first boolean constant past 128 xsdk runs.
+
+**Upstream:** `upstream_fmod.md` drafts the report and a pull request, not posted. glslang's HLSL front end is
+deprecated (KhronosGroup/glslang#4210): reports are closed, and low-risk HLSL fixes with tests, outside shared
+infrastructure, may be taken; the fold's line is shared code, gated on HLSL. Khronos's glslang at 2fbed5e1, 2026-10-13,
+still relates `fmod` to `EOpMod`. The registers aren't drafted: a new convention through a new `TQualifier` field.
+
+**For step 8:** docs/GETTING_STARTED.md, section 4, builds glslang-xenon as above, SPIRV-Tools and SPIRV-Headers
+included, `ENABLE_OPT=ON`, and puts it at ~/xsdk-gcc/bin/glslang, where `XSDK_GLSLANG` (cmake/xsdk.cmake) looks, its
+GLSL the same; `tools/build_shaders.py` takes `.hlsl` with check_hlsl.py's flags, `-D -V --hlsl-dx9-compatible
+-fhlsl_functionality1 -S <stage> -e <entry>`, and doesn't fall back to the Windows build for HLSL, which has neither
+fix; check_hlsl.py's default glslang follows.
+
 ## On the console
 
 docs/HARDWARE.md, "HLSL on the console, milestone 50", records what these settled. Each run built clean in full from
