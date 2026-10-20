@@ -44,12 +44,29 @@ static bool has_loop(const XscModule *m)
 	return false;
 }
 
+// A Function or Private variable takes what's stored to it alone, so an initializer (SPIR-V 1.0, section 3.32.8,
+// OpVariable), which xost would drop, is refused.
+static bool refuse_initializers(Xsc *x, const XscModule *m)
+{
+	for (size_t i = 0; i < m->instr_count; i++) {
+		const XscInstr *const ins = &m->instrs[i];
+		const uint32_t storage = xsdk_xsc_operand(ins, 0);
+		if (ins->opcode == SPV_VARIABLE && xsdk_xsc_operand_count(ins) > 1 &&
+			(storage == SPV_STORAGE_FUNCTION || storage == SPV_STORAGE_PRIVATE))
+			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "%s (%%%u), a Function or Private variable with an initializer",
+				xsdk_xsc_name(m, ins->result_id, ""), (unsigned)ins->result_id);
+	}
+	return true;
+}
+
 // Loops unrolled, or kept for hardware loops where a block counts them; a pixel shader's loop that won't unroll as the
 // one shape of hardware loop a bare uniform counts (xsc_lower_loop.c). Refused both ways, it gives both reasons.
 static bool lower(Xsc *x, XscModule *m, const XsdkXscOptions *options, XscInterface *si, XscLowered *out)
 {
 	if (!m->entry_point_count)
 		return xsdk_xsc_fail(x, XSDK_XSC_MALFORMED, "list index out of range");
+	if (!refuse_initializers(x, m))
+		return false;
 	const bool pixel = m->entry_points[0].model != MODEL_VERTEX;
 	bool refused;
 	if (!xsdk_xsc_unroll(x, m, &refused)) {

@@ -3,7 +3,8 @@
 variables, as locals (xsdk:src/xsc_spirv.c, xsdk_xsc_declares_local); clamp's bounds folded to constant splats
 (src/xsc_lower.c, xsdk_xsc_const_scalar); OpUndef and OpConstantNull as zeros (src/xsc_spirv.c,
 xsdk_xsc_spirv_zero_nulls); and a float2 FragCoord used whole, which has no z or w (src/xsc_lower_fragment.c,
-reads_depth).
+reads_depth). And step 4's guard: a Private variable given an initializer, which xost would drop, is refused
+(src/xsc_compile.c, refuse_initializers); glslang writes a static's value as a store.
 
 Each shader of xsc/testdata/hlsl, whose SPIR-V must hold what it's there for, runs on xdis/simulate.py, the optimiser
 off and on, and each export must be what the HLSL gives exactly; no operation rounds on these inputs. A static global
@@ -72,7 +73,40 @@ CASES = {
 }
 
 
+OP_VARIABLE, OP_CONSTANT = 59, 43
+
+
+def with_initializer(blob):
+    """The module with its first Private variable given its first constant as an initializer."""
+    words = list(struct.unpack(f"<{len(blob) // 4}I", blob))
+    at, constant = 5, None
+    while at < len(words):
+        count, opcode = words[at] >> 16, words[at] & 0xFFFF
+        if opcode == OP_CONSTANT and constant is None:
+            constant = words[at + 2]
+        if opcode == OP_VARIABLE and count == 4 and words[at + 3] == PRIVATE and constant is not None:
+            words[at] = (count + 1) << 16 | opcode
+            words.insert(at + count, constant)
+            return struct.pack(f"<{len(words)}I", *words)
+        at += count
+    raise ValueError("no Private variable after a constant")
+
+
+def initializer_refused():
+    m = module("hlsl/static_globals_ps.hlsl")
+    lower_ex(m, XSDK_REGISTERS, True)
+    try:
+        native.compile_spirv(with_initializer(m.blob), XSDK_REGISTERS.pixel, XSDK_REGISTERS.vertex, True)
+    except native.CompileError as e:
+        if e.status != native.REFUSED or "with an initializer" not in str(e):
+            raise SystemExit(f"  FAIL an initializer: {e.status}, {e}")
+    else:
+        raise SystemExit("  FAIL a Private variable with an initializer compiled")
+    print("  PASS a Private variable with an initializer refused")
+
+
 def main():
+    initializer_refused()
     for name, (what, registers, constants, wants) in CASES.items():
         m = module(f"hlsl/{name}")
         if not holds(m, what):
