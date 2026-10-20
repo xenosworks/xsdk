@@ -703,3 +703,12 @@ At 5254c03, built clean with vulkan4xenon against it (local/m50/build.sh), throu
   depth, loop, skin, VFACE and VPOS breaks each failed their check and their shader's compile check; the link break
   the two link checks and the DEPTH cell's, whose stages it links. Every break failed the controller's two besides.
 - vulkan4xenon_test 517 of 517 twice; vkbench 17 of 17, xsdk's draw+submit within 1% of step 6's.
+
+**glslang-xenon on the console.** M50g's glslang changes code the console build compiles, the fold and `TQualifier`,
+so glslang-xenon's `xsdk/glslang_probe` ran too. It no longer linked: libstdc++ calls `rename`, which libxsdk.a
+replaces since 574153e but was scanned ahead of, so newlib's came in, and the `unlink` that pulls then brought xsdk's
+path.o and its `rename` with it, defined twice. The Makefile and cmake/xsdk.cmake now put libxsdk.a after libstdc++,
+as vulkan4xenon's Makefile does; libxsdk.a and libstdc++ define nothing in common. Linked so, built clean
+(`step7_link_*.log`): xsdk_test 525 of 527, the controller's two; vulkan4xenon_test 517 of 517 twice; vkbench 17 of
+17, xsdk's draw+submit as before; and `step7_glslang_probe.log`, Dusklight's 150 GLSL programs, compiled on the
+console and every one's SPIR-V the PC's, the first in 0.93 s and the rest in 11.3 ms each on average, as on 2026-10-14.
