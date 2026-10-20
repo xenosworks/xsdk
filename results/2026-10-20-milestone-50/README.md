@@ -712,3 +712,66 @@ as vulkan4xenon's Makefile does; libxsdk.a and libstdc++ define nothing in commo
 (`step7_link_*.log`): xsdk_test 525 of 527, the controller's two; vulkan4xenon_test 517 of 517 twice; vkbench 17 of
 17, xsdk's draw+submit as before; and `step7_glslang_probe.log`, Dusklight's 150 GLSL programs, compiled on the
 console and every one's SPIR-V the PC's, the first in 0.93 s and the rest in 11.3 ms each on average, as on 2026-10-14.
+
+## Step 8: HLSL in a title's project
+
+docs/scope/50-hlsl.md, step 8 and "Done when", built on the PC on 2026-10-20; nothing here has run on the console.
+- **`tools/build_shaders.py` takes `.hlsl`:** `<name>_vs.hlsl` and `<name>_ps.hlsl` go through glslang with
+  check_hlsl.py's flags, `-D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stage> -e <entry>`, which check_hlsl.py
+  now takes from build_shaders.py (`hlsl_args`), as it does its default glslang (`find_glslang`): `--glslang`, else the
+  one on PATH; for HLSL never xost's Windows build, Khronos's, but a stop naming docs/GETTING_STARTED.md, section 4.
+  glslang-xenon and Khronos's 16.3.0 print the same `--version`, and nothing cheaper tells them apart, so HLSL through
+  Khronos's glslang builds, `fmod` floored and `b#` and `i#` dropped; the docs say so. An HLSL loop's block loop need
+  writes nothing: the int it counts is the loop constant the table names, which the title sets. `xsdk_add_shaders`
+  passes `.hlsl` files beside GLSL in its one call, as it passes any file.
+- **docs/GETTING_STARTED.md, section 4,** builds glslang-xenon with SPIRV-Tools and SPIRV-Headers fetched by its
+  `update_glslang_sources.py`, `ENABLE_OPT=ON`, into `~/xsdk-gcc/bin/glslang`. Its commands ran verbatim with HOME at
+  `~/fresh50`, cloning from GitHub: 1.3 s, 6.0 s, 3.2 s and 60.6 s on 32 threads, printing what the section shows.
+  GitHub's `xenon` is at 9bc57aec, without step 7's three commits, which are on Z:\glslang-xenon's `xenon` alone; that
+  tree fetched to a607c3a9 and rebuilt, its glslang:
+  - **GLSL:** step 7's 623 programs, `-V`, against Khronos's 16.3.0 (`~/fresh41`): 596 the same SPIR-V byte for byte,
+    the 27 others refused alike, with the same messages;
+  - **HLSL:** `check_hlsl.py --refresh` over every folder of xost's HLSL testdata, 234 shaders and the corpus's GLSL
+    twins, left every committed `.spv` as it is, and check_hlsl.py's run gives `step7.json` and `step7.txt` byte for
+    byte.
+- **xenos-toolchain/docs/xsc.md, "HLSL",** gives the flags, the names, D3D9's semantics, binding, `fmod` and every
+  construct xost refuses with HLSL. One is new here: a pixel shader without a loop refuses an `if` that spirv-opt keeps
+  a branch, as it does any that changes a value, `if (c) x *= 0.5;` among them (`if/else arm does not assign
+  o_color`): its values meet in Phis, which the pixel shader's if/else lowering, written for GLSL's stores, doesn't
+  read. A `?:`, `clip` and an `if` around `discard` compile, and with a loop in the shader the unroller takes such an
+  if; no shader of the corpus or the idioms has one. TODO.md lists it. docs/PARITY.md, docs/GUIDE.md, README.md and the
+  template name HLSL beside GLSL.
+
+**The check:** `tests/cmake/cmake_check.cpp`, CMake's title, builds `quad_vs.hlsl` and `quad_ps.hlsl` through
+`xsdk_add_shaders` and draws them, linked, as two quads across a 64x32 target: Ramp at `register(s2)` sampled from
+textures bound at slot 2 as `SetTexture(2)` binds, others at 0 and 1; Swap at `register(b1)`, which an if reads, set by
+name through `xsdk_shader_constant`, clear on the left quad and set on the right; Count at `register(i3)`, a loop's
+count, set at loop constant 19, 16 + 3, as `SetPixelShaderConstantI(3)` sets it, 1 and 3; Step at `register(c3)`. Each
+of the 2048 pixels must hold Ramp's texel, red and green swapped where Swap is set, and blue Count steps of an
+eighth, and the table must name D3D9's numbers:
+
+`PASS: cmake: an HLSL pair built by xsdk_add_shaders draws as D3D9 binds it, Ramp at s2 bound at slot 2, Swap at b1
+set by name, Count at i3 at loop constant 19 and Step at c3, its table naming Ramp at fetch constant 2, Swap at boolean
+constant 129, Count at loop constant 19 and Step at float constant 3: 0 of 2048 pixels wrong`
+
+It draws one frame after the splash. On `xdis/simulate.py`, the pixel shader as build_shaders.py builds it, its
+container the header's, drew every column of both quads as the check wants, Swap's arms on boolean constant 129.
+
+**The break:** `make cmake_check_break` builds the title into `build/cmake_check_brk` with its HLSL through xost's
+Windows glslang, Khronos's 16.3.0, as if build_shaders.py fell back to it: the table names Swap at boolean constant
+128 and Count at loop constant 16, the lowest left, and the microcode reads those. Set by name, Swap still draws right,
+but loop constant 16 holds 0, so every pixel's blue is 0: on the simulator 64 of 64 columns wrong. It must fail that
+line, as `... Swap at boolean constant 128, Count at loop constant 16 and Step at float constant 3: 2048 of 2048 pixels
+wrong`, and pass the title's other checks.
+
+**GLSL unchanged:** every `.vert` and `.frag` of the samples, xost's testdata and vulkan4xenon's `tests/shaders`,
+`src/shaders` and `bench/shaders`, 477, through build_shaders.py at 4349ed2 and at this step, each alone, with xost's
+Windows glslang and with glslang-xenon: every header the same byte for byte, the 91 that stop stopping with the same
+message. `make samples` regenerates `triangle_shaders.h` and `cube_shaders.h` as they were. cmake_check had no
+shaders before.
+
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, 59, `test_scalar_unit.py` with its corpus
+at `/mnt/z/vulkan4xenon`.
+
+**Builds:** `make clean` and `make -j32`, then cmake_check and its break: 0 warnings; vulkan4xenon against it, clean,
+0 warnings. The console set is in `local/m50/set8/`: `xsdk_test.xex`, `cmake_check.xex` and `cmake_check_hlsl_brk.xex`.
