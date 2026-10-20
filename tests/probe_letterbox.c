@@ -9,27 +9,23 @@
 #include "xsdk/gpu.h"
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
+#include "xsdk/present.h"
 #include "xsdk/thread.h"
 
-// Milestone 54 step 5's probe (docs/scope/54-porters-files-and-system.md): which display registers place the scaled
-// picture in the output, to letterbox 1280x720 on a 4:3 screen. game:\letterbox_case.txt names the case; without it,
+// Milestone 54 step 5's probe (docs/scope/54-porters-files-and-system.md): letterboxing as xsdk does it, which places
+// the scaled picture with radeonhd's overscan (src/display.c). game:\letterbox_case.txt names the case; without it,
 // "read" runs. "read" logs the display controller's registers, VdQueryVideoMode and VdGetCurrentDisplayInformation,
-// writing nothing, and ends. The other cases take the display as xsdk does and show a test picture: a white border,
-// 160-pixel squares from the centre, a ring of radius 300 there, and red, green, blue and yellow corners at the top
-// left, top right, bottom left and bottom right. Square squares and a round ring mean unstretched; the border and four
-// corners in view mean nothing is cut off. "fill" shows 1280x720 as xsdk does today, filling the output. "letterbox"
-// shows it across the output's width at 3/4 of its height, as 16:9 sits on a 4:3 screen, bars above and below;
-// "pillar" a 960x720 picture at the output's height and 3/4 of its width, as 4:3 sits on a 16:9 screen, bars left and
-// right, whatever screen VdQueryVideoMode reports. Both place it as radeonhd does for scaling that keeps the aspect,
-// with AVIVO's external overscan as the bars and 0x659C at 1 (xf86-video-radeonhd:src/rhd_crtc.c:612-679, 721-790),
-// and scale as xsdk does into what's left; each register written is logged, then read back. A case that shows the
-// picture runs until Back on controller 1, which puts the overscan and 0x659C back, or until the console agent ends
-// the title, which leaves them as written; "read" shows what the next title finds.
+// writing nothing, and ends. "fill" and "letterbox" present a test picture through xsdk_present every frame, as a title
+// does, so XAM's VdSwap runs: a white border, 160-pixel squares from the centre, a ring of radius 300 there, and red,
+// green, blue and yellow corners at the top left, top right, bottom left and bottom right. Square squares and a round
+// ring mean unstretched; the border and four corners in view mean nothing is cut off. "fill" opens the display as a
+// title does, filling a widescreen output; "letterbox" forces letterboxing, as on a 4:3 screen, with bars above and
+// below. Each logs the registers before the display opens, once its frames are on screen, and after it closes. They
+// run until Back on controller 1, or until the title is ended from outside.
 
 enum {
 	WIDTH = 1280,
 	HEIGHT = 720,
-	PILLAR_WIDTH = 960,
 	SQUARE = 160,
 	// Keeps the squares' count from the centre positive.
 	SQUARE_BIAS = 10 * SQUARE,
@@ -37,7 +33,6 @@ enum {
 	RING_HALF_WIDTH = 2,
 	CORNER = 64,
 	WHITE = 0xFFFFFFFF,
-	BLACK = 0xFF000000,
 	DARK = 0xFF303030,
 	LIGHT = 0xFF606060,
 	RED = 0xFFFF0000,
@@ -45,16 +40,13 @@ enum {
 	BLUE = 0xFF0000FF,
 	YELLOW = 0xFFFFFF00,
 	CYAN = 0xFF00FFFF,
-	SCALE_ONE_LOG2 = 24,
-	// xsdk's scaler settings (src/display.c): 2 taps each way through the built-in filter.
-	TWO_TAPS = 0x101,
-	TAPS = 2,
-	BUILT_IN_FILTER = 0x100,
-	// Holds the scaler's registers until it's released (xf86-video-radeonhd:src/rhd_regs.h:412-413).
-	SCALER_UPDATE_LOCK = 0x10000,
+	BUFFERS = 2,
+	SWAP_INTERVAL = 1,
+	BEGIN_TIMEOUT_MS = 1000,
+	// Half a second at 60 Hz, then the registers are logged.
+	LOG_AT_FRAME = 30,
 	// Long enough for the display to take new values at a vblank.
 	SETTLE_MS = 100,
-	POLL_MS = 50,
 	NAME_BYTES = 16,
 };
 
@@ -171,47 +163,6 @@ static const Register logged[] = {
 
 enum { LOGGED = sizeof logged / sizeof logged[0] };
 
-// The registers a placed picture writes: xsdk's scaler set, in src/display.c's order, then what radeonhd adds to keep
-// the aspect.
-enum {
-	SCALER_ENABLE,
-	SCALER_TAP_CONTROL,
-	VIEWPORT_SIZE,
-	VIEWPORT_WIDTH_QUARTER,
-	HORIZONTAL_FILTER,
-	HORIZONTAL_SCALE,
-	HORIZONTAL_PHASE,
-	VERTICAL_FILTER,
-	VERTICAL_SCALE,
-	VERTICAL_PHASE,
-	OVERSCAN_LEFT_RIGHT,
-	OVERSCAN_TOP_BOTTOM,
-	CENTER,
-	WRITTEN,
-};
-
-static const uint32_t written[WRITTEN] = { AVIVO_D1SCL_SCALER_ENABLE, AVIVO_D1SCL_SCALER_TAP_CONTROL,
-	AVIVO_D1MODE_VIEWPORT_SIZE, UNKNOWN_197A, UNKNOWN_196C, UNKNOWN_196D, UNKNOWN_196E, UNKNOWN_1970, UNKNOWN_1971,
-	UNKNOWN_1972, UNKNOWN_1962, UNKNOWN_1963, UNKNOWN_1967 };
-
-// What xsdk's display close doesn't put back, so the probe does.
-static const uint32_t restored[] = { UNKNOWN_1962, UNKNOWN_1963, UNKNOWN_1967 };
-
-enum { RESTORED = sizeof restored / sizeof restored[0] };
-
-typedef enum { FILL, LETTERBOX, PILLAR } Shape;
-
-// The picture on the output, and the bars around it.
-typedef struct {
-	uint32_t source_width;
-	uint32_t width;
-	uint32_t height;
-	uint32_t left;
-	uint32_t right;
-	uint32_t top;
-	uint32_t bottom;
-} Placement;
-
 static const char *const case_path = "game:\\letterbox_case.txt";
 
 static void log_registers(const char *when)
@@ -250,9 +201,9 @@ static void log_modes(void)
 			(unsigned)info.scaler_parameters[i]);
 }
 
-static uint32_t picture_argb(uint32_t x, uint32_t y, uint32_t width)
+static uint32_t picture_argb(uint32_t x, uint32_t y)
 {
-	const uint32_t right = width - 1;
+	const uint32_t right = WIDTH - 1;
 	const uint32_t bottom = HEIGHT - 1;
 	if (x == 0 || y == 0 || x == right || y == bottom)
 		return WHITE;
@@ -264,159 +215,84 @@ static uint32_t picture_argb(uint32_t x, uint32_t y, uint32_t width)
 		return BLUE;
 	if (x >= right - CORNER && y >= bottom - CORNER)
 		return YELLOW;
-	const int32_t dx = (int32_t)x - (int32_t)(width / 2);
+	const int32_t dx = (int32_t)x - WIDTH / 2;
 	const int32_t dy = (int32_t)y - HEIGHT / 2;
 	const int32_t distance_squared = dx * dx + dy * dy;
 	const int32_t inner = RADIUS - RING_HALF_WIDTH;
 	const int32_t outer = RADIUS + RING_HALF_WIDTH;
 	if (distance_squared >= inner * inner && distance_squared <= outer * outer)
 		return CYAN;
-	const uint32_t squares = (x + SQUARE_BIAS - width / 2) / SQUARE + (y + SQUARE_BIAS - HEIGHT / 2) / SQUARE;
+	const uint32_t squares = (x + SQUARE_BIAS - WIDTH / 2) / SQUARE + (y + SQUARE_BIAS - HEIGHT / 2) / SQUARE;
 	return squares & 1 ? LIGHT : DARK;
 }
 
-// The display reads a word's bytes as B, G, R, A (docs/HARDWARE.md, "A title's buffer on screen"); past the picture's
-// width, black.
-static void draw_picture(volatile uint32_t *pixels, uint32_t width)
+// The display reads a word's bytes as B, G, R, A (docs/HARDWARE.md, "A title's buffer on screen").
+static void draw_picture(volatile uint32_t *pixels)
 {
 	for (uint32_t y = 0; y < HEIGHT; y++) {
 		for (uint32_t x = 0; x < WIDTH; x++)
-			pixels[tiled_index(x, y, WIDTH)] = __builtin_bswap32(x < width ? picture_argb(x, y, width) : BLACK);
+			pixels[tiled_index(x, y, WIDTH)] = __builtin_bswap32(picture_argb(x, y));
 	}
 	__asm__ volatile("sync" ::: "memory");
 }
 
-// Source over output in 8.24 (docs/HARDWARE.md, "Scaling 1280x720 by hand").
-static uint32_t scale(uint32_t source, uint32_t output)
+static bool back_pressed(void)
 {
-	return (uint32_t)(((uint64_t)source << SCALE_ONE_LOG2) / output);
+	INPUT_STATE input;
+	return XamInputGetState(0, 0, &input) == ERROR_SUCCESS && input.gamepad.buttons & INPUT_GAMEPAD_BACK;
 }
 
-// (scale + taps + 1) / 2 in 16.16 (docs/HARDWARE.md, "What AMD's code says about the scaler").
-static uint32_t phase(uint32_t scale_8_24)
+// Each buffer gets the picture the first time it comes round, then keeps it; every frame goes through VdSwap.
+static void present_until_back(void)
 {
-	return ((TAPS + 1) << 15) + (scale_8_24 >> 9);
-}
-
-// The picture as it sits on a 4:3 screen at 16:9, or on a 16:9 screen at 4:3, its size a multiple of 4 and the bars
-// shared out evenly.
-static Placement plan(const VIDEO_MODE *mode, Shape shape)
-{
-	const uint32_t output_width = mode->display_width;
-	const uint32_t output_height = mode->display_height;
-	Placement placement = {
-		.source_width = shape == PILLAR ? PILLAR_WIDTH : WIDTH,
-		.width = shape == PILLAR ? (output_width * 3 / 4) & ~3u : output_width,
-		.height = shape == LETTERBOX ? (output_height * 3 / 4) & ~3u : output_height,
-	};
-	placement.left = (output_width - placement.width) / 2;
-	placement.right = output_width - placement.width - placement.left;
-	placement.top = (output_height - placement.height) / 2;
-	placement.bottom = output_height - placement.height - placement.top;
-	return placement;
-}
-
-// xsdk's scaling (src/display.c, plan_values) into the placement's picture, and the bars as overscan.
-static void plan_values(const Placement *placement, uint32_t *values)
-{
-	const uint32_t horizontal = scale(placement->source_width, placement->width);
-	const uint32_t vertical = scale(HEIGHT, placement->height);
-	values[SCALER_ENABLE] = 1;
-	values[SCALER_TAP_CONTROL] = TWO_TAPS;
-	values[VIEWPORT_SIZE] = placement->source_width << 16 | HEIGHT;
-	values[VIEWPORT_WIDTH_QUARTER] = placement->source_width / 4 - 1;
-	values[HORIZONTAL_FILTER] = probe_gpu_registers[UNKNOWN_196C] | BUILT_IN_FILTER;
-	values[HORIZONTAL_SCALE] = horizontal;
-	values[HORIZONTAL_PHASE] = phase(horizontal);
-	values[VERTICAL_FILTER] = probe_gpu_registers[UNKNOWN_1970] | BUILT_IN_FILTER;
-	values[VERTICAL_SCALE] = vertical;
-	values[VERTICAL_PHASE] = phase(vertical);
-	values[OVERSCAN_LEFT_RIGHT] = placement->left << 16 | placement->right;
-	values[OVERSCAN_TOP_BOTTOM] = placement->top << 16 | placement->bottom;
-	values[CENTER] = 1;
-}
-
-// Under the scaler's lock, as src/display.c writes its set.
-static void write_registers(const uint32_t *indices, const uint32_t *values, uint32_t count)
-{
-	probe_gpu_registers[AVIVO_D1SCL_UPDATE] = SCALER_UPDATE_LOCK;
-	for (uint32_t i = 0; i < count; i++)
-		probe_gpu_registers[indices[i]] = values[i];
-	probe_gpu_registers[AVIVO_D1SCL_UPDATE] = 0;
-}
-
-static void place(const VIDEO_MODE *mode, Shape shape)
-{
-	const Placement placement = plan(mode, shape);
-	xsdk_log_write(
-		"letterbox: %u wide of the front buffer to %ux%u of the %ux%u output; bars left %u, right %u, top %u, "
-		"bottom %u",
-		(unsigned)placement.source_width, (unsigned)placement.width, (unsigned)placement.height,
-		(unsigned)mode->display_width, (unsigned)mode->display_height, (unsigned)placement.left,
-		(unsigned)placement.right, (unsigned)placement.top, (unsigned)placement.bottom);
-	uint32_t values[WRITTEN];
-	plan_values(&placement, values);
-	write_registers(written, values, WRITTEN);
-	(void)xsdk_thread_sleep(SETTLE_MS);
-	for (uint32_t i = 0; i < WRITTEN; i++)
-		xsdk_log_write("letterbox: wrote %04X (byte %04X) %08X, reads back %08X", (unsigned)written[i],
-			(unsigned)(written[i] * 4), (unsigned)values[i], (unsigned)probe_gpu_registers[written[i]]);
-}
-
-static void wait_for_back(void)
-{
-	for (;;) {
-		INPUT_STATE input;
-		if (XamInputGetState(0, 0, &input) == ERROR_SUCCESS && input.gamepad.buttons & INPUT_GAMEPAD_BACK)
+	for (uint32_t frame = 0; !back_pressed(); frame++) {
+		uint32_t address;
+		const NTSTATUS status = xsdk_present_begin(&address, BEGIN_TIMEOUT_MS);
+		if (!NT_SUCCESS(status)) {
+			xsdk_log_write(
+				"letterbox: FAILED, xsdk_present_begin returned 0x%08X at frame %u", (unsigned)status, (unsigned)frame);
 			return;
-		(void)xsdk_thread_sleep(POLL_MS);
+		}
+		if (frame < BUFFERS)
+			draw_picture(xsdk_present_pixels(address));
+		xsdk_present_end();
+		if (frame == LOG_AT_FRAME) {
+			XsdkPresentStats stats;
+			xsdk_present_stats(&stats);
+			xsdk_log_write("letterbox: %u flips over %u vblanks; Back on controller 1 ends it", (unsigned)stats.flips,
+				(unsigned)stats.vblanks);
+			log_registers("shown");
+		}
 	}
+	xsdk_log_write("letterbox: Back pressed");
 }
 
-static int show(Shape shape)
+static int show(bool letterbox)
 {
 	log_modes();
 	log_registers("at start");
-	VIDEO_MODE mode;
-	VdQueryVideoMode(&mode);
 	NTSTATUS status = xsdk_gpu_open();
 	if (!NT_SUCCESS(status)) {
 		xsdk_log_write("letterbox: FAILED, xsdk_gpu_open returned 0x%08X", (unsigned)status);
 		return 1;
 	}
+	xsdk_display_force_letterbox(letterbox);
 	uint32_t width = 0;
 	uint32_t height = 0;
-	status = xsdk_display_open(XSDK_DISPLAY_720P, &width, &height);
+	status = xsdk_present_open(XSDK_DISPLAY_720P, BUFFERS, SWAP_INTERVAL, &width, &height);
+	xsdk_display_force_letterbox(false);
 	if (!NT_SUCCESS(status) || width != WIDTH || height != HEIGHT) {
-		xsdk_log_write("letterbox: FAILED, xsdk_display_open returned 0x%08X, %ux%u, where this needs xsdk's 1280x720",
+		xsdk_log_write("letterbox: FAILED, xsdk_present_open returned 0x%08X, %ux%u, where this needs 1280x720",
 			(unsigned)status, (unsigned)width, (unsigned)height);
 		return 1;
 	}
-	volatile uint32_t *const pixels = xsdk_gpu_alloc(xsdk_gpu_resolve_bytes(WIDTH, HEIGHT));
-	if (!pixels) {
-		xsdk_log_write("letterbox: FAILED, no memory for the picture");
-		return 1;
-	}
-	draw_picture(pixels, shape == PILLAR ? PILLAR_WIDTH : WIDTH);
-	status = xsdk_display_show(xsdk_gpu_address(pixels), WIDTH);
+	present_until_back();
+	xsdk_present_close();
 	(void)xsdk_thread_sleep(SETTLE_MS);
-	xsdk_log_write("letterbox: xsdk_display_show returned 0x%08X", (unsigned)status);
-	log_registers("as xsdk shows it");
-	uint32_t before[RESTORED];
-	for (uint32_t i = 0; i < RESTORED; i++)
-		before[i] = probe_gpu_registers[restored[i]];
-	if (shape != FILL) {
-		place(&mode, shape);
-		log_registers("placed");
-	}
-	xsdk_log_write("letterbox: showing; Back on controller 1 ends it");
-	wait_for_back();
-	write_registers(restored, before, RESTORED);
-	xsdk_display_close();
-	xsdk_gpu_free(pixels);
-	xsdk_log_write("letterbox: Back pressed; 1962, 1963 and 1967 put back to %08X %08X %08X, the display given back",
-		(unsigned)before[0], (unsigned)before[1], (unsigned)before[2]);
-	return 0;
+	log_registers("closed");
+	status = xsdk_gpu_close();
+	xsdk_log_write("letterbox: done; xsdk_gpu_close returned 0x%08X", (unsigned)status);
+	return NT_SUCCESS(status) ? 0 : 1;
 }
 
 static int read_case(void)
@@ -428,17 +304,12 @@ static int read_case(void)
 
 static int fill_case(void)
 {
-	return show(FILL);
+	return show(false);
 }
 
 static int letterbox_case(void)
 {
-	return show(LETTERBOX);
-}
-
-static int pillar_case(void)
-{
-	return show(PILLAR);
+	return show(true);
 }
 
 typedef struct {
@@ -449,9 +320,8 @@ typedef struct {
 
 static const ProbeCase cases[] = {
 	{ "read", "logs the display registers and modes, writing nothing", read_case },
-	{ "fill", "shows 1280x720 as xsdk does, filling the output", fill_case },
-	{ "letterbox", "shows 1280x720 across the output, bars above and below as on a 4:3 screen", letterbox_case },
-	{ "pillar", "shows 960x720 at the output's height, bars left and right as on a 16:9 screen", pillar_case },
+	{ "fill", "presents 1280x720 as a title does, filling a widescreen output", fill_case },
+	{ "letterbox", "presents 1280x720 letterboxed, forced, as on a 4:3 screen", letterbox_case },
 };
 
 enum { CASES = sizeof cases / sizeof cases[0] };
