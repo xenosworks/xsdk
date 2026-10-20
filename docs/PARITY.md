@@ -15,7 +15,7 @@ where they and this page disagree, they win, and this page is out of date.
 which implements what the games it runs need:
 - **The kernel:** its table lists 922 xboxkrnl exports. 239 have code in Xenia, 200 of them more than a stub. xsdk
   imports 55 (`imports/imports.txt`).
-- **XAM:** its table lists 1,735 exports. 169 have code in Xenia, 106 of them more than a stub. xsdk imports 27, 22 of
+- **XAM:** its table lists 1,735 exports. 169 have code in Xenia, 106 of them more than a stub. xsdk imports 47, 22 of
   them for sockets.
 
 ## Building and packaging

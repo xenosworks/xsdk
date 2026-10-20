@@ -211,6 +211,8 @@ enum {
 // Win32 errors that XAM returns (xenia:src/xenia/xbox.h:86-100).
 enum {
 	ERROR_SUCCESS = 0,
+	ERROR_NO_MORE_FILES = 0x12,
+	ERROR_IO_PENDING = 0x3E5,
 	ERROR_DEVICE_NOT_CONNECTED = 0x48F,
 };
 
@@ -403,6 +405,46 @@ typedef struct {
 	int32_t microseconds;
 } WSA_TIMEVAL;
 
+// An asynchronous XAM call returns ERROR_IO_PENDING, then writes result, extended_error and length and sets event
+// (xenia:src/xenia/xbox.h:176-184, xenia:src/xenia/kernel/kernel_state.cc:696-720).
+typedef struct {
+	uint32_t result;
+	uint32_t length;
+	uint32_t context;
+	HANDLE event;
+	uint32_t completion_routine;
+	uint32_t completion_context;
+	uint32_t extended_error;
+} XAM_OVERLAPPED;
+
+// A content package: file_name names it on its device (xenia:src/xenia/kernel/xam/content_manager.h:39-55).
+typedef struct {
+	uint32_t device_id;
+	uint32_t content_type;
+	uint16_t display_name[128];
+	char file_name[42];
+	uint8_t padding[2];
+} XCONTENT_DATA;
+
+// xenia:src/xenia/kernel/xam/xam_content_device.cc:101-111
+typedef struct {
+	uint32_t device_id;
+	uint32_t device_type;
+	uint64_t total_bytes;
+	uint64_t free_bytes;
+	uint16_t name[28];
+} CONTENT_DEVICE_DATA;
+
+// xenia:src/xenia/kernel/xam/xam_user.cc:75-83
+typedef struct {
+	uint64_t xuid;
+	uint32_t unknown_08;
+	uint32_t signin_state;
+	uint32_t unknown_10;
+	uint32_t unknown_14;
+	char name[16];
+} USER_SIGNIN_INFO;
+
 // xam.xex
 int32_t NetDll_accept(uint32_t caller, int32_t socket, void *address, int32_t *length);
 int32_t NetDll_bind(uint32_t caller, int32_t socket, const void *address, int32_t length);
@@ -433,12 +475,48 @@ int32_t NetDll_XNetDnsLookup(uint32_t caller, const char *name, HANDLE event, XN
 int32_t NetDll_XNetDnsRelease(uint32_t caller, XNDNS *result);
 // params is XNetStartupParams, 13 bytes, its first its size (xam_net.cc:154-168).
 int32_t NetDll_XNetStartup(uint32_t caller, const uint8_t *params);
+// The content calls (xenia:src/xenia/kernel/xam/xam_content.cc, xam_content_device.cc). A package mounts under root,
+// "save" as save:, until closed.
+uint32_t XamContentClose(const char *root, XAM_OVERLAPPED *overlapped);
+uint32_t XamContentCreateDeviceEnumerator(
+	uint32_t content_type, uint32_t flags, uint32_t items, uint32_t *buffer_bytes, HANDLE *enumerator);
+uint32_t XamContentCreateEnumerator(uint32_t user_index, uint32_t device_id, uint32_t content_type, uint32_t flags,
+	uint32_t items, uint32_t *buffer_bytes, HANDLE *enumerator);
+uint32_t XamContentCreateEx(uint32_t user_index, const char *root, const XCONTENT_DATA *data, uint32_t flags,
+	uint32_t *disposition, uint32_t *license_mask, uint32_t cache_bytes, uint64_t content_bytes,
+	XAM_OVERLAPPED *overlapped);
+uint32_t XamContentDelete(uint32_t user_index, const XCONTENT_DATA *data, XAM_OVERLAPPED *overlapped);
+uint32_t XamContentFlush(const char *root, XAM_OVERLAPPED *overlapped);
+uint32_t XamContentGetDeviceData(uint32_t device_id, CONTENT_DEVICE_DATA *data);
+uint32_t XamContentGetDeviceName(uint32_t device_id, uint16_t *name, uint32_t name_chars);
+uint32_t XamContentGetDeviceState(uint32_t device_id, XAM_OVERLAPPED *overlapped);
+// The next items into buffer; ERROR_NO_MORE_FILES past the last. NtClose ends it (xenia:src/xenia/kernel/xam/
+// xam_enum.cc:30-84).
+uint32_t XamEnumerate(HANDLE enumerator, uint32_t flags, void *buffer, uint32_t buffer_bytes, uint32_t *items,
+	XAM_OVERLAPPED *overlapped);
+uint32_t XamGetOverlappedResult(XAM_OVERLAPPED *overlapped, uint32_t *length, uint32_t wait);
 uint32_t XamInputGetState(uint32_t user_index, uint32_t flags, INPUT_STATE *state);
 uint32_t XamInputSetState(uint32_t user_index, uint32_t flags, const INPUT_VIBRATION *vibration);
+uint32_t XamIsUIActive(void);
 void XamLoaderTerminateTitle(void);
 // A listener for the notification areas whose bits mask sets, an area being bits 25-30 of a notification's id; its
 // handle, or 0 (xenia:src/xenia/kernel/xam/xam_notify.cc:21-41, xnotifylistener.h:25-32).
 HANDLE XamNotifyCreateListener(uint64_t mask, uint32_t max_version);
+// The dialogs, their text UTF-16 (xenia:src/xenia/kernel/xam/xam_ui.cc:268-463, xam_user.cc:518-530).
+uint32_t XamShowKeyboardUI(uint32_t user_index, uint32_t flags, const uint16_t *default_text, const uint16_t *title,
+	const uint16_t *description, uint16_t *text, uint32_t text_chars, XAM_OVERLAPPED *overlapped);
+uint32_t XamShowMessageBoxUI(uint32_t user_index, const uint16_t *title, const uint16_t *text, uint32_t button_count,
+	const uint16_t *const *buttons, uint32_t focus_button, uint32_t flags, uint32_t *pressed,
+	XAM_OVERLAPPED *overlapped);
+uint32_t XamShowSigninUI(uint32_t panes, uint32_t flags);
+// The profile calls (xenia:src/xenia/kernel/xam/xam_user.cc:29-310).
+uint32_t XamUserGetName(uint32_t user_index, char *name, uint32_t name_bytes);
+uint32_t XamUserGetSigninInfo(uint32_t user_index, uint32_t flags, USER_SIGNIN_INFO *info);
+uint32_t XamUserGetSigninState(uint32_t user_index);
+uint32_t XamUserGetXUID(uint32_t user_index, uint32_t type_mask, uint64_t *xuid);
+uint32_t XamUserReadProfileSettings(uint32_t title_id, uint32_t user_index, uint32_t xuid_count, const uint64_t *xuids,
+	uint32_t setting_count, const uint32_t *setting_ids, uint32_t *buffer_bytes, void *buffer,
+	XAM_OVERLAPPED *overlapped);
 // Takes the listener's next notification, or its next match_id one if that's nonzero; nonzero if there was one
 // (xenia:src/xenia/kernel/xam/xam_notify.cc:53-91).
 uint32_t XNotifyGetNext(HANDLE listener, uint32_t match_id, uint32_t *id, uint32_t *param);
