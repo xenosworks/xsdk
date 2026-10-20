@@ -84,19 +84,23 @@ Memory only the CPU uses comes from `malloc`, whose heap can grow into all the m
 
 ## Shaders and their constants
 
-[samples/triangle](../samples/triangle/main.c), [samples/cube](../samples/cube/main.c)
+[samples/triangle](../samples/triangle/main.c), [samples/cube](../samples/cube/main.c), HLSL in
+[tests/cmake](../tests/cmake/cmake_check.cpp)
 
-Shaders are GLSL 4.50 for Vulkan, compiled when the title builds. In its `CMakeLists.txt`:
+Shaders are GLSL 4.50 for Vulkan, or shader model 3 HLSL as D3D9 ports bring it, compiled when the title builds. In
+its `CMakeLists.txt`:
 
 ```
 xsdk_add_shaders(title cube.vert cube.frag)
 ```
 
-That runs `tools/build_shaders.py` into `title_shaders.h` in the build folder: each `.vert` and `.frag` through
-glslang to SPIR-V, then through xost's compiler at xsdk's register split, optimised. The header takes the target's
-name, the first argument, and what's in it takes the files' names. Once a target; a target's shaders go in the one
-call. The header holds, for each file:
-- `cube_vert`, an `XsdkBuiltShader`: its container, for `xsdk_shader_load`, its stage and its literals;
+That runs `tools/build_shaders.py` into `title_shaders.h` in the build folder: each `.vert` and `.frag`, and each
+`<name>_vs.hlsl` and `<name>_ps.hlsl`, through glslang to SPIR-V, the HLSL through glslang-xenon with the flags
+xenos-toolchain/docs/xsc.md, "HLSL", gives (docs/GETTING_STARTED.md, section 4), then through xost's compiler at xsdk's
+register split, optimised. The header takes the target's name, the first argument, and what's in it takes the files'
+names. Once a target; a target's shaders, GLSL and HLSL, go in the one call. The header holds, for each file:
+- `cube_vert`, an `XsdkBuiltShader`: its container, for `xsdk_shader_load`, its stage and its literals; `quad_ps.hlsl`
+  gives `quad_ps_hlsl`;
 - an enum of where its resources landed: `CUBE_VERT_PUSH`, the first float constant of its push constants, and
   `CUBE_VERT_PUSH_REGISTERS`, how many; `CUBE_VERT_UNIFORM_<set>_<binding>` and its `_REGISTERS` for a uniform block;
   `CUBE_FRAG_SAMPLER_<set>_<binding>`, a sampler's texture fetch constant;
@@ -133,18 +137,19 @@ call. The header holds, for each file:
   and set each in every set the table names it in: a bool a pixel shader's if reads in execs of its own is a boolean
   constant, `XSDK_SHADER_BOOL`, bit `c.index % 32` of word `c.index / 32` for `xsdk_gpu_set_bool_constants`; an int a
   loop counts a loop constant, `XSDK_SHADER_INT`, set to `xsdk_gpu_loop_constant(n, 0, 1)`; either read as a value a
-  float constant, 1.0 or 0.0 for a bool. Through glslang-xenon (step 7), a bool's `register(bN)` makes its boolean
-  constant 128 + N, where `SetPixelShaderConstantB(N)` puts it, and an int's `register(iN)` its loop constant 16 + N
-  in a pixel shader and N in a vertex shader; Khronos's glslang drops `b#` and `i#`.
+  float constant, 1.0 or 0.0 for a bool. A bool's `register(bN)` makes its boolean constant 128 + N, where
+  `SetPixelShaderConstantB(N)` puts it, and an int's `register(iN)` its loop constant 16 + N in a pixel shader and N
+  in a vertex shader; Khronos's glslang drops `b#` and `i#`, glslang-xenon keeps them.
 - **Indices** are big-endian, as the CPU writes them, 16 bits each unless `indices_32_bit`, up to 65535 a draw.
 - **Constants the GPU loads from memory,** `xsdk_gpu_load_vertex_constants` and `xsdk_gpu_load_pixel_constants`, go in
   whole groups of 4 from a multiple of 4, from 64-byte aligned memory; a group loaded isn't also set. The boolean and
   loop constants are set all together (`xsdk_gpu_set_bool_constants`, `xsdk_gpu_set_loop_constants`).
 - **What the build takes:** xost's subset of GLSL (xenos-toolchain/docs/xsc.md; docs/PITFALLS.md, "xost's GLSL
-  subset"). It stops with xost's reason for a shader it refuses, as in
-  `bits.frag: xost didn't compile it (refused): v1 fragment: unsupported integer op BitwiseAnd`. It also stops for a
-  shader needing a constant it doesn't write yet, a loop a uniform counts or whose count is data, or a clip plane:
-  give such a loop a constant count, which xost unrolls.
+  subset"), and of HLSL (xsc.md, "HLSL", names what it refuses). It stops with xost's reason for a shader it refuses,
+  as in `bits.frag: xost didn't compile it (refused): v1 fragment: unsupported integer op BitwiseAnd`. It also stops
+  for a shader needing a constant it doesn't write yet, a GLSL loop a uniform counts, a loop whose count is data, or a
+  clip plane: give such a loop a constant count, which xost unrolls. An HLSL loop an int counts needs nothing more: the
+  title sets the int.
 
 `xsdk_xsc_compile` (`xsc.h`) is the same compiler in the title, for SPIR-V that arrives at run time; any thread may
 call it. Instanced draws (`xsdk_gpu_draw_instanced`), depth, stencil, blending, culling, the viewport and the scissor

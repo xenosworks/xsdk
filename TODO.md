@@ -141,6 +141,11 @@ work begins.
   drew the rest of the target back in first, and smaller ones but for one 8-bit colour attachment.
 - **Mipped linear textures.** `xsdk_texture_create` returns `STATUS_NOT_IMPLEMENTED` for them. Xenia keeps their rows
   256-byte aligned (texture_util.cc:209-449). Vulkan rarely needs them.
+- **An HLSL `if` that changes a value in a pixel shader without a loop.** spirv-opt leaves the arms' values in Phis
+  where they meet, which the pixel shader's if/else lowering, written for GLSL's stores, doesn't read, so xost refuses
+  it, `if (c) x *= 0.5;` among them (xenos-toolchain/docs/xsc.md, "HLSL"). With a loop anywhere in the shader the
+  unroller takes it; whether the unroller could take it without one is unchecked. None of milestone 50's corpus or
+  idioms has one.
 
 ## Costs measured but not chased
 

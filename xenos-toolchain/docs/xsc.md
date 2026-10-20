@@ -1,6 +1,7 @@
 # xsc — GLSL → Xenos shader compiler
 
-Pipeline: **GLSL → glslang → SPIR-V → xsc → Xenos container**. glslang
+Pipeline: **GLSL → glslang → SPIR-V → xsc → Xenos container**, and shader model 3
+HLSL the same way (HLSL, below). glslang
 (Khronos reference compiler) does parsing/semantics/optimization; xsc lowers
 the SPIR-V to microcode through the hardware-proven Program builder. xsc is C,
 xsdk's `src/xsc_*.c`: titles call `xsdk_xsc_compile` (`include/xsdk/xsc.h`), and
@@ -328,6 +329,77 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
   23). It compares the filtered depth, so a linear filter blends depths, not
   results.
 - An ALU instruction reads one constant register; a second goes through a temp.
+
+## HLSL
+
+Shader model 3 HLSL, vs_3_0's and ps_3_0's, as D3D9 ports bring it (xsdk:docs/scope/50-hlsl.md): glslang reads it to
+SPIR-V, and xost takes D3D9's meaning from what glslang keeps of it. All 157 of milestone 50's corpus and its 21 idioms
+compile (xsdk:results/2026-10-20-milestone-50/). Shader model 4 and later, D3D9's assembly shaders and Effects files
+(`.fx`) are left out; a port using Effects compiles each technique's entry points itself.
+
+- **glslang:** glslang-xenon (github.com/xenosworks/glslang-xenon, branch `xenon`; xsdk:docs/GETTING_STARTED.md,
+  section 4), Khronos's 16.3.0 with HLSL's `fmod` truncating and `b#` and `i#` kept, built with SPIR-V's optimiser,
+  whose legalisation glslang runs on all HLSL (16.3.0's SPIRV/GlslangToSpv.cpp:12045-12051). Its GLSL is Khronos's.
+  Khronos's glslang reports the same version, so nothing tells the two apart, and builds the same HLSL with `fmod`
+  floored and every bool and int at the lowest constant left.
+- **Flags:** `-D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stage> -e <entry>`, as xsdk's
+  `tools/build_shaders.py` runs them and `tools/check_hlsl.py` checks them. `--hlsl-dx9-compatible` makes a `sampler2D`
+  a texture and sampler in one, which without it is a bare sampler; `-fhlsl_functionality1` keeps each varying's
+  semantic, and a `$Global` member's `register(bN)` or `register(iN)`, as UserSemantic strings
+  (SPV_GOOGLE_hlsl_functionality1).
+- **Names:** `<name>_vs.hlsl` is a vertex shader and `<name>_ps.hlsl` a pixel shader, its entry `vs_main` or `ps_main`
+  where the source has one, else `main`. In build_shaders.py's header `quad_ps.hlsl` is `quad_ps_hlsl`.
+- **D3D9's semantics** (Interface conventions): a vertex input's usage and index are its semantic's; POSITION, PSIZE,
+  COLOR*n* and DEPTH outputs are the position, the point's size, target *n* and the depth, struct members and return
+  values too; VPOS is the pixel's whole column and row, and VFACE +1 on a front face, clockwise as on D3D9, and -1 on a
+  back one, as the console drew them (xsdk:docs/HARDWARE.md, "HLSL on the console, milestone 50"); each stage packs
+  its interpolators by semantic, and `xsdk_shader_link` links a pair by semantic as D3D9 does.
+- **Binding as D3D9 binds** (Interface conventions; `tests/test_hlsl_binding.py`, `tests/test_hlsl_registers.py`):
+  - `register(cN)` is float constant *N*, as `SetVertexShaderConstantF` and `SetPixelShaderConstantF` set it: glslang
+    puts the globals in one `$Global` block at their registers' offsets, which xost lays from c0.
+  - `register(sN)` is texture fetch constant *N*, as `SetTexture(N)` binds it.
+  - A bool a pixel shader's if reads, its arms in execs, at `register(bN)` is boolean constant 128 + *N*, where
+    `SetPixelShaderConstantB(N)` puts it (libxenon:drivers/xenos/xe.c:2051-2063). A vertex shader's if and a `?:`
+    read it as a value.
+  - An int a loop counts at `register(iN)` is loop constant 16 + *N* in a pixel shader and *N* in a vertex shader, set
+    to `xsdk_gpu_loop_constant(n, 0, 1)` for *n*; a title's build needs nothing else for it.
+  - A bool or int read as a value is a float, 1.0 or 0.0 for a bool, at its own `register(cN)` or in a register past
+    the blocks: a title sets it by name.
+  - A bool or loop count without a register takes the lowest constant no other takes and no member's register names.
+  - The constant table names every sampler and member as declared, with its register set, index, count and type, and
+    `xsdk_shader_constant` (xsdk:include/xsdk/shader.h) finds one by name.
+- **`fmod`** is `x - y * trunc(x / y)`, with the sign of x, as HLSL defines it, where glslang made it GLSL's floored
+  `mod` (glslang-xenon's `decomposeIntrinsic`, glslang/HLSL/hlslParseHelper.cpp, and its constant fold,
+  glslang/MachineIndependent/Constant.cpp; `tests/test_hlsl_fmod.py`). HLSL's `%` is as it was.
+
+Refused, each by name, with xost's message where it's short:
+- **An if in a pixel shader without a loop,** where spirv-opt keeps it a branch, as it does an `if` that changes a
+  local or returns, `if (c) x *= 0.5;` among them: its values meet in Phis, which the pixel shader's if/else lowering
+  doesn't read (`if/else arm does not assign o_color`). A `?:`, `clip` and an `if` around `discard` compile, and with a
+  loop anywhere in the shader the unroller takes such an if (Control flow).
+- **Loops** (Loops): a do/while's header Phi read after the loop; a value a loop's test works out, kept past the loop or
+  read in its pass where xost can't work it out again; a value a do/while's pass works out read after the loop that no
+  header Phi carries; a merge Phi of a header Phi that can't share its variable; a Phi on the edge from a test into the
+  pass; a switch, which spirv-opt's inliner makes of a helper's early return; and a loop an int counts from other than
+  0 by 1, as a title setting the int couldn't count its passes.
+- **Semantics:** a vertex input's or interpolator's semantic other than D3D9's usages at an index to 15 (`not one of
+  D3D9's declaration usages`); a matrix varying whose columns run past index 15; two varyings of one semantic (`share
+  semantic`); a varying without a semantic beside one with; more than 16 interpolators.
+- **A static or local with an initializer,** which xost would drop (`a Function or Private variable with an
+  initializer`); glslang writes a static's value as a store, so none has reached xost.
+- **Arrays and matrices:** a local array other than a constant one at a run-time index, or one stored by element; a
+  matrix output held by rows, as a cast of a block's matrix, where an interpolator takes a column; a vertex shader's
+  matrix input; a column of a matrix value other than a cast's.
+- **Integers:** an int or bool loaded other than from a local, an input or `$Global` (`integer Load must be a foldable
+  local`); and int operations past add, subtract, multiply, divide and remainder, the bitwise ones and shifts, which
+  Xenos lacks (`unsupported integer op`).
+- **Registers:** a `b#` on other than a bool, an `i#` on other than an int; two members in one register (`share
+  register`); a bool an if reads past b127 or an int a loop counts past i15 (`past the stage's`); and an arm of a
+  bool's if, in execs on its boolean constant, that uses a0 (`an arm on a boolean constant that uses a0`).
+- **What GLSL can't do either** (Supported; Not yet / out of scope): a `discard` or `return` in a loop, a fifth nested
+  hardware loop, more than 255 passes of one, more than 64 registers.
+
+Wrong without a refusal, for GLSL too: `pow` of an exponent whose components differ takes its x in every lane.
 
 ## Literal constant pool (the host-upload contract)
 
@@ -759,8 +831,8 @@ host's front face, set from PA_SU_SC_MODE_CNTL's face as culling is
 (xenia:src/xenia/gpu/vulkan/vulkan_pipeline_cache.cc:625).
 
 HLSL's VFACE reads the same sign: `cndge` on the `rcpc`, +1 on a front face and -1 on a back one, D3D9's signs, from
-one constant, `VFACE_FRONT` (`xsdk:src/xsc_lower_fragment.c`), till the console's `hlsl: VFACE` check says which sign a
-front face gets under xsdk's winding (xsdk:tests/test_hlsl.c).
+one constant, `VFACE_FRONT` (`xsdk:src/xsc_lower_fragment.c`); the console's `hlsl: VFACE` check read +1 on a clockwise
+front face (xsdk:docs/HARDWARE.md, "HLSL on the console, milestone 50").
 
 ## Vertex textures
 

@@ -6,5 +6,6 @@ project(title C)
 add_executable(title main.c)
 set_target_properties(title PROPERTIES C_STANDARD 17 C_EXTENSIONS ON)
 target_compile_options(title PRIVATE -Wall -Wextra -Werror)
-# GLSL shaders go through xsdk_add_shaders(title shader.vert shader.frag), which writes title_shaders.h.
+# GLSL and HLSL shaders go through xsdk_add_shaders(title shader.vert shader.frag shader_vs.hlsl shader_ps.hlsl), which
+# writes title_shaders.h.
 xsdk_add_xex(title)

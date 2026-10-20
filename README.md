@@ -48,7 +48,7 @@ make
 That makes `build/libxsdk.a` and the test title, `build/xsdk_test.xex`, as well as the bring-up probes. A title links
 its own objects and `libxsdk.a` with `src/xsdk.ld`, which starts it at `xsdk_start` in the library, then packs the ELF
 with `tools/elf2xex.py`; vulkan4xenon's Makefile does it that way. CMake projects get the same through
-`-DCMAKE_TOOLCHAIN_FILE=cmake/xsdk.cmake` and `xsdk_add_xex(<target>)`, and compile their GLSL shaders with
+`-DCMAKE_TOOLCHAIN_FILE=cmake/xsdk.cmake` and `xsdk_add_xex(<target>)`, and compile their GLSL and HLSL shaders with
 `xsdk_add_shaders(<target> <files>)`; `make samples` builds the samples that way, and `make cmake_check` a C++ title.
 
 ## Testing
