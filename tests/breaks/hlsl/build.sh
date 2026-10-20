@@ -1,5 +1,5 @@
 #!/bin/sh
-# Milestone 50 steps 3, 4 and 5's breaks: xsdk_test built with each patch here applied, as
+# Milestone 50 steps 3 to 6's breaks: xsdk_test built with each patch here applied, as
 # build/breaks/xsdk_test_hlsl_<break>.xex. Each but link breaks xost in the title, which compiles the HLSL grid's
 # shaders on the console (tests/test_hlsl.c), so test_xsc's check of that shader against the PC's container fails too.
 # Run in WSL from anywhere: sh tests/breaks/hlsl/build.sh. Each patch is taken back out after its build, even a failed
@@ -22,9 +22,14 @@
 #   "hlsl: a quad skinned by float4x3 bones ..." and "xsc: hlsl/grid_skin_vs.hlsl compiles into the PC's container
 #   ...". The break before it, a0 from each vector's x (tests/probe_skin.patch), passed on the console only because the
 #   check expected the clear everywhere: -CELL_HEIGHT was unsigned, so the reference's quad had no rows.
+# - binding: HLSL's samplers packed from 0 in binding order again, as GLSL's are, so grid_binding_ps.hlsl's Low and
+#   High read fetch constants 0 and 1, where the test binds other textures, not 3 and 7; on the simulator every pixel of
+#   the cell takes their red 8 and green 8; fails "hlsl: samplers at s3 and s7 sample the textures bound at slots 3
+#   and 7, ...", "hlsl: grid_binding_ps.hlsl's table names Low at fetch constant 0 and High at 1, ..." and
+#   "xsc: hlsl/grid_binding_ps.hlsl compiles into the PC's container ...".
 set -eu
 cd "$(dirname "$0")/../../.."
-for name in link vpos vface depth loop skin; do
+for name in link vpos vface depth loop skin binding; do
 	patch -p1 --forward --quiet < "tests/breaks/hlsl/$name.patch"
 	trap 'patch -p1 -R --quiet < "tests/breaks/hlsl/$name.patch"' EXIT INT TERM
 	make -j32 BUILD="build/breaks/hlsl_$name" "build/breaks/hlsl_$name/xsdk_test.xex"

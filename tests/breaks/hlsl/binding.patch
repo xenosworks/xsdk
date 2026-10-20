@@ -1,0 +1,12 @@
+--- a/src/xsc_resolve.c
++++ b/src/xsc_resolve.c
+@@ -719,7 +719,8 @@
+ 		return false;
+ 	for (size_t i = 0; i < count; i++)
+ 		slots[i] = (int64_t)i;
+-	if (xsdk_xsc_hlsl(m) && !hlsl_slots(x, samplers, count, slots))
++	// Broken on purpose: HLSL's samplers packed from 0 in binding order, as GLSL's are, not at their s#.
++	if (false && !hlsl_slots(x, samplers, count, slots))
+ 		return false;
+ 	for (size_t i = 0; i < count; i++) {
+ 		const XscVar *const v = samplers[i];

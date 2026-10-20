@@ -11,6 +11,7 @@
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
 #include "xsdk/shader.h"
+#include "xsdk/texture.h"
 #include "xsdk/thread.h"
 #include "xsdk/xsc.h"
 
@@ -23,7 +24,9 @@
 // TEXCOORD3, COLOR1, TEXCOORD0 and FOG meet a pixel shader reading COLOR1 and TEXCOORD3 alone, in 2 interpolators; a
 // loop in SSA form (step 3), a hardware loop an int in $Global counts, each pixel leaving it on its own TEXCOORD0; and
 // skinning (step 5), each corner of a quad skinned by four float4x3 bones in vertex constants that its int4
-// BLENDINDICES, UBYTE4s, pick, the cell left of the loop's.
+// BLENDINDICES, UBYTE4s, pick, the cell left of the loop's; and binding as D3D9 binds (step 6), samplers at s3 and s7
+// bound at slots 3 and 7, a bool at b2 an if reads and an int at i1 a loop counts, set by name through the container's
+// table, the cell left of the gaps'.
 
 enum {
 	WIDTH = 1280,
@@ -50,8 +53,19 @@ enum {
 	VERTEX_FLOATS = 10,
 	STRIDE_BYTES = VERTEX_FLOATS * 4,
 	QUAD_VERTICES = 6,
-	// The link's quad, VPOS's, VFACE's two, DEPTH's, the nearer one over it, the link with gaps' and the loop's.
-	QUADS = 8,
+	// The binding cell, left of the gaps' cell, a quad a half: Low's and High's texels across each, and each its own
+	// Bright and Count; slots 3 and 7, as D3D9's SetTexture(3) and (7), and 0 and 1, which samplers packed from 0 read.
+	BINDING_X = CELL_X - CELL_WIDTH - 20,
+	BINDING_Y = GAPS_Y,
+	BINDING_HALF = CELL_WIDTH / 2,
+	BINDING_QUAD = 8,
+	BINDING_TEXELS = 4,
+	LOW_SLOT = 3,
+	HIGH_SLOT = 7,
+	DECOY_SLOTS = 2,
+	// The link's quad, VPOS's, VFACE's two, DEPTH's, the nearer one over it, the link with gaps', the loop's and the
+	// binding's two.
+	QUADS = 10,
 	VERTEX_WORDS = QUADS * QUAD_VERTICES * VERTEX_FLOATS,
 	// VPOS's red and green: the column and row mod 64, times 4.
 	VPOS_PERIOD = 64,
@@ -99,12 +113,52 @@ enum {
 	SHADER_LOOP,
 	// The skinning's pixel shader, the link's.
 	SHADER_SKIN,
+	SHADER_BINDING,
 	SHADERS,
 };
 
+// The binding shader's constants, each found by name in its container's table.
+enum {
+	BOUND_LOW,
+	BOUND_HIGH,
+	BOUND_STEP,
+	BOUND_BRIGHT,
+	BOUND_COUNT,
+	BOUND_NAMES,
+};
+
+static const struct {
+	const char *name;
+	uint32_t set;
+} bound_names[BOUND_NAMES] = { { "Low", XSDK_SHADER_SAMPLER }, { "High", XSDK_SHADER_SAMPLER },
+	{ "Step", XSDK_SHADER_FLOAT }, { "Bright", XSDK_SHADER_BOOL }, { "Count", XSDK_SHADER_INT } };
+
+// The binding cell's textures, 4 texels across: Low's reds, High's greens, and those at slots 0 and 1.
+enum {
+	LOW_TEXTURE,
+	HIGH_TEXTURE,
+	DECOY_TEXTURE,
+	BINDING_TEXTURES = DECOY_TEXTURE + DECOY_SLOTS,
+};
+
+static const uint32_t binding_texels[BINDING_TEXTURES][BINDING_TEXELS] = {
+	{ 0xFF300000, 0xFF700000, 0xFFB00000, 0xFFF00000 },
+	{ 0xFF00F000, 0xFF00B000, 0xFF007000, 0xFF003000 },
+	{ 0xFF08F8F8, 0xFF08F8F8, 0xFF08F8F8, 0xFF08F8F8 },
+	{ 0xFFF808F8, 0xFFF808F8, 0xFFF808F8, 0xFFF808F8 },
+};
+
+// Step at the float constant the table names: blue's step a pass, and what Bright adds; each half's Count and Bright.
+static const float binding_step[4] = { 0.125f, 0.5f, 0.0f, 0.0f };
+static const struct {
+	uint32_t count;
+	uint32_t bright;
+} binding_halves[2] = { { 2, 1 }, { 5, 0 } };
+
 static const char *const shader_names[SHADERS] = { "hlsl/grid_vs.hlsl", "hlsl/grid_gaps_vs.hlsl",
 	"hlsl/grid_skin_vs.hlsl", "hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl",
-	"hlsl/grid_depth_ps.hlsl", "hlsl/grid_gaps_ps.hlsl", "hlsl/grid_loop_ps.hlsl", "hlsl/grid_link_ps.hlsl" };
+	"hlsl/grid_depth_ps.hlsl", "hlsl/grid_gaps_ps.hlsl", "hlsl/grid_loop_ps.hlsl", "hlsl/grid_link_ps.hlsl",
+	"hlsl/grid_binding_ps.hlsl" };
 
 static const XsdkVertexElement layout[] = {
 	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT4 },
@@ -150,6 +204,8 @@ static const Quad quads[QUADS] = {
 	{ DEPTH_Y, false, CELL_X, CELL_WIDTH, 0.5f, near_colour },
 	{ GAPS_Y, false, CELL_X, CELL_WIDTH, 0.5f, link_colour },
 	{ LOOP_Y, false, CELL_X, CELL_WIDTH, 0.5f, link_colour },
+	{ BINDING_Y, false, BINDING_X, BINDING_HALF, 0.5f, link_colour },
+	{ BINDING_Y, false, BINDING_X + BINDING_HALF, BINDING_HALF, 0.5f, link_colour },
 };
 
 // A quad's two triangles, in units of a quad: top left, top right, bottom left, then the other half.
@@ -171,6 +227,11 @@ typedef struct {
 	// The loop's loop constant, from its compile's block loop need, and that constant's value for LOOP_COUNT.
 	uint32_t loop_constant;
 	uint32_t loop_value;
+	// The binding shader's constants where its table puts them, -1 for one it doesn't name; its textures, point
+	// sampled.
+	int32_t bound[BOUND_NAMES];
+	XsdkTexture textures[BINDING_TEXTURES];
+	XsdkSamplerState point;
 	bool has_display;
 } Grid;
 
@@ -181,6 +242,7 @@ typedef struct {
 	uint32_t gaps;
 	uint32_t loop;
 	uint32_t skin;
+	uint32_t binding;
 	// VFACE's front and back quads: pixels reading +1, -1 and neither.
 	uint32_t faces[2][3];
 } Wrong;
@@ -325,6 +387,42 @@ static bool find_loop(Grid *g)
 	return false;
 }
 
+// Where the binding shader's table puts each of its constants, by name, as a D3D9 port finds them.
+static void find_binding(Grid *g)
+{
+	for (uint32_t i = 0; i < BOUND_NAMES; i++) {
+		XsdkShaderConstant c;
+		const bool found =
+			xsdk_shader_constant(&g->shaders[SHADER_BINDING], bound_names[i].name, bound_names[i].set, &c);
+		g->bound[i] = found ? (int32_t)c.index : -1;
+	}
+}
+
+static uint32_t bound(const Grid *g, uint32_t i)
+{
+	return g->bound[i] < 0 ? 0 : (uint32_t)g->bound[i];
+}
+
+// The binding cell's textures, linear, and the point sampling they're drawn with.
+static bool make_textures(Grid *g)
+{
+	const XsdkSampler point = { .mag_filter = XSDK_FILTER_POINT,
+		.min_filter = XSDK_FILTER_POINT,
+		.mip_filter = XSDK_FILTER_POINT,
+		.address_u = XSDK_ADDRESS_CLAMP,
+		.address_v = XSDK_ADDRESS_CLAMP,
+		.address_w = XSDK_ADDRESS_CLAMP };
+	xsdk_texture_sampler_state(&g->point, &point);
+	for (uint32_t i = 0; i < BINDING_TEXTURES; i++) {
+		XsdkTexture *const t = &g->textures[i];
+		if (!NT_SUCCESS(xsdk_texture_create(t, XSDK_FORMAT_A8R8G8B8, BINDING_TEXELS, 1, 1, false)))
+			return false;
+		xsdk_texture_upload(t, 0, binding_texels[i], sizeof binding_texels[i]);
+		xsdk_gpu_invalidate(t->address, t->size_bytes);
+	}
+	return true;
+}
+
 // The shaders compiled on the console as the raster test compiles its own, the vertices and the frames' buffers.
 static bool make_grid(Grid *g)
 {
@@ -338,6 +436,9 @@ static bool make_grid(Grid *g)
 		if (!load_pair(g, i))
 			return false;
 	}
+	find_binding(g);
+	if (!make_textures(g))
+		return false;
 	xsdk_gpu_raster_state(&g->raster, &(XsdkRaster){ .cull = XSDK_CULL_NONE, .front_clockwise = true });
 	xsdk_gpu_depth_stencil_state(
 		&g->depth, &(XsdkDepthStencil){ .depth_test = true, .depth_write = true, .depth_compare = XSDK_COMPARE_LESS });
@@ -391,6 +492,25 @@ static void draw_skin(const Grid *g)
 	xsdk_gpu_draw(XSDK_PRIMITIVE_TRIANGLE_LIST, QUAD_VERTICES);
 }
 
+// The binding cell: other textures at 0 and 1, Low's and High's at 3 and 7 as D3D9 binds them, then each half with its
+// Bright and Count, set where the table puts them.
+static void draw_binding(const Grid *g)
+{
+	for (uint32_t i = 0; i < DECOY_SLOTS; i++)
+		xsdk_gpu_set_texture(i, &g->textures[DECOY_TEXTURE + i], &g->point);
+	xsdk_gpu_set_texture(LOW_SLOT, &g->textures[LOW_TEXTURE], &g->point);
+	xsdk_gpu_set_texture(HIGH_SLOT, &g->textures[HIGH_TEXTURE], &g->point);
+	xsdk_gpu_set_pixel_constants(bound(g, BOUND_STEP), binding_step, 1);
+	for (uint32_t half = 0; half < 2; half++) {
+		const uint32_t bright = bound(g, BOUND_BRIGHT);
+		const uint32_t word = binding_halves[half].bright << bright % 32;
+		const uint32_t loop = xsdk_gpu_loop_constant(binding_halves[half].count, 0, 1);
+		xsdk_gpu_set_bool_constants(bright / 32, &word, 1);
+		xsdk_gpu_set_loop_constants(bound(g, BOUND_COUNT), &loop, 1);
+		draw_quads(g, SHADER_BINDING, BINDING_QUAD + half, 1);
+	}
+}
+
 // One frame of the cells, resolved and waited for; false if the fence didn't land.
 static bool draw(const Grid *g, volatile uint32_t *buffer)
 {
@@ -404,6 +524,7 @@ static bool draw(const Grid *g, volatile uint32_t *buffer)
 	xsdk_gpu_set_loop_constants(g->loop_constant, &g->loop_value, 1);
 	draw_quads(g, SHADER_LOOP, 7, 1);
 	draw_skin(g);
+	draw_binding(g);
 	xsdk_gpu_set_depth_stencil(&g->depth);
 	draw_quads(g, SHADER_DEPTH, 4, 1);
 	draw_quads(g, SHADER_LINK, 5, 1);
@@ -461,6 +582,18 @@ static uint32_t loop_colour(uint32_t x)
 	return stored(unorm(red), unorm(green), unorm((float)i * loop_step[2]));
 }
 
+// The binding cell's colour at column x: Low's red and High's green for the texel there, and blue Count steps and what
+// Bright adds.
+static uint32_t binding_colour(uint32_t x)
+{
+	const uint32_t half = (x - BINDING_X) / BINDING_HALF;
+	const uint32_t texel = (x - BINDING_X) % BINDING_HALF * BINDING_TEXELS / BINDING_HALF;
+	const float blue =
+		(float)binding_halves[half].count * binding_step[0] + (float)binding_halves[half].bright * binding_step[1];
+	return stored(
+		binding_texels[LOW_TEXTURE][texel] >> 16 & 0xFF, binding_texels[HIGH_TEXTURE][texel] >> 8 & 0xFF, unorm(blue));
+}
+
 static bool pixel_right(const char *what, uint32_t x, uint32_t y, uint32_t held, uint32_t want, uint32_t tolerance,
 	uint32_t frame, uint32_t *logged)
 {
@@ -515,6 +648,10 @@ static void check_frame(const Grid *g, volatile const uint32_t *buffer, uint32_t
 			y = SKIN_Y + dy;
 			wrong->skin += !pixel_right("skinning", sx, y, buffer[tiled_index(sx, y, WIDTH)], skin_colour(g, sx, y),
 				RAMP_TOLERANCE, frame, logged);
+			const uint32_t bx = BINDING_X + (x - CELL_X);
+			y = BINDING_Y + dy;
+			wrong->binding += !pixel_right(
+				"binding", bx, y, buffer[tiled_index(bx, y, WIDTH)], binding_colour(bx), TOLERANCE, frame, logged);
 			// Last, so the columns DEPTH leaves out are the only ones skipped.
 			y = DEPTH_Y + dy;
 			const uint32_t middle = CELL_X + CELL_WIDTH / 2;
@@ -576,6 +713,12 @@ static void report(const Wrong *w, bool landed, uint32_t frames)
 		"%u of %u pixels wrong",
 		(unsigned)w->skin, (unsigned)pixels);
 	check(name, landed && frames && w->skin == 0);
+	(void)snprintf(name, sizeof name,
+		"hlsl: samplers at s3 and s7 sample the textures bound at slots 3 and 7, an if reads a bool at b2 and a loop "
+		"counts an int at i1, each set by name through the container's table, as D3D9 binds them: %u of %u pixels "
+		"wrong",
+		(unsigned)w->binding, (unsigned)pixels);
+	check(name, landed && frames && w->binding == 0);
 }
 
 static void free_grid(Grid *g)
@@ -584,6 +727,10 @@ static void free_grid(Grid *g)
 		xsdk_gpu_free(g->buffers[i]);
 	xsdk_gpu_free(g->skin_vertices);
 	xsdk_gpu_free(g->vertices);
+	for (uint32_t i = 0; i < BINDING_TEXTURES; i++) {
+		if (g->textures[i].texels)
+			xsdk_texture_free(&g->textures[i]);
+	}
 	for (uint32_t i = 0; i < SHADERS; i++) {
 		if (g->shaders[i].microcode)
 			xsdk_shader_free(&g->shaders[i]);
@@ -634,12 +781,20 @@ void test_hlsl(void)
 	const bool made = make_grid(&g);
 	check("hlsl: xost compiles the grid's HLSL shaders on the console, and the grid is made", made);
 	if (made) {
-		char name[160];
+		char name[320];
 		const uint32_t count = g.shaders[SHADER_GAPS].interpolator_count;
 		(void)snprintf(name, sizeof name,
 			"hlsl: the pixel shader reading COLOR1 and TEXCOORD3 declares %u interpolators in its container, not 14",
 			(unsigned)count);
 		check(name, count == GAPS_INTERPOLATORS);
+		const int32_t *const b = g.bound;
+		(void)snprintf(name, sizeof name,
+			"hlsl: grid_binding_ps.hlsl's table names Low at fetch constant %d and High at %d, as their s3 and s7, "
+			"Step at float constant %d, Bright at boolean constant %d and Count at loop constant %d",
+			(int)b[BOUND_LOW], (int)b[BOUND_HIGH], (int)b[BOUND_STEP], (int)b[BOUND_BRIGHT], (int)b[BOUND_COUNT]);
+		check(name,
+			b[BOUND_LOW] == LOW_SLOT && b[BOUND_HIGH] == HIGH_SLOT && b[BOUND_STEP] >= 0 && b[BOUND_BRIGHT] >= 0 &&
+				b[BOUND_COUNT] >= 0);
 		run(&g);
 	}
 	xsdk_display_close();
