@@ -19,7 +19,8 @@ a vertex shader's position among them, equal bit for bit on every trial, inexact
 
 --refresh writes each shader's SPIR-V beside it, <name>.spv, as testdata keeps it; --json writes every result, a
 compiled shader's constant table among it (xsc/native.py, constant_table). Runs in WSL with xost's Windows glslang,
-as check_optimize.py does.
+as check_optimize.py does, or the glslang --glslang names: glslang-xenon's PC build with SPIR-V's optimiser, whose
+fmod truncates and which keeps a bool's b# and an int's i#, made the testdata since milestone 50 step 7.
 
     python3 tools/check_hlsl.py --json ../results/2026-10-20-milestone-50/step2.json
 """
@@ -62,10 +63,11 @@ STORAGE_PRIVATE = 6
 DEC_OFFSET, DEC_ARRAY_STRIDE, DEC_MATRIX_STRIDE, DEC_BUILTIN, BUILTIN_FRAG_COORD = 35, 6, 7, 11, 15
 
 
-def spirv_of(source, args, work):
+def spirv_of(glslang, source, args, work):
     out = Path(work) / (source.name + ".spv")
-    result = subprocess.run([str(GLSLANG), *args, host_path(source), "-o", host_path(out)], capture_output=True,
-                            text=True)
+    # A Windows glslang opens Windows paths, a Linux one WSL's.
+    path = host_path if glslang.suffix == ".exe" else str
+    result = subprocess.run([str(glslang), *args, path(source), "-o", path(out)], capture_output=True, text=True)
     if result.returncode:
         raise ValueError("glslang: " + (result.stdout + result.stderr).strip().splitlines()[-1])
     return out.read_bytes()
@@ -321,8 +323,8 @@ def check(source, args, work):
     twin = source.with_name(source.stem[:-3] + (".vert" if vertex else ".frag"))
     twin = twin if twin.exists() else None
     try:
-        blob = spirv_of(source, hlsl_args(source), work)
-        twin_blob = spirv_of(twin, ["-V"], work) if twin else None
+        blob = spirv_of(args.glslang, source, hlsl_args(source), work)
+        twin_blob = spirv_of(args.glslang, twin, ["-V"], work) if twin else None
     except ValueError as e:
         return {"status": "glslang", "cause": str(e)}
     if args.refresh:
@@ -369,6 +371,7 @@ def main():
     ap.add_argument("folders", nargs="*", default=[TESTDATA / "corpus", TESTDATA / "idioms"], type=Path)
     ap.add_argument("--trials", type=int, default=20)
     ap.add_argument("--seed", type=int, default=1)
+    ap.add_argument("--glslang", type=Path, default=GLSLANG, help="glslang, by default xost's Windows build")
     ap.add_argument("--refresh", action="store_true", help="write each shader's SPIR-V beside it")
     ap.add_argument("--json", help="write every shader's result and the totals to this file")
     args = ap.parse_args()
