@@ -137,9 +137,16 @@ $(TILES_BREAKS:%=$(BUILD)/tests/probe_tiles_%.o): $(BUILD)/tests/probe_tiles_%.o
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -DTILES_BREAK='"$*"' -c $< -o $@
 
-$(BUILD)/libxsdk.a: $(SDK_OBJECTS)
+$(BUILD)/libxsdk.a: $(SDK_OBJECTS) | $(BUILD)/check/doloop_check.o
 	rm -f $@
 	$(AR) rcs $@ $^
+
+# Counted loops end in bdnz only with gcc-xsdk.patch's rs6000_preferred_doloop_mode (milestone 52).
+$(BUILD)/check/doloop_check.o: tests/doloop_check.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -c $< -o $@
+	@$(OBJDUMP) -d $@ | grep -qw bdnz || { rm -f $@; echo "$(CC) ends counted loops without bdnz;" \
+		"rebuild it with tools/toolchain/build.sh (milestone 52)" >&2; exit 1; }
 
 $(IMPORT_SOURCES) &: imports/imports.txt tools/gen_imports.py
 	$(PYTHON) tools/gen_imports.py imports/imports.txt $(BUILD)/imports
