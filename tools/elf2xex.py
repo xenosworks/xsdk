@@ -27,6 +27,7 @@ SECTION_DATA = 2
 SECTION_READONLY = 3
 
 # xenia:src/xenia/kernel/util/xex2_info.h:278-308
+HEADER_RESOURCE_INFO = 0x000002FF
 HEADER_FILE_FORMAT_INFO = 0x000003FF
 HEADER_ENTRY_POINT = 0x00010100
 HEADER_IMAGE_BASE_ADDRESS = 0x00010201
@@ -65,6 +66,20 @@ PE_SECTION_FLAGS = {
     SECTION_DATA: 0xC0000040,
 }
 PE_SECTION_NAMES = {SECTION_CODE: b".text", SECTION_READONLY: b".rdata", SECTION_DATA: b".data"}
+
+# A title's name is string 0x8000 of its default language in an XDBF database, in the resource named after its title
+# ID (xenia:src/xenia/kernel/kernel_state.cc:111-125, user_module.cc:267-288, util/xex2_info.h:427-437, and
+# util/xdbf_utils.h:26-77, xdbf_utils.cc:16-24, 63-87, 123-135). Xenia reads neither the database's version and free
+# table nor the sizes in XSTC and XSTR.
+XDBF_SECTION_METADATA = 1
+XDBF_SECTION_STRING_TABLE = 3
+XDBF_ID_XSTC = 0x58535443
+XDBF_ID_TITLE = 0x8000
+XDBF_VERSION = 0x10000
+# xenia:src/xenia/xbox.h:330-332
+LANGUAGE_ENGLISH = 1
+# The database goes in the first page after the PE headers, below the byte tests/xex_checks.py flips.
+TITLE_NAME_END = 0x800
 
 IMPORT_RECORD = struct.Struct(">IIII16s")
 RECORD_THUNK = 0x01000000
@@ -258,6 +273,28 @@ def pe_headers(image, runs, entry, stack_bytes):
     if len(headers) > PE_HEADER_BYTES:
         fail("PE headers don't fit in their page")
     image[0:len(headers)] = headers
+    return len(headers)
+
+
+def title_database(name):
+    text = name.encode()
+    strings = struct.pack(">HH", XDBF_ID_TITLE, len(text)) + text
+    xstr = struct.pack(">4sIIH", b"XSTR", 1, 2 + len(strings), 1) + strings
+    xstc = struct.pack(">4sIII", b"XSTC", 1, 4, LANGUAGE_ENGLISH)
+    entries = struct.pack(">HQII", XDBF_SECTION_METADATA, XDBF_ID_XSTC, 0, len(xstc))
+    entries += struct.pack(">HQII", XDBF_SECTION_STRING_TABLE, LANGUAGE_ENGLISH, len(xstc), len(xstr))
+    content_bytes = len(xstc) + len(xstr)
+    free = struct.pack(">II", content_bytes, 0xFFFFFFFF - content_bytes)
+    return struct.pack(">4sIIIII", b"XDBF", XDBF_VERSION, 2, 2, 1, 1) + entries + free + xstc + xstr
+
+
+def add_title_name(image, headers_end, title_id, name):
+    database = title_database(name)
+    offset = align(headers_end, 16)
+    if offset + len(database) > TITLE_NAME_END:
+        fail("the title name doesn't fit beside the PE headers")
+    image[offset:offset + len(database)] = database
+    return struct.pack(">I8sII", 4 + 16, f"{title_id:08X}".encode(), IMAGE_BASE + offset, len(database))
 
 
 def page_descriptors(image, runs):
@@ -289,7 +326,7 @@ def optional_header_table(inline, blocks, data_offset, placed):
     return table, data
 
 
-def build_xex(image, runs, entry, libraries, args):
+def build_xex(image, runs, entry, libraries, resources, args):
     imports, import_digest = import_libraries_header(libraries)
     descriptors, image_digest = page_descriptors(image, runs)
 
@@ -304,6 +341,8 @@ def build_xex(image, runs, entry, libraries, args):
         HEADER_TLS_INFO: struct.pack(">IIII", TLS_SLOTS, 0, 0, 0),
         HEADER_EXECUTION_INFO: struct.pack(">IIIIBBBBI", 0, 0, 0, args.title_id, 0, 0, 1, 1, 0),
     }
+    if resources:
+        blocks[HEADER_RESOURCE_INFO] = resources
 
     header_count = len(inline) + len(blocks) + 1
     security_offset = align(0x18 + 8 * header_count, 8)
@@ -351,14 +390,16 @@ def main():
     parser.add_argument("xex", type=Path)
     parser.add_argument("--title-id", type=lambda text: int(text, 16), default=0x5853444B)
     parser.add_argument("--stack-size", type=lambda text: int(text, 0), default=1024 * 1024)
+    parser.add_argument("--title-name", help="the name the dashboard shows")
     args = parser.parse_args()
 
     entry, sections = read_elf(args.elf.read_bytes())
     image, runs = build_image(sections)
     libraries = read_imports(sections, image)
     patch_import_records(image, libraries)
-    pe_headers(image, runs, entry, args.stack_size)
-    args.xex.write_bytes(build_xex(image, runs, entry, libraries, args))
+    headers_end = pe_headers(image, runs, entry, args.stack_size)
+    resources = add_title_name(image, headers_end, args.title_id, args.title_name) if args.title_name else b""
+    args.xex.write_bytes(build_xex(image, runs, entry, libraries, resources, args))
 
 
 if __name__ == "__main__":

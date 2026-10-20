@@ -69,13 +69,24 @@ function(xsdk_add_shaders target)
 	target_include_directories(${target} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 endfunction()
 
-# Packs a title's ELF into <target>.xex beside it, and lists what Xenia would skip, as the Makefile does.
+# Packs a title's ELF into <target>.xex beside it, and lists what Xenia would skip, as the Makefile does:
+# xsdk_add_xex(target [TITLE_ID 0x5853444B] [NAME "the name the dashboard shows"]). A title ID of its own keeps its
+# saves apart from other titles'.
 function(xsdk_add_xex target)
+	cmake_parse_arguments(PARSE_ARGV 1 XEX "" "TITLE_ID;NAME" "")
+	set(options)
+	if(DEFINED XEX_TITLE_ID)
+		list(APPEND options --title-id "${XEX_TITLE_ID}")
+	endif()
+	if(DEFINED XEX_NAME)
+		list(APPEND options --title-name "${XEX_NAME}")
+	endif()
 	# The link rule names these outside CMake's view, so a rebuilt SDK would otherwise leave the title linked to the old.
 	set_property(TARGET ${target} APPEND PROPERTY LINK_DEPENDS
 		"${XSDK_ROOT}/build/libxsdk.a" "${XSDK_ROOT}/src/xsdk.ld")
 	add_custom_command(TARGET ${target} POST_BUILD
 		COMMAND sh -c "'${CMAKE_OBJDUMP}' -d '$<TARGET_FILE:${target}>' | python3 '${XSDK_ROOT}/tools/xenia_scan.py'"
-		COMMAND python3 "${XSDK_ROOT}/tools/elf2xex.py" "$<TARGET_FILE:${target}>" "$<TARGET_FILE_DIR:${target}>/${target}.xex"
+		COMMAND python3 "${XSDK_ROOT}/tools/elf2xex.py" ${options}
+			"$<TARGET_FILE:${target}>" "$<TARGET_FILE_DIR:${target}>/${target}.xex"
 		VERBATIM)
 endfunction()
