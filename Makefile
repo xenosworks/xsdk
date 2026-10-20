@@ -81,7 +81,7 @@ UNROLL_O2_FLAGS := -munroll-only-small-loops -fno-rename-registers
 UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_loops_unrolled.o
 
 .PHONY: all clean cmake_check samples sample_breaks occlusion_tries tiles_probe loop_break_probes instancing_probes \
-	cpu_probes xam_probes hiz_pass_probes
+	cpu_probes xam_probes hiz_pass_probes msaa_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -329,6 +329,20 @@ $(BUILD)/probe_hiz_pass.elf: $(PROBE_HIZ_PASS_OBJECTS) $(BUILD)/libxsdk.a src/xs
 
 $(BUILD)/xsdk_test_nohizpass.elf: $(TEST_OBJECTS) $(BUILD)/tests/gpu_resolve_nohizpass.o $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(TEST_OBJECTS) $(BUILD)/tests/gpu_resolve_nohizpass.o $(LIBS)
+
+# Milestone 44 step 3's probe of multisampled formats, targets, sample places, depth resolves, hierarchical depth and
+# rates; outside all. It links src/gpu_draw.c built with the probe's hooks ahead of libxsdk.a, standing in for the
+# library's.
+PROBE_MSAA_OBJECTS := $(BUILD)/tests/probe_msaa.o $(BUILD)/tests/gpu_draw_msaa.o
+
+msaa_probes: $(BUILD)/probe_msaa.xex
+
+$(BUILD)/tests/gpu_draw_msaa.o: src/gpu_draw.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -DXSDK_MSAA_PROBE -c $< -o $@
+
+$(BUILD)/probe_msaa.elf: $(PROBE_MSAA_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(PROBE_MSAA_OBJECTS) $(LIBS)
 
 $(BUILD)/host/libxsc.so: $(XSC_SOURCES:src/%.c=$(BUILD)/host/%.o)
 	$(HOST_CC) -shared -o $@ $^

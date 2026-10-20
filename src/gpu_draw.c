@@ -212,6 +212,13 @@ static Surface hiz_surface;
 static bool pixel_writes_depth;
 static uint32_t depth_control_set;
 
+#ifdef XSDK_MSAA_PROBE
+// Milestone 44 step 3's probe (tests/probe_msaa.c) of what xsdk refuses or never sends at 2 and 4 samples: a resolve's
+// copy sample select, UINT32_MAX for xsdk's, and the hierarchical buffer there.
+static uint32_t probe_sample_select = UINT32_MAX;
+static bool probe_hiz;
+#endif
+
 // MsaaSamples, 0 to 2 for 1, 2 and 4 samples (xenia:src/xenia/gpu/xenos.h:288-292).
 static uint32_t samples_log2(uint32_t samples)
 {
@@ -254,6 +261,10 @@ static bool is_hiz_surface(uint32_t width, uint32_t height)
 
 bool xsdk_gpu_hiz_fits(uint32_t width, uint32_t height)
 {
+#ifdef XSDK_MSAA_PROBE
+	if (probe_hiz)
+		return width <= HIZ_MOST_WIDTH && height <= HIZ_MOST_HEIGHT;
+#endif
 	// Multisampled targets haven't been tried with the buffer on the console.
 	return target_samples == 1 && width <= HIZ_MOST_WIDTH && height <= HIZ_MOST_HEIGHT;
 }
@@ -295,6 +306,10 @@ uint32_t xsdk_gpu_color_target_format(uint32_t target)
 
 uint32_t xsdk_gpu_copy_sample_select(void)
 {
+#ifdef XSDK_MSAA_PROBE
+	if (probe_sample_select != UINT32_MAX)
+		return probe_sample_select;
+#endif
 	return copy_sample_selects[samples_log2(target_samples)];
 }
 
@@ -439,6 +454,28 @@ void xsdk_gpu_set_targets(
 	hold_targets(targets, count, depth_tile);
 	put_target(width, height, height);
 }
+
+#ifdef XSDK_MSAA_PROBE
+// xsdk_gpu_set_targets at 2 or 4 samples, which xsdk refuses until the console says which formats take them.
+void xsdk_probe_msaa_targets(uint32_t width, uint32_t height, const XsdkColorTarget *targets, uint32_t count,
+	uint32_t depth_tile, uint32_t samples)
+{
+	assert(count >= 1 && (samples == 1 || samples == 2 || samples == 4));
+	hold_targets(targets, count, depth_tile);
+	target_samples = samples;
+	put_target(width, height, height);
+}
+
+void xsdk_probe_msaa_select(uint32_t select)
+{
+	probe_sample_select = select;
+}
+
+void xsdk_probe_msaa_hiz(bool on)
+{
+	probe_hiz = on;
+}
+#endif
 
 void xsdk_gpu_set_band_targets(uint32_t width, uint32_t height, uint32_t rows, const XsdkColorTarget *targets,
 	uint32_t count, uint32_t depth_tile, bool queued)
