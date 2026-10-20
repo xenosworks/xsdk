@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -20,8 +21,10 @@
 // shader's TEXCOORD0 and COLOR0 meet a pixel shader's by semantic, with a TEXCOORD1 declared first; VPOS is each
 // pixel's whole column and row; VFACE's sign on a clockwise and a counter-clockwise quad, front faces clockwise as on
 // D3D9, is reported; DEPTH from TEXCOORD0's x leaves a nearer quad in front of half a cell; another vertex shader's
-// TEXCOORD3, COLOR1, TEXCOORD0 and FOG meet a pixel shader reading COLOR1 and TEXCOORD3 alone, in 2 interpolators; and
-// a loop in SSA form (step 3), a hardware loop an int in $Global counts, each pixel leaving it on its own TEXCOORD0.
+// TEXCOORD3, COLOR1, TEXCOORD0 and FOG meet a pixel shader reading COLOR1 and TEXCOORD3 alone, in 2 interpolators; a
+// loop in SSA form (step 3), a hardware loop an int in $Global counts, each pixel leaving it on its own TEXCOORD0; and
+// skinning (step 5), each corner of a quad skinned by four float4x3 bones in vertex constants that its int4
+// BLENDINDICES, UBYTE4s, pick, the cell left of the loop's.
 
 enum {
 	WIDTH = 1280,
@@ -62,30 +65,59 @@ enum {
 	GAPS_INTERPOLATORS = 2,
 	// The loop's count, Count in grid_loop_ps.hlsl's $Global: columns past 12 steps of red run every pass.
 	LOOP_COUNT = 12,
+	// The skinning cell, left of the loop's, and its vertices: POSITION, BLENDWEIGHT, BLENDINDICES as a word of
+	// UBYTE4s, and TEXCOORD0.
+	SKIN_X = CELL_X - CELL_WIDTH - 20,
+	SKIN_Y = LOOP_Y,
+	SKIN_VERTEX_WORDS = 11,
+	SKIN_STRIDE_BYTES = SKIN_VERTEX_WORDS * 4,
+	SKIN_INDICES_WORD = 8,
+	// grid_skin_vs.hlsl's palette, 8 float4x3 bones of 3 registers, a register a row: output j is row j . POSITION.
+	BONES = 8,
+	BONE_ROWS = 3,
+	BONE_REGISTERS = BONES * BONE_ROWS,
+	// The bones each corner takes, with weights a half, a quarter and two eighths.
+	BONES_A_VERTEX = 4,
 };
 
 // The vertex shaders, then the pixel shaders.
 enum {
 	SHADER_VERTEX,
 	SHADER_GAPS_VERTEX,
+	SHADER_SKIN_VERTEX,
 	SHADER_LINK,
 	SHADER_VPOS,
 	SHADER_VFACE,
 	SHADER_DEPTH,
 	SHADER_GAPS,
 	SHADER_LOOP,
+	// The skinning's pixel shader, the link's.
+	SHADER_SKIN,
 	SHADERS,
 };
 
 static const char *const shader_names[SHADERS] = { "hlsl/grid_vs.hlsl", "hlsl/grid_gaps_vs.hlsl",
-	"hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl", "hlsl/grid_depth_ps.hlsl",
-	"hlsl/grid_gaps_ps.hlsl", "hlsl/grid_loop_ps.hlsl" };
+	"hlsl/grid_skin_vs.hlsl", "hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl",
+	"hlsl/grid_depth_ps.hlsl", "hlsl/grid_gaps_ps.hlsl", "hlsl/grid_loop_ps.hlsl", "hlsl/grid_link_ps.hlsl" };
 
 static const XsdkVertexElement layout[] = {
 	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT4 },
 	{ .usage = XSDK_USAGE_COLOR, .format = XSDK_VERTEX_FLOAT4, .offset_bytes = 16 },
 	{ .usage = XSDK_USAGE_TEXCOORD, .format = XSDK_VERTEX_FLOAT2, .offset_bytes = 32 },
 };
+
+static const XsdkVertexElement skin_layout[] = {
+	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT4 },
+	{ .usage = XSDK_USAGE_BLENDWEIGHT, .format = XSDK_VERTEX_FLOAT4, .offset_bytes = 16 },
+	{ .usage = XSDK_USAGE_BLENDINDICES, .format = XSDK_VERTEX_UBYTE4, .offset_bytes = SKIN_INDICES_WORD * 4 },
+	{ .usage = XSDK_USAGE_TEXCOORD, .format = XSDK_VERTEX_FLOAT2, .offset_bytes = 36 },
+};
+
+// Each corner's bones, top left, top right, bottom left and bottom right: a pair weighted a half and a quarter whose
+// changes from the whole palette's skinning cancel, D and -2D, and a pair weighted an eighth each, E and -E.
+static const uint8_t corner_bones[4][BONES_A_VERTEX] = { { 0, 1, 2, 3 }, { 4, 5, 6, 7 }, { 0, 1, 6, 7 },
+	{ 4, 5, 2, 3 } };
+static const float skin_weights[BONES_A_VERTEX] = { 0.5f, 0.25f, 0.125f, 0.125f };
 
 // The link's colour, red 64 and green 191, and the nearer quad's red.
 static const float link_colour[4] = { 0.25f, 0.75f, 0.0f, 1.0f };
@@ -123,6 +155,14 @@ typedef struct {
 	XsdkShader shaders[SHADERS];
 	XsdkShader linked[SHADERS];
 	volatile uint32_t *vertices;
+	volatile uint32_t *skin_vertices;
+	// grid_skin_vs.hlsl's palette at vertex constant 0, each corner as the CPU skins it, its left and right edges in
+	// pixels, and the first and last columns and rows whose centres the quad covers.
+	float bones[BONE_REGISTERS][4];
+	float skinned[4][BONE_ROWS];
+	float skin_left;
+	float skin_right;
+	uint32_t skin_box[4];
 	volatile uint32_t *buffers[BUFFERS];
 	XsdkRasterState raster;
 	XsdkDepthStencilState depth;
@@ -138,6 +178,7 @@ typedef struct {
 	uint32_t depth;
 	uint32_t gaps;
 	uint32_t loop;
+	uint32_t skin;
 	// VFACE's front and back quads: pixels reading +1, -1 and neither.
 	uint32_t faces[2][3];
 } Wrong;
@@ -176,6 +217,64 @@ static void put_vertices(volatile uint32_t *vertices)
 	xsdk_gpu_invalidate(xsdk_gpu_address(vertices), VERTEX_WORDS * 4);
 }
 
+// The palette: each bone the whole skinning, which takes the unit square to the skinning cell in clip space and red
+// from 0.25 at its left to 0.75 at its right, plus its pair's change times 1 and -2 for a pair weighted a half and a
+// quarter, 1 and -1 for one weighted an eighth each, so each corner's sum is the whole and a bone read wrong shows.
+static void make_bones(float bones[BONE_REGISTERS][4])
+{
+	const float whole[BONE_ROWS][4] = {
+		{ CELL_WIDTH / (WIDTH / 2.0f), 0.0f, 0.0f, (SKIN_X - 0.5f) / (WIDTH / 2.0f) - 1.0f },
+		{ 0.0f, -CELL_HEIGHT / (HEIGHT / 2.0f), 0.0f, 1.0f - (SKIN_Y - 0.5f) / (HEIGHT / 2.0f) },
+		{ 0.5f, 0.0f, 0.0f, 0.25f },
+	};
+	// Each pair's change: x moved, y moved, x scaled, red's ramp steeper.
+	static const struct {
+		uint32_t row;
+		uint32_t column;
+		float by;
+	} changes[BONES / 2] = { { 0, 3, 0.25f }, { 1, 3, 0.25f }, { 0, 0, 0.125f }, { 2, 0, 0.25f } };
+	// A table, not a chain of ?:, which GCC makes an mcrf Xenia skips (tools/xenia_scan.py).
+	static const float times[4] = { 1.0f, -2.0f, 1.0f, -1.0f };
+	for (uint32_t b = 0; b < BONES; b++) {
+		memcpy(bones[b * BONE_ROWS], whole, sizeof whole);
+		bones[b * BONE_ROWS + changes[b / 2].row][changes[b / 2].column] += times[b % 4] * changes[b / 2].by;
+	}
+}
+
+// A corner, 0 to 3 as corner_bones has them, skinned as grid_skin_vs.hlsl skins it: component j the bones' rows j
+// dotted with POSITION, weighted.
+static void skin_corner(const float bones[BONE_REGISTERS][4], uint32_t corner, float out[BONE_ROWS])
+{
+	const float pos[4] = { (float)(corner & 1), (float)(corner >> 1), 0.0f, 1.0f };
+	for (uint32_t j = 0; j < BONE_ROWS; j++) {
+		out[j] = 0.0f;
+		for (uint32_t k = 0; k < BONES_A_VERTEX; k++) {
+			const float *const row = bones[corner_bones[corner][k] * BONE_ROWS + j];
+			out[j] += skin_weights[k] * (row[0] * pos[0] + row[1] * pos[1] + row[2] * pos[2] + row[3] * pos[3]);
+		}
+	}
+}
+
+// Each vertex: its corner of the unit square, BLENDWEIGHT's three weights, its corner's bones as UBYTE4s, and
+// TEXCOORD0's x 0 to 1 across.
+static void put_skin_vertices(volatile uint32_t *vertices)
+{
+	for (uint32_t v = 0; v < QUAD_VERTICES; v++) {
+		const float u = corners[v][0], w = corners[v][1];
+		const uint8_t *const b = corner_bones[(uint32_t)u + 2 * (uint32_t)w];
+		const float floats[SKIN_INDICES_WORD] = { u, w, 0.0f, 1.0f, skin_weights[0], skin_weights[1], skin_weights[2],
+			0.0f };
+		volatile uint32_t *const vertex = vertices + v * SKIN_VERTEX_WORDS;
+		for (uint32_t k = 0; k < SKIN_INDICES_WORD; k++)
+			vertex[k] = float_bits(floats[k]);
+		vertex[SKIN_INDICES_WORD] = b[0] | b[1] << 8 | b[2] << 16 | (uint32_t)b[3] << 24;
+		vertex[SKIN_INDICES_WORD + 1] = float_bits(u);
+		vertex[SKIN_INDICES_WORD + 2] = 0;
+	}
+	__asm__ volatile("sync" ::: "memory");
+	xsdk_gpu_invalidate(xsdk_gpu_address(vertices), QUAD_VERTICES * SKIN_STRIDE_BYTES);
+}
+
 static bool compile_shader(Grid *g, uint32_t i)
 {
 	const XscTestShader *const source = xsc_shader(shader_names[i]);
@@ -192,16 +291,19 @@ static NTSTATUS load(XsdkShader *shader, const XsdkXscShader *compiled)
 
 static uint32_t vertex_of(uint32_t pixel)
 {
-	return pixel == SHADER_GAPS ? SHADER_GAPS_VERTEX : SHADER_VERTEX;
+	return pixel == SHADER_GAPS ? SHADER_GAPS_VERTEX : pixel == SHADER_SKIN ? SHADER_SKIN_VERTEX : SHADER_VERTEX;
 }
 
 // The pixel shader, and the vertex shader loaded for it and linked to it.
 static bool load_pair(Grid *g, uint32_t pixel)
 {
 	const uint32_t vertex = vertex_of(pixel);
+	const bool skin = pixel == SHADER_SKIN;
+	const uint32_t stride = skin ? SKIN_STRIDE_BYTES : STRIDE_BYTES;
+	const uint32_t elements = skin ? sizeof skin_layout / sizeof skin_layout[0] : sizeof layout / sizeof layout[0];
 	return NT_SUCCESS(load(&g->shaders[pixel], &g->compiled[pixel])) &&
 		NT_SUCCESS(load(&g->linked[pixel], &g->compiled[vertex])) &&
-		NT_SUCCESS(xsdk_shader_set_vertex_layout(&g->linked[pixel], layout, 3, (const uint32_t[]){ STRIDE_BYTES })) &&
+		NT_SUCCESS(xsdk_shader_set_vertex_layout(&g->linked[pixel], skin ? skin_layout : layout, elements, &stride)) &&
 		NT_SUCCESS(xsdk_shader_link(&g->linked[pixel], &g->shaders[pixel]));
 }
 
@@ -238,11 +340,23 @@ static bool make_grid(Grid *g)
 	xsdk_gpu_depth_stencil_state(
 		&g->depth, &(XsdkDepthStencil){ .depth_test = true, .depth_write = true, .depth_compare = XSDK_COMPARE_LESS });
 	g->vertices = xsdk_gpu_alloc(VERTEX_WORDS * 4);
+	g->skin_vertices = xsdk_gpu_alloc(QUAD_VERTICES * SKIN_STRIDE_BYTES);
 	for (uint32_t i = 0; i < BUFFERS; i++)
 		g->buffers[i] = xsdk_gpu_alloc(xsdk_gpu_resolve_bytes(WIDTH, HEIGHT));
-	if (!g->vertices || !g->buffers[0] || !g->buffers[1])
+	if (!g->vertices || !g->skin_vertices || !g->buffers[0] || !g->buffers[1])
 		return false;
 	put_vertices(g->vertices);
+	put_skin_vertices(g->skin_vertices);
+	make_bones(g->bones);
+	for (uint32_t corner = 0; corner < 4; corner++)
+		skin_corner(g->bones, corner, g->skinned[corner]);
+	g->skin_left = (g->skinned[0][0] + 1.0f) * (WIDTH / 2.0f);
+	g->skin_right = (g->skinned[1][0] + 1.0f) * (WIDTH / 2.0f);
+	const float top = (1.0f - g->skinned[0][1]) * (HEIGHT / 2.0f), bottom = (1.0f - g->skinned[2][1]) * (HEIGHT / 2.0f);
+	g->skin_box[0] = (uint32_t)floorf(g->skin_left) + 1;
+	g->skin_box[1] = (uint32_t)ceilf(g->skin_right) - 1;
+	g->skin_box[2] = (uint32_t)floorf(top) + 1;
+	g->skin_box[3] = (uint32_t)ceilf(bottom) - 1;
 	return true;
 }
 
@@ -271,6 +385,17 @@ static void draw_quads(const Grid *g, uint32_t pixel, uint32_t first, uint32_t c
 	xsdk_gpu_draw(XSDK_PRIMITIVE_TRIANGLE_LIST, count * QUAD_VERTICES);
 }
 
+// The skinning's quad, the palette in the vertex constants from c0.
+static void draw_skin(const Grid *g)
+{
+	xsdk_gpu_set_shaders(&g->linked[SHADER_SKIN], &g->shaders[SHADER_SKIN]);
+	set_literals(&g->compiled[SHADER_SKIN_VERTEX], false);
+	set_literals(&g->compiled[SHADER_SKIN], true);
+	xsdk_gpu_set_vertex_constants(0, &g->bones[0][0], BONE_REGISTERS);
+	xsdk_gpu_set_vertices(0, xsdk_gpu_address(g->skin_vertices), QUAD_VERTICES * SKIN_STRIDE_BYTES);
+	xsdk_gpu_draw(XSDK_PRIMITIVE_TRIANGLE_LIST, QUAD_VERTICES);
+}
+
 // One frame of the cells, resolved and waited for; false if the fence didn't land.
 static bool draw(const Grid *g, volatile uint32_t *buffer)
 {
@@ -283,6 +408,7 @@ static bool draw(const Grid *g, volatile uint32_t *buffer)
 	xsdk_gpu_set_pixel_constants(0, loop_step, 1);
 	xsdk_gpu_set_loop_constants(g->loop_constant, &g->loop_value, 1);
 	draw_quads(g, SHADER_LOOP, 7, 1);
+	draw_skin(g);
 	xsdk_gpu_set_depth_stencil(&g->depth);
 	draw_quads(g, SHADER_DEPTH, 4, 1);
 	draw_quads(g, SHADER_LINK, 5, 1);
@@ -360,7 +486,20 @@ static uint32_t face_sign(uint32_t held)
 	return red >= 255 - TOLERANCE ? 0 : red <= TOLERANCE ? 1 : 2;
 }
 
-static void check_frame(volatile const uint32_t *buffer, uint32_t frame, Wrong *wrong, uint32_t *logged)
+// The skinning's colour at a pixel, from the corners as the CPU skins them: inside the quad they make, red the skinned
+// z from its left corners to its right, as the quad interpolates it, green COLOR0's and blue TEXCOORD0's x; the clear
+// colour outside.
+static uint32_t skin_colour(const Grid *g, uint32_t x, uint32_t y)
+{
+	const uint32_t *const box = g->skin_box;
+	if (x < box[0] || x > box[1] || y < box[2] || y > box[3])
+		return stored(CLEAR_ARGB >> 16 & 0xFF, CLEAR_ARGB >> 8 & 0xFF, CLEAR_ARGB & 0xFF);
+	const float u = ((float)x - g->skin_left) / (g->skin_right - g->skin_left);
+	const float (*const c)[BONE_ROWS] = g->skinned;
+	return stored(unorm(c[0][2] + (c[1][2] - c[0][2]) * u), unorm(0.75f), unorm(u));
+}
+
+static void check_frame(const Grid *g, volatile const uint32_t *buffer, uint32_t frame, Wrong *wrong, uint32_t *logged)
 {
 	for (uint32_t dy = 0; dy < CELL_HEIGHT; dy++) {
 		for (uint32_t x = CELL_X; x < CELL_X + CELL_WIDTH; x++) {
@@ -386,6 +525,10 @@ static void check_frame(volatile const uint32_t *buffer, uint32_t frame, Wrong *
 			y = LOOP_Y + dy;
 			wrong->loop +=
 				!pixel_right("loop", x, y, buffer[tiled_index(x, y, WIDTH)], loop_colour(x), TOLERANCE, frame, logged);
+			const uint32_t sx = SKIN_X + (x - CELL_X);
+			y = SKIN_Y + dy;
+			wrong->skin += !pixel_right("skinning", sx, y, buffer[tiled_index(sx, y, WIDTH)], skin_colour(g, sx, y),
+				RAMP_TOLERANCE, frame, logged);
 		}
 	}
 }
@@ -433,12 +576,18 @@ static void report(const Wrong *w, bool landed, uint32_t frames)
 		"what it carries and the pass it left at: %u of %u pixels wrong",
 		(unsigned)w->loop, (unsigned)pixels);
 	check(name, landed && frames && w->loop == 0);
+	(void)snprintf(name, sizeof name,
+		"hlsl: a quad skinned by float4x3 bones in vertex constants that its corners' int4 BLENDINDICES, UBYTE4s, "
+		"pick lands and shades as the CPU's skinning of its corners: %u of %u pixels wrong",
+		(unsigned)w->skin, (unsigned)pixels);
+	check(name, landed && frames && w->skin == 0);
 }
 
 static void free_grid(Grid *g)
 {
 	for (uint32_t i = 0; i < BUFFERS; i++)
 		xsdk_gpu_free(g->buffers[i]);
+	xsdk_gpu_free(g->skin_vertices);
 	xsdk_gpu_free(g->vertices);
 	for (uint32_t i = 0; i < SHADERS; i++) {
 		if (g->shaders[i].microcode)
@@ -461,7 +610,7 @@ static void run(Grid *g)
 		landed = draw(g, buffer);
 		// The first frame's colour and depth are whatever eDRAM held; its resolve clears them.
 		if (frame > 0 && landed) {
-			check_frame(buffer, frame, &wrong, &logged);
+			check_frame(g, buffer, frame, &wrong, &logged);
 			checked++;
 		}
 		if (g->has_display)

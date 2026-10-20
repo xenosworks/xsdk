@@ -1,6 +1,6 @@
 --- a/src/xsc_resolve.c
 +++ b/src/xsc_resolve.c
-@@ -533,7 +533,8 @@
+@@ -555,7 +555,8 @@
  		si->point_size = v;
  		return true;
  	}
