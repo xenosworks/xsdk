@@ -29,6 +29,19 @@ With the user at the console on 2026-10-20, a profile signed in:
   result is still unknown. `probe_xam_signed_in.log` is the unattended cases with the profile signed in.
 - **save_check:** 12 of 12 for each title ID, then 8 of 8 each after a reboot (`save_check_*.log`). The dashboard
   lists both as unknown games.
+- **save_check with nobody signed in,** run by itself (`save_check_nobody_1.log`, `save_check_nobody_2.log`): 8 of 8
+  saving as no profile's, then after a reboot 8 of 8 reading it back as written and deleting it.
+
+The probe's packages were deleted after: those no profile owns by its `delete` case under each title ID, user 0's
+under the profile by hand, as XAM refuses to delete it with nobody signed in (0x65B).
+
+## The milestone
+
+Done on 2026-10-20. A title saves into a content package on the hard disk and reads it back after a reboot, with a
+profile signed in and with none; it reads the gamertag, takes typed text from the keyboard and a button from a message
+box, and knows when XAM's UI is up; titles with their own title IDs keep their saves apart; xsdk_test passes.
+Not settled: what a cancelled keyboard returns, and a title name the dashboard shows, which lists every xsdk title as
+an unknown game.
 
 ## What xsdk_test checks
 

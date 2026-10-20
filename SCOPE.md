@@ -989,7 +989,9 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
 
 50. **HLSL.** Agreed on 2026-10-19: docs/scope/50-hlsl.md, after 48, as both change xost.
 
-51. **Saves, profiles and XAM's asynchronous calls.** Agreed on 2026-10-19: docs/scope/51-saves-and-profiles.md.
+51. **Saves, profiles and XAM's asynchronous calls.** Agreed on 2026-10-19 and done on 2026-10-20:
+    docs/scope/51-saves-and-profiles.md (results/2026-10-19-milestone-51/; HARDWARE.md, "XAM's saves, profiles and
+    asynchronous calls, milestone 51").
 
 52. **Compiled CPU code.** Agreed and done on 2026-10-19: docs/scope/52-compiled-cpu-code.md (HARDWARE.md, "Counted
     loops end in bdnz, milestone 52"; what atomics cost in docs/GUIDE.md, "Threads and where they run").

@@ -4462,6 +4462,9 @@ throughout (logs: `results/2026-10-19-milestone-51/`, `probe_xam.log` and, under
   `save_check_t2_1.log`); after a reboot, each found its own save, read it back as written and deleted it, 8 of 8
   (`save_check_2.log`, `save_check_t2_2.log`). The dashboard's storage view lists every xsdk title as an unknown game,
   the saves under it by the display names they were made with.
+- **With nobody signed in,** save_check's save for user 0xFE was there after a reboot and read back as written
+  (`save_check_nobody_1.log`, `save_check_nobody_2.log`). `XamContentDelete` of user 0's save fails with 0x65B while
+  nobody is signed in.
 - **A title's name in its `.xex`:** `tools/elf2xex.py --title-name` puts an XDBF database holding it in the first
   page, after the PE headers, as the resource named after the title ID (xenia:src/xenia/kernel/kernel_state.cc:111-125).
   The loader took it: `XexGetModuleSection` found the 118 bytes under that name (`cmake_check.log`), and 0xC0000225
