@@ -78,7 +78,7 @@ UNROLL_O2_FLAGS := -munroll-only-small-loops -fno-rename-registers
 UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_loops_unrolled.o
 
 .PHONY: all clean cmake_check samples sample_breaks occlusion_tries tiles_probe loop_break_probes instancing_probes \
-	cpu_probes
+	cpu_probes xam_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -281,6 +281,18 @@ instancing_probes: $(BUILD)/probe_instancing.xex $(INSTANCING_BREAKS:%=$(BUILD)/
 
 # Milestone 52 step 1's probes of how bdnz counts CTR and of what atomics cost; outside all.
 cpu_probes: $(BUILD)/probe_ctr.xex $(BUILD)/probe_atomics.xex
+
+# Milestone 51 step 1's probe of XAM, presenting the bar scene while XAM's calls and dialogs run, and the same title
+# under a second title ID, to see whether XAM keeps content apart by title; outside all.
+PROBE_XAM_OBJECTS := $(BUILD)/tests/probe_xam.o $(BUILD)/tests/bar_scene.o
+
+$(BUILD)/probe_xam.elf: $(PROBE_XAM_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(PROBE_XAM_OBJECTS) $(LIBS)
+
+$(BUILD)/probe_xam_t2.xex: $(BUILD)/probe_xam.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --title-id 0x5853444C $< $@
+
+xam_probes: $(BUILD)/probe_xam.xex $(BUILD)/probe_xam_t2.xex
 
 $(BUILD)/host/libxsc.so: $(XSC_SOURCES:src/%.c=$(BUILD)/host/%.o)
 	$(HOST_CC) -shared -o $@ $^
