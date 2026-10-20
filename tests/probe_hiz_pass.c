@@ -66,7 +66,9 @@ typedef struct {
 // Events by number (xenia:src/xenia/gpu/xenos.h:1541-1566). Not 9 or 21, which hung the GPU, nor 5, 6, 7 and 8, 15 or
 // 22, which changed nothing (docs/HARDWARE.md, "Hierarchical depth, milestone 30" and "Queries and events").
 static const PassCase cases[] = {
-	{ "full", "the pass over the whole target, as xsdk draws it", true, 0, { 0, 0, 0, 0 } },
+	{ "full", "the pass as xsdk draws it, over the top 8 rows since milestone 49", true, 0, { 0, 0, 0, 0 } },
+	{ "whole", "the pass over the whole target, as xsdk drew it before milestone 49", true, 0,
+		{ 0, 0, WIDTH, HEIGHT } },
 	{ "none", "no pass, the control, which must leave pixels wrong", false, 0, { 0, 0, 0, 0 } },
 	{ "rows8", "the pass over the top 8 rows", true, 0, { 0, 0, WIDTH, 8 } },
 	{ "rows16", "the pass over the top 16 rows", true, 0, { 0, 0, WIDTH, 16 } },

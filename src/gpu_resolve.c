@@ -38,6 +38,9 @@
 
 enum {
 	RESOLVE_MAX_DWORDS = 160,
+	// A pass over the top 8 rows after a depth clear put every draw right where smaller ones didn't (docs/HARDWARE.md,
+	// "The pass after a depth clear, milestone 49").
+	HIZ_PASS_ROWS = 8,
 	// The size libxenon invalidates for its vertex pool: 12000 bytes and a page (xe.c:33, 1850, 1871).
 	RECTANGLE_INVALIDATE_BYTES = 12000 + 0x1000,
 	INVALIDATE_VERTEX_SHADER = 1 << 8,
@@ -244,6 +247,15 @@ static void put_shader(GpuPackets *packets)
 		gpu_put(packets, i < sizeof resolve_vertex_shader / 4 ? resolve_vertex_shader[i] : 0);
 }
 
+// Vertex fetch constant 0 at a rectangle's three vertices.
+static void put_rectangle_fetch(GpuPackets *packets, uint32_t vertices)
+{
+	const uint32_t fetch[] = { vertices | VERTEX_FETCH_TYPE, VERTEX_FETCH_SIZE_6_8IN32, 0, 0, 0, 0 };
+	const uint32_t flush_fetch[] = { 0, 0, 0 };
+	gpu_put_registers(packets, SHADER_CONSTANT_FETCH_00_0, fetch, 6);
+	gpu_put_registers(packets, SHADER_CONSTANT_FLUSH_FETCH_0, flush_fetch, 3);
+}
+
 #ifdef XSDK_HIZ_PASS_PROBE
 // Milestone 49's probe (tests/probe_hiz_pass.c) of cheaper ways to put the buffer right: the pass, if on, over the
 // rectangle if it has a width, or the event in its place if not 0. Built with 0, the pass is left out.
@@ -268,21 +280,17 @@ static bool put_probe_case(GpuPackets *packets)
 	}
 	if (!probe_on || probe_event)
 		return false;
-	if (probe_rect[2]) {
-		// Written before the resolve's invalidate runs, which takes the rectangles' whole page (src/gpu_setup.c).
-		const uint32_t vertices = xsdk_gpu_rectangle(probe_rect[0], probe_rect[1], probe_rect[2], probe_rect[3]);
-		const uint32_t fetch[] = { vertices | VERTEX_FETCH_TYPE, VERTEX_FETCH_SIZE_6_8IN32, 0, 0, 0, 0 };
-		const uint32_t flush_fetch[] = { 0, 0, 0 };
-		gpu_put_registers(packets, SHADER_CONSTANT_FETCH_00_0, fetch, 6);
-		gpu_put_registers(packets, SHADER_CONSTANT_FLUSH_FETCH_0, flush_fetch, 3);
-	}
+	if (probe_rect[2])
+		put_rectangle_fetch(packets, xsdk_gpu_rectangle(probe_rect[0], probe_rect[1], probe_rect[2], probe_rect[3]));
 	return true;
 }
 #endif
 
-// After a clear, a draw's first block may test the buffer's old values until one draw tests it all (docs/HARDWARE.md).
-static void put_hiz_test(GpuPackets *packets, uint32_t hiz_clear)
+// After a clear, a draw's first block may test the buffer's old values until a draw over the top rows tests them
+// (docs/HARDWARE.md, "The pass after a depth clear, milestone 49").
+static void put_hiz_test(GpuPackets *packets, uint32_t hiz_clear, uint32_t vertices)
 {
+	put_rectangle_fetch(packets, vertices);
 #ifdef XSDK_HIZ_PASS_PROBE
 	if (!put_probe_case(packets))
 		return;
@@ -328,13 +336,13 @@ static void resolve(uint32_t source, uint32_t target, uint32_t address, const Ar
 	const uint32_t program[] = { PROGRAM_CNTL_RESOLVE, 0 };
 	const uint32_t indices[] = { 0xFFFF, 0, 0 };
 	const uint32_t clip[] = { CLIP_DISABLE, VTX_WINDOW_OFFSET_ENABLE, VTE_XY_Z_ALREADY_TRANSFORMED };
-	const uint32_t fetch[] = { vertices | VERTEX_FETCH_TYPE, VERTEX_FETCH_SIZE_6_8IN32, 0, 0, 0, 0 };
-	const uint32_t flush_fetch[] = { 0, 0, 0 };
 	const uint32_t depth_clears[] = { depth_clear >> HIZ_CLEAR_SHIFT, depth_clear };
 	const bool clears_depth = copy_clears & COPY_CONTROL_DEPTH_CLEAR;
 	// The hierarchical buffer bounds the surface's depth only after a clear of all of it, and only where it fits.
 	const bool whole = !area->x && !area->y && area->width == width && area->height == height;
 	const bool clears_hiz = clears_depth && whole && xsdk_gpu_hiz_fits(width, height);
+	// Written before the resolve's invalidate runs, which takes the rectangles' whole page (src/gpu_setup.c).
+	const uint32_t pass = clears_hiz ? xsdk_gpu_rectangle(0, 0, width, HIZ_PASS_ROWS) : 0;
 	uint32_t dwords[RESOLVE_MAX_DWORDS];
 	GpuPackets packets = { .dwords = dwords, .count = 0, .capacity = RESOLVE_MAX_DWORDS };
 	put_window(&packets, area);
@@ -360,8 +368,7 @@ static void resolve(uint32_t source, uint32_t target, uint32_t address, const Ar
 	gpu_put_registers(&packets, VGT_MAX_VTX_INDX, indices, 3);
 	gpu_put_registers(&packets, PA_CL_CLIP_CNTL, clip, 3);
 	gpu_put_register(&packets, COHER_DEST_BASE_7, 0);
-	gpu_put_registers(&packets, SHADER_CONSTANT_FETCH_00_0, fetch, 6);
-	gpu_put_registers(&packets, SHADER_CONSTANT_FLUSH_FETCH_0, flush_fetch, 3);
+	put_rectangle_fetch(&packets, vertices);
 	gpu_put_type3(&packets, PM4_DRAW_INDX_2, 1);
 	gpu_put(&packets, RECTANGLE_LIST_AUTO_INDEX_3);
 	gpu_put_type3(&packets, PM4_EVENT_WRITE, 1);
@@ -373,7 +380,7 @@ static void resolve(uint32_t source, uint32_t target, uint32_t address, const Ar
 	// Xe_Sync's wait for idle (xe.c:1223-1226, 1278-1282).
 	gpu_put_register(&packets, WAIT_UNTIL, WAIT_3D_IDLE_CLEAN);
 	if (clears_hiz)
-		put_hiz_test(&packets, depth_clears[0]);
+		put_hiz_test(&packets, depth_clears[0], pass);
 	xsdk_gpu_write(&packets);
 	xsdk_gpu_undo_target();
 	if (clears_hiz)
