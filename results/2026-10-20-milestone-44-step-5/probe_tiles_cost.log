@@ -1,0 +1,15 @@
+log: game:\probe_tiles.log
+log: named after \Device\Harddisk0\Partition1\tilescost\probe_tiles.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+tiles probe: cases 11 to 11 (game:\tiles_case.txt names the case to start from); break build: none
+tiles probe: case 11 cost: xsdk's tiled passes timed by the GPU's clock at 1280x720 in 1, 2 and 3 bands
+tiles probe: case 11 cost, fill-bound, 4 full-screen quads through the long shader: untiled 10302 us, 1 band 10307 us, 2 bands 10315 us, 3 bands 10322 us
+tiles probe: case 11 cost, vertex-bound, 16 draws of 65532 degenerate triangles' vertices: untiled 2374 us, 1 band 2378 us, 2 bands 4487 us, 3 bands 6594 us
+tiles probe: case 11 cost, one pixel: untiled 272 us, 1 band 277 us, 2 bands 284 us, 3 bands 289 us
+tiles probe: case 11 cost, at 2 samples in bands of 384 rows: fill-bound 10320 us, vertex-bound 4487 us
+tiles probe: case 11 cost, at 2 samples in bands of 256 rows: fill-bound 10325 us, vertex-bound 6594 us
+tiles probe: case 11 cost, at 4 samples in bands of 256 rows: fill-bound 10331 us, vertex-bound 6594 us
+tiles probe: case 11 cost, a band's fixed cost: (289 - 277) / 2 = 6 us; under 50 us: PASS
+tiles probe: case 11 cost, the vertex-bound draws in band 1 of 2: predicated outside it 0 us, drawn 2103 us; under a fifth: PASS
+tiles probe: done, 2 PASS, 0 DIFFERS; xsdk_gpu_close 0x00000000
+exit: status 0

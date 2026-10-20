@@ -965,9 +965,11 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
 42. **Render target formats.** Proposed on 2026-10-15, not yet agreed: docs/scope/42-target-formats.md, the first
     of three toward HDR and deferred rendering, before multiple render targets (43) and predicated tiling (44).
 
-44. **Predicated tiling and multisampling.** Agreed on 2026-10-17: docs/scope/44-tiling-and-msaa.md, in two parts.
-    Tiling at one sample comes first of the three toward D3D9 parity scoped that day; multisampling comes last, after
-    46 and 47.
+44. **Predicated tiling and multisampling.** Agreed on 2026-10-17 and done on 2026-10-20:
+    docs/scope/44-tiling-and-msaa.md, in two parts. Tiling at one sample came first of the three toward D3D9 parity
+    scoped that day; multisampling last, after 46 and 47 (results/2026-10-17-milestone-44-step-1, -step-2,
+    results/2026-10-20-milestone-44-step-3, -step-4, -step-5; HARDWARE.md, from "Tiling's registers and packets,
+    milestone 44 step 1" to "Multisampling's cost, and Dusklight at 2 and 4 samples, milestone 44 step 5").
 
 45. **xost's code quality.** Agreed and done on 2026-10-17: docs/scope/45-xost-code-quality.md (HARDWARE.md, "xost's
     code quality, milestone 45").

@@ -4584,3 +4584,15 @@ tiled passes resolve a band's depth before its colour since (`runs_at`, src/gpu_
 2048x2048 shadow map with the buffer on lost pixels from its band 1 too, and cleared on a depth resolve the same way,
 so its 2048 pitch, blamed above ("Render passes past eDRAM in the layer, milestone 44"), may not have been the cause;
 it hasn't been run again, and the buffer stays off past 1280 wide.
+
+## Multisampling's cost, and Dusklight at 2 and 4 samples, milestone 44 step 5 (2026-10-20)
+
+Logs: results/2026-10-20-milestone-44-step-5/.
+- **Samples cost fill nothing; bands cost vertices.** probe_tiles' fill-bound 720p frame took 10,302 us untiled at 1
+  sample and 10,320 to 10,331 us at 2 and 4 samples in 2 or 3 bands; its vertex-bound frame 2,374 us untiled and 4,487
+  and 6,594 us in 2 and 3 bands at any count, each band running every draw's vertices again. A band's fixed cost 6 us.
+- **Through the layer, banding is the replay's cost.** Dusklight's logo shot replayed in 1.1 ms of CPU at 1 sample and
+  in 29 ms with every pass with depth forced into 2 or 3 bands, the GPU's work past the replay 3 ms; at 2 and 4 samples,
+  where only the EFB's passes tile, 11 and 13 ms of replay and 4 and 6 ms more GPU a frame than at 1 sample.
+- **At 2 samples Dusklight dips under 30 fps:** the title scene 28.8 to 29.9 fps, Ordon's village 27 to 28 against 29
+  to 30 at 1 sample. Its edges come out blended. Dusklight stays at 1 sample.
