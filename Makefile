@@ -75,7 +75,8 @@ PROBE_FAULT_OBJECTS := $(BUILD)/tests/probe_fault.o $(BUILD)/tests/probe_fault_s
 UNROLL_O2_FLAGS := -munroll-only-small-loops -fno-rename-registers
 UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_loops_unrolled.o
 
-.PHONY: all clean cmake_check occlusion_tries tiles_probe loop_break_probes instancing_probes cpu_probes
+.PHONY: all clean cmake_check samples sample_breaks occlusion_tries tiles_probe loop_break_probes instancing_probes \
+	cpu_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -85,6 +86,22 @@ all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(B
 cmake_check: $(BUILD)/libxsdk.a
 	cmake -S tests/cmake -B $(BUILD)/cmake_check -G Ninja -DCMAKE_TOOLCHAIN_FILE=$(CURDIR)/cmake/xsdk.cmake
 	cmake --build $(BUILD)/cmake_check
+
+# The samples, each a CMake project built as a title's is, into build/samples/<sample>/<sample>.xex; sdl3 is built when
+# SDL3_DIR names SDL-xenon's build. sample_breaks builds each one broken on purpose, into build/samples/<sample>_brk.
+SAMPLES := hello triangle cube sound sdl3 template
+SAMPLE_BREAKS := hello triangle cube sound sdl3
+SDL3_DIR ?=
+# Only sdl3 reads SDL3_DIR, so the others aren't to warn that they don't.
+sample_build = cmake -S samples/$(1) -B $(BUILD)/samples/$(2) -G Ninja -DCMAKE_TOOLCHAIN_FILE=$(CURDIR)/cmake/xsdk.cmake \
+	-DCMAKE_BUILD_TYPE=RelWithDebInfo --no-warn-unused-cli $(if $(SDL3_DIR),-DSDL3_DIR=$(SDL3_DIR)) $(3) && \
+	cmake --build $(BUILD)/samples/$(2)
+
+samples: $(BUILD)/libxsdk.a $(BUILD)/host/libxsc.so
+	for sample in $(SAMPLES); do $(call sample_build,$$sample,$$sample) || exit 1; done
+
+sample_breaks: $(BUILD)/libxsdk.a $(BUILD)/host/libxsc.so
+	for sample in $(SAMPLE_BREAKS); do $(call sample_build,$$sample,$${sample}_brk,-DSAMPLE_BREAK=ON) || exit 1; done
 
 $(BUILD)/%.xex: $(BUILD)/%.elf tools/elf2xex.py
 	$(PYTHON) tools/elf2xex.py $< $@
