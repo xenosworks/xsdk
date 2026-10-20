@@ -4496,3 +4496,36 @@ top two rows of blocks, each the first draw after its own clear.
   pass there since.
 - **Skipped where the buffer stays off:** multisampled targets and targets past 1280x1024 get no pass
   (`xsdk_gpu_hiz_fits`).
+
+## Multisampled formats and targets, milestone 44 step 3 (2026-10-20)
+
+`tests/probe_msaa.c` on the console, its default group once and its pattern and depth cases each alone from a fresh
+boot (docs/scope/44-tiling-and-msaa.md, step 3). Logs: `results/2026-10-20-milestone-44-step-3/`.
+- **8_8_8_8, 2_10_10_10, its 7e3 float and 16_16_16_16 take 2 and 4 samples:** drawn, blended as at 1 sample, and
+  resolved with every edge pixel at a step of the samples' average. **16_16_FLOAT, 16_16_16_16_FLOAT and 32_FLOAT
+  don't average:** drawn right off the edges, their edge pixels resolved between the steps, a half-covered
+  16_16_16_16_FLOAT pixel 0.625 1.0625 27.625 -98304 for 0.875 1.375 500.375 -0.5. xsdk refuses those three at 2 and
+  4 samples (`xsdk_gpu_set_targets_samples`).
+- **Tiles:** each format's held at its count, a 64-bit target's twice a 32-bit one's, and four targets at once
+  resolved the non-float ones by value.
+- **The sample pattern,** in 16ths of a pixel across, then down, from the pixel's centre: at 2 samples 0 at (-4, 4)
+  and 1 at (4, -4); at 4 samples 0 at (-2, -2), 1 at (2, 2), 2 at (-6, 6) and 3 at (6, -6). Copy sample selects 0 to
+  3 each copy one sample, and `PA_SC_AA_MASK` bit i, set in every nibble, lets sample i through. At 2 samples sample 0
+  is the lower one, where Xenia takes it to be the upper (xenia:src/xenia/gpu/draw_util.h:315-320).
+- **Depth resolves:** selects 0 to 3 copy one sample's depth; 4 to 6 average it, where Xenia copies one sample
+  (xenia:src/xenia/gpu/draw_util.cc:717-757). xsdk's depth resolves copy sample 0 at every count.
+- **Hierarchical depth at 2 and 4 samples,** at 1280x256 with xsdk's buffer and pass after a clear: hidden quads 84
+  times as fast, every visible pixel drawn, and milestone 30's and 49's draws after clears all right. xsdk keeps it
+  on up to 1280 wide and 1024 rows times samples.
+- **Rates,** by the GPU's clock: fills 3.4 Gpixels/s at 1, 2 and 4 samples, 6.9, 13.8 and 27 samples a clock,
+  blended as opaque; a 1280x720 resolve 270 us whole at 1 and 2 samples, and 277 in 3 bands at 1, 2 and 4.
+- **On the console,** built clean at `654c07e` (local/m44p2/build.sh): xsdk_test 496 of 498, the controller's two
+  failing with the pad idle, every new multisample and tiles check passing, the 720p frames tiled at 2 samples in 2
+  and 3 bands and at 4 in 3 equal to their untiled references pixel for pixel with hierarchical depth on. Each break
+  failed what it names, `msaa_bands2`'s colour wrapping past tile 2047 without hanging the GPU. vulkan4xenon_test 492
+  of 492 twice, vkbench 17 of 17.
+- **vkbench and code placement:** vulkan4xenon's `uniforms_1000` took 772 us against main's 670, but main with 256
+  bytes of code added to gpu_draw.c took 676, and this build with 128 added 733; `states_1000` went 1277, 1300, 1262
+  and 1317 over the same four. Padding alone moved them 4 to 5%, and nothing this step changed runs in their draws, so
+  the 15% is most likely where code lands; a change in those two scenes needs such a control before it's put down to
+  the code.

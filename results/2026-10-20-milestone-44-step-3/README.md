@@ -125,34 +125,17 @@ milestone 51's two. Each must fail these checks, and the controller's when the p
   The band's colour wraps past tile 2047 onto its depth; if that wedges the GPU instead, every check after it fails
   too.
 
-## For docs/HARDWARE.md
+## On the console
 
-Proposed section:
-
-> ## Multisampled formats and targets, milestone 44 step 3 (2026-10-20)
->
-> `tests/probe_msaa.c` on the console, its default group once and its pattern and depth cases each alone from a fresh
-> boot (docs/scope/44-tiling-and-msaa.md, step 3). Logs: `results/2026-10-20-milestone-44-step-3/`.
-> - **8_8_8_8, 2_10_10_10, its 7e3 float and 16_16_16_16 take 2 and 4 samples:** drawn, blended as at 1 sample, and
->   resolved with every edge pixel at a step of the samples' average. **16_16_FLOAT, 16_16_16_16_FLOAT and 32_FLOAT
->   don't average:** drawn right off the edges, their edge pixels resolved between the steps, a half-covered
->   16_16_16_16_FLOAT pixel 0.625 1.0625 27.625 -98304 for 0.875 1.375 500.375 -0.5. xsdk refuses those three at 2 and
->   4 samples (`xsdk_gpu_set_targets_samples`).
-> - **Tiles:** each format's held at its count, a 64-bit target's twice a 32-bit one's, and four targets at once
->   resolved the non-float ones by value.
-> - **The sample pattern,** in 16ths of a pixel across, then down, from the pixel's centre: at 2 samples 0 at (-4, 4)
->   and 1 at (4, -4); at 4 samples 0 at (-2, -2), 1 at (2, 2), 2 at (-6, 6) and 3 at (6, -6). Copy sample selects 0 to
->   3 each copy one sample, and `PA_SC_AA_MASK` bit i, set in every nibble, lets sample i through. At 2 samples sample 0
->   is the lower one, where Xenia takes it to be the upper (xenia:src/xenia/gpu/draw_util.h:315-320).
-> - **Depth resolves:** selects 0 to 3 copy one sample's depth; 4 to 6 average it, where Xenia copies one sample
->   (xenia:src/xenia/gpu/draw_util.cc:717-757). xsdk's depth resolves copy sample 0 at every count.
-> - **Hierarchical depth at 2 and 4 samples,** at 1280x256 with xsdk's buffer and pass after a clear: hidden quads 84
->   times as fast, every visible pixel drawn, and milestone 30's and 49's draws after clears all right. xsdk keeps it
->   on up to 1280 wide and 1024 rows times samples.
-> - **Rates,** by the GPU's clock: fills 3.4 Gpixels/s at 1, 2 and 4 samples, 6.9, 13.8 and 27 samples a clock,
->   blended as opaque; a 1280x720 resolve 270 us whole at 1 and 2 samples, and 277 in 3 bands at 1, 2 and 4.
-
-Once the console list below has run, the section gains what xsdk_test and the breaks did.
+docs/HARDWARE.md, "Multisampled formats and targets, milestone 44 step 3", records the probe and the run:
+- `xsdk_test.log`: 496 of 498, the controller's two failing with the pad idle.
+- `xsdk_test_msaa_sample0.log`, `_onesample.log`, `_tiles64.log`, `_bands2.log` (the last from a fresh boot): each
+  failed what "The breaks" names, and the controller's two.
+- `vulkan4xenon_test_1.log`, `_2.log`: 492 of 492 each. `vkbench.log`: 17 of 17.
+- `vkbench_main.log`, `vkbench_main_padded.log`, `vkbench_padded.log`: main, main with 256 bytes of code added in
+  gpu_draw.c, and this build with 128, for vulkan4xenon's `uniforms_1000` (670, 676, 733 against this build's 772 us)
+  and `states_1000` (1277, 1300, 1317 against 1262): most likely code placement, as nothing this step changed runs in
+  their draws.
 
 ## To run on the console
 

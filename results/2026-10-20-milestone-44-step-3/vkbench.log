@@ -1,0 +1,95 @@
+log: game:\vkbench.log
+log: named after \Device\Harddisk0\Partition1\v4xtest\vkbench.xex
+sbrk: the heap may grow to 471 MB from 0x00070000, the title's free memory
+vkbench: 11 scenes, each 60 warm-up and 600 measured frames, through xsdk then vulkan4xenon
+vkbench: a 1 ms sleep took 1994 us on average, from 1557 to 2001, over 100
+vkbench: writing 1 MB, fastest of 8: write-combined, 32-bit stores 274 us (3826 MB/s), memcpy 294 us (3566 MB/s); cached, 32-bit stores 669 us then dcbst 89 us (1383 MB/s)
+vkbench: copying 1024 KB from memory into write-combined memory, fastest of 8, memcpy: 710 us (1476 MB/s)
+vkbench: copying 256 KB from the cache into write-combined memory, fastest of 8, memcpy: 48 us (5461 MB/s)
+vkbench: copying 1024 KB from memory into write-combined memory, fastest of 8, VMX stores and dcbt 8 lines ahead: 717 us (1462 MB/s)
+vkbench: copying 1024 KB from memory into write-combined memory, fastest of 8, VMX stores and dcbt 16 lines ahead: 697 us (1504 MB/s)
+vkbench: copying 1024 KB from memory into write-combined memory, fastest of 8, VMX stores and dcbt 32 lines ahead: 791 us (1325 MB/s)
+vkbench: copying 1024 KB from memory into cached memory, fastest of 8, memcpy: 577 us (1817 MB/s)
+vkbench: copying 1024 KB from memory into cached memory, fastest of 8, VMX stores, dcbt and dcbz: 462 us (2269 MB/s)
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 27939 us
+PASS: vkbench: xsdk: opened
+vkbench: xsdk draws_250: draw+submit 79 us (mean 79, p99 82): draw 75, submit 5; gpu 585 (p99 626); present 15356; frame 15996 (59.9 fps)
+vkbench: xsdk draws_250: a frame: 11544 dwords, 46.2 for each of 250; 6.0 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk draws_1000: draw+submit 295 us (mean 295, p99 301): draw 290, submit 5; gpu 650 (p99 695); present 15116; frame 15996 (59.9 fps)
+vkbench: xsdk draws_1000: a frame: 45320 dwords, 45.3 for each of 1000; 10.0 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk draws_4000: draw+submit 1158 us (mean 1158, p99 1167): draw 1153, submit 5; gpu 765 (p99 910); present 15010; frame 16995 (59.9 fps)
+vkbench: xsdk draws_4000: a frame: 180422 dwords, 45.1 for each of 4000; 27.0 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk states_250: draw+submit 129 us (mean 130, p99 131): draw 125, submit 5; gpu 546 (p99 630); present 15346; frame 15996 (59.9 fps)
+vkbench: xsdk states_250: a frame: 18123 dwords, 72.5 for each of 250; 7.0 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk states_1000: draw+submit 496 us (mean 496, p99 501): draw 491, submit 5; gpu 1020 (p99 1051); present 15451; frame 16995 (59.9 fps)
+vkbench: xsdk states_1000: a frame: 71794 dwords, 71.8 for each of 1000; 13.1 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk uniforms_1000: draw+submit 294 us (mean 295, p99 300): draw 290, submit 5; gpu 650 (p99 691); present 15120; frame 15996 (59.9 fps)
+vkbench: xsdk uniforms_1000: a frame: 45320 dwords, 45.3 for each of 1000; 10.0 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk stream_1000: draw+submit 33 us (mean 33, p99 35): draw 28, submit 5; gpu 755 (p99 761); present 15103; frame 15996 (59.9 fps)
+vkbench: xsdk stream_1000: a frame: 298 dwords, 0.3 for each of 1000; 3.0 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk stream_8000: draw+submit 535 us (mean 552, p99 648): draw 523, submit 11; gpu 4102 (p99 4111); present 10001; frame 15996 (59.9 fps)
+vkbench: xsdk stream_8000: a frame: 298 dwords, 0.0 for each of 8000; 3.0 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk fill_4: draw+submit 8 us (mean 8, p99 9): draw 3, submit 5; gpu 1350 (p99 1351); present 15637; frame 16995 (59.9 fps)
+vkbench: xsdk fill_4: a frame: 302 dwords, 75.6 for each of 4; 3.0 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk fill_16: draw+submit 9 us (mean 9, p99 10): draw 4, submit 5; gpu 4555 (p99 4560); present 11431; frame 15996 (59.9 fps)
+vkbench: xsdk fill_16: a frame: 362 dwords, 22.7 for each of 16; 3.0 kicks; 0.0 waits, 0 us waiting
+vkbench: xsdk instances_4000: draw+submit 85 us (mean 86, p99 89): draw 80, submit 5; gpu 946 (p99 986); present 15862; frame 16995 (59.9 fps)
+vkbench: xsdk instances_4000: a frame: 1860 dwords, 0.5 for each of 4000; 4.0 kicks; 0.0 waits, 0 us waiting
+PASS: vkbench: xsdk: every scene ran its 660 frames with no call failing
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 29734 us
+PASS: vkbench: vulkan4xenon: opened
+vkbench: vulkan4xenon draws_250: draw+submit 221 us (mean 221, p99 226): draw 72, submit 148; gpu 538 (p99 581); present 15912; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon draws_250: a frame: 11552 dwords, 46.2 for each of 250; 6.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon draws_1000: draw+submit 832 us (mean 833, p99 842): draw 281, submit 551; gpu 488 (p99 524); present 15331; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon draws_1000: a frame: 45325 dwords, 45.3 for each of 1000; 10.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon draws_4000: draw+submit 3563 us (mean 3561, p99 3636): draw 1263, submit 2293; gpu 345 (p99 363); present 12507; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon draws_4000: a frame: 180429 dwords, 45.1 for each of 4000; 27.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon states_250: draw+submit 327 us (mean 328, p99 337): draw 91, submit 236; gpu 499 (p99 562); present 15844; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon states_250: a frame: 16027 dwords, 64.1 for each of 250; 7.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon states_1000: draw+submit 1262 us (mean 1264, p99 1278): draw 361, submit 901; gpu 753 (p99 776); present 14635; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon states_1000: a frame: 63314 dwords, 63.3 for each of 1000; 12.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon uniforms_1000: draw+submit 772 us (mean 774, p99 795): draw 286, submit 486; gpu 596 (p99 616); present 15285; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon uniforms_1000: a frame: 13298 dwords, 13.3 for each of 1000; 6.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon stream_1000: draw+submit 39 us (mean 39, p99 43): draw 26, submit 13; gpu 773 (p99 775); present 15761; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon stream_1000: a frame: 298 dwords, 0.3 for each of 1000; 3.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon stream_8000: draw+submit 573 us (mean 588, p99 679): draw 525, submit 49; gpu 4118 (p99 4126); present 10625; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon stream_8000: a frame: 298 dwords, 0.0 for each of 8000; 3.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon fill_4: draw+submit 14 us (mean 14, p99 17): draw 2, submit 12; gpu 1365 (p99 1367); present 15299; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon fill_4: a frame: 313 dwords, 78.4 for each of 4; 3.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon fill_16: draw+submit 17 us (mean 17, p99 20): draw 2, submit 14; gpu 4573 (p99 4575); present 12088; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon fill_16: a frame: 373 dwords, 23.4 for each of 16; 3.0 kicks; 0.0 waits, 0 us waiting
+vkbench: vulkan4xenon instances_4000: draw+submit 150 us (mean 150, p99 154): draw 64, submit 85; gpu 959 (p99 1004); present 15467; frame 16679 (59.9 fps)
+vkbench: vulkan4xenon instances_4000: a frame: 1877 dwords, 0.5 for each of 4000; 4.0 kicks; 0.0 waits, 0 us waiting
+PASS: vkbench: vulkan4xenon: every scene ran its 660 frames with no call failing
+vkbench: vulkan4xenon against xsdk, medians
+vkbench: draws_250: draw+submit 221 us against 79, 2.80x; gpu 538 us against 585, 0.92x; 0 of 2304 points differ
+PASS: vkbench: draws_250: both backends drew the same picture
+vkbench: draws_1000: draw+submit 832 us against 295, 2.82x; gpu 488 us against 650, 0.75x; 0 of 2304 points differ
+PASS: vkbench: draws_1000: both backends drew the same picture
+vkbench: draws_4000: draw+submit 3563 us against 1158, 3.08x; gpu 345 us against 765, 0.45x; 0 of 2304 points differ
+PASS: vkbench: draws_4000: both backends drew the same picture
+vkbench: states_250: draw+submit 327 us against 129, 2.53x; gpu 499 us against 546, 0.91x; 0 of 2304 points differ
+PASS: vkbench: states_250: both backends drew the same picture
+vkbench: states_1000: draw+submit 1262 us against 496, 2.54x; gpu 753 us against 1020, 0.74x; 0 of 2304 points differ
+PASS: vkbench: states_1000: both backends drew the same picture
+vkbench: uniforms_1000: draw+submit 772 us against 294, 2.63x; gpu 596 us against 650, 0.92x; 0 of 2304 points differ
+PASS: vkbench: uniforms_1000: both backends drew the same picture
+vkbench: stream_1000: draw+submit 39 us against 33, 1.18x; gpu 773 us against 755, 1.02x; 0 of 2304 points differ
+PASS: vkbench: stream_1000: both backends drew the same picture
+vkbench: stream_8000: draw+submit 573 us against 535, 1.07x; gpu 4118 us against 4102, 1.00x; 0 of 2304 points differ
+PASS: vkbench: stream_8000: both backends drew the same picture
+vkbench: fill_4: draw+submit 14 us against 8, 1.75x; gpu 1365 us against 1350, 1.01x; 0 of 2304 points differ
+PASS: vkbench: fill_4: both backends drew the same picture
+vkbench: fill_16: draw+submit 17 us against 9, 1.89x; gpu 4573 us against 4555, 1.00x; 0 of 2304 points differ
+PASS: vkbench: fill_16: both backends drew the same picture
+vkbench: instances_4000: draw+submit 150 us against 85, 1.76x; gpu 959 us against 946, 1.01x; 0 of 2304 points differ
+PASS: vkbench: instances_4000: both backends drew the same picture
+vkbench: scenes against the scene whose picture they draw, through each backend, medians
+vkbench: xsdk: instances_4000 against draws_4000: draw+submit 85 us against 1158, 0.07x; gpu 946 us against 765, 1.24x; 0 of 2304 points differ
+PASS: vkbench: xsdk: instances_4000 drew draws_4000's picture
+vkbench: vulkan4xenon: instances_4000 against draws_4000: draw+submit 150 us against 3563, 0.04x; gpu 959 us against 345, 2.78x; 0 of 2304 points differ
+PASS: vkbench: vulkan4xenon: instances_4000 drew draws_4000's picture
+tests: 17 passed, 0 failed
+exit: status 0
