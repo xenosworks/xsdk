@@ -4617,3 +4617,32 @@ xsdk_test's log over UDP to `tools/net_log.py` (results/2026-10-20-milestone-53/
 - **`DbgPrint` costs 3 to 7 ms a line** on this console, and was 5.6 ms of a line's 5.9 while every line went to it,
   so the log leaves it off unless `dbgprint.txt` or `xsdk_log_set_dbgprint` turns it on. Why it's slow here isn't
   known.
+
+## Drives, time zones and Xbox Home, milestone 54 (2026-10-20)
+
+`tests/probe_drives.c`, `tests/probe_terminate.c` and xsdk_test on the console, with a USB stick in and no disc or
+memory unit (results/2026-10-20-milestone-54/):
+- **Drive roots open as folders only with their closing backslash.** `\Device\Harddisk0\Partition1\` and
+  `\Device\Mass0\`, the USB stick, opened and listed; without the backslash both answered 0xC0000103, not a directory
+  (`probe_drives.log`). `\Device\Mass1`, `Mass2`, `Mu0`, `Mu1`, `BuiltInMuSfc` and `BuiltInMuUsb\Storage` answered
+  0xC00002B6, no device; `\Device\Cdrom0`, with no disc, 0xC0000013; the `Mass<n>PartitionFile\Storage` paths and
+  `BuiltInMuMmc\Storage` 0xC000003A, no such path. `\Device\Harddisk0\Partition0` is the whole disk, 0xC000014F as a
+  folder.
+- **Their sizes,** `NtQueryVolumeInformationFile`'s size class: the hard disk's data partition has 16,384-byte units,
+  9,453,636 of them; the USB stick 32,768-byte units; `Partition0` 512-byte sectors. A file of 65,537 bytes, written
+  and flushed, took 5 units of `game:`'s (`step1_xsdk_test.log`).
+- **`pwrite`, `fsync` and `statvfs` passed** their checks. `ftruncate`'s check failed with no call failing, so a size
+  or the bytes it added came back wrong; which isn't known yet.
+- **The console's time zone isn't in `ExGetXConfigSetting`'s user category:** with the dashboard set to US Eastern,
+  its settings 1-7, the time zone's biases, names and dates, all read 0, while its language, 1, and country, 103, the
+  US, were right. `XGetLanguage` gave 1 and `XamGetLocaleEx(111, 43)` 36, the US in XAM's locales.
+- **The title-terminate notification's routine runs on a thread of the console's,** hardware thread 3, not one the
+  title made, when the title is ended from outside (`probe_terminate_registered_late.txt`):
+  - every thread of the title is frozen: none counted in 1 ms, and a mutex a frozen thread held stayed held through
+    20 ms of tries;
+  - the title's file handles are closed, `NtWriteFile` 0xC0000008, and `game:` is gone: it wrote through
+    `\Device\Harddisk0\Partition1\` instead; 54 bytes stdio held unwritten were lost;
+  - it ran the 2 s it asked for and returned.
+- **A registration left in place froze the console** as the next title, Aurora, started. With the routine taking its
+  registration out before it returned, the console came back (`probe_terminate_unregistered_late.txt`). The
+  registration lives in the title's memory, which the kernel frees once the routines return.

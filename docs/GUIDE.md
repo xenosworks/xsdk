@@ -17,10 +17,18 @@ gets a title built and onto the console, and docs/PITFALLS.md says what breaks o
 
 [samples/template](../samples/template/main.c), [samples/hello](../samples/hello/main.c)
 
-xsdk's start, `xsdk_start` in `libxsdk.a`, opens the log, runs the static constructors and calls `main(1, argv)`,
-`argv[0]` empty. What `main` returns is the exit status; returning, or `exit`, runs `atexit` handlers and destructors,
-closes the display and the GPU, logs `exit: status <n>` and goes back to the dashboard (src/start.c, src/exit.c). A
-failed `assert` or `abort` logs `exit: signal 6` and ends the title the same way.
+xsdk's start, `xsdk_start` in `libxsdk.a`, opens the log, sets the console's time zone, runs the static constructors
+and calls `main(1, argv)`, `argv[0]` empty. What `main` returns is the exit status; returning, or `exit`, runs `atexit`
+handlers and destructors, closes the display and the GPU, logs `exit: status <n>` and goes back to the dashboard
+(src/start.c, src/exit.c). A failed `assert` or `abort` logs `exit: signal 6` and ends the title the same way.
+
+Xbox Home, or the console agent sending the console to the dashboard, ends the title without `exit`: no `atexit`
+handler or destructor runs, and what stdio holds unwritten is lost, so a title flushes what it must keep as it goes.
+`xsdk_on_terminate(routine)` (`terminate.h`) has a routine run then, on a thread of the console's with every thread of
+the title frozen, its file handles closed and `game:` gone. It may take no lock the title's threads could hold and use
+no stdio, `malloc` or other newlib state: only raw kernel calls, on device paths such as
+`\Device\Harddisk0\Partition1\...`, in well under the 2 s the console gave it (docs/HARDWARE.md, "Drives, time zones
+and Xbox Home, milestone 54"; tests/terminate_check.c).
 
 | Call | Leaves set | Undone by | Threads |
 |---|---|---|---|
@@ -243,10 +251,15 @@ calls take `/` or `\`:
 - a path from `/` goes to the kernel as written, a device path such as `\Device\Harddisk0\Partition1\...`
   (src/path.c).
 
-`open`, `read`, `write`, `lseek`, `stat`, `opendir`, `mkdir`, `rename`, `unlink`, `truncate`, stdio and
-`std::filesystem` all work there (tests/test_files.c, tests/test_cpp_filesystem.cpp). Files open sharing nothing, so a
-file already open can't be opened again (docs/PITFALLS.md). Permissions can't change, and there are no links. Other
-drives, `hdd:`, `usb:` and the DVD, aren't named yet (docs/PARITY.md, "Files, drives and storage"). The log,
+xsdk names the console's other drives, in any case: `hdd:` is the hard disk's data partition, `usb:` or `usb0:` the
+first USB drive, `usb1:` and `usb2:` the others, `mu:` or `mu0:` and `mu1:` the memory units, and `dvd:` the disc. A
+drive with nothing in it fails with `ENOENT` (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54").
+
+`open`, `read`, `write`, `pread`, `pwrite`, `lseek`, `fsync`, `stat`, `statvfs`, `opendir`, `mkdir`, `rename`,
+`unlink`, `truncate`, stdio and `std::filesystem` all work there (tests/test_files.c, tests/test_cpp_filesystem.cpp).
+`statvfs`'s block is the drive's allocation unit, 16 KB on the hard disk. `ftruncate` failed its check on the console
+and is still being looked into. Files open sharing nothing, so a file already open can't be opened again
+(docs/PITFALLS.md). Permissions can't change, and there are no links. The log,
 `xsdk_log_write` from any thread, is `<title>.log` in `game:\`; `stdout` and `stderr` go there too. With a
 `net_log.txt` beside the `.xex` each line also goes to a PC running `tools/net_log.py`, and with a `dbgprint.txt`, or
 after `xsdk_log_set_dbgprint(true)`, to `DbgPrint` (docs/GETTING_STARTED.md, "Reading the log").
@@ -316,30 +329,41 @@ ported in mbedtls-xenon.
   the dashboard shows, with `xsdk_add_xex(target TITLE_ID 0x... NAME "...")`.
 - **Pause for the Guide** while `xsdk_system_ui_open` says it's up; a dialog's own call says when it closes.
 
+## The console's settings
+
+[tests/test_system.c](../tests/test_system.c), through `system.h`
+
+At start-up xsdk sets newlib's time zone, `TZ`, from XAM's `GetTimeZoneInformation`, so `localtime`, `mktime` and
+`strftime`'s `%Z` give the console's local time, daylight saving included; a title's own `setenv("TZ", ...)` and
+`tzset()` replace it. `xsdk_system_language()` is the console's language, `XGetLanguage`'s number, which
+`XsdkLanguage` names, and `xsdk_system_country()` its country, XAM's number for it in its list of locales, 36 for the
+US. The console's time zone isn't where Xenia looks for it, `ExGetXConfigSetting`, whose time zone settings read 0
+(docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54").
+
 ## Porting: the C and POSIX calls
 
 A C17 or C++23 program builds with newlib, libstdc++ and xsdk's POSIX layer. What links, by a link of every name below
 against `libxsdk.a`, newlib and libstdc++ on 2026-10-19:
 
-- **Has:** stdio, strings, math, `malloc` and `aligned_alloc`, `time`, `clock`, `strftime` and the rest of `time.h`,
-  `setjmp`, `getenv` and `setenv`; `open`, `openat`, `close`, `read`, `pread`, `write`, `lseek`, `fstat`, `isatty`,
-  `stat`, `chdir`, `getcwd`, `mkdir`, `unlink`, `unlinkat`, `rename`, `truncate`, `readlink`, `pathconf`, `opendir`,
-  `fdopendir`, `readdir`, `rewinddir`, `closedir`; `pthread_create`, `join`, `detach`, attributes and stack sizes,
-  mutexes, condition variables, read-write locks, `once` and keys, `sched_yield`; `clock_gettime`, `gettimeofday`,
-  `nanosleep`; `sysconf`, `getentropy`, `getpid`, `kill`, `raise`, `signal`, `abort`, `exit`, `atexit`; the sockets
-  above, `getaddrinfo`, `inet_pton` and `inet_ntop`; C++23's threads, atomics, exceptions, `chrono`, `filesystem` and
-  `format` (docs/PARITY.md).
+- **Has:** stdio, strings, math, `malloc` and `aligned_alloc`, `time`, `clock`, `strftime` and the rest of `time.h`, in
+  the console's time zone, `setjmp`, `getenv` and `setenv`; `open`, `openat`, `close`, `read`, `pread`, `write`,
+  `pwrite`, `lseek`, `fstat`, `fsync`, `fdatasync`, `ftruncate`, `fstatvfs`, `isatty`, `stat`, `statvfs`, `chdir`,
+  `getcwd`, `mkdir`, `unlink`, `unlinkat`, `rename`, `truncate`, `readlink`, `pathconf`, `opendir`, `fdopendir`,
+  `readdir`, `rewinddir`, `closedir`; `pthread_create`, `join`, `detach`, attributes and stack sizes, mutexes, condition
+  variables, read-write locks, `once` and keys, `sched_yield`; `clock_gettime`, `gettimeofday`, `nanosleep`; `sysconf`,
+  `getentropy`, `getpid`, `kill`, `raise`, `signal`, `abort`, `exit`, `atexit`; the sockets above, `getaddrinfo`,
+  `inet_pton` and `inet_ntop`; C++23's threads, atomics, exceptions, `chrono`, `filesystem` and `format`
+  (docs/PARITY.md).
 - **Refuses at run time:** `pthread_setschedparam`, `ENOTSUP`; `pthread_cancel`, `link` and `symlink`, `ENOSYS`;
   `fchmod` and `fchmodat` changing a file's permissions, `ENOTSUP`; `fcntl` on a file, `ENOSYS`.
-- **Doesn't link:** processes, `fork`, `vfork`, `execve`, `wait`, `waitpid`; memory maps, `mmap`, `munmap`,
-  `mprotect`; `dlopen`; `dup`, `dup2`, `pipe`, `socketpair`; `rmdir` (`remove` and `unlink` remove an empty
-  folder), `fsync`, `ftruncate`, `pwrite`, `readv`, `writev`, `lstat`, `fstatat`, `access`, `faccessat`, `realpath`,
-  `chmod`, `chown`, `fchown`, `umask`, `utime`, `utimes`, `utimensat`, `futimens`, `mkdirat`, `renameat`, `fpathconf`;
-  `sleep` and `usleep` (`nanosleep` is there); `clock_getres`, `clock_nanosleep`, `times`, `alarm`; `sigaction`;
-  `sem_init`, `sem_wait`, `sem_post`; `pthread_exit`, `pthread_kill`, `pthread_sigmask`, `pthread_atfork`, barriers and
-  spin locks; C11's `thrd_create`; `sched_setaffinity` (`xsdk_thread_move` is there); `getuid`, `geteuid`, `getppid`,
-  `getpagesize`; `gethostbyname` and `getnameinfo` (`getaddrinfo` is there); `getrandom` (`getentropy` is there);
-  `posix_memalign` (`aligned_alloc` is there); `ioctl`.
+- **Doesn't link:** processes, `fork`, `vfork`, `execve`, `wait`, `waitpid`; memory maps, `mmap`, `munmap`, `mprotect`;
+  `dlopen`; `dup`, `dup2`, `pipe`, `socketpair`; `rmdir` (`remove` and `unlink` remove an empty folder), `readv`,
+  `writev`, `lstat`, `fstatat`, `access`, `faccessat`, `realpath`, `chmod`, `chown`, `fchown`, `umask`, `utime`,
+  `utimes`, `utimensat`, `futimens`, `mkdirat`, `renameat`, `fpathconf`; `sleep` and `usleep` (`nanosleep` is there);
+  `clock_getres`, `clock_nanosleep`, `times`, `alarm`; `sigaction`; `sem_init`, `sem_wait`, `sem_post`; `pthread_exit`,
+  `pthread_kill`, `pthread_sigmask`, `pthread_atfork`, barriers and spin locks; C11's `thrd_create`; `sched_setaffinity`
+  (`xsdk_thread_move` is there); `getuid`, `geteuid`, `getppid`, `getpagesize`; `gethostbyname` and `getnameinfo`
+  (`getaddrinfo` is there); `getrandom` (`getentropy` is there); `posix_memalign` (`aligned_alloc` is there); `ioctl`.
 
 A port supplies what it needs of the last list itself, on the calls above, or leaves it out. Shared libraries don't
 exist: everything links into the one `.xex` (cmake/xsdk.cmake builds static libraries).

@@ -2,9 +2,9 @@
 
 xsdk's goal is to let anyone make homebrew and port games to the Xbox 360 without Microsoft's SDK. This page is the
 map: for each area, what a title gets from xsdk today, how to use it, which test proves it on the console, and what's
-missing. It was drawn up on 2026-10-15, at xsdk `3e889a7`, and brought up to date on 2026-10-20, at `e43c0e1`, after
-milestones 41 and 44 to 52. SCOPE.md has the milestones and TODO.md the open items; where they and this page disagree,
-they win, and this page is out of date.
+missing. It was drawn up on 2026-10-15, at xsdk `3e889a7`, brought up to date on 2026-10-20, at `e43c0e1`, after
+milestones 41 and 44 to 52, and again for milestone 54's files, drives, settings and Xbox Home. SCOPE.md has the
+milestones and TODO.md the open items; where they and this page disagree, they win, and this page is out of date.
 
 **Status:**
 - **Yes:** works, and a test proves it on the console.
@@ -15,8 +15,8 @@ they win, and this page is out of date.
 **What retail titles call** is judged from Xenia (xenia-project/xenia `95a5c3e`, in `xenos-toolchain/reference/xenia`),
 which implements what the games it runs need:
 - **The kernel:** its table lists 922 xboxkrnl exports. 239 have code in Xenia, 200 of them more than a stub. xsdk
-  imports 56 (`imports/imports.txt`).
-- **XAM:** its table lists 1,735 exports. 169 have code in Xenia, 106 of them more than a stub. xsdk imports 47, 22 of
+  imports 60 (`imports/imports.txt`).
+- **XAM:** its table lists 1,735 exports. 169 have code in Xenia, 106 of them more than a stub. xsdk imports 50, 22 of
   them for sockets.
 
 ## Building and packaging
@@ -63,15 +63,17 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Wall clock, monotonic clocks, sleeps | Yes | `clock_gettime`, `gettimeofday`, `nanosleep` (`src/time.c`), `std::chrono` | `tests/test_clocks.c`, `test_cpp_chrono.cpp` | Short sleeps: a 1 ms sleep took about 2 ms (docs/HARDWARE.md, "Sleeps, write speeds, and a set-up that wouldn't run from a cached stream") |
+| Local time in the console's time zone | Partial | `localtime`, `mktime`, `strftime`, newlib's `TZ` set at start-up from XAM's `GetTimeZoneInformation` (`src/system.c`) | `tests/test_system.c`, not yet on the console | The console run: `ExGetXConfigSetting`, read first, held no time zone (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") |
 
 ## Files, drives and storage
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Files and folders beside the `.xex` (`game:`) | Yes | POSIX `open`, `read`, `stat`, `opendir`, `mkdir`, `rename`, `unlink`; `std::filesystem` | `tests/test_files.c`, `test_cpp_filesystem.cpp` | Asynchronous I/O; files open sharing nothing, so `remove_all` fails on nested folders (TODO.md) |
-| Other drives: the hard disk, USB, memory units | Partial | a path starting with `\` goes to the kernel as written (`src/path.c`) | untested | Drive names: no `hdd:`, `usb:` or `dvd:`, as `ObCreateSymbolicLink` (xboxkrnl_ob.cc) isn't imported |
-| Free space; flushing to disk | No | | | `NtQueryVolumeInformationFile` (xboxkrnl_io_info.cc), `NtFlushBuffersFile` (xboxkrnl_io.cc) |
-| The DVD drive: discs and the tray | No | | | Mounting the drive; `HalOpenCloseODDTray`, which Xenia doesn't implement |
+| Other drives: the hard disk, USB, memory units, the DVD | Partial | `hdd:`, `usb:` to `usb2:`, `mu:` to `mu1:` and `dvd:`, each its device's root (`src/path.c`); a path starting with `\` goes to the kernel as written | `tests/test_files.c`'s drive checks, not yet on the console; the device paths, `tests/probe_drives.c` (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | A memory unit and a disc, with none on hand yet |
+| Writing at an offset, flushing, free space | Yes | `pwrite`, `fsync`, `fdatasync`, `statvfs`, `fstatvfs` (`src/file.c`, `src/path.c`) | `tests/test_files.c` | |
+| Setting a file's size | Partial | `truncate`, `ftruncate` | `tests/test_files.c`'s `ftruncate` check failed on the console, which call or value isn't known yet | Why it fails |
+| The DVD drive's tray | No | | | `HalOpenCloseODDTray`, which Xenia doesn't implement |
 
 ## Save data, content and profiles
 
@@ -176,7 +178,8 @@ Each in its own repository under xenosworks.
 |---|---|---|---|---|
 | Ending the title, back to the dashboard | Yes | `exit` (`src/exit.c`) | every title | |
 | Random numbers | Yes | `getentropy` (`src/entropy.c`) | mbedtls-xenon's checks | |
-| Language, region, time zone, AV settings | No | | | `XGetLanguage` (xam_info.cc), `ExGetXConfigSetting` (xboxkrnl_xconfig.cc) |
+| Language, country, time zone | Partial | `xsdk_system_language`, `xsdk_system_country` (`system.h`); the time zone as newlib's, above | `tests/test_system.c`: language and country read on the console; the time zone not yet | Region and AV settings, through `ExGetXConfigSetting` (xboxkrnl_xconfig.cc) raw |
+| A routine when Xbox Home ends the title | Partial | `xsdk_on_terminate` (`terminate.h`), on a thread of the console's with the title frozen, its handles closed and `game:` gone | the notification, `tests/probe_terminate.c`; `tests/terminate_check.c`, not yet on the console | Flushing stdio and running `atexit` there, which the frozen title's handles and locks rule out (docs/HARDWARE.md) |
 | Launching another `.xex`, and passing it data | No | | | `XamLoaderLaunchTitle`, `XamLoaderSetLaunchData` (xam_info.cc) |
 | Rebooting and powering off | No | | | `HalReturnToFirmware` (xboxkrnl_hal.cc) |
 | The SMC: LEDs, temperatures, fan, power button, AV cable | No | | | `HalSendSMCMessage` and `HalGetCurrentAVPack`, which Xenia doesn't implement, so only the console can settle them |
@@ -217,8 +220,8 @@ What a porter would hit first, as proposed on 2026-10-15, each a milestone agree
 2. **Docs and samples,** which make everything after them easier to use, for people and for the AI assistants most of
    them will work through. Done, milestone 41.
 3. **The log over the network,** so a title's failure can be seen without copying files back. Done, milestone 53.
-4. **XAM's asynchronous calls, then save data and drives.** XAM's calls and saves on the hard disk done, milestone 51.
-   Open: memory units and USB drives, the device selector, `hdd:`, `usb:` and `dvd:`.
+4. **XAM's asynchronous calls, then save data and drives.** XAM's calls and saves on the hard disk done, milestone 51;
+   `hdd:`, `usb:`, `mu:` and `dvd:`, milestone 54. Open: saves on memory units and USB drives, the device selector.
 5. **Profiles and system UI.** The signed-in user and gamertag, the keyboard, message boxes and pausing for the Guide
    done, milestones 37 and 51. Open: writing profile settings, ending the title under the Guide, and what a cancelled
    keyboard gives.
@@ -228,7 +231,8 @@ What a porter would hit first, as proposed on 2026-10-15, each a milestone agree
    coverage, cube and 3D textures, instancing, and queries whether draws rasterized done, milestones 44 and 47 among
    them. Open: sample counts in queries, memory export, and the formats and textures in the GPU table's Missing column.
 9. **Audio:** XMA decoding, speaker configuration. Open.
-10. **Input and the system:** keyboards, controller types, language and region, launching titles, the SMC. Open.
+10. **Input and the system:** keyboards, controller types, language and region, launching titles, the SMC. Language,
+    country and the time zone, milestone 54. Open: the rest.
 
 Done since, beside the list: shader model 3 HLSL (milestone 50), loops in shaders (46), xost's code quality (45, 48),
 the pass after a depth clear (49), and counted loops in compiled CPU code (52).
