@@ -149,3 +149,61 @@ variable with an initializer compiled`.
 
 **GLSL unchanged:** the 900 programs of step 2, compiled by 5047f51 and by this step: the same containers, manifests
 and resources byte for byte, and the 30 refused refused alike.
+
+## Step 4, linked at bind
+
+`step4b.txt`, `step4b.json`. Step 4 first gave each semantic one interpolator in both stages, so a pixel shader declared
+every interpolator below its highest: one reading COLOR1 or FOG declared 14 or 15. D3D9's link replaces it
+(docs/scope/50-hlsl.md, step 4; xenos-toolchain/docs/xsc.md, "Interface conventions"):
+- **Packed by semantic** (src/xsc_resolve.c, `pack_semantics`): each stage takes interpolators from 0 in the order of
+  its semantics, usage then index, so a pixel shader declares only those it reads and a vertex shader exports only
+  those it writes. Any of D3D9's usages is an interpolator, where the map took TEXCOORD0 to 11, COLOR0, COLOR1 and FOG;
+  a semantic that isn't one, two variables of one, or a varying without a semantic beside one with is refused. Each
+  interpolator record holds its semantic, usage and index where XenosRecomp reads them, and bit 31 marks it HLSL's
+  (src/xsc_container.c).
+- **Linked when a title pairs them** (src/shader.c, `xsdk_shader_link`): each of the vertex shader's exports goes to
+  the pixel shader's interpolator for its semantic; one the pixel shader doesn't read writes nothing, no write mask at
+  interpolator 0, the form Xenia gives the XNA assembler's empty exports (xenia:src/xenia/gpu/ucode.h:2041-2059); and
+  SQ_PROGRAM_CNTL's export count becomes the pixel shader's interpolators. It patches the vertex shader's microcode from
+  its container's, as `xsdk_shader_set_vertex_layout` patches fetches, not while the vertex shader may run, and writes
+  only words that change, so linking a pair again costs nothing. An input no output feeds is undefined. A GLSL pair is
+  left alone, and one stage of each refused. The decisions are xost's `xsdk_xsc_link` and `xsdk_xsc_link_export`, which
+  the PC's tests call through libxsc.so.
+- **A call of its own,** not in `xsdk_gpu_set_shaders`: there it would have to know the GPU is done with the vertex
+  shader, or copy it on the hot path, which allocates nothing. A vertex shader drawn with pixel shaders reading
+  different semantics is loaded for each, as xsdk_test's grid now loads its vertex shader for each pixel shader.
+
+| Corpus | Step 4's map | Packed |
+|---|---|---|
+| Interpolators of the 107 pixel shaders | 265, most 9 | 215, most 8 |
+| Interpolators the 50 vertex shaders export | 189, most 9 | 149, most 8 |
+
+50 of the pixel shaders and 40 of the vertex shaders take one fewer: SPIRV-Cross named the corpus's varyings TEXCOORD0
+up from their locations, so the map's one gap was COLOR0's. Shaders using the other semantics show its cost: idiom
+`i02_rowmajor_vs` exported 15 for its 3, FOG at 14, and `semantics_ps.hlsl` declared 15 for its 4.
+
+**Against the GLSL path:** each shader's result is step 4's, 151 exact and 6 inexact, the same 6. check_hlsl.py
+compares each stage alone, a varying at the interpolator xost gives it in that stage, so the link doesn't enter it.
+
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, `test_scalar_unit.py` with its corpus at
+`/mnt/z/vulkan4xenon`. `tests/test_hlsl_link.py`, new, links xsdk_test's pair with gaps, `grid_gaps_vs.hlsl` (TEXCOORD3,
+COLOR1, TEXCOORD0 and FOG) and `grid_gaps_ps.hlsl` (COLOR1 and TEXCOORD3), checks each record, every export word and
+the export count after the link, runs the pair on the simulator linked and unlinked, checks that every export to an
+interpolator in the 58 HLSL vertex shaders of the testdata sits at its container's export slots, each an ALU
+instruction, and that a GLSL pair is left as it is and a mixed one refused; the optimiser off and on.
+`tests/test_hlsl_semantics.py` checks the packed interpolators and links its pair through the same code. Each change
+broken on purpose failed them: interpolators not packed `vector_dest=336 does not fit in 6 unsigned bits`; two of one
+semantic not refused `refused_shared_ps.hlsl compiled`; records not marked `records ... not ..., marked` and `5
+interpolators exported, not the pixel shader's 4`; exports not moved `slot 12's export 0xc80f8001 linked 0xc80f8001,
+not 0xc80f8000`; unread exports left writing `slot 8's export 0xc80f8000 linked 0xc80f8000, not 0xc8008000`; the
+vertex shader's count exported `4 exported, not 2`.
+
+**xsdk_test:** `tests/test_hlsl.c` links each pixel shader to a vertex shader loaded for it, and adds a cell, the pair
+with gaps, `hlsl: a vertex shader's TEXCOORD3, COLOR1, TEXCOORD0 and FOG meet a pixel shader's COLOR1 and TEXCOORD3 by
+semantic, the other two unread: %u of %u pixels wrong`, and `hlsl: the pixel shader reading COLOR1 and TEXCOORD3
+declares %u interpolators in its container, not 14`. `tests/breaks/hlsl/link.patch` now leaves each pair as loaded;
+on the simulator the link's cell then draws red 191 and green 64 for 64 and 191, and the gaps' cell the ramp, 0 and 191
+for 64, 191 and the ramp, failing both link checks.
+
+**GLSL unchanged:** the 900 programs of step 2, compiled by 11a3e72 and by this step: the same containers, manifests
+and resources byte for byte, and the 30 refused refused alike.

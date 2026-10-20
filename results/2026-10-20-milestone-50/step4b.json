@@ -1,0 +1,1215 @@
+{
+ "trials": 20,
+ "seed": 1,
+ "sets": {
+  "corpus": {
+   "shaders": {
+    "017c19da20649fa0_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "01c8b343f41ff9f4_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "020233a3aaada7e9_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "041a85f07c74ec96_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "04a469b1240c5698_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "05716a5bd2aae204_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "05b63b9d751d5736_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "093884ef391dfddc_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "0963325b37f04df0_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "09bef7f9a3ac5df7_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "0c5faf5ad1250944_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "0c9a6858fbbe328e_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "0f8714b3c758a3b1_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "12d30073b6d47043_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "1510c05add37f2b3_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "15a57b221b955025_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "1675a46dea18c182_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "16a9a335fb71c29a_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "172ccfa9a454e318_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "1ad5c2f8e1cc2653_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "1e5db8674ad9d29e_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "2013a34320f17698_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "20a291c66ca7e0fd_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "22d6a7758d2d5d84_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "233aa73af10f83bc_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "246ca2b33bb1fdf4_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "251e226c8a088a82_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "29fab4bb2516d607_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "2a1a218d5688204a_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "2bc4ebf687f545b6_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "2e7f30cdc49bd211_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "2eefbbd89e53921c_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "31871ebc6e90765a_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "32d160ecc3deb658_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "33d3ad7a449b966c_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "349b6ed78d720732_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "350248024002ce37_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "35fc826ad15e1872_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "39662e66d545c874_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "3ba44326990edfeb_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "3de421fc6f9f3122_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "407248b726bcb428_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "412f75e329bbe3a2_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "46d1eea9e1360669_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "48cd8f549b507826_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "4a2fde48317fee5f_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "4e6272cd5ea024f5_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "4ee5b3c093bea8ab_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "inexact",
+      "largest difference 8.94e-08"
+     ]
+    },
+    "4f41862f49358139_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "4f939ba938f196ae_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "5264b90e6f50c901_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "551fb86c6ef59def_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "556ea181d0d34829_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "55a0066e2650ed99_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "58786ba1a7e49515_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "607a7b7110387a22_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "60bcbd6f4104ab13_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "61cdb76b69b6489b_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "64f76a18fb37dd48_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "66457dda201609ed_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "676ff8c4689eaf91_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "68b11762bd80366b_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "695e15b366c72818_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "6a05b1f88a016fb2_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "6b7ff186cc28cce5_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "6c429f0c99b0524f_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "6dd3a70373df59bf_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "inexact",
+      "largest difference 5.96e-08"
+     ]
+    },
+    "6e690d475f0af5fe_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "70ee109df12524e4_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "71ac4a48df92e5b7_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "72abd6191dcd7bfe_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "75422301f0e22829_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "inexact",
+      "largest difference 5.96e-08"
+     ]
+    },
+    "820f98f280587ea8_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "84e4d80e1fc6e615_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "8586b077d3e63bc1_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "858b7f6b67e42fd6_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "85ae52ee303f618c_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "85c8b022385334bf_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "inexact",
+      "largest difference 5.96e-08"
+     ]
+    },
+    "88a3de8e328f385a_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "8b4ce5184129a25a_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "8e555ecc28e3d240_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "8ecfa22174a91d18_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "8f974c0335e452d5_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "92f6cc89e68fccea_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "93d36ce55e3f9bad_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "946541a3cc485e48_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "987a188c27a802e5_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "9f1eca9bebdc35b6_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "a122a58ca77e3270_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "a2beec39ae2b951c_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "a35e191254f5ef46_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "a478595f52157a73_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "a479ce42ba36b7d8_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "a48b96d69ff86daf_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "ad037db0d56a10dd_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "b331aaa6bee56ee9_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "inexact",
+      "largest difference 5.96e-08"
+     ]
+    },
+    "b40238367bc2ae70_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "b4a8c01218dcffe9_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "b4bd0f33bde7fc52_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "b624738d17bc5ca0_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "b72c3e79097987b4_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "ba930563b1db79f4_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "bacc292ad5a86eb3_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "bde83fec0182df1d_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "be7931e3ec0bb85e_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "c0887c56621045a9_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "c0ddfd4547c71e5a_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "c165aaa5a5be8de5_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "c2679fcd0788b78d_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "c359885760b8a624_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "c4bb20c5e14ce9d8_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "c8673f02f09b439d_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "c91470b682614340_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "c98a0ca2e68f85a1_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "ca44599827bbdb23_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "cad12b640d1cfd9c_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "cbed2c9db6f723a5_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "ce4bffbb0b973310_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "cefc467138f9dac7_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "d1441271ff15f72c_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "d5d99e338acc096e_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "d8658b0e39305f51_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "d8d724f61446ecbb_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "d90889c31c82dbe8_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "da2593920df168c8_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "dae9addf7280e276_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "dee3af7655c47a63_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e09e6878603dc742_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e19f86ee747cb140_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e2cfed9f9f80cbf0_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "inexact",
+      "largest difference 5.96e-08"
+     ]
+    },
+    "e2f1c3a692fdfb84_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e3fba406929fde97_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e4c0798e6cc9e4ba_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e5c535debebde1ed_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e5ea8b62e2ebf4ac_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e6ec5aee8cc08f41_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e7fe951996d1f40b_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e9d14d2c939cffe4_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "e9e5df17e9c42a02_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "ece2618e566d8623_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "ed3667059b5c9028_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "f12926532ee0b4d0_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "f1f88472976e4bfb_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "f2f1d4cd60de5251_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "f3825523049d31cf_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "f526e9ffb3616812_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "f544e71db9210106_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "f5cb41c6eaf01a5f_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "f6b5e1536572c9a5_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "f7c1df6fe6364447_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "mesh_gray_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "mesh_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "mesh_uniform_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "mesh_uniform_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "mesh_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "sprite_ps.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    },
+    "sprite_vs.hlsl": {
+     "status": "compiled",
+     "comparison": [
+      "exact",
+      ""
+     ]
+    }
+   },
+   "totals": {
+    "counts": {
+     "compiled": 157
+    },
+    "causes": {},
+    "comparisons": {
+     "exact": 151,
+     "inexact": 6
+    }
+   }
+  },
+  "idioms": {
+   "shaders": {
+    "i01_transform_vs.hlsl": {
+     "status": "refused",
+     "cause": "a matrix not loaded from uniforms (step 5)",
+     "message": "v1 vertex: unhandled matrix op CompositeConstruct"
+    },
+    "i02_rowmajor_vs.hlsl": {
+     "status": "compiled"
+    },
+    "i03_samplers_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i04_vpos_vface_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i05_math_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i06_half_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i07_branch_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i08_depth_mrt_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i09_skin_vs.hlsl": {
+     "status": "refused",
+     "cause": "an int vector (step 5)",
+     "message": "v1 vertex: unsupported integer op CompositeExtract"
+    },
+    "i10_boolint_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i11_lighting_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i12_dx10sem_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i13_dx10sem_vs.hlsl": {
+     "status": "compiled"
+    },
+    "i14_cbuffer_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i15_postfx_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i16_intloop_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i17_boolbranch_ps.hlsl": {
+     "status": "refused",
+     "cause": "an int or bool constant (step 5)",
+     "message": "integer Load must be a foldable local"
+    },
+    "m1_colmajor_vs.hlsl": {
+     "status": "compiled"
+    },
+    "m2_rowmajor_vs.hlsl": {
+     "status": "compiled"
+    },
+    "m3_colmajor_mv_vs.hlsl": {
+     "status": "compiled"
+    },
+    "m4_slots_ps.hlsl": {
+     "status": "compiled"
+    }
+   },
+   "totals": {
+    "counts": {
+     "refused": 8,
+     "compiled": 13
+    },
+    "causes": {
+     "a matrix not loaded from uniforms (step 5)": 1,
+     "a loop in SSA form (step 3)": 5,
+     "an int vector (step 5)": 1,
+     "an int or bool constant (step 5)": 1
+    },
+    "comparisons": {}
+   }
+  }
+ }
+}
