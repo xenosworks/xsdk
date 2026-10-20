@@ -1,0 +1,35 @@
+log: game:\save_check.log
+log: named after \Device\Harddisk0\Partition1\savecheck\save_check.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+save_check: answer the keyboard and the message box when they show, then press Back
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 27182 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 28186 us
+PASS: save_check: GPU, scene and present open
+open: NtCreateFile(game:\save_check.saved) failed: 0xC0000034
+save_check: user 0x0, gamertag 'Player1', 0x00000000; saving, marker game:\save_check.saved
+PASS: save_check: a profile is signed in and its gamertag read
+save_check: mounted 0x00000000, disposition 1, at frame 9
+PASS: save_check: the save was made new
+PASS: save_check: the save written
+save_check: unmounted 0x00000000, the flush 0x00000000
+PASS: save_check: the save flushed and unmounted
+PASS: save_check: the marker written for the next launch
+save_check: xsdk_xam_keyboard returned 0x000003E5 at frame 15
+save_check: XAM's UI opened at frame 16
+save_check: the keyboard gave 0x00000000, extended error 0x00000000, length 0x00000000, text 'xsdk', at frame 191
+PASS: save_check: the keyboard closed and its text was read
+PASS: save_check: XAM's UI showed open while the keyboard was
+save_check: XAM's UI closed at frame 208
+save_check: xsdk_xam_message_box returned 0x000003E5 at frame 208
+save_check: XAM's UI opened at frame 209
+save_check: the message box gave 0x00000000, extended error 0x00000000, button 0, at frame 476
+PASS: save_check: the message box closed on a button
+PASS: save_check: XAM's UI showed open while the message box was
+save_check: done at frame 476; press Back, then reboot and launch again to read the save back
+save_check: XAM's UI closed at frame 494
+PASS: save_check: every frame queued in time
+PASS: save_check: GPU close
+save_check: 12 passed, 0 failed
+exit: status 0

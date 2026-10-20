@@ -1,0 +1,145 @@
+log: game:\probe_xam.log
+log: named after \Device\Harddisk0\Partition1\m51person\probe_xam.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 32339 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 32670 us
+probe_xam: 8 cases; listener 0xF8000008, XamIsUIActive 0
+probe_xam: case signin_ui: the sign-in UI and what it notifies; at 2519 ms, frame 3
+signin_ui: XamUserGetSigninState of users 0 to 3: 1 0 0 0
+signin_ui: XamShowSigninUI(1 pane, flags 0) = 0x00000000, XamIsUIActive 0
+notify: 0x00000009, parameter 0x00000001, at 2556 ms, frame 5
+notify: 0x0000000A, parameter 0x00000000, at 2567 ms, frame 5
+notify: 0x00060019, parameter 0x00000000, at 2578 ms, frame 6
+notify: 0x02000009, parameter 0x00000000, at 2589 ms, frame 7
+notify: 0x0A000001, parameter 0x00000000, at 2600 ms, frame 8
+notify: 0x0A000003, parameter 0x00000001, at 2612 ms, frame 8
+notify: 0x0000000A, parameter 0x00000001, at 5250 ms, frame 166
+notify: 0x00000009, parameter 0x00000000, at 5602 ms, frame 187
+signin_ui: XAM's UI closed after 3144 ms
+users: XamUserGetSigninState of users 0 to 3: 1 0 0 0
+users: XamUserGetXUID(user 0, type mask 1) = 0x00000000, XUID E000125D8D3F8689
+users: XamUserGetXUID(user 0, type mask 2) = 0x80070525, XUID 0000000000000000
+users: XamUserGetXUID(user 0, type mask 4) = 0x80070525, XUID 0000000000000000
+users: XamUserGetXUID(user 0, type mask 7) = 0x00000000, XUID E000125D8D3F8689
+users: XamUserGetName(user 0, 16 bytes) = 0x00000000, 'Player1'
+users: the name +0x000: 50 6C 61 79 65 72 31 00 A5 A5 A5 A5 A5 A5 A5 A5
+users: XamUserGetSigninInfo(user 0, flags 0) = 0x00000000
+users: XamUserGetSigninInfo(user 0, flags 0) +0x000: E0 00 12 5D 8D 3F 86 89 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 FE 50 6C 61 79 65 72 31 00
+users: XamUserGetSigninInfo(user 0, flags 0) +0x020: 00 00 00 00 00 00 00 00
+users: XamUserGetSigninInfo(user 0, flags 1) = 0x00000000
+users: XamUserGetSigninInfo(user 0, flags 1) +0x000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 FE 50 6C 61 79 65 72 31 00
+users: XamUserGetSigninInfo(user 0, flags 1) +0x020: 00 00 00 00 00 00 00 00
+users: XamUserGetSigninInfo(user 0, flags 2) = 0x00000000
+users: XamUserGetSigninInfo(user 0, flags 2) +0x000: E0 00 12 5D 8D 3F 86 89 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 FE 50 6C 61 79 65 72 31 00
+users: XamUserGetSigninInfo(user 0, flags 2) +0x020: 00 00 00 00 00 00 00 00
+probe_xam: case signin_ui done at 5891 ms, frame 205
+probe_xam: case users: sign-in states, XUIDs, the name and sign-in info; at 5898 ms, frame 205
+users: XamUserGetSigninState of users 0 to 3: 1 0 0 0
+users: XamUserGetXUID(user 0, type mask 1) = 0x00000000, XUID E000125D8D3F8689
+users: XamUserGetXUID(user 0, type mask 2) = 0x80070525, XUID 0000000000000000
+users: XamUserGetXUID(user 0, type mask 4) = 0x80070525, XUID 0000000000000000
+users: XamUserGetXUID(user 0, type mask 7) = 0x00000000, XUID E000125D8D3F8689
+users: XamUserGetName(user 0, 16 bytes) = 0x00000000, 'Player1'
+users: the name +0x000: 50 6C 61 79 65 72 31 00 A5 A5 A5 A5 A5 A5 A5 A5
+users: XamUserGetSigninInfo(user 0, flags 0) = 0x00000000
+users: XamUserGetSigninInfo(user 0, flags 0) +0x000: E0 00 12 5D 8D 3F 86 89 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 FE 50 6C 61 79 65 72 31 00
+users: XamUserGetSigninInfo(user 0, flags 0) +0x020: 00 00 00 00 00 00 00 00
+users: XamUserGetSigninInfo(user 0, flags 1) = 0x00000000
+users: XamUserGetSigninInfo(user 0, flags 1) +0x000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 FE 50 6C 61 79 65 72 31 00
+users: XamUserGetSigninInfo(user 0, flags 1) +0x020: 00 00 00 00 00 00 00 00
+users: XamUserGetSigninInfo(user 0, flags 2) = 0x00000000
+users: XamUserGetSigninInfo(user 0, flags 2) +0x000: E0 00 12 5D 8D 3F 86 89 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 FE 50 6C 61 79 65 72 31 00
+users: XamUserGetSigninInfo(user 0, flags 2) +0x020: 00 00 00 00 00 00 00 00
+probe_xam: case users done at 6102 ms, frame 217
+probe_xam: case settings: invert Y and vibration from user 0's profile; at 6107 ms, frame 218
+settings: XamUserReadProfileSettings(user 0, invert Y and vibration, no buffer) = 0x0000007A, 88 bytes
+settings: XamUserReadProfileSettings(user 0, invert Y and vibration) returned 0x000003E5
+settings: XamUserReadProfileSettings(user 0, invert Y and vibration): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+settings: XamUserReadProfileSettings(user 0, invert Y and vibration): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+settings: XamUserReadProfileSettings(user 0, invert Y and vibration): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+settings: result 0x00000000, 88 bytes given, 0x00000058 after
+settings: the buffer +0x000: 00 00 00 02 82 07 23 20 00 00 00 01 A5 A5 A5 A5 00 00 00 00 A5 A5 A5 A5 10 04 00 02 A5 A5 A5 A5
+settings: the buffer +0x020: 01 A5 A5 A5 A5 A5 A5 A5 00 00 00 00 00 00 00 00 00 00 00 01 A5 A5 A5 A5 00 00 00 00 A5 A5 A5 A5
+settings: the buffer +0x040: 10 04 00 03 A5 A5 A5 A5 01 A5 A5 A5 A5 A5 A5 A5 00 00 00 03 00 00 00 00
+probe_xam: case settings done at 6280 ms, frame 227
+probe_xam: case signed_in_content: content's save for user 0, a profile signed in; at 6287 ms, frame 227
+signed_in_content: XamUserGetSigninState of users 0 to 3: 1 0 0 0
+listing before: 19 entries under \Device\Harddisk0\Partition1\Content, in 33 ms
+devices: XamContentCreateDeviceEnumerator(saved games, 8 items) = 0x00000000, 0x00000280 bytes, handle 0xF800000C
+devices: XamEnumerate pass 0 = 0x00000000, 0x00000002 items
+devices: enumerated: device 0x00000001, type 0x00000001, 154888372224 bytes, 139735662592 free, name 'Hard Drive'
+devices: enumerated: device 0x00000003, type 0x00000010, 61513662464 bytes, 61463724032 free, name 'USB Storage Device'
+devices: XamEnumerate pass 1 = 0x00000103, 0x00000000 items
+devices: NtClose(enumerator) = 0x00000000
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4) returned 0x000003E5
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4): completed after 50 ms (wait 0x00000000), 3 frames presented meanwhile
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4): overlapped complete: result 0x00000000, length 0x00000001, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 4): result 0x00000000, disposition 0x00000001, license mask 0x00000000
+content: wrote 26 of 26 bytes to save:\probe.dat, fclose 0, errno 0
+content: XamContentFlush(save) returned 0x000003E5
+content: XamContentFlush(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentFlush(save): completed after 56 ms (wait 0x00000000), 3 frames presented meanwhile
+content: XamContentFlush(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save) returned 0x000003E5
+content: XamContentClose(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentClose(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 3) returned 0x000003E5
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 3): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 3): completed after 10 ms (wait 0x00000000), 1 frames presented meanwhile
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 3): overlapped complete: result 0x00000000, length 0x00000002, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEx(user 0x00, save, device 0x00000001, xsdkprobe_00, flags 3): result 0x00000000, disposition 0x00000002, license mask 0x00000000
+content: read 26 bytes back from save:\probe.dat, as written
+content: XamContentClose(save) returned 0x000003E5
+content: XamContentClose(save): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentClose(save): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+content: XamContentClose(save): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+content: XamContentCreateEnumerator(user 0x00, device 0x00000001, saved games, 16 items) = 0x00000000, 0x00001340 bytes, handle 0xF800000C
+content: XamEnumerate pass 0 = 0x00000000, 0x00000001 items
+content: enumerated device 0x00000001, type 0x00000001, display name 'xsdk probe, user 00', file name 'xsdkprobe_00', padding 00 00
+content: XamEnumerate pass 1 = 0x00000000, 0x00000002 items
+content: enumerated device 0x00000001, type 0x00000001, display name 'xsdk probe, user FE', file name 'øsdkprobe_fe', padding 00 00
+content: enumerated device 0x00000001, type 0x00000001, display name 'xsdk probe, user FF', file name 'øsdkprobe_ff', padding 00 00
+content: XamEnumerate pass 2 = 0x00000012, 0x00000000 items
+content: NtClose(enumerator) = 0x00000000
+listing after: 22 entries under \Device\Harddisk0\Partition1\Content, in 0 ms
+listing: new \Device\Harddisk0\Partition1\Content\E000125D8D3F8689\5853444B, a folder of 0 bytes
+listing: new \Device\Harddisk0\Partition1\Content\E000125D8D3F8689\5853444B\00000001, a folder of 0 bytes
+listing: new \Device\Harddisk0\Partition1\Content\E000125D8D3F8689\5853444B\00000001\xsdkprobe_00, a file of 61440 bytes
+listing: 3 changes
+probe_xam: case signed_in_content done at 7215 ms, frame 281
+probe_xam: case keyboard: the keyboard, accepted, then cancelled; at 7224 ms, frame 282
+keyboard: accepted returned 0x000003E5
+keyboard: accepted: overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+keyboard: accepted: XamGetOverlappedResult(wait 0) straight after = 0x000003E4 in 0 us, length 0xA5A5A5A5
+notify: 0x00000009, parameter 0x00000001, at 7269 ms, frame 284
+keyboard: accepted: completed after 7556 ms (wait 0x00000000), 453 frames presented meanwhile
+keyboard: accepted: overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+keyboard: accepted: XamGetOverlappedResult(wait 0) once complete = 0x00000000, length 0x00000000
+keyboard: accepted: XamGetOverlappedResult(wait 1) once complete = 0x00000000, length 0x00000000
+keyboard: accepted, XamIsUIActive 1, 458 frames
+keyboard: accepted: the text 'xsdk'
+keyboard: accepted +0x000: 00 78 00 73 00 64 00 6B 00 00 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5
+keyboard: accepted +0x020: A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5
+keyboard: cancelled returned 0x00000005
+keyboard: cancelled: overlapped on return: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+keyboard: cancelled: the text '????????????????????????????????'
+keyboard: cancelled +0x000: A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5
+keyboard: cancelled +0x020: A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5
+probe_xam: case keyboard done at 14948 ms, frame 745
+probe_xam: case message_box: a message box of 2 buttons; at 14953 ms, frame 745
+message_box: XamShowMessageBoxUI(2 buttons) returned 0x00000005
+message_box: XamShowMessageBoxUI(2 buttons): overlapped on return: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+message_box: result 0x00000005, button 0x00000000 (the second is 1)
+probe_xam: case message_box done at 14992 ms, frame 747
+probe_xam: case null_overlapped: a message box and the keyboard with no overlapped; at 14997 ms, frame 748
+null_overlapped: XamShowMessageBoxUI with no overlapped returned 0x00000057 after 0 ms, 2 frames presented meanwhile
+null_overlapped: button 0xA5A5A5A5
+notify: 0x00000009, parameter 0x00000000, at 15161 ms, frame 758
+null_overlapped: the message box: XAM's UI closed after 0 ms
+notify: 0x00000009, parameter 0x00000001, at 16076 ms, frame 812
+notify: 0x00000009, parameter 0x00000000, at 23260 ms, frame 1243
+notify: 0x00000009, parameter 0x00000001, at 75785 ms, frame 4392

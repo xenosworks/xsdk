@@ -1,0 +1,24 @@
+log: game:\save_check_t2.log
+log: named after \Device\Harddisk0\Partition1\savecheck\save_check_t2.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+save_check: answer the keyboard and the message box when they show, then press Back
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 19435 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 27030 us
+PASS: save_check: GPU, scene and present open
+save_check: user 0x0, gamertag 'Player1', 0x00000000; reading back the last launch's save, marker game:\save_check_t2.saved
+PASS: save_check: a profile is signed in and its gamertag read
+save_check: mounted 0x00000000, disposition 2, at frame 3
+PASS: save_check: the last launch's save is there
+save_check: read back 'save_check for 'Player1' at 134369450644670000', expected 'save_check for 'Player1' at 134369450644670000'
+PASS: save_check: it reads back as the last launch wrote it
+save_check: unmounted 0x00000000, the flush 0x00000000
+PASS: save_check: the save flushed and unmounted
+save_check: XamContentDelete 0x00000000
+PASS: save_check: the save and the marker deleted
+save_check: done at frame 11; press Back, and the next launch saves afresh
+PASS: save_check: every frame queued in time
+PASS: save_check: GPU close
+save_check: 8 passed, 0 failed
+exit: status 0

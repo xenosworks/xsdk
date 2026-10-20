@@ -4447,6 +4447,21 @@ throughout (logs: `results/2026-10-19-milestone-51/`, `probe_xam.log` and, under
 - **xsdk's helpers on the console** (`xsdk_test.log`): `xsdk_save_device` found the hard disk in 12 ms; a save for
   user 0xFE mounted in 187 ms, made new, flushed and closed in 75; mounted again in 15 ms it opened the package
   (disposition 2) and read back what was written; `XamContentDelete` took it away in 9 ms.
+- **With a profile signed in** (`probe_xam_person.log`, `probe_xam_signed_in.log`): `XamUserGetXUID` gave the
+  profile's XUID with type masks 1 and 7, and 0x80070525 with 2 and 4; `XamUserGetName` its gamertag;
+  `XamUserReadProfileSettings` invert Y and vibration, 88 bytes, completing at once. User 0's save landed at
+  `Content\<XUID>\<title ID>\00000001\<file name>`, and user 0's enumerator listed it, then the saves no profile owns,
+  the first byte of their file names garbled in that second pass.
+- **XAM's dialogs** (`probe_xam_person.log`, `probe_xam_dialogs.log`, `save_check_1.log`): a keyboard or message box
+  asked for while XAM's UI is up returns 5 at once, `ERROR_ACCESS_DENIED`, and shows nothing. That includes the 0.3 to
+  0.4 s after a dialog's call completes, before XN_SYS_UI says the UI closed, and the Guide being open. A message box
+  with no overlapped returns 0x57; a keyboard with no overlapped showed, and its call hadn't returned 52 s after it
+  closed. An accepted keyboard completes with 0, extended error 0 and length 0, its text in the buffer.
+- **save_check** under title IDs 0x5853444D and 0x5853444E, a profile signed in: each made its save new, wrote,
+  flushed and unmounted it, took the keyboard's text and a message box's button, 12 checks of 12 (`save_check_1.log`,
+  `save_check_t2_1.log`); after a reboot, each found its own save, read it back as written and deleted it, 8 of 8
+  (`save_check_2.log`, `save_check_t2_2.log`). The dashboard's storage view lists every xsdk title as an unknown game,
+  the saves under it by the display names they were made with.
 - **A title's name in its `.xex`:** `tools/elf2xex.py --title-name` puts an XDBF database holding it in the first
   page, after the PE headers, as the resource named after the title ID (xenia:src/xenia/kernel/kernel_state.cc:111-125).
   The loader took it: `XexGetModuleSection` found the 118 bytes under that name (`cmake_check.log`), and 0xC0000225

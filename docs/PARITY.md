@@ -77,10 +77,10 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | XAM's asynchronous calls, which the rows below take | Partial | `xsdk_xam_prepare`, `xsdk_xam_returned` and `xsdk_xam_wait` (`xam.h`): poll once a frame, or wait on the call's event | `tests/test_xam.c`; how the calls complete, `tests/probe_xam.c` (results/2026-10-19-milestone-51/) | Completion routines, which arrive as APCs and need alertable waits |
-| Save games in content packages, on the HDD or a memory unit | Partial | `xsdk_save_mount`, `xsdk_save_unmount` and `xsdk_save_wait` (`xam.h`), on the hard disk, a package a drive such as `save:`; `XamContentDelete` and `XamContentCreateEnumerator` raw | `tests/test_xam.c` with no profile; `tests/save_check.c` by hand with one, pending | Memory units and USB drives; where a profile's saves land |
+| Save games in content packages, on the HDD or a memory unit | Partial | `xsdk_save_mount`, `xsdk_save_unmount` and `xsdk_save_wait` (`xam.h`), on the hard disk, a package a drive such as `save:`; `XamContentDelete` and `XamContentCreateEnumerator` raw | `tests/test_xam.c` with no profile; `tests/save_check.c` with one, read back after a reboot, two title IDs apart | Memory units and USB drives |
 | Choosing a storage device; its state and free space | Partial | `xsdk_save_device`, the hard disk; `XamContentCreateDeviceEnumerator`, `XamContentGetDeviceState` and `XamContentGetDeviceData` raw | `tests/test_xam.c` | `XamShowDeviceSelectorUI` (xam_ui.cc), not imported |
-| Sign-in state, profile ID, gamertag | Partial | `xsdk_xam_signed_in_user`, the first user signed in and their gamertag; `XamUserGetXUID` and `XamUserGetSigninInfo` raw | `tests/test_xam.c` with nobody signed in; `tests/save_check.c` by hand, pending | What `XamUserGetXUID`'s type mask does, and everything with a profile signed in, until the person run |
-| Profile settings: invert Y, difficulty, a title's own data | Partial | `XamUserReadProfileSettings` (`kernel.h`), raw | untested: `tests/probe_xam.c`'s `settings` case is pending | Writing them, `XamUserWriteProfileSettings` (xam_user.cc) |
+| Sign-in state, profile ID, gamertag | Partial | `xsdk_xam_signed_in_user`, the first user signed in and their gamertag; `XamUserGetXUID` and `XamUserGetSigninInfo` raw | `tests/test_xam.c`, signed in or not; `tests/save_check.c`; `XamUserGetXUID`'s masks, `tests/probe_xam.c` (docs/HARDWARE.md) | |
+| Profile settings: invert Y, difficulty, a title's own data | Partial | `XamUserReadProfileSettings` (`kernel.h`), raw | `tests/probe_xam.c`'s `settings` case read both | Writing them, `XamUserWriteProfileSettings` (xam_user.cc) |
 | Achievements | No | | | Through `XMsgStartIORequest` (xam_msg.cc); low priority |
 
 ## System UI and the Guide
@@ -88,9 +88,9 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | The Guide over the title | Yes | automatic, through `xsdk_present_*` | `tests/guide_check.c`, by hand | The Guide on the kernel's display mode and interlaced outputs (TODO.md) |
-| Knowing when to pause for the Guide | Partial | `xsdk_system_ui_open` (`xam.h`), from the XN_SYS_UI notifications `tests/guide_check.c` reads; `XamIsUIActive` raw | `tests/save_check.c`, by hand, pending | |
+| Knowing when to pause for the Guide | Partial | `xsdk_system_ui_open` (`xam.h`), from the XN_SYS_UI notifications `tests/guide_check.c` reads; `XamIsUIActive` raw | `tests/save_check.c`, by hand | |
 | Ending the title by itself while the Guide is open | No | | | It hangs as it ends; leaving through Xbox Home is fine (TODO.md) |
-| On-screen keyboard, message boxes, sign-in prompt | Partial | `xsdk_xam_keyboard` and `xsdk_xam_message_box` (`xam.h`), each started in one call and polled once a frame; `XamShowSigninUI` raw | `tests/save_check.c`, by hand, pending | What a cancelled keyboard gives, and whether XAM takes them with no overlapped or under the Guide, until the person run |
+| On-screen keyboard, message boxes, sign-in prompt | Partial | `xsdk_xam_keyboard` and `xsdk_xam_message_box` (`xam.h`), each started in one call and polled once a frame; `XamShowSigninUI` raw | `tests/save_check.c`, by hand; `tests/probe_xam.c` | What a cancelled keyboard gives. XAM refuses a dialog with 5 under the Guide or straight after another, and needs an overlapped (docs/HARDWARE.md) |
 | Keeping the screen from dimming in cutscenes | No | | | `XamResetInactivity` (xam_input.cc) |
 | Where notifications pop up | No | | | `XNotifyPositionUI` (xam_notify.cc) |
 

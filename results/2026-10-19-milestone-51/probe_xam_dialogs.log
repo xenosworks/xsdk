@@ -1,0 +1,57 @@
+log: game:\probe_xam.log
+log: named after \Device\Harddisk0\Partition1\m51person\probe_xam.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 17534 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 32265 us
+probe_xam: 3 cases; listener 0xF8000008, XamIsUIActive 0
+probe_xam: case keyboard: the keyboard, accepted, then cancelled; at 2500 ms, frame 2
+keyboard: accepted returned 0x000003E5
+keyboard: accepted: overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+keyboard: accepted: XamGetOverlappedResult(wait 0) straight after = 0x000003E4 in 0 us, length 0xA5A5A5A5
+notify: 0x00000009, parameter 0x00000001, at 2545 ms, frame 5
+notify: 0x0000000A, parameter 0x00000000, at 2556 ms, frame 5
+notify: 0x00060019, parameter 0x00000000, at 2567 ms, frame 6
+notify: 0x02000009, parameter 0x00000000, at 2578 ms, frame 7
+notify: 0x0A000001, parameter 0x00000000, at 2589 ms, frame 8
+notify: 0x0A000003, parameter 0x00000001, at 2600 ms, frame 8
+keyboard: accepted: FAILED, not complete in 120000 ms
+keyboard: accepted, XamIsUIActive 1, 7198 frames
+keyboard: accepted: the text '????????????????????????????????'
+keyboard: accepted +0x000: A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5
+keyboard: accepted +0x020: A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5
+keyboard: accepted: XAM's UI didn't close in 120000 ms
+keyboard: cancelled returned 0x00000005
+keyboard: cancelled: overlapped on return: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF8000010 (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+keyboard: cancelled: the text '????????????????????????????????'
+keyboard: cancelled +0x000: A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5
+keyboard: cancelled +0x020: A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5 A5
+notify: 0x00090020, parameter 0x00000000, at 303208 ms, frame 18032
+keyboard: cancelled: XAM's UI didn't close in 120000 ms
+probe_xam: case keyboard done at 365368 ms, frame 21759
+probe_xam: case message_box: a message box of 2 buttons; at 365713 ms, frame 21779
+message_box: XamShowMessageBoxUI(2 buttons) returned 0x00000005
+message_box: XamShowMessageBoxUI(2 buttons): overlapped on return: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF8000010 (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+message_box: result 0x00000005, button 0x00000000 (the second is 1)
+notify: 0x00000009, parameter 0x00000000, at 372254 ms, frame 22172
+message_box: XAM's UI closed after 5565 ms
+probe_xam: case message_box done at 372362 ms, frame 22178
+probe_xam: case guide_open: a message box, then the keyboard, asked for with the Guide open; at 372378 ms, frame 22179
+guide_open: press the Guide button now
+notify: 0x00090020, parameter 0x00000001, at 373354 ms, frame 22237
+notify: 0x00000009, parameter 0x00000001, at 390812 ms, frame 23284
+guide_open: XamShowMessageBoxUI under the Guide: the Guide is open, XamIsUIActive 1
+guide_open: close the Guide, then answer what shows: any button, or B on the keyboard
+guide_open: XamShowMessageBoxUI under the Guide returned 0x00000005
+guide_open: XamShowMessageBoxUI under the Guide: overlapped on return: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF8000010 (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+guide_open: XamShowMessageBoxUI under the Guide: result 0x00000005, button 0x00000000
+notify: 0x00000009, parameter 0x00000000, at 396381 ms, frame 23618
+guide_open: XamShowMessageBoxUI under the Guide: XAM's UI closed after 3566 ms
+guide_open: press the Guide button now
+guide_open: XamShowKeyboardUI under the Guide: XAM's UI didn't open in 120000 ms
+probe_xam: case guide_open done at 516526 ms, frame 30822
+probe_xam: done; close any dialog or the Guide, then press Back to end
+notify: 0x00090020, parameter 0x00000000, at 697693 ms, frame 41684
+notify: 0x00000009, parameter 0x00000001, at 924141 ms, frame 55261
+notify: 0x00090020, parameter 0x00000001, at 925871 ms, frame 55365

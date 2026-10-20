@@ -21,7 +21,14 @@ to 4, built at `ba49e3d` with the console's facts alone, ran on 2026-10-19 with 
 - **The name and saves:** `probe_xam.elf` packed under title ID 0x58534450 with a name (`probe_xam_name.log`) made
   its saves under its own folder, their headers' title name empty, then deleted them (`probe_xam_name_delete.log`).
 
-save_check, the keyboard, the message box and everything with a profile signed in wait for the person run.
+With the user at the console on 2026-10-20, a profile signed in:
+- **The probe's person cases** (`probe_xam_person.log`): sign-in, the profile, its save and its settings, and the
+  first keyboard; its second keyboard and message box came straight after the first and were refused with 5. Run
+  again waiting for XAM's UI to close first (`probe_xam_dialogs.log`), the first keyboard stayed open about 6 minutes
+  and the rest were refused as XAM's UI was still up, a message box under the Guide among them; the keyboard's cancel
+  result is still unknown. `probe_xam_signed_in.log` is the unattended cases with the profile signed in.
+- **save_check:** 12 of 12 for each title ID, then 8 of 8 each after a reboot (`save_check_*.log`). The dashboard
+  lists both as unknown games.
 
 ## What xsdk_test checks
 
