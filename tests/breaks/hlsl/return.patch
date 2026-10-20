@@ -1,0 +1,12 @@
+--- a/src/xsc_switch.c
++++ b/src/xsc_switch.c
+@@ -167,7 +167,8 @@ static bool emit_tail(Pass *p, uint32_t
+ 		const XscInstr *const ins = &m->instrs[i];
+ 		old_ids[mapped] = ins->result_id;
+ 		if (ins->opcode == SPV_PHI) {
+-			new_ids[mapped++] = incoming(ins, from);
++			// Broken on purpose: each copy takes the Phi's first value, whichever block branched to the merge.
++			new_ids[mapped++] = ins->words[2];
+ 			if (!new_ids[mapped - 1])
+ 				return xsdk_xsc_fail(p->x, XSDK_XSC_MALFORMED, "a Phi without a value from %%%u", (unsigned)from);
+ 			continue;

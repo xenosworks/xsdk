@@ -1,0 +1,12 @@
+--- a/src/xsc_switch.c
++++ b/src/xsc_switch.c
+@@ -451,7 +451,8 @@ static bool emit_test(Pass *p, size_t a,
+ 		if (sw->words[k + 1] == sw->words[1])
+ 			continue;
+ 		const uint32_t constant = p->literals[n++].id;
+-		if (sw->words[k + 1] != p->arms[a].root)
++		// Broken on purpose: a case tests its first literal alone, the selector's others taking the default.
++		if (sw->words[k + 1] != p->arms[a].root || *condition)
+ 			continue;
+ 		const uint32_t equal = p->next_id++;
+ 		const uint32_t words[4] = { p->bool_type, equal, sw->words[0], constant };
