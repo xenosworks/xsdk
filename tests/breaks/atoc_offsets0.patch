@@ -1,0 +1,12 @@
+--- a/src/gpu_draw.c
++++ b/src/gpu_draw.c
+@@ -695,7 +695,8 @@
+ 		setting->alpha_op << ALPHA_COMB_FCN_SHIFT | setting->alpha_dest << ALPHA_DESTBLEND_SHIFT;
+ 	state->color_mask = setting->write_mask & XSDK_WRITE_ALL;
+ 	state->color_control = setting->alpha_to_coverage
+-		? (COLOR_CONTROL & ~ALPHA_TO_MASK_OFFSETS) | ALPHA_TO_MASK_ENABLE | ALPHA_TO_MASK_SYMMETRIC
++		// Broken on purpose: the offsets left at 0.
++		? (COLOR_CONTROL & ~ALPHA_TO_MASK_OFFSETS) | ALPHA_TO_MASK_ENABLE
+ 		: COLOR_CONTROL;
+ }
+ 

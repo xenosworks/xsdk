@@ -1,6 +1,6 @@
 --- a/src/gpu_draw.c
 +++ b/src/gpu_draw.c
-@@ -466,7 +466,8 @@
+@@ -471,7 +471,8 @@
  	assert(count >= 1);
  	for (uint32_t i = 0; i < count; i++)
  		assert(xsdk_gpu_target_takes_samples(targets[i].format, samples));

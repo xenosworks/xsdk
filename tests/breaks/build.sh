@@ -11,9 +11,13 @@
 # - msaa_tiles64: a 64-bit target's tiles not doubled at 4 samples; the tile counts and four at once at 4 fail.
 # - msaa_bands2: a 4-sample pass's bands sized as for 2 samples, its colour wrapping past eDRAM's end; the band counts
 #   and the 4-sample tiled frame fail.
+# Milestone 44 step 4's, each failing the checks results/2026-10-20-milestone-44-step-4/README.md names for it:
+# - atoc_noenable: alpha to mask's enable bit left off; every alpha below 1 covers every sample, and the alpha to
+#   coverage checks at 1, 2 and 4 samples fail.
+# - atoc_offsets0: the offsets left at 0; each threshold moves up half a step, and the same three fail.
 set -eu
 cd "$(dirname "$0")/../.."
-for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2; do
+for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0; do
 	patch -p1 --forward --quiet < "tests/breaks/$name.patch"
 	trap 'patch -p1 -R --quiet < "tests/breaks/$name.patch"' EXIT INT TERM
 	make -j32 BUILD="build/breaks/$name" "build/breaks/$name/xsdk_test.xex"

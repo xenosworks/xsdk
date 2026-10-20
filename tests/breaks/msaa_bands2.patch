@@ -16,7 +16,7 @@
  
 --- a/src/gpu_draw.c
 +++ b/src/gpu_draw.c
-@@ -337,7 +337,6 @@
+@@ -342,7 +342,6 @@
  {
  	const XsdkColorTarget *const color = &color_targets[target];
  	const uint32_t tile = target_placed ? color->tile : target_tiles;

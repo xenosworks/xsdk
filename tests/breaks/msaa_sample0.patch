@@ -1,6 +1,6 @@
 --- a/src/gpu_draw.c
 +++ b/src/gpu_draw.c
-@@ -323,7 +323,8 @@
+@@ -328,7 +328,8 @@
  	if (probe_sample_select != UINT32_MAX)
  		return probe_sample_select;
  #endif
