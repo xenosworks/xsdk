@@ -365,7 +365,7 @@ def register_read(name, blob, fetches, index):
     inputs = {POSITION_INPUT: list(CHECK_POSITION), INDEX_INPUT: [float(index), *INDEX_VECTOR]}
     constants = {r: fill(r) for r in range(CONSTANTS)}
     result = simulate.run(blob, {0: [0.0] * 4}, constants,
-                          vertex_fetch=lambda n, fetch, vertex: inputs[fetches[n][1]])
+                          vertex_fetch=lambda n, fetch, vertex: inputs[fetches[n][1]], keep_a0=True)
     if result.exports.get(tri.EXPORT_POSITION) != list(CHECK_POSITION):
         sys.exit(f"gen_relative_constant_probe: {name}: the position export is "
                  f"{result.exports.get(tri.EXPORT_POSITION)}")

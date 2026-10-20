@@ -353,7 +353,7 @@ def _control_flow(blob):
 
 
 def run(blob: bytes, registers: dict | None = None, constants: dict | None = None, vertex_fetch=None,
-        texture_fetch=None, loops: dict | None = None, texture_lod=None) -> Result:
+        texture_fetch=None, loops: dict | None = None, texture_lod=None, keep_a0: bool = False) -> Result:
     """Runs the program in the container blob.
 
     registers: temp -> 4 floats at the start (a pixel shader's interpolators and pixel parameters; a vertex shader's
@@ -361,17 +361,19 @@ def run(blob: bytes, registers: dict | None = None, constants: dict | None = Non
     the 4 floats the program's nth vertex fetch reads for the vertex index it reads from its source register;
     texture_fetch(slot, coordinates) the 4 a texture fetch from fetch constant slot samples at the 3 coordinates its
     source swizzle picks; texture_lod(slot, coordinates, lod), given in its place, the same with the fetch's Lod.
-    loops: loop constant -> its count of passes; without it each loop's body runs once.
+    loops: loop constant -> its count of passes; without it each loop's body runs once. keep_a0 keeps a0 past an
+    alloc, as Xenia's model does, for a probe that asks whether the console reads what that model says.
     """
-    return run_group(blob, [registers or {}], constants, vertex_fetch, texture_fetch, loops, texture_lod)[0]
+    return run_group(blob, [registers or {}], constants, vertex_fetch, texture_fetch, loops, texture_lod,
+                     keep_a0=keep_a0)[0]
 
 
 def run_group(blob: bytes, registers: list, constants: dict | None = None, vertex_fetch=None, texture_fetch=None,
-              loops: dict | None = None, texture_lod=None, quads: bool = False) -> list:
+              loops: dict | None = None, texture_lod=None, quads: bool = False, keep_a0: bool = False) -> list:
     """Runs the program for a group of vertices or pixels in lockstep, each one's registers at the start in the list
     registers, the rest as run gives them; a Result for each, in order. With quads, each four lanes are a 2x2 quad of
     pixels, top left, top right, bottom left and bottom right, whose getGradients and computed LODs read each other,
-    and whose fetches at register gradients all take the top left's."""
+    and whose fetches at register gradients all take the top left's. keep_a0 as run's."""
     if quads and len(registers) % 4:
         raise ValueError("simulate: quads of a group that isn't whole quads")
     consts = constants or {}
@@ -409,7 +411,7 @@ def run_group(blob: bytes, registers: list, constants: dict | None = None, verte
                 stack.append([0, count])
                 for _, _, state in lanes:
                     state["aL"] = 0
-        elif isinstance(d, xu.ParsedAllocInstruction):
+        elif isinstance(d, xu.ParsedAllocInstruction) and not keep_a0:
             # a0 is lost at an alloc on the console, where Xenia keeps it (xsdk:docs/HARDWARE.md, "a0 doesn't survive
             # an alloc").
             for _, _, state in lanes:
