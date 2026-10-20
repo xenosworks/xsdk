@@ -820,3 +820,133 @@ glslang-xenon a607c3a9 at `~/xsdk-gcc/bin/glslang`, through the console agent on
 - cmake_check 6 of 6, its HLSL line as above, 0 of 2048 pixels wrong; its break 5 of 6, failing that line alone, Swap
   at boolean constant 128 and Count at loop constant 16, 2048 of 2048 wrong.
 - vulkan4xenon_test 517 of 517 twice; vkbench 17 of 17, xsdk's draw+submit as step 7's.
+
+## Early returns and switches
+
+Built on the PC on 2026-10-20 at 1b0fc01 and d81369c; nothing here has run on the console. An early `return` is
+ordinary shader model 3 HLSL and fxc took `switch` for it too, so both are in step 8 by the parity rule.
+
+**What xost got.** glslang runs spirv-opt's legalisation on HLSL (glslang-xenon SPIRV/SpvTools.cpp:185-228,
+`SpirvToolsTransform`), merge-return among it (line 202). Its structured path wraps a function with an early return in a
+switch on a constant with no cases (SPIRV-Tools 2ec8457a, source/opt/merge_return_pass.cpp:882-977) and makes each
+return a branch to the innermost loop's or switch's merge (238-290, `GenerateState` 77-101), the wrapper's for a return
+outside loops; once the function is inlined, the returned values meet at the merge in a Phi stored to the outputs before
+the `OpReturn`. A return in a loop sets a flag and breaks to the loop's merge, and the block after it branches to the
+wrapper's merge where the flag is set (`BreakFromConstruct`, 488-598); in glslang-xenon's output that branch comes with
+an `OpSelectionMerge` (`return/loop_ps.hlsl.spv`). xost took no switch: `a switch (v1)` from the unroller or the SSA
+pass, `if/else arm does not assign o_color` from the fragment lowering, or `v1 fragment: unhandled op Phi` for an HLSL
+`switch`.
+
+**The change** (src/xsc_switch.c, `xsdk_xsc_switches`, run in src/xsc_compile.c after the nulls are zeroed and before
+the SSA pass, so no switch reaches the unroller or a lowering):
+- **merge-return's wrapper:** the switch becomes a branch to its default; each `OpBranch` to the merge becomes a copy of
+  the merge's code, each Phi replaced by its value from that block, each other value given a new id past the module's
+  bound; an if/else's arm to the merge, the loop case's, is pointed at a new block holding the copy. The merge goes.
+  So each return is an `OpReturn` where it was, the shape glslang writes for GLSL. Only where the merge holds its Phis,
+  values and stores to outputs before its return, 64 instructions at most; refused by name otherwise (`its merge
+  holding more than values and output stores before a return`, `reaching its merge on other than a branch or an
+  if/else's arm`).
+- **Any other switch,** HLSL's or GLSL's, on a 32-bit int: an if/else chain, the first case's test where the switch
+  was, the selector `OpIEqual` to each of its literals and `OpLogicalOr`'d, each next case's test in a new block the
+  one before fails to, the default last; each if/else's merge a new block that branches to the one before's, the
+  switch's merge's Phis split along them, a case that is the default's block left to it. Refused by name: a case
+  falling through to another; one left other than by one `OpBranch` to the merge at its end, outside any if/else or
+  loop of its own (a `break` in an if, a `continue`, a return merge-return made a branch from inside an if); a
+  selector other than a 32-bit int; more than 32 cases or 64 literals.
+- **Returns on data** (src/xsc_unroll.c, `return_on_data`, `gate_returned`): put back, a return inside an if/else on
+  data was still refused where the unroller walks it, `a discard or return inside an if/else on data`, GLSL's as well,
+  which a nested return or a vertex shader's needs; the fragment lowering takes only a return in its one if/else. The
+  unroller now gates a return on data outside any loop as a break leaves an unrolled loop: each output keeps a returned
+  copy, `cnd(running && c, value now, returned)`, `running` becomes `running && !c`, and at the function's end each
+  output is `cnd(running, value, returned)`. It emits no kill, so a discard after such a return is refused, `a discard
+  after a return on data (v1)`: it would kill a pixel that returned. A return in a loop the unroller walks stays
+  refused, as for GLSL; HLSL's arrives as a break.
+
+**A return in a loop:** the copy goes into the block after the loop where the flag is set, an `if (flag) { store;
+return; }`, and the flag and the returned value are merge Phis the SSA pass stores at the break like any other; the
+loop then unrolls, or keeps its hardware loop, as before. `return/loop_ps` (a constant count) and `return/counted_ps`
+(an int at `register(i0)`) compile and draw what HLSL defines, so nothing is refused for it.
+
+**Compiled before, compiled as before:** step 7's 623 GLSL programs with step 8's `if/if_only.frag`, 624, and the 240
+HLSL testdata shaders of 1304bf7, the optimiser off and on, compiled by 1304bf7's libxsc.so and by d81369c's: 864 the
+same containers, manifests and resources byte for byte, or refused alike with the same messages. None of them holds a
+switch. Only this change's testdata differ, refused before: `return/` and `switch/`'s 13 that compile and
+`grid_return_ps` and `grid_switch_ps` (`if/else arm does not assign o_color; a switch (v1)`, `a switch (v1)`, `v1
+fragment: unhandled op Phi`, `vertex shader control flow the unroller left isn't lowered`, and for `if.frag` `a store
+into part of local %9; a discard or return inside an if/else on data`), and the three refusals, now refused by their own
+names. Outside the set, a GLSL `switch` in a pixel shader without a loop whose cases each store the colour, which the
+fragment lowering took, compiled silently wrong before, one case's store whatever the selector (`switch (int(uv.x *
+4.0)) { case 0: o = vec4(0.25); break; default: o = colour; break; }` drew 0.25 at every x); it now compiles to what
+GLSL defines. check_hlsl.py over the corpus and idioms gives `step7.json` and `step7.txt` byte for byte, and its
+`--refresh` over every folder of the HLSL testdata, 255 shaders, leaves every `.spv` as it is, the new ones included.
+
+**On the simulator:** `tests/test_hlsl_return.py`, new, runs `xsc/testdata/hlsl/return` and `switch` and the grid's two
+cells, the optimiser off and on, every result exactly what HLSL defines, and GLSL for the twins:
+
+| Shader | What | ALU, CF off | on |
+|---|---|---|---|
+| `return/if_ps` | a return under an if | 7, 4 | 4, 2 |
+| `return/if.frag` | its GLSL twin, the same values bit for bit | 9, 4 | 5, 2 |
+| `return/else_ps` | in the else | 8, 4 | 4, 2 |
+| `return/nested_ps` | in an if inside another | 18, 4 | 10, 4 |
+| `return/two_ps` | two returns | 9, 4 | 7, 4 |
+| `return/sampled_ps` | after a sample at fetch constant 1, on its alpha | 13, 6 | 7, 4 |
+| `return/vertex_vs` | a vertex shader's, the position set before it | 10, 6 | 5, 6 |
+| `return/loop_ps` | in an unrolled loop, from each pass or none | 79, 16 | 50, 10 |
+| `return/counted_ps` | in a hardware loop at loop constant 16, counts 0, 2 and 5 | 32, 10 | 32, 10 |
+| `switch/switch_ps` | cases, 2 and 3 sharing one, and a default, at all 8 | 20, 6 | 14, 4 |
+| `switch/switch.frag` | its GLSL twin | 20, 6 | 14, 4 |
+| `switch/switch_vs` | a vertex shader's, without a default | 13, 6 | 9, 6 |
+| `switch/return_ps` | a return in a case | 21, 6 | 13, 4 |
+| `grid_return_ps` | the cell, all 80 columns | 40, 8 | 16, 4 |
+| `grid_switch_ps` | the cell, all 80 columns | 31, 8 | 15, 4 |
+
+And three refusals: `switch/refused_fallthrough_ps` (`a switch's case falling through to another`),
+`return/refused_discard_ps` and its GLSL twin (`a discard after a return on data`). Each piece broken on purpose failed
+it:
+- the pass off: `if_ps` refused, `if/else arm does not assign o_color; a switch (v1)`;
+- each copy of the merge taking its Phis' first value (`tests/breaks/hlsl/return.patch`): `return/if_ps.hlsl, optimiser
+  off, uv [0.25, 0.25]: [0.25, 0.25, 0.25, 1.0], not [0.625, 0.25, 0.875, 0.75]`;
+- the unroller's end gate with its arms swapped: `return/if.frag` the same;
+- a case testing its first literal alone (`switch.patch`): `switch_ps.hlsl, optimiser off, int 3: [0.3125, -0.1875,
+  0.4375, 0.375], not [0.625, 0.625, 0.875, 0.75]`;
+- each meeting's Phi taking a case's value where the next meeting's goes: `switch/return_ps.hlsl, optimiser off, uv
+  [0.25, 0.25]: [1.0, 0.0, 0.25, 1.0], not [0.625, 0.25, 0.875, 0.5]`;
+- the discard refusal off: `return/refused_discard_ps.hlsl compiled`.
+
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, 61 with `test_hlsl_return.py`,
+`test_scalar_unit.py` with its corpus at `/mnt/z/vulkan4xenon`.
+
+**xsdk_test:** `tests/test_hlsl.c` draws two more cells in the column left of the grid's, each linked to `grid_vs.hlsl`
+and checked by pixel against the CPU's colour for its column in the grid's 10 frames, so they add no time of their
+own but two quads a frame:
+- `grid_return_ps.hlsl` left of VFACE's, at column 860, row 510: `hlsl: a pixel shader without a loop, its early returns
+  under an if and in an if inside another, values changed before, between and after them on TEXCOORD0's x, draws what
+  HLSL defines at every column: %u of %u pixels wrong`;
+- `grid_switch_ps.hlsl` left of VPOS's, at row 465, five cases across: `hlsl: a pixel shader without a loop, its switch
+  on an int from TEXCOORD0's x taking cases that break, two literals sharing one, and a default, draws what HLSL
+  defines at every column: %u of %u pixels wrong`.
+
+`tests/xsc_shaders.h` regenerates with the two added and nothing else changed. The breaks, each built by
+`tests/breaks/hlsl/build.sh` and `local/m50/build.sh`; under each, of xsdk_test's 60 shaders only its cell's compiles
+otherwise:
+- `return.patch`: 60 of `grid_return_ps`'s 80 columns wrong on the simulator, 0 to 59, each the first return's colour.
+  It must fail the early returns' check and `xsc: hlsl/grid_return_ps.hlsl compiles into the PC's container, literals
+  and resources`.
+- `switch.patch`: columns 48 to 63, the selector 3, take the default, 16 of 80 wrong. It must fail the switch's check
+  and `xsc: hlsl/grid_switch_ps.hlsl compiles into the PC's container, literals and resources`.
+
+`if.patch` is made again against the unroller, its four hunks the same.
+
+**Builds:** at d81369c, `make clean` and `make -j32`, the HLSL breaks, `make cmake_check` and `make cmake_check_break`,
+then vulkan4xenon against it, clean: 0 warnings each. The console set is in `local/m50/set9/`: `xsdk_test.xex`,
+`x_hlsl_return.xex`, `x_hlsl_switch.xex` and `v4x_test.xex`.
+
+**Found, not fixed** (TODO.md): the fragment lowering plans a kill from a pixel shader's first if/else whose arm
+discards and ignores what else branches (src/xsc_lower_fragment.c, `plan`), so `if (uv.y > 0.5) { if (uv.x > 0.5) { o
+= c; return; } } discard;` leaves the pixels whose y passes and whose x doesn't unkilled, on the simulator in GLSL, and
+in HLSL with `clip(-1.0)`, by 1304bf7 and by d81369c alike, the same containers byte for byte. A fix changes
+containers that compile today, so it isn't in this change.
+
+**Still refused:** a `break` in an if inside a switch's case, a case falling through, a return inside an if inside a
+case (two exits), GLSL's `return` in a loop, and a discard after a return on data where the unroller takes the shader.
