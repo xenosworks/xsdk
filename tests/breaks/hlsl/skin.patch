@@ -1,13 +1,14 @@
 --- a/src/xsc_lower_block.c
 +++ b/src/xsc_lower_block.c
-@@ -183,8 +183,8 @@
+@@ -183,9 +183,9 @@
  		origin = xsdk_xsc_scalar_origin(l, xsdk_xsc_operand(ins, 0));
  		sop = XSC_SCALAR_MAX_ASF;
  	} else if (ins->opcode == SPV_COMPOSITE_EXTRACT) {
 -		// An int vector's component, read in its lane, as skinning's int4 indices are.
--		origin = (XscOrigin){ xsdk_xsc_int_operand(l, xsdk_xsc_operand(ins, 0)), xsdk_xsc_operand(ins, 1) };
-+		// Broken on purpose: an int vector's every component read in its x, as its first index.
-+		origin = (XscOrigin){ xsdk_xsc_int_operand(l, xsdk_xsc_operand(ins, 0)), 0 };
- 		sop = XSC_SCALAR_MAX_AS;
++		// Broken on purpose: an int vector's component taken as a float index, not scaled by its element's registers.
+ 		origin = (XscOrigin){ xsdk_xsc_int_operand(l, xsdk_xsc_operand(ins, 0)), xsdk_xsc_operand(ins, 1) };
+-		sop = XSC_SCALAR_MAX_AS;
++		sop = XSC_SCALAR_MAX_ASF;
  	} else {
  		origin = (XscOrigin){ xsdk_xsc_int_operand(l, part), 0 };
+ 		sop = XSC_SCALAR_MAX_AS;

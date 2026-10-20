@@ -16,9 +16,11 @@
 # - loop: a loop merge's Phi held in its header's Phi's variable not stored at a break, so a pixel that broke keeps its
 #   pass's top; fails "hlsl: a hardware loop an int in $Global counts, ..." and
 #   "xsc: hlsl/grid_loop_ps.hlsl compiles into the PC's container ...".
-# - skin: a0 loaded from an int vector's x for each of its components, so each corner of the skinning quad takes its
-#   first bone four times and the quad collapses to no width, drawing nothing; fails "hlsl: a quad skinned by float4x3
-#   bones ..." and "xsc: hlsl/grid_skin_vs.hlsl compiles into the PC's container ...".
+# - skin: a0 loaded from an int vector's lane as a float index, floored and not times the bone's 3 registers, so every
+#   bone past 0 is read across the wrong rows whichever lane each load reads; on the simulator the skinning quad lands
+#   within columns 501 to 711 and rows 173 to 523, leaving its cell empty; fails "hlsl: a quad skinned by float4x3
+#   bones ..." and "xsc: hlsl/grid_skin_vs.hlsl compiles into the PC's container ...". The break before it, a0 from
+#   each vector's x, drew the quad right on the console (tests/probe_skin.patch).
 set -eu
 cd "$(dirname "$0")/../../.."
 for name in link vpos vface depth loop skin; do
