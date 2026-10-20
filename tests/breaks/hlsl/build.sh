@@ -17,10 +17,11 @@
 #   pass's top; fails "hlsl: a hardware loop an int in $Global counts, ..." and
 #   "xsc: hlsl/grid_loop_ps.hlsl compiles into the PC's container ...".
 # - skin: a0 loaded from an int vector's lane as a float index, floored and not times the bone's 3 registers, so every
-#   bone past 0 is read across the wrong rows whichever lane each load reads; on the simulator the skinning quad lands
-#   within columns 501 to 711 and rows 173 to 523, leaving its cell empty; fails "hlsl: a quad skinned by float4x3
-#   bones ..." and "xsc: hlsl/grid_skin_vs.hlsl compiles into the PC's container ...". The break before it, a0 from
-#   each vector's x, drew the quad right on the console (tests/probe_skin.patch).
+#   bone past 0 is read across the wrong rows whichever lane each load reads; on the simulator the skinning quad draws
+#   over columns 493 to 711 and rows 178 to 526, leaving its cell clear, 1536 of its 3200 pixels wrong a frame; fails
+#   "hlsl: a quad skinned by float4x3 bones ..." and "xsc: hlsl/grid_skin_vs.hlsl compiles into the PC's container
+#   ...". The break before it, a0 from each vector's x (tests/probe_skin.patch), passed on the console only because the
+#   check expected the clear everywhere: -CELL_HEIGHT was unsigned, so the reference's quad had no rows.
 set -eu
 cd "$(dirname "$0")/../../.."
 for name in link vpos vface depth loop skin; do

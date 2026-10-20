@@ -12,22 +12,26 @@
 #include "xsdk/xsc.h"
 
 // Why xsdk_test's skinning check passed on the console with skin.patch's old break, whose container the simulator
-// collapses to no width (results/2026-10-20-milestone-50/README.md): the skinning cell drawn as tests/test_hlsl.c draws
-// it, from each case's container. This title's xost is that break's, tests/probe_skin.patch's xsc_lower_block.c linked
-// ahead of libxsdk.a (Makefile, skin_probe). game:\skin_start.txt names one case; without it every case runs.
+// draws away from the quad (results/2026-10-20-milestone-50/README.md): the skinning cell drawn as tests/test_hlsl.c
+// draws it, from each case's container. This title's xost is that break's, tests/probe_skin.patch's xsc_lower_block.c
+// linked ahead of libxsdk.a (Makefile, skin_probe). game:\skin_start.txt names one case; without it every case runs.
 
 enum {
 	WIDTH = 1280,
 	HEIGHT = 720,
 	FRAMES = 3,
 	FENCE_TIMEOUT_MS = 1000,
-	CLEAR_ARGB = 0xFF202020,
 	RAMP_TOLERANCE = 2,
-	// tests/test_hlsl.c's skinning cell and vertices: POSITION, BLENDWEIGHT, BLENDINDICES as UBYTE4s, TEXCOORD0.
+	// tests/test_hlsl.c's skinning cell, its quad and vertices: POSITION, BLENDWEIGHT, UBYTE4 BLENDINDICES, TEXCOORD0.
 	CELL_WIDTH = 80,
 	CELL_HEIGHT = 40,
 	SKIN_X = 860,
 	SKIN_Y = 645,
+	SKIN_MARGIN = 8,
+	SKIN_QUAD_X = SKIN_X + SKIN_MARGIN,
+	SKIN_QUAD_Y = SKIN_Y + SKIN_MARGIN,
+	SKIN_QUAD_WIDTH = CELL_WIDTH - 2 * SKIN_MARGIN,
+	SKIN_QUAD_HEIGHT = CELL_HEIGHT - 2 * SKIN_MARGIN,
 	QUAD_VERTICES = 6,
 	SKIN_VERTEX_WORDS = 11,
 	SKIN_STRIDE_BYTES = SKIN_VERTEX_WORDS * 4,
@@ -38,6 +42,9 @@ enum {
 	BONES_A_VERTEX = 4,
 	NAME_BYTES = 16,
 };
+
+// Outside the enum: a value past INT_MAX there makes GCC give every constant in it unsigned int, -CELL_HEIGHT too.
+static const uint32_t CLEAR_ARGB = 0xFF202020;
 
 typedef enum {
 	SOURCE_PC,
@@ -106,8 +113,8 @@ static const XscTestShader *xsc_shader(const char *name)
 static void make_bones(void)
 {
 	const float whole[BONE_ROWS][4] = {
-		{ CELL_WIDTH / (WIDTH / 2.0f), 0.0f, 0.0f, (SKIN_X - 0.5f) / (WIDTH / 2.0f) - 1.0f },
-		{ 0.0f, -CELL_HEIGHT / (HEIGHT / 2.0f), 0.0f, 1.0f - (SKIN_Y - 0.5f) / (HEIGHT / 2.0f) },
+		{ SKIN_QUAD_WIDTH / (WIDTH / 2.0f), 0.0f, 0.0f, (SKIN_QUAD_X - 0.5f) / (WIDTH / 2.0f) - 1.0f },
+		{ 0.0f, -SKIN_QUAD_HEIGHT / (HEIGHT / 2.0f), 0.0f, 1.0f - (SKIN_QUAD_Y - 0.5f) / (HEIGHT / 2.0f) },
 		{ 0.5f, 0.0f, 0.0f, 0.25f },
 	};
 	static const struct {
@@ -175,14 +182,13 @@ static bool close_to(uint32_t held, uint32_t want)
 	return true;
 }
 
-// tests/test_hlsl.c's skin_colour: the quad the CPU's corners make, red its skinned z, green 0.75, blue TEXCOORD0's x.
+// tests/test_hlsl.c's skin_colour: the quad where the palette puts it, red its skinned z, green 0.75, blue TEXCOORD0's
+// x; the clear around it.
 static uint32_t skin_colour(uint32_t x, uint32_t y)
 {
-	const float left = (skinned[0][0] + 1.0f) * (WIDTH / 2.0f), right = (skinned[1][0] + 1.0f) * (WIDTH / 2.0f);
-	const float top = (1.0f - skinned[0][1]) * (HEIGHT / 2.0f), bottom = (1.0f - skinned[2][1]) * (HEIGHT / 2.0f);
-	if ((float)x < left + 0.5f || (float)x > right - 0.5f || (float)y < top + 0.5f || (float)y > bottom - 0.5f)
+	if (x < SKIN_QUAD_X || x >= SKIN_QUAD_X + SKIN_QUAD_WIDTH || y < SKIN_QUAD_Y || y >= SKIN_QUAD_Y + SKIN_QUAD_HEIGHT)
 		return stored(CLEAR_ARGB >> 16 & 0xFF, CLEAR_ARGB >> 8 & 0xFF, CLEAR_ARGB & 0xFF);
-	const float u = ((float)x - left) / (right - left);
+	const float u = ((float)(x - SKIN_QUAD_X) + 0.5f) / SKIN_QUAD_WIDTH;
 	return stored(unorm(skinned[0][2] + (skinned[1][2] - skinned[0][2]) * u), unorm(0.75f), unorm(u));
 }
 
