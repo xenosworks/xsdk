@@ -15,6 +15,7 @@
 // The first launch reads the gamertag, saves to a package, then opens the keyboard and a message box once; a marker
 // beside the log then says the next launch, after a reboot, reads the save back and deletes it. The bar moves all
 // along, as XAM's dialogs show only while the title presents, and the title ends only on Back with XAM's UI closed.
+// With nobody signed in, it saves as no profile's, opens no dialog and ends by itself, so it runs unattended.
 
 enum {
 	SPLASH_MS = 2000,
@@ -59,6 +60,7 @@ static char marker_path[PATH_BYTES];
 // What the first launch writes, and what the next reads back.
 static char text[TEXT_BYTES];
 static uint32_t user = XSDK_XAM_USER_NONE;
+static bool nobody;
 static char gamertag[XSDK_XAM_GAMERTAG_BYTES];
 static Step step;
 // XAM writes into these after the call that starts them returns.
@@ -176,7 +178,10 @@ static void unmounted(uint32_t result)
 	}
 	check(
 		"save_check: the marker written for the next launch", result == ERROR_SUCCESS && write_text(marker_path, text));
-	start_keyboard();
+	if (nobody)
+		step = DONE;
+	else
+		start_keyboard();
 }
 
 static void mounted(uint32_t result)
@@ -197,7 +202,7 @@ static void mounted(uint32_t result)
 	}
 	if (result == ERROR_SUCCESS)
 		wait_for(UNMOUNTING, xsdk_save_unmount(&save), unmounted);
-	else if (reading_back)
+	else if (reading_back || nobody)
 		step = DONE;
 	else
 		start_keyboard();
@@ -262,7 +267,11 @@ static void start(void)
 	const uint32_t result = xsdk_xam_signed_in_user(&user, gamertag);
 	xsdk_log_write("save_check: user 0x%X, gamertag '%s', 0x%08X; %s, marker %s", (unsigned)user, gamertag,
 		(unsigned)result, reading_back ? "reading back the last launch's save" : "saving", marker_path);
-	check("save_check: a profile is signed in and its gamertag read", result == ERROR_SUCCESS && gamertag[0]);
+	nobody = result == ERROR_NO_SUCH_USER;
+	if (nobody)
+		check("save_check: nobody is signed in, so the save is no profile's", user == XSDK_XAM_USER_NONE);
+	else
+		check("save_check: a profile is signed in and its gamertag read", result == ERROR_SUCCESS && gamertag[0]);
 	if (!reading_back) {
 		uint64_t now = 0;
 		KeQuerySystemTime(&now);
@@ -309,7 +318,7 @@ int main(void)
 		if (step == DONE && !told_done)
 			xsdk_log_write("save_check: done at frame %u; press Back, %s", (unsigned)frame, next_launch);
 		told_done |= step == DONE;
-		if (step == DONE && !ui_open && back_pressed())
+		if (step == DONE && !ui_open && (nobody || back_pressed()))
 			break;
 	}
 	xsdk_present_close();
