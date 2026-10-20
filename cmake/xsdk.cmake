@@ -53,8 +53,8 @@ set(ENV{PKG_CONFIG_PATH} "")
 set(XSDK_GLSLANG "${XSDK_TOOLCHAIN}/bin/glslang" CACHE FILEPATH
 	"glslang for xsdk_add_shaders; if it isn't there, tools/build_shaders.py finds one itself")
 
-# Compiles a target's GLSL files into <target>_shaders.h, which its sources include (tools/build_shaders.py); once a
-# target.
+# Compiles a target's GLSL and HLSL files, .vert, .frag, _vs.hlsl and _ps.hlsl, into <target>_shaders.h, which its
+# sources include (tools/build_shaders.py); once a target.
 function(xsdk_add_shaders target)
 	set(header "${CMAKE_CURRENT_BINARY_DIR}/${target}_shaders.h")
 	list(TRANSFORM ARGN PREPEND "${CMAKE_CURRENT_SOURCE_DIR}/" REGEX "^[^/]" OUTPUT_VARIABLE sources)

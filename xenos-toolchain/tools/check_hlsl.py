@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """check_hlsl.py [folder]...: the HLSL path of xsdk milestone 50 (xsdk:docs/scope/50-hlsl.md). Each .hlsl in the
-folders, xsc/testdata/hlsl's corpus and idioms by default, goes through glslang as a port's shader model 3 code would,
--D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stage> -e <entry>, the last flag keeping each varying's semantic
-as a string xost reads (SPV_GOOGLE_hlsl_functionality1), the stage from the name's _vs or _ps and the entry vs_main or
-ps_main where the source has one, else main, then through xost at xsdk's register split with the optimiser on. What
-xost refuses is sorted by cause.
+folders, xsc/testdata/hlsl's corpus and idioms by default, goes through glslang as xsdk's tools/build_shaders.py runs a
+title's shader model 3 code, -D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stage> -e <entry>, the last flag
+keeping each varying's semantic as a string xost reads (SPV_GOOGLE_hlsl_functionality1), the stage from the name's _vs
+or _ps and the entry vs_main or ps_main where the source has one, else main, then through xost at xsdk's register split
+with the optimiser on. What xost refuses is sorted by cause.
 
 A corpus shader beside its GLSL twin, <name>.frag for <name>_ps.hlsl and <name>.vert for <name>_vs.hlsl, is compared
 with it: the twin goes through glslang -V and xost as GLSL does today, and both programs run on xdis/simulate.py on
@@ -18,9 +18,10 @@ instance <block>, as SPIRV-Cross names them. Each comparison is exact, every exp
 a vertex shader's position among them, equal bit for bit on every trial, inexact, or not comparable, with the reason.
 
 --refresh writes each shader's SPIR-V beside it, <name>.spv, as testdata keeps it; --json writes every result, a
-compiled shader's constant table among it (xsc/native.py, constant_table). Runs in WSL with xost's Windows glslang,
-as check_optimize.py does, or the glslang --glslang names: glslang-xenon's PC build with SPIR-V's optimiser, whose
-fmod truncates and which keeps a bool's b# and an int's i#, made the testdata since milestone 50 step 7.
+compiled shader's constant table among it (xsc/native.py, constant_table). Runs in WSL with the glslang --glslang
+names, else the one on PATH, as build_shaders.py finds one for HLSL: glslang-xenon (xsdk:docs/GETTING_STARTED.md,
+section 4), whose fmod truncates and which keeps a bool's b# and an int's i#, made the testdata since milestone 50 step
+7; xost's Windows glslang, Khronos's, steps 1 to 6's.
 
     python3 tools/check_hlsl.py --json ../results/2026-10-20-milestone-50/step2.json
 """
@@ -38,19 +39,19 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+sys.path.insert(0, str(ROOT.parent / "tools"))
 
 import xdis.container as container  # noqa: E402
 import xdis.simulate as simulate  # noqa: E402
 import xsc.native as native  # noqa: E402
 import xsc.resolve as resolve  # noqa: E402
 import xsc.spirv as spirv  # noqa: E402
-from check_optimize import GLSLANG, host_path  # noqa: E402
+from build_shaders import find_glslang, hlsl_args  # noqa: E402
+from check_optimize import host_path  # noqa: E402
 
 TESTDATA = ROOT / "xsc" / "testdata" / "hlsl"
-FLAGS = ["-D", "-V", "--hlsl-dx9-compatible", "-fhlsl_functionality1"]
 # xsdk's split (xsdk:src/xsc_compile.c).
 REGISTERS = 64
-ENTRY = re.compile(r"\b(vs_main|ps_main)\s*\(")
 # The constant xsdk keeps for gl_FragCoord and VPOS outside a tiled pass (xsdk:include/xsdk/xsc.h,
 # XSDK_XSC_FRAG_COORD_CONSTANT).
 FRAG_COORD = (0.5, 0.5, 0.0, 0.0)
@@ -71,12 +72,6 @@ def spirv_of(glslang, source, args, work):
     if result.returncode:
         raise ValueError("glslang: " + (result.stdout + result.stderr).strip().splitlines()[-1])
     return out.read_bytes()
-
-
-def hlsl_args(source):
-    stage = "vert" if source.stem.endswith("_vs") else "frag"
-    found = ENTRY.search(source.read_text())
-    return FLAGS + ["-S", stage, "-e", found.group(1) if found else "main"]
 
 
 def defined_by(module, ident):
@@ -371,10 +366,11 @@ def main():
     ap.add_argument("folders", nargs="*", default=[TESTDATA / "corpus", TESTDATA / "idioms"], type=Path)
     ap.add_argument("--trials", type=int, default=20)
     ap.add_argument("--seed", type=int, default=1)
-    ap.add_argument("--glslang", type=Path, default=GLSLANG, help="glslang, by default xost's Windows build")
+    ap.add_argument("--glslang", help="glslang, by default the one on PATH, as build_shaders.py finds one for HLSL")
     ap.add_argument("--refresh", action="store_true", help="write each shader's SPIR-V beside it")
     ap.add_argument("--json", help="write every shader's result and the totals to this file")
     args = ap.parse_args()
+    args.glslang = find_glslang(args.glslang, True)
     everything = {}
     with tempfile.TemporaryDirectory() as work:
         for folder in args.folders:
