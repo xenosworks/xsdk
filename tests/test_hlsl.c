@@ -26,7 +26,8 @@
 // skinning (step 5), each corner of a quad skinned by four float4x3 bones in vertex constants that its int4
 // BLENDINDICES, UBYTE4s, pick, the cell left of the loop's; and binding as D3D9 binds (step 6), samplers at s3 and s7
 // bound at slots 3 and 7, a bool at b2 an if reads and an int at i1 a loop counts, set by name through the container's
-// table, the cell left of the gaps'.
+// table, the cell left of the gaps'; and an if with no else and nested if/else changing values in a pixel shader
+// without a loop (step 8), the cell left of DEPTH's.
 
 enum {
 	WIDTH = 1280,
@@ -66,9 +67,12 @@ enum {
 	BRIGHT_BOOLEAN = 128 + 2,
 	COUNT_LOOP = 16 + 1,
 	DECOY_SLOTS = 2,
-	// The link's quad, VPOS's, VFACE's two, DEPTH's, the nearer one over it, the link with gaps', the loop's and the
-	// binding's two.
-	QUADS = 10,
+	// The if/else cell, left of DEPTH's.
+	IF_X = CELL_X - CELL_WIDTH - 20,
+	IF_Y = DEPTH_Y,
+	// The link's quad, VPOS's, VFACE's two, DEPTH's, the nearer one over it, the link with gaps', the loop's, the
+	// binding's two and the if/else's.
+	QUADS = 11,
 	VERTEX_WORDS = QUADS * QUAD_VERTICES * VERTEX_FLOATS,
 	// VPOS's red and green: the column and row mod 64, times 4.
 	VPOS_PERIOD = 64,
@@ -117,6 +121,7 @@ enum {
 	// The skinning's pixel shader, the link's.
 	SHADER_SKIN,
 	SHADER_BINDING,
+	SHADER_IF,
 	SHADERS,
 };
 
@@ -161,7 +166,7 @@ static const struct {
 static const char *const shader_names[SHADERS] = { "hlsl/grid_vs.hlsl", "hlsl/grid_gaps_vs.hlsl",
 	"hlsl/grid_skin_vs.hlsl", "hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl",
 	"hlsl/grid_depth_ps.hlsl", "hlsl/grid_gaps_ps.hlsl", "hlsl/grid_loop_ps.hlsl", "hlsl/grid_link_ps.hlsl",
-	"hlsl/grid_binding_ps.hlsl" };
+	"hlsl/grid_binding_ps.hlsl", "hlsl/grid_if_ps.hlsl" };
 
 static const XsdkVertexElement layout[] = {
 	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT4 },
@@ -209,6 +214,7 @@ static const Quad quads[QUADS] = {
 	{ LOOP_Y, false, CELL_X, CELL_WIDTH, 0.5f, link_colour },
 	{ BINDING_Y, false, BINDING_X, BINDING_HALF, 0.5f, link_colour },
 	{ BINDING_Y, false, BINDING_X + BINDING_HALF, BINDING_HALF, 0.5f, link_colour },
+	{ IF_Y, false, IF_X, CELL_WIDTH, 0.5f, link_colour },
 };
 
 // A quad's two triangles, in units of a quad: top left, top right, bottom left, then the other half.
@@ -246,6 +252,7 @@ typedef struct {
 	uint32_t loop;
 	uint32_t skin;
 	uint32_t binding;
+	uint32_t if_else;
 	// VFACE's front and back quads: pixels reading +1, -1 and neither.
 	uint32_t faces[2][3];
 } Wrong;
@@ -528,6 +535,7 @@ static bool draw(const Grid *g, volatile uint32_t *buffer)
 	draw_quads(g, SHADER_LOOP, 7, 1);
 	draw_skin(g);
 	draw_binding(g);
+	draw_quads(g, SHADER_IF, 10, 1);
 	xsdk_gpu_set_depth_stencil(&g->depth);
 	draw_quads(g, SHADER_DEPTH, 4, 1);
 	draw_quads(g, SHADER_LINK, 5, 1);
@@ -597,6 +605,25 @@ static uint32_t binding_colour(uint32_t x)
 		binding_texels[LOW_TEXTURE][texel] >> 16 & 0xFF, binding_texels[HIGH_TEXTURE][texel] >> 8 & 0xFF, unorm(blue));
 }
 
+// The if/else cell's colour at column x, as grid_if_ps.hlsl works it out from TEXCOORD0's x and COLOR0's red and green.
+static uint32_t if_colour(uint32_t x)
+{
+	const float u = ((float)(x - IF_X) + 0.5f) / CELL_WIDTH;
+	float red = link_colour[0], green = link_colour[1], blue = u;
+	if (u > 0.25f)
+		red += 0.5f;
+	if (u > 0.5f) {
+		green *= 0.5f;
+		if (u > 0.75f)
+			blue = 1.0f - blue;
+		else
+			red = 0.0f;
+	} else {
+		blue *= 0.5f;
+	}
+	return stored(unorm(red), unorm(green), unorm(blue));
+}
+
 static bool pixel_right(const char *what, uint32_t x, uint32_t y, uint32_t held, uint32_t want, uint32_t tolerance,
 	uint32_t frame, uint32_t *logged)
 {
@@ -655,6 +682,10 @@ static void check_frame(const Grid *g, volatile const uint32_t *buffer, uint32_t
 			y = BINDING_Y + dy;
 			wrong->binding += !pixel_right(
 				"binding", bx, y, buffer[tiled_index(bx, y, WIDTH)], binding_colour(bx), TOLERANCE, frame, logged);
+			const uint32_t ix = IF_X + (x - CELL_X);
+			y = IF_Y + dy;
+			wrong->if_else += !pixel_right(
+				"if/else", ix, y, buffer[tiled_index(ix, y, WIDTH)], if_colour(ix), RAMP_TOLERANCE, frame, logged);
 			// Last, so the columns DEPTH leaves out are the only ones skipped.
 			y = DEPTH_Y + dy;
 			const uint32_t middle = CELL_X + CELL_WIDTH / 2;
@@ -722,6 +753,11 @@ static void report(const Wrong *w, bool landed, uint32_t frames)
 		"wrong",
 		(unsigned)w->binding, (unsigned)pixels);
 	check(name, landed && frames && w->binding == 0);
+	(void)snprintf(name, sizeof name,
+		"hlsl: a pixel shader without a loop, its if with no else and nested if/else each changing a value on "
+		"TEXCOORD0's x, draws what HLSL defines at every column: %u of %u pixels wrong",
+		(unsigned)w->if_else, (unsigned)pixels);
+	check(name, landed && frames && w->if_else == 0);
 }
 
 static void free_grid(Grid *g)
