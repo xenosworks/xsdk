@@ -950,3 +950,21 @@ containers that compile today, so it isn't in this change.
 
 **Still refused:** a `break` in an if inside a switch's case, a case falling through, a return inside an if inside a
 case (two exits), GLSL's `return` in a loop, and a discard after a return on data where the unroller takes the shader.
+
+## Early returns and switches on the console
+
+At d6b306b, built clean with vulkan4xenon against it (local/m50/build.sh) and cmake_check, through the console agent
+on 2026-10-20 (`step8b_*.log`):
+- xsdk_test 531 of 533, the controller's two failing with the pad idle; the early returns' cell and the switch's each
+  0 of 28800 pixels wrong.
+- The return break failed the early returns' check, 21600 of 28800 wrong, and `xsc: hlsl/grid_return_ps.hlsl compiles
+  into the PC's container, literals and resources`; the switch break the switch's, 5760 of 28800, the 16 columns of
+  80, and `xsc: hlsl/grid_switch_ps.hlsl ...`; each besides the controller's two.
+- cmake_check 6 of 6; vulkan4xenon_test 517 of 517 twice; vkbench 17 of 17, xsdk's draw+submit within 2% of step 8's.
+
+**How far the kill found above reaches:** with a line in `plan_kill` that reported a module branching more than once,
+none of the 435 GLSL pixel shaders of Dusklight's pack sources, vulkan4xenon's `tests`, `src` and `bench` and xost's
+testdata, nor the 291 HLSL pixel shaders of xost's testdata and the corpus, took that path, and a shader written to
+(`if (uv.y > 0.25) { if (uv.x > 0.5) { o = ...; return; } } discard;`) did. HLSL's `clip` followed by an if, the shape
+D3D9 ports meet most, is refused, not miscompiled: `v1 fragment: unhandled op Phi; a discard or return inside an
+if/else on data`.
