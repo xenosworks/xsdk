@@ -1,0 +1,12 @@
+--- a/src/system.c
++++ b/src/system.c
+@@ -80,7 +80,8 @@
+ 	name[length] = '\0';
+ 	if (length < ZONE_NAME_MIN)
+ 		(void)snprintf(name, sizeof(name), "%c%02d%02d", minutes_west > 0 ? '-' : '+', hours, minutes);
+-	return snprintf(tz, tz_bytes, "<%s>%s%d:%02d", name, minutes_west < 0 ? "-" : "", hours, minutes);
++	// Broken on purpose: the offset's sign flipped.
++	return snprintf(tz, tz_bytes, "<%s>%s%d:%02d", name, minutes_west > 0 ? "-" : "", hours, minutes);
+ }
+ 
+ void xsdk_system_set_time_zone(void)

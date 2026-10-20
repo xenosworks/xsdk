@@ -18,10 +18,12 @@
 # Milestone 54's:
 # - pwrite_position: pwrite writes at the descriptor's position, not the offset; fails "pwrite: writes at an offset,
 #   read back by pread, the position and size unchanged" alone.
+# - tz_sign: TZ's offsets get the wrong sign; fails "settings: localtime is UTC moved by the console's time zone, and
+#   mktime takes it back" alone, wherever the console's time is off UTC as the test runs.
 set -eu
 cd "$(dirname "$0")/../.."
 for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0 \
-	pwrite_position; do
+	pwrite_position tz_sign; do
 	patch -p1 --forward --quiet < "tests/breaks/$name.patch"
 	trap 'patch -p1 -R --quiet < "tests/breaks/$name.patch"' EXIT INT TERM
 	make -j32 BUILD="build/breaks/$name" "build/breaks/$name/xsdk_test.xex"

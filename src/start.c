@@ -6,6 +6,7 @@
 #include "microcode_private.h"
 #include "pthread_private.h"
 #include "reent_private.h"
+#include "system_private.h"
 #include "xsdk/log.h"
 
 int main(int argc, char **argv);
@@ -42,6 +43,7 @@ void xsdk_start(void)
 	xsdk_pthread_init();
 	xsdk_reent_init();
 	(void)xsdk_log_open();
+	xsdk_system_set_time_zone();
 	__register_frame_info(__eh_frame_start, eh_frame_object);
 
 	for (void (**function)(void) = __preinit_array_start; function < __preinit_array_end; function++)

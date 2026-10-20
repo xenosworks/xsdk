@@ -41,6 +41,7 @@ int main(int argc, char **argv)
 	test_interrupts();
 	test_files();
 	test_xam();
+	test_system();
 	test_copy();
 	test_xsc();
 	test_net();

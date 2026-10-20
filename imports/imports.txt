@@ -5,6 +5,7 @@
 
 xboxkrnl.exe  0x003  DbgPrint
 xboxkrnl.exe  0x00D  ExCreateThread
+xboxkrnl.exe  0x010  ExGetXConfigSetting
 xboxkrnl.exe  0x019  ExTerminateThread
 xboxkrnl.exe  0x05A  KeDelayExecutionThread
 xboxkrnl.exe  0x083  KeQueryPerformanceFrequency
@@ -108,3 +109,5 @@ xam.xex       0x2BC  XamShowSigninUI
 xam.xex       0x2C1  XamShowKeyboardUI
 xam.xex       0x2CA  XamShowMessageBoxUI
 xam.xex       0x2EC  XamIsUIActive
+xam.xex       0x3CD  XGetLanguage
+xam.xex       0x5D7  XamGetLocaleEx

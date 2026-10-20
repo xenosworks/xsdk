@@ -282,6 +282,33 @@ enum {
 	FILE_FS_SIZE_INFORMATION_CLASS = 3,
 };
 
+// ExGetXConfigSetting's user category and its settings (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc:66-96). The
+// time zone's are laid out as in freestyledash's ExConfig.h, which Xenia names (xboxkrnl_xconfig.cc:51-52): the biases
+// 4 bytes, minutes west of UTC as Windows counts them; the names 4 bytes, ending in a zero only if shorter.
+enum {
+	XCONFIG_USER_CATEGORY = 3,
+	XCONFIG_USER_TIME_ZONE_BIAS = 1,
+	XCONFIG_USER_TIME_ZONE_STD_NAME = 2,
+	XCONFIG_USER_TIME_ZONE_DLT_NAME = 3,
+	XCONFIG_USER_TIME_ZONE_STD_DATE = 4,
+	XCONFIG_USER_TIME_ZONE_DLT_DATE = 5,
+	XCONFIG_USER_TIME_ZONE_STD_BIAS = 6,
+	XCONFIG_USER_TIME_ZONE_DLT_BIAS = 7,
+	XCONFIG_USER_LANGUAGE = 9,
+	// One byte.
+	XCONFIG_USER_COUNTRY = 14,
+	XCONFIG_TIME_ZONE_NAME_BYTES = 4,
+};
+
+// When standard or daylight time starts, at hour local time: day is the week in the month, 5 the last, and day_of_week
+// 0 Sunday, as Windows' time zones count; unverified until the console shows its dates. Month 0 means no change.
+typedef struct {
+	uint8_t month;
+	uint8_t day;
+	uint8_t day_of_week;
+	uint8_t hour;
+} XCONFIG_TIMEZONE_DATE;
+
 // Event types (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:470) and processor modes; the values are NT's.
 enum {
 	NOTIFICATION_EVENT = 0,
@@ -299,6 +326,9 @@ static inline bool NT_SUCCESS(NTSTATUS status)
 NTSTATUS DbgPrint(const char *format, ...);
 NTSTATUS ExCreateThread(HANDLE *thread, uint32_t stack_bytes, uint32_t *thread_id, void *xapi_thread_startup,
 	void *start_address, void *start_context, uint32_t creation_flags);
+// Copies a console setting into buffer and gives its size (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc:44-139).
+NTSTATUS ExGetXConfigSetting(
+	uint16_t category, uint16_t setting, void *buffer, uint16_t buffer_bytes, uint16_t *required_bytes);
 void ExTerminateThread(uint32_t exit_code);
 // The running .xex's path, which the loader writes into the kernel's 256 bytes as it starts the title; custom
 // dashboards read their own path there (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:177-185,
@@ -519,6 +549,9 @@ uint32_t XamContentGetDeviceState(uint32_t device_id, XAM_OVERLAPPED *overlapped
 // xam_enum.cc:30-84).
 uint32_t XamEnumerate(HANDLE enumerator, uint32_t flags, void *buffer, uint32_t buffer_bytes, uint32_t *items,
 	XAM_OVERLAPPED *overlapped);
+// A number in XAM's list of locales, a country each: 35 Britain, 36 the US (xenia:src/xenia/kernel/xam/xam_locale.cc:
+// 110-119). XamGetLocale asks for countries up to 111 and locales up to 43 (xam_locale.cc:203-225).
+uint32_t XamGetLocaleEx(uint32_t max_country, uint32_t max_locale);
 uint32_t XamGetOverlappedResult(XAM_OVERLAPPED *overlapped, uint32_t *length, uint32_t wait);
 uint32_t XamInputGetState(uint32_t user_index, uint32_t flags, INPUT_STATE *state);
 uint32_t XamInputSetState(uint32_t user_index, uint32_t flags, const INPUT_VIBRATION *vibration);
@@ -542,6 +575,8 @@ uint32_t XamUserGetXUID(uint32_t user_index, uint32_t type_mask, uint64_t *xuid)
 uint32_t XamUserReadProfileSettings(uint32_t title_id, uint32_t user_index, uint32_t xuid_count, const uint64_t *xuids,
 	uint32_t setting_count, const uint32_t *setting_ids, uint32_t *buffer_bytes, void *buffer,
 	XAM_OVERLAPPED *overlapped);
+// Xenia gives English (xenia:src/xenia/kernel/xam/xam_info.cc:208-223).
+uint32_t XGetLanguage(void);
 // Takes the listener's next notification, or its next match_id one if that's nonzero; nonzero if there was one
 // (xenia:src/xenia/kernel/xam/xam_notify.cc:53-91).
 uint32_t XNotifyGetNext(HANDLE listener, uint32_t match_id, uint32_t *id, uint32_t *param);

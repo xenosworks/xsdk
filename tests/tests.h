@@ -62,6 +62,8 @@ EntryChanged test_entry_changed(const EntryRegs *regs);
 void test_files(void);
 // Saves, the signed-in user and XAM's asynchronous calls, with nobody signed in (milestone 51).
 void test_xam(void);
+// The console's time zone, language and country (milestone 54).
+void test_system(void);
 // The SDK's memcpy and memmove (milestone 20).
 void test_copy(void);
 // xost's compiler, shaders compiled from SPIR-V (docs/scope/shader-compiling.md, step 2).
