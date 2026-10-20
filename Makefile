@@ -82,7 +82,7 @@ UNROLL_O2_FLAGS := -munroll-only-small-loops -fno-rename-registers
 UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_loops_unrolled.o
 
 .PHONY: all clean cmake_check samples sample_breaks occlusion_tries tiles_probe loop_break_probes instancing_probes \
-	cpu_probes xam_probes hiz_pass_probes msaa_probes
+	cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -344,6 +344,39 @@ $(BUILD)/tests/gpu_draw_msaa.o: src/gpu_draw.c
 
 $(BUILD)/probe_msaa.elf: $(PROBE_MSAA_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(PROBE_MSAA_OBJECTS) $(LIBS)
+
+# Milestone 50 step 5's probe of the skin break the console drew right; outside all. tests/probe_skin.patch goes on a
+# copy of src/xsc_lower_block.c, built into the PC's compiler that makes the probe's lanex container and into the
+# title, ahead of libxsdk.a, standing in for the library's.
+SKIN_PROBE := $(BUILD)/skin_probe
+
+skin_probe: $(BUILD)/probe_skin.xex
+
+$(SKIN_PROBE)/xsc_lower_block.c: src/xsc_lower_block.c tests/probe_skin.patch
+	@mkdir -p $(@D)
+	patch -p1 --quiet -o $@ src/xsc_lower_block.c < tests/probe_skin.patch
+
+$(SKIN_PROBE)/xsc_lower_block.o: $(SKIN_PROBE)/xsc_lower_block.c
+	$(CC) $(CFLAGS) -Isrc -ffp-contract=off -c $< -o $@
+
+$(SKIN_PROBE)/host/xsc_lower_block.o: $(SKIN_PROBE)/xsc_lower_block.c
+	@mkdir -p $(@D)
+	$(HOST_CC) $(HOST_CFLAGS) -Isrc -ffp-contract=off -c $< -o $@
+
+$(SKIN_PROBE)/libxsc.so: $(filter-out %/xsc_lower_block.o,$(XSC_SOURCES:src/%.c=$(BUILD)/host/%.o)) \
+	$(SKIN_PROBE)/host/xsc_lower_block.o
+	$(HOST_CC) -shared -o $@ $^
+
+$(BUILD)/probe/probe_skin_shaders.h: tools/gen_skin_probe.py $(SKIN_PROBE)/libxsc.so \
+	xenos-toolchain/xsc/testdata/hlsl/grid_skin_vs.hlsl.spv
+	@mkdir -p $(@D)
+	$(PYTHON) tools/gen_skin_probe.py $(SKIN_PROBE)/libxsc.so $@
+
+$(BUILD)/tests/probe_skin.o: CFLAGS += -I$(BUILD)/probe
+$(BUILD)/tests/probe_skin.o: $(BUILD)/probe/probe_skin_shaders.h
+
+$(BUILD)/probe_skin.elf: $(BUILD)/tests/probe_skin.o $(SKIN_PROBE)/xsc_lower_block.o $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/probe_skin.o $(SKIN_PROBE)/xsc_lower_block.o $(LIBS)
 
 $(BUILD)/host/libxsc.so: $(XSC_SOURCES:src/%.c=$(BUILD)/host/%.o)
 	$(HOST_CC) -shared -o $@ $^
