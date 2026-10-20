@@ -26,6 +26,10 @@
 # - terminate_noregister, of terminate_check: xsdk_on_terminate never registers; the read case after a run fails
 #   "terminate check: the routine ran as the title was ended from outside" and "the routine that ran is the one
 #   registered last". It takes nothing out, as a registration left in place freezes the console.
+# - letterbox_nobars: letterboxing scales into the bars' space but never sets the bars; fails "scale: letterboxed
+#   through the present, the display holds the bars above and below and the scale into what's between" alone, on a
+#   widescreen console (on a 4:3 one, "scale: the scaler holds 2 taps, the built-in filter and the output's scale
+#   factors" too).
 set -eu
 cd "$(dirname "$0")/../.."
 build_break()
@@ -40,7 +44,7 @@ build_break()
 	cp "build/breaks/$name/$title.xex" "build/breaks/${title}_$name.xex"
 }
 for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0 \
-	pwrite_position tz_sign hdd_device; do
+	pwrite_position tz_sign hdd_device letterbox_nobars; do
 	build_break "$name" xsdk_test
 done
 build_break terminate_noregister terminate_check

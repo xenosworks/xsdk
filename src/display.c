@@ -28,8 +28,14 @@ enum {
 	// The line being scanned, in viewport lines (xenia:src/xenia/gpu/graphics_system.cc:189-192; docs/HARDWARE.md).
 	R500_D1MODE_V_COUNTER = 0x194C,
 	AVIVO_D1MODE_VIEWPORT_SIZE = 0x1961,
+	// The external overscan, the bars around a picture that keeps its aspect, left and top in the high half
+	// (xf86-video-radeonhd:src/rhd_regs.h:200-201, rhd_crtc.c:612-679, 744-752).
+	UNKNOWN_1962 = 0x1962,
+	UNKNOWN_1963 = 0x1963,
 	AVIVO_D1SCL_SCALER_ENABLE = 0x1964,
 	AVIVO_D1SCL_SCALER_TAP_CONTROL = 0x1965,
+	// 1 wherever radeonhd sets overscan; its guess is D1MODE_CENTER (rhd_regs.h:207, rhd_crtc.c:761-773).
+	UNKNOWN_1967 = 0x1967,
 	// Filter control, scale factor and start phase, horizontal then vertical (docs/HARDWARE.md).
 	UNKNOWN_196C = 0x196C,
 	UNKNOWN_196D = 0x196D,
@@ -81,21 +87,28 @@ enum {
 	VERTICAL_FILTER,
 	VERTICAL_SCALE,
 	VERTICAL_PHASE,
+	OVERSCAN_LEFT_RIGHT,
+	OVERSCAN_TOP_BOTTOM,
+	CENTER,
 	SCALER_REGISTERS,
 };
 
 _Static_assert((int)SCALER_REGISTERS == (int)DISPLAY_SCALER_REGISTERS, "DisplaySize holds the scaler's registers");
 
-// The registers the scaling probes wrote and put back, which gave the display back to XAM (docs/HARDWARE.md).
+// The registers the scaling probes wrote and put back, which gave the display back to XAM (docs/HARDWARE.md), and
+// those that place a picture keeping its aspect.
 static const uint32_t scaler_registers[SCALER_REGISTERS] = { AVIVO_D1SCL_SCALER_ENABLE, AVIVO_D1SCL_SCALER_TAP_CONTROL,
 	AVIVO_D1MODE_VIEWPORT_SIZE, UNKNOWN_197A, UNKNOWN_196C, UNKNOWN_196D, UNKNOWN_196E, UNKNOWN_1970, UNKNOWN_1971,
-	UNKNOWN_1972 };
+	UNKNOWN_1972, UNKNOWN_1962, UNKNOWN_1963, UNKNOWN_1967 };
 
 static bool is_open;
 static uint32_t mode_height;
 static Surface old_surface;
 // Set while the title's front buffer is 1280x720 on the SDK's scaling rather than the kernel's.
 static bool scaling;
+// Set while the screen is taken as 4:3, as VdQueryVideoMode reports it or the title forces it.
+static bool four_by_three;
+static bool letterbox_forced;
 static bool scaler_applied;
 static uint32_t old_scaler[SCALER_REGISTERS];
 static uint32_t new_scaler[SCALER_REGISTERS];
@@ -133,12 +146,28 @@ static uint32_t phase(uint32_t scale_8_24)
 	return ((TAPS + 1) << 15) + (scale_8_24 >> 9);
 }
 
-// The scaler filling the output with width by height, or showing it 1:1 with the scaler off as libxenon does
+// How much of the output a width by height surface covers: all of it, or on a 4:3 screen as much as keeps its aspect,
+// across the width for a wider picture or the height for a narrower one, in multiples of 4 to split the bars evenly.
+static void plan_picture(uint32_t width, uint32_t height, uint32_t *picture_width, uint32_t *picture_height)
+{
+	*picture_width = output_width;
+	*picture_height = output_height;
+	if (four_by_three && 3 * width > 4 * height)
+		*picture_height = (uint32_t)((uint64_t)output_height * 4 * height / (3 * width)) & ~3u;
+	else if (four_by_three && 3 * width < 4 * height)
+		*picture_width = (uint32_t)((uint64_t)output_width * 3 * width / (4 * height)) & ~3u;
+}
+
+// The scaler showing width by height on its part of the output, the rest black bars of overscan, as radeonhd keeps an
+// aspect (xf86-video-radeonhd:src/rhd_crtc.c:612-679, 744-773), or 1:1 with the scaler off as libxenon does
 // (xenos.c:381-417).
 static void plan_values(uint32_t width, uint32_t height, uint32_t *values)
 {
-	const uint32_t horizontal = scale(width, output_width);
-	const uint32_t vertical = scale(height, output_height);
+	uint32_t picture_width;
+	uint32_t picture_height;
+	plan_picture(width, height, &picture_width, &picture_height);
+	const uint32_t horizontal = scale(width, picture_width);
+	const uint32_t vertical = scale(height, picture_height);
 	values[SCALER_ENABLE] = horizontal != 1u << SCALE_ONE_LOG2 || vertical != 1u << SCALE_ONE_LOG2;
 	values[SCALER_TAP_CONTROL] = TWO_TAPS;
 	values[VIEWPORT_SIZE] = width << 16 | height;
@@ -149,9 +178,18 @@ static void plan_values(uint32_t width, uint32_t height, uint32_t *values)
 	values[VERTICAL_FILTER] = old_scaler[VERTICAL_FILTER] | BUILT_IN_FILTER;
 	values[VERTICAL_SCALE] = vertical;
 	values[VERTICAL_PHASE] = phase(vertical);
+	// Without bars, the overscan and 0x659C keep what the kernel left.
+	const bool bars = picture_width != output_width || picture_height != output_height;
+	const uint32_t left = (output_width - picture_width) / 2;
+	const uint32_t top = (output_height - picture_height) / 2;
+	values[OVERSCAN_LEFT_RIGHT] =
+		bars ? left << 16 | (output_width - picture_width - left) : old_scaler[OVERSCAN_LEFT_RIGHT];
+	values[OVERSCAN_TOP_BOTTOM] =
+		bars ? top << 16 | (output_height - picture_height - top) : old_scaler[OVERSCAN_TOP_BOTTOM];
+	values[CENTER] = bars ? 1 : old_scaler[CENTER];
 }
 
-// Plans 1280x720 filling the output.
+// Plans 1280x720 on the output: filling it, or letterboxed on a 4:3 screen.
 static bool plan_scaler(void)
 {
 	VIDEO_MODE video;
@@ -165,10 +203,20 @@ static bool plan_scaler(void)
 		old_scaler[i] = gpu_registers[scaler_registers[i]];
 	output_width = video.display_width;
 	output_height = video.display_height;
+	four_by_three = !video.is_widescreen || letterbox_forced;
 	plan_values(WIDTH_720P, HEIGHT_720P, new_scaler);
 	xsdk_log_write("display: 1280x720 %s to the %ux%u output", new_scaler[SCALER_ENABLE] ? "scaled" : "shown 1:1",
 		(unsigned)video.display_width, (unsigned)video.display_height);
+	if (four_by_three)
+		xsdk_log_write("display: letterboxed, as the screen is %s; overscan %08X %08X",
+			video.is_widescreen ? "taken as 4:3" : "4:3", (unsigned)new_scaler[OVERSCAN_LEFT_RIGHT],
+			(unsigned)new_scaler[OVERSCAN_TOP_BOTTOM]);
 	return true;
+}
+
+void xsdk_display_force_letterbox(bool force)
+{
+	letterbox_forced = force;
 }
 
 bool xsdk_display_output(uint32_t *width, uint32_t *height)
