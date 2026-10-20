@@ -627,14 +627,16 @@ baseline -> step 4 -> step 5's first build, `7dc5220` -> step 5, `31e1bf6`:
 going on past a pair took 8% off, and the second pairing gives half of it back. The console took 1.236 s at the first
 build, within 1.42.
 
-**What's left for the console,** built clean from the M48 pair at this step, Dusklight's pack rebuilt with this xost:
-- `probe_shader_cost`: Dusklight's vertex shaders, the milestone's open target, at most 12,686 us, 12,609 at the first
-  build; every pixel picture as the baseline's, bit for bit, `8ecfa22174a91d18`, `b624738d17bc5ca0` and
-  `be7931e3ec0bb85e` among them.
-- `probe_xsc`: 150 of 150 programs as the pack holds them, within 1.42 s.
-- xsdk_test, its compiler check taking the 6 changed programs and its raster test `vk_loop_grid.frag`, 0 pixels wrong;
-  vulkan4xenon_test twice, 492 of 492, `branch_data.vert`, `branch_uniform.vert` and `loop_break.frag` compiled on the
-  console among them, its bundles as they are.
-- `probe_scalar_forms` again, its cases now expecting the temp with itself where the lanes match: 695 of 695.
-- Dusklight's title scene, whose lighting alone shows the 19 vertex `subsc`s' negation and their literals' lanes, as
-  the probe checks no vertex results.
+**On the console,** built clean from the M48 pair at this step, rebased on main `8d966df`, Dusklight's pack rebuilt
+with this xost (local/m48/step5b_build.sh). The first build's failing logs are in `step5_first_run/`.
+- **`probe_step5.log`:** Dusklight's vertex shaders take 12,630 us for a draw of each, 5.4% under the baseline's
+  13,354, past the milestone's 5%; its pixel shaders 51,621 us, 18.1% under 63,053. All 103 pixel pictures hash as the
+  baseline's, bit for bit, the three the first build changed among them.
+- **`probe_scalar_forms_rule.log`:** 695 of 695, the equal-lane cases now expecting the temp with itself.
+- **`probe_xsc_step5.log`:** 150 of 150 programs compile on the console as the pack holds them, the 150 in 1.235 s.
+- **`step5_xsdk_test.log`:** 463 passed, 2 failed, the controller's checks with no pad; the raster test of
+  `vk_loop_grid.frag` compiled on the console, 0 pixels wrong.
+- **`step5_vulkan4xenon_test_1.log`, `_2.log`:** 492 of 492 each, `branch_data.vert`, `branch_uniform.vert` and
+  `loop_break.frag` compiled on the console among them.
+- **`step5_dusklight.log`:** Dusklight's title scene with the rebuilt pack, at 26.6 to 30 fps as before. The vertex
+  shaders' scalar forms are the ones the probe ran on the same ALUs, `muls` and `subsc` among them.
