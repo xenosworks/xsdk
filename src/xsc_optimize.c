@@ -69,6 +69,9 @@ typedef struct {
 	size_t *a0_span;
 	size_t span_capacity;
 	uint8_t *live;
+	// Each temp a move writes before the op common_subexpressions is at.
+	uint8_t *moved;
+	size_t moved_capacity;
 	// Each op's results' ranges, RANGE_SLOTS an op, as fold_by_ranges finds them.
 	Range *ranges;
 	size_t range_capacity;
@@ -708,6 +711,13 @@ static bool same_lanes(const Optimizer *o, const Source *sa, const Source *sb, i
 	return true;
 }
 
+// Whether operand n of op names a temp a move before the op the pass is at wrote.
+static bool moved_into(const Optimizer *o, const XscOp *op, int n)
+{
+	const int64_t reg = op->alu.src_reg[n - 1] & (XSC_ABS_SOURCE - 1);
+	return op->alu.src_is_temp[n - 1] && reg < o->key_count / 4 && o->moved[reg];
+}
+
 static bool same_computation(const Optimizer *o, const XscOp *a, const XscOp *b, size_t i, size_t j)
 {
 	const int64_t op = b->alu.vector_opcode;
@@ -719,11 +729,14 @@ static bool same_computation(const Optimizer *o, const XscOp *a, const XscOp *b,
 	const int n = vector_reads_table(op, table);
 	const int count = !vector_active(b) ? 0 : n < 0 ? 3 : n;
 	for (int k = 1; k <= count; k++) {
+		// Two registers hold the same only as temps a move wrote one of, where most pairs end, their operands unread.
+		if (a->alu.src_reg[k - 1] != b->alu.src_reg[k - 1] && !moved_into(o, a, k) && !moved_into(o, b, k))
+			return false;
 		const Source sa = source(a, k);
 		const Source sb = source(b, k);
 		if (sa.temp != sb.temp || sa.absolute != sb.absolute || sa.negate != sb.negate || sa.relative != sb.relative)
 			return false;
-		if (sa.temp) {
+		if (sa.temp && sa.reg != sb.reg) {
 			if (!same_lanes(o, &sa, &sb, lanes[k], i, j))
 				return false;
 			continue;
@@ -733,7 +746,9 @@ static bool same_computation(const Optimizer *o, const XscOp *a, const XscOp *b,
 			if ((used >> lane & 1) && sa.components[lane] != sb.components[lane])
 				return false;
 		}
-		if (sa.reg != sb.reg || !same_values(o, &sa, NULL, 0, i, j))
+		int components[4];
+		const int distinct = component_set(&sa, used, components);
+		if (sa.reg != sb.reg || !same_values(o, &sa, components, distinct, i, j))
 			return false;
 	}
 	return true;
@@ -742,11 +757,17 @@ static bool same_computation(const Optimizer *o, const XscOp *a, const XscOp *b,
 static bool common_subexpressions(Optimizer *o, bool *changed)
 {
 	*changed = false;
-	if (!build_flow(o))
+	size_t capacity = o->moved_capacity;
+	if (!build_flow(o) || !grow(o->x, &o->moved, &capacity, (size_t)o->key_count / 4, sizeof *o->moved))
 		return false;
+	o->moved_capacity = capacity;
+	memset(o->moved, 0, (size_t)o->key_count / 4);
 	for (size_t j = 0; j < o->count; j++) {
 		XscOp *const b = o->ops[j];
-		if (!plain_vector(b) || is_move(b))
+		const bool move = is_move(b);
+		if (move)
+			o->moved[b->alu.vector_dest] = 1;
+		if (move || !plain_vector(b))
 			continue;
 		for (size_t i = j; i-- > 0;) {
 			const XscOp *const a = o->ops[i];
