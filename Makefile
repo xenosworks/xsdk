@@ -81,7 +81,7 @@ UNROLL_O2_FLAGS := -munroll-only-small-loops -fno-rename-registers
 UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_loops_unrolled.o
 
 .PHONY: all clean cmake_check samples sample_breaks occlusion_tries tiles_probe loop_break_probes instancing_probes \
-	cpu_probes xam_probes
+	cpu_probes xam_probes hiz_pass_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -305,6 +305,21 @@ $(BUILD)/probe_xam_t2.xex: $(BUILD)/probe_xam.elf tools/elf2xex.py
 	$(PYTHON) tools/elf2xex.py --title-id 0x5853444C $< $@
 
 xam_probes: $(BUILD)/probe_xam.xex $(BUILD)/probe_xam_t2.xex
+
+# Milestone 49 step 1's probe of what puts the hierarchical buffer right after a depth clear, with xsdk_test's
+# hierarchical depth checks; outside all. It links src/gpu_resolve.c built with the probe's hook ahead of libxsdk.a,
+# standing in for the library's.
+PROBE_HIZ_PASS_OBJECTS := $(BUILD)/tests/probe_hiz_pass.o $(BUILD)/tests/test_hiz.o \
+	$(BUILD)/tests/gpu_resolve_hiz_pass.o
+
+hiz_pass_probes: $(BUILD)/probe_hiz_pass.xex
+
+$(BUILD)/tests/gpu_resolve_hiz_pass.o: src/gpu_resolve.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -DXSDK_HIZ_PASS_PROBE=1 -c $< -o $@
+
+$(BUILD)/probe_hiz_pass.elf: $(PROBE_HIZ_PASS_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(PROBE_HIZ_PASS_OBJECTS) $(LIBS)
 
 $(BUILD)/host/libxsc.so: $(XSC_SOURCES:src/%.c=$(BUILD)/host/%.o)
 	$(HOST_CC) -shared -o $@ $^

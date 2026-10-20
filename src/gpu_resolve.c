@@ -244,9 +244,49 @@ static void put_shader(GpuPackets *packets)
 		gpu_put(packets, i < sizeof resolve_vertex_shader / 4 ? resolve_vertex_shader[i] : 0);
 }
 
+#ifdef XSDK_HIZ_PASS_PROBE
+// Milestone 49's probe (tests/probe_hiz_pass.c) of cheaper ways to put the buffer right: the pass, if on, over the
+// rectangle if it has a width, or the event in its place if not 0. Built with 0, the pass is left out.
+static bool probe_on = XSDK_HIZ_PASS_PROBE;
+static uint32_t probe_event;
+static uint32_t probe_rect[4];
+
+void xsdk_probe_hiz_pass(bool on, uint32_t event, const uint32_t rect[4])
+{
+	probe_on = on;
+	probe_event = event;
+	memcpy(probe_rect, rect, sizeof probe_rect);
+}
+
+// The probe's event, or its rectangle for the pass; whether the pass follows.
+static bool put_probe_case(GpuPackets *packets)
+{
+	if (probe_on && probe_event) {
+		gpu_put_type3(packets, PM4_EVENT_WRITE, 1);
+		gpu_put(packets, probe_event);
+		gpu_put_register(packets, WAIT_UNTIL, WAIT_3D_IDLE_CLEAN);
+	}
+	if (!probe_on || probe_event)
+		return false;
+	if (probe_rect[2]) {
+		// Written before the resolve's invalidate runs, which takes the rectangles' whole page (src/gpu_setup.c).
+		const uint32_t vertices = xsdk_gpu_rectangle(probe_rect[0], probe_rect[1], probe_rect[2], probe_rect[3]);
+		const uint32_t fetch[] = { vertices | VERTEX_FETCH_TYPE, VERTEX_FETCH_SIZE_6_8IN32, 0, 0, 0, 0 };
+		const uint32_t flush_fetch[] = { 0, 0, 0 };
+		gpu_put_registers(packets, SHADER_CONSTANT_FETCH_00_0, fetch, 6);
+		gpu_put_registers(packets, SHADER_CONSTANT_FLUSH_FETCH_0, flush_fetch, 3);
+	}
+	return true;
+}
+#endif
+
 // After a clear, a draw's first block may test the buffer's old values until one draw tests it all (docs/HARDWARE.md).
 static void put_hiz_test(GpuPackets *packets, uint32_t hiz_clear)
 {
+#ifdef XSDK_HIZ_PASS_PROBE
+	if (!put_probe_case(packets))
+		return;
+#endif
 	// Rejected whole it costs less: at z 0 testing greater-than over a clear above 0, at the rectangle's z of 1 over 0.
 	const uint32_t z_zero[] = { 0, 0 };
 	const bool at_zero = hiz_clear != 0;
