@@ -31,7 +31,8 @@ read at two run-time indices that the optimiser reads at a0 where they're used, 
 and milestone 50's HLSL grid, hlsl/grid_*.hlsl, glslang's SPIR-V of D3D9's semantics, of a loop in SSA form and of
 skinning from int4 BLENDINDICES, and of binding as D3D9 binds, samplers at s3 and s7, a bool an if reads and an int a
 loop counts, and of an if with no else and nested if/else changing values in a pixel shader without a loop, and of
-early returns and a switch in pixel shaders without a loop, which the HLSL test draws.
+early returns and a switch in pixel shaders without a loop, and of a clip before an if and a discard in an if inside
+another, which the HLSL test draws.
 Prints a C header. Runs in WSL, where make builds the compiler for the PC.
 """
 
@@ -61,7 +62,7 @@ SHADERS = ("vk_block_literals.vert", "vk_texel_offsets.frag", "vk_vertex_if.vert
            "hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl", "hlsl/grid_depth_ps.hlsl",
            "hlsl/grid_gaps_vs.hlsl", "hlsl/grid_gaps_ps.hlsl", "hlsl/grid_loop_ps.hlsl",
            "hlsl/grid_skin_vs.hlsl", "hlsl/grid_binding_ps.hlsl", "hlsl/grid_if_ps.hlsl", "hlsl/grid_return_ps.hlsl",
-           "hlsl/grid_switch_ps.hlsl")
+           "hlsl/grid_switch_ps.hlsl", "hlsl/grid_discard_ps.hlsl")
 # xsdk's split (xsdk:src/gpu_setup.c).
 REGISTERS = 64
 RESOURCE_KINDS = {"push": "XSDK_XSC_PUSH_CONSTANTS", "uniform": "XSDK_XSC_UNIFORM_BUFFER",

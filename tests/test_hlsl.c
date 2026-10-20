@@ -28,7 +28,8 @@
 // bound at slots 3 and 7, a bool at b2 an if reads and an int at i1 a loop counts, set by name through the container's
 // table, the cell left of the gaps'; and an if with no else and nested if/else changing values in a pixel shader
 // without a loop (step 8), the cell left of DEPTH's; and in pixel shaders without a loop, early returns, the cell left
-// of VFACE's, and a switch, the cell left of VPOS's.
+// of VFACE's, and a switch, the cell left of VPOS's; and a clip before an if and a discard in an if inside another, the
+// cell left of the link's.
 
 enum {
 	WIDTH = 1280,
@@ -68,16 +69,19 @@ enum {
 	BRIGHT_BOOLEAN = 128 + 2,
 	COUNT_LOOP = 16 + 1,
 	DECOY_SLOTS = 2,
-	// The if/else cell, left of DEPTH's; the early returns', left of VFACE's; the switch's, left of VPOS's.
+	// The if/else cell, left of DEPTH's; the early returns', left of VFACE's; the switch's, left of VPOS's; the
+	// discards', left of the link's.
 	IF_X = CELL_X - CELL_WIDTH - 20,
 	IF_Y = DEPTH_Y,
 	RETURN_X = CELL_X - CELL_WIDTH - 20,
 	RETURN_Y = VFACE_Y,
 	SWITCH_X = CELL_X - CELL_WIDTH - 20,
 	SWITCH_Y = VPOS_Y,
+	DISCARD_X = CELL_X - CELL_WIDTH - 20,
+	DISCARD_Y = LINK_Y,
 	// The link's quad, VPOS's, VFACE's two, DEPTH's, the nearer one over it, the link with gaps', the loop's, the
-	// binding's two, the if/else's, the early returns' and the switch's.
-	QUADS = 13,
+	// binding's two, the if/else's, the early returns', the switch's and the discards'.
+	QUADS = 14,
 	VERTEX_WORDS = QUADS * QUAD_VERTICES * VERTEX_FLOATS,
 	// VPOS's red and green: the column and row mod 64, times 4.
 	VPOS_PERIOD = 64,
@@ -129,6 +133,7 @@ enum {
 	SHADER_IF,
 	SHADER_RETURN,
 	SHADER_SWITCH,
+	SHADER_DISCARD,
 	SHADERS,
 };
 
@@ -173,7 +178,8 @@ static const struct {
 static const char *const shader_names[SHADERS] = { "hlsl/grid_vs.hlsl", "hlsl/grid_gaps_vs.hlsl",
 	"hlsl/grid_skin_vs.hlsl", "hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl",
 	"hlsl/grid_depth_ps.hlsl", "hlsl/grid_gaps_ps.hlsl", "hlsl/grid_loop_ps.hlsl", "hlsl/grid_link_ps.hlsl",
-	"hlsl/grid_binding_ps.hlsl", "hlsl/grid_if_ps.hlsl", "hlsl/grid_return_ps.hlsl", "hlsl/grid_switch_ps.hlsl" };
+	"hlsl/grid_binding_ps.hlsl", "hlsl/grid_if_ps.hlsl", "hlsl/grid_return_ps.hlsl", "hlsl/grid_switch_ps.hlsl",
+	"hlsl/grid_discard_ps.hlsl" };
 
 static const XsdkVertexElement layout[] = {
 	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT4 },
@@ -224,6 +230,7 @@ static const Quad quads[QUADS] = {
 	{ IF_Y, false, IF_X, CELL_WIDTH, 0.5f, link_colour },
 	{ RETURN_Y, false, RETURN_X, CELL_WIDTH, 0.5f, link_colour },
 	{ SWITCH_Y, false, SWITCH_X, CELL_WIDTH, 0.5f, link_colour },
+	{ DISCARD_Y, false, DISCARD_X, CELL_WIDTH, 0.5f, link_colour },
 };
 
 // A quad's two triangles, in units of a quad: top left, top right, bottom left, then the other half.
@@ -264,6 +271,7 @@ typedef struct {
 	uint32_t if_else;
 	uint32_t returns;
 	uint32_t switches;
+	uint32_t discards;
 	// VFACE's front and back quads: pixels reading +1, -1 and neither.
 	uint32_t faces[2][3];
 } Wrong;
@@ -549,6 +557,7 @@ static bool draw(const Grid *g, volatile uint32_t *buffer)
 	draw_quads(g, SHADER_IF, 10, 1);
 	draw_quads(g, SHADER_RETURN, 11, 1);
 	draw_quads(g, SHADER_SWITCH, 12, 1);
+	draw_quads(g, SHADER_DISCARD, 13, 1);
 	xsdk_gpu_set_depth_stencil(&g->depth);
 	draw_quads(g, SHADER_DEPTH, 4, 1);
 	draw_quads(g, SHADER_LINK, 5, 1);
@@ -671,6 +680,18 @@ static uint32_t switch_colour(uint32_t x)
 	}
 }
 
+// The discards' colour at column x, as grid_discard_ps.hlsl works it out from TEXCOORD0's x and COLOR0's red and
+// green; where it clips or discards, the clear, which the pixel keeps.
+static uint32_t discard_colour(uint32_t x)
+{
+	const float u = ((float)(x - DISCARD_X) + 0.5f) / CELL_WIDTH;
+	if (u < 0.125f || (u > 0.5f && u < 0.75f))
+		return stored(CLEAR_ARGB >> 16 & 0xFF, CLEAR_ARGB >> 8 & 0xFF, CLEAR_ARGB & 0xFF);
+	if (u > 0.5f)
+		return stored(unorm(link_colour[0] + 0.5f), unorm(link_colour[1] * 0.5f), unorm(1.0f - u));
+	return stored(unorm(link_colour[0]), unorm(link_colour[1] * 0.5f), unorm(u));
+}
+
 static bool pixel_right(const char *what, uint32_t x, uint32_t y, uint32_t held, uint32_t want, uint32_t tolerance,
 	uint32_t frame, uint32_t *logged)
 {
@@ -741,6 +762,10 @@ static void check_frame(const Grid *g, volatile const uint32_t *buffer, uint32_t
 			y = SWITCH_Y + dy;
 			wrong->switches += !pixel_right(
 				"switch", wx, y, buffer[tiled_index(wx, y, WIDTH)], switch_colour(wx), RAMP_TOLERANCE, frame, logged);
+			const uint32_t kx = DISCARD_X + (x - CELL_X);
+			y = DISCARD_Y + dy;
+			wrong->discards += !pixel_right("discards", kx, y, buffer[tiled_index(kx, y, WIDTH)], discard_colour(kx),
+				RAMP_TOLERANCE, frame, logged);
 			// Last, so the columns DEPTH leaves out are the only ones skipped.
 			y = DEPTH_Y + dy;
 			const uint32_t middle = CELL_X + CELL_WIDTH / 2;
@@ -824,6 +849,11 @@ static void report(const Wrong *w, bool landed, uint32_t frames)
 		"literals sharing one, and a default, draws what HLSL defines at every column: %u of %u pixels wrong",
 		(unsigned)w->switches, (unsigned)pixels);
 	check(name, landed && frames && w->switches == 0);
+	(void)snprintf(name, sizeof name,
+		"hlsl: a pixel shader's clip before an if and discard in an if inside another, on TEXCOORD0's x, kill the "
+		"columns HLSL kills, which keep the clear, and draw what HLSL defines at the others: %u of %u pixels wrong",
+		(unsigned)w->discards, (unsigned)pixels);
+	check(name, landed && frames && w->discards == 0);
 }
 
 static void free_grid(Grid *g)

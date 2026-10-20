@@ -1,0 +1,12 @@
+--- a/src/xsc_unroll.c
++++ b/src/xsc_unroll.c
+@@ -1173,7 +1173,8 @@ static bool discard(Unroller *u)
+ 			return false;
+ 	}
+ 	if (!on_path(u, 0, &active) || (!active && !true_id(u, &active)) ||
+-		(u->killed && !logical(u, OP_LOGICAL_OR, u->killed, active, &active)))
++		// Broken on purpose: each discard's kill takes the place of those before it.
++		false)
+ 		return false;
+ 	u->killed = active;
+ 	u->returning = !u->unrolled;

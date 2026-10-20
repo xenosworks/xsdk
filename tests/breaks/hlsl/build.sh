@@ -32,9 +32,10 @@
 #   draws right; fails "hlsl: grid_binding_ps.hlsl's table names ... Bright at boolean constant 128 and Count at loop
 #   constant 16, as their b2 and i1" and "xsc: hlsl/grid_binding_ps.hlsl compiles into the PC's container ...".
 # - if: the selects merging an if/else the fragment lowering refused, which the unroller now takes, with their arms
-#   swapped, so grid_if_ps.hlsl, alone of the shaders xsdk_test compiles, draws each column's other arms; on the
-#   simulator all 80 of the cell's columns wrong; fails "hlsl: a pixel shader without a loop, its if with no else and
-#   nested if/else ..." and "xsc: hlsl/grid_if_ps.hlsl compiles into the PC's container ...".
+#   swapped, so grid_if_ps.hlsl draws each column's other arms; on the simulator all 80 of the cell's columns wrong;
+#   fails "hlsl: a pixel shader without a loop, its if with no else and nested if/else ..." and "xsc:
+#   hlsl/grid_if_ps.hlsl compiles into the PC's container ...". The early returns', switch's and discards' cells go
+#   through the unroller the same way, so their shaders compile otherwise and their checks fail too.
 # - return: each copy of merge-return's merge taking its Phis' first value, whichever block branched there, so
 #   grid_return_ps.hlsl, alone of the shaders xsdk_test compiles, draws the first return's colour wherever it returns;
 #   fails "hlsl: a pixel shader without a loop, its early returns ..." and "xsc: hlsl/grid_return_ps.hlsl compiles into
@@ -42,9 +43,13 @@
 # - switch: a switch's case testing its first literal alone, so grid_switch_ps.hlsl, alone of the shaders xsdk_test
 #   compiles, draws its default where the selector is 3, which shares a case with 1; fails "hlsl: a pixel shader
 #   without a loop, its switch ..." and "xsc: hlsl/grid_switch_ps.hlsl compiles into the PC's container ...".
+# - discard: each discard's kill taking the place of those before it, so grid_discard_ps.hlsl, alone of the shaders
+#   xsdk_test compiles, kills where its nested discard does and draws the 10 columns of 80 its clip kills; fails "hlsl:
+#   a pixel shader's clip before an if and discard in an if inside another ..." and "xsc: hlsl/grid_discard_ps.hlsl
+#   compiles into the PC's container ...".
 set -eu
 cd "$(dirname "$0")/../../.."
-for name in link vpos vface depth loop skin binding registers if return switch; do
+for name in link vpos vface depth loop skin binding registers if return switch discard; do
 	patch -p1 --forward --quiet < "tests/breaks/hlsl/$name.patch"
 	trap 'patch -p1 -R --quiet < "tests/breaks/hlsl/$name.patch"' EXIT INT TERM
 	make -j32 BUILD="build/breaks/hlsl_$name" "build/breaks/hlsl_$name/xsdk_test.xex"
