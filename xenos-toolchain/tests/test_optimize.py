@@ -80,6 +80,11 @@ def indexed(dest, reg):
     return dict(move(dest, c(reg)), is_const_address_register_relative=True, src1_const_rel=True, src2_const_rel=True)
 
 
+def at_a0(f):
+    """ALU fields f with operand 1, a constant, read at a0."""
+    return dict(f, is_const_address_register_relative=True, src1_const_rel=True)
+
+
 def set_a0(src):
     """a0 from src's x, floored, as xsc's set_a0 loads it."""
     return scalar(S.kMaxAsf, 0, src, 0)
@@ -202,6 +207,16 @@ CASES = [
      [export(r(4))], 3),
     ("of reads at two indices, the one a0 still holds goes into its reader",
      [set_a0(r(0, "xxxx")), indexed(2, 4), set_a0(r(0, "yyyy")), indexed(3, 6), alu(V.kAdd, 4, 0xF, r(2), r(3))],
+     [export(r(4))], 5),
+    ("a product of a constant read at a0 isn't computed into its export past an a0 load",
+     [],
+     [set_a0(r(0, "xxxx")), at_a0(alu(V.kMul, 2, 0xF, c(4), r(1))), set_a0(r(0, "yyyy")), export(r(2))], 4),
+    ("a constant read at a0 doesn't join a plain read of its register in the slot they'd share",
+     [set_a0(r(0, "xxxx")), indexed(2, 5), alu(V.kMad, 3, 0xF, c(6), c(5), r(2))],
+     [export(r(3))], 4),
+    ("a sum of a constant read at a0 isn't the same sum of its register read plainly",
+     [set_a0(r(0, "xxxx")), alu(V.kAdd, 2, 0xF, c(4), r(1)), at_a0(alu(V.kAdd, 3, 0xF, c(4), r(1))),
+      alu(V.kMul, 4, 0xF, r(2), r(3))],
      [export(r(4))], 5),
     ("a third constant isn't folded into an instruction holding two",
      [move(2, c(2)), alu(V.kMad, 3, 0xF, c(0), c(1), r(2))],
