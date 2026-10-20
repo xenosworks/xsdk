@@ -331,8 +331,8 @@ $(BUILD)/xsdk_test_nohizpass.elf: $(TEST_OBJECTS) $(BUILD)/tests/gpu_resolve_noh
 	$(CC) $(LDFLAGS) -o $@ $(TEST_OBJECTS) $(BUILD)/tests/gpu_resolve_nohizpass.o $(LIBS)
 
 # Milestone 44 step 3's probe of multisampled formats, targets, sample places, depth resolves, hierarchical depth and
-# rates; outside all. It links src/gpu_draw.c built with the probe's hooks ahead of libxsdk.a, standing in for the
-# library's.
+# rates, and step 4's of alpha to coverage; outside all. It links src/gpu_draw.c built with the probe's hooks ahead of
+# libxsdk.a, standing in for the library's.
 PROBE_MSAA_OBJECTS := $(BUILD)/tests/probe_msaa.o $(BUILD)/tests/gpu_draw_msaa.o
 
 msaa_probes: $(BUILD)/probe_msaa.xex

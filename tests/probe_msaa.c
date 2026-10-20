@@ -17,10 +17,11 @@
 #include "xsdk/texture.h"
 
 // Milestone 44 step 3's probe (docs/scope/44-tiling-and-msaa.md, "First, probe_msaa extended") of what Xenos does at 2
-// and 4 samples that xsdk hasn't tried. game:\msaa_case.txt names a case, run with the cases after it in its group, or
-// a group; without it the cases are listed and the default group runs. A fresh boot case writes register values xsdk
-// never has, so it runs alone after a reboot, as a hang leaves the GPU hung. Each step is logged before it's sent and
-// ends with a fence and a resolve the CPU reads back. Built with src/gpu_draw.c's probe hooks (Makefile, msaa_probes).
+// and 4 samples that xsdk hasn't tried, and step 4's of alpha to coverage ("First, a probe"). game:\msaa_case.txt names
+// a case, run with the cases after it in its group, or a group; without it the cases are listed and the default group
+// runs. A fresh boot case writes register values xsdk never has, so it runs alone after a reboot, as a hang leaves the
+// GPU hung. Each step is logged before it's sent and ends with a fence and a resolve the CPU reads back. Built with
+// src/gpu_draw.c's probe hooks (Makefile, msaa_probes).
 
 // The hooks XSDK_MSAA_PROBE builds into src/gpu_draw.c: colour targets of any format at any count, and the resolves'
 // copy sample select (UINT32_MAX for xsdk's). xsdk keeps the hierarchical buffer on at 1280x256 at 2 and 4 samples
@@ -94,6 +95,8 @@ enum {
 	NEAR_ARGB = 0xFF40E040,
 	FAR_ARGB = 0xFFE04040,
 	PROBE_ARGB = 0xFFE0E040,
+	// xsdk's RB_COLORCONTROL, libxenon's: alpha to mask off, its offsets 3, 1, 0, 2 (src/gpu_draw.c).
+	COLOR_CONTROL = 0x87000007,
 };
 
 static const float DEPTH_DRAWN = 0.25f;
@@ -1405,6 +1408,291 @@ static bool run_rates(uint32_t samples)
 	return ran;
 }
 
+enum {
+	// RB_COLORCONTROL (xenia:src/xenia/gpu/register_table.inc:538): alpha_to_mask_enable, and from bit 24 a 2-bit
+	// offset for each pixel of a 2x2 quad (xenia:src/xenia/gpu/registers.h:682-731).
+	RB_COLORCONTROL = 0x2202,
+	ALPHA_TO_MASK_ENABLE = 1 << 4,
+	ALPHA_TO_MASK_OFFSETS_SHIFT = 24,
+	QUAD_PIXELS = 4,
+	// Alphas 0 to 16 sixteenths, each a 16x16 square in a 32x32 cell, 8 cells a row, on even pixels so quads line up.
+	ALPHA_STEPS = 16,
+	ALPHA_CELL = 32,
+	ALPHA_MARGIN = 8,
+	ALPHA_SIZE = 16,
+	ALPHA_CELLS_ACROSS = 8,
+	// Alphas 0, 1/4, 1/2, 3/4 and 1.
+	QUARTER_STEPS = ALPHA_STEPS / 4,
+};
+
+// Each pixel's samples covered, bit s from copy sample select s.
+static uint8_t covered[HEIGHT][WIDTH];
+
+typedef struct {
+	// Each alpha's first quad: the samples each of its pixels covered, by quad_pixel.
+	uint8_t masks[ALPHA_STEPS + 1][QUAD_PIXELS];
+	// Pixels a select's resolve held neither the shape's colour nor the clear's at.
+	uint32_t between;
+	// Pixels of a square unlike its first quad's at their place, and pixels off the squares covered.
+	uint32_t unlike;
+	uint32_t outside;
+	// Pixels where the averaging resolve's step isn't the selects' count.
+	uint32_t averages_off;
+} Coverage;
+
+static uint32_t square_x(uint32_t step)
+{
+	return step % ALPHA_CELLS_ACROSS * ALPHA_CELL + ALPHA_MARGIN;
+}
+
+static uint32_t square_y(uint32_t step)
+{
+	return step / ALPHA_CELLS_ACROSS * ALPHA_CELL + ALPHA_MARGIN;
+}
+
+// The alpha step of the square over the pixel, or -1 off the squares.
+static int alpha_step_at(uint32_t x, uint32_t y)
+{
+	const uint32_t step = y / ALPHA_CELL * ALPHA_CELLS_ACROSS + x / ALPHA_CELL;
+	const uint32_t in_x = x - square_x(step);
+	const uint32_t in_y = y - square_y(step);
+	return step <= ALPHA_STEPS && in_x < ALPHA_SIZE && in_y < ALPHA_SIZE ? (int)step : -1;
+}
+
+// A pixel's place in its quad in the offsets' order, (0, 0), (0, 1), (1, 0) and (1, 1) as x and y, as Xenia picks the
+// offset (xenia:src/xenia/gpu/dxbc_shader_translator_om.cc:1881-1894).
+static uint32_t quad_pixel(uint32_t x, uint32_t y)
+{
+	return (x & 1) << 1 | (y & 1);
+}
+
+// A clear, then the squares drawn under RB_COLORCONTROL at control, set back to xsdk's before the resolve through the
+// select.
+static bool draw_alphas(uint32_t samples, uint32_t control, uint32_t select, const char *label)
+{
+	xsdk_log_write("msaa: %s: sending", label);
+	xsdk_gpu_set_target_samples(WIDTH, HEIGHT, samples);
+	xsdk_gpu_resolve(scratch_address, WIDTH, HEIGHT, CLEAR_ARGB);
+	xsdk_gpu_set_target_samples(WIDTH, HEIGHT, samples);
+	xsdk_gpu_set_shaders(&vertex_shader, &flat_shader);
+	put_register(RB_COLORCONTROL, control);
+	for (uint32_t step = 0; step <= ALPHA_STEPS; step++) {
+		const float color[CHANNELS] = { shape_color[0], shape_color[1], shape_color[2], (float)step / ALPHA_STEPS };
+		const uint32_t x = square_x(step);
+		const uint32_t y = square_y(step);
+		xsdk_gpu_set_pixel_constants(0, color, 1);
+		draw_rect(x, y, x + ALPHA_SIZE, y + ALPHA_SIZE, WIDTH, HEIGHT, 0.0f, SHAPE_ARGB);
+	}
+	put_register(RB_COLORCONTROL, COLOR_CONTROL);
+	xsdk_probe_msaa_select(select);
+	xsdk_gpu_resolve(xsdk_gpu_address(image), WIDTH, HEIGHT, CLEAR_ARGB);
+	xsdk_probe_msaa_select(UINT32_MAX);
+	return wait_gpu(label);
+}
+
+// The pixel's step of the shape's colour over the clear's, alpha left out as the squares' differ.
+static int rgb_level(uint32_t x, uint32_t y, uint32_t steps)
+{
+	return blend_level(pixel_argb(x, y, WIDTH) | 0xFF000000, steps);
+}
+
+static void read_sample(uint32_t sample, Coverage *c)
+{
+	for (uint32_t y = 0; y < HEIGHT; y++) {
+		for (uint32_t x = 0; x < WIDTH; x++) {
+			const int level = rgb_level(x, y, 1);
+			if (level < 0)
+				c->between++;
+			else
+				covered[y][x] |= (uint8_t)(level << sample);
+		}
+	}
+}
+
+static void read_averages(uint32_t samples, Coverage *c)
+{
+	for (uint32_t y = 0; y < HEIGHT; y++)
+		for (uint32_t x = 0; x < WIDTH; x++)
+			c->averages_off += rgb_level(x, y, samples) != __builtin_popcount(covered[y][x]);
+}
+
+static void tally_alphas(Coverage *c)
+{
+	for (uint32_t step = 0; step <= ALPHA_STEPS; step++)
+		for (uint32_t q = 0; q < QUAD_PIXELS; q++)
+			c->masks[step][q] = covered[square_y(step) + (q & 1)][square_x(step) + (q >> 1)];
+	for (uint32_t y = 0; y < HEIGHT; y++) {
+		for (uint32_t x = 0; x < WIDTH; x++) {
+			const int step = alpha_step_at(x, y);
+			if (step < 0)
+				c->outside += covered[y][x] != 0;
+			else
+				c->unlike += covered[y][x] != c->masks[step][quad_pixel(x, y)];
+		}
+	}
+}
+
+// The squares drawn and resolved once through each sample's select, then through the averaging one.
+static bool read_coverage(uint32_t samples, uint32_t control, const char *label, Coverage *c)
+{
+	memset(covered, 0, sizeof covered);
+	memset(c, 0, sizeof *c);
+	char step[LABEL_BYTES];
+	for (uint32_t s = 0; s < samples; s++) {
+		snprintf(step, sizeof step, "%s: copy sample select %u", label, (unsigned)s);
+		if (!draw_alphas(samples, control, s, step))
+			return false;
+		read_sample(s, c);
+	}
+	if (samples > 1) {
+		snprintf(step, sizeof step, "%s: the averaging select", label);
+		if (!draw_alphas(samples, control, UINT32_MAX, step))
+			return false;
+		read_averages(samples, c);
+	}
+	tally_alphas(c);
+	char text[TEXT_BYTES];
+	snprintf(text, sizeof text,
+		"%s: read back: %u pixels neither the shape nor the clear, %u unlike their square's first quad, %u off the "
+		"squares covered, %u averaged off the selects' count",
+		label, (unsigned)c->between, (unsigned)c->unlike, (unsigned)c->outside, (unsigned)c->averages_off);
+	verdict(!c->between && !c->unlike && !c->outside && !c->averages_off, text);
+	return true;
+}
+
+static void report_control(uint32_t samples, const char *label, const Coverage *c)
+{
+	uint32_t short_of_all = 0;
+	for (uint32_t step = 0; step <= ALPHA_STEPS; step++)
+		for (uint32_t q = 0; q < QUAD_PIXELS; q++)
+			short_of_all += c->masks[step][q] != (1u << samples) - 1;
+	char text[TEXT_BYTES];
+	snprintf(text, sizeof text, "%s: every sample covered at every alpha: %u of %u quad pixels not", label,
+		(unsigned)short_of_all, (unsigned)((ALPHA_STEPS + 1) * QUAD_PIXELS));
+	verdict(!short_of_all, text);
+}
+
+static uint32_t quad_count(const uint8_t masks[QUAD_PIXELS])
+{
+	uint32_t count = 0;
+	for (uint32_t q = 0; q < QUAD_PIXELS; q++)
+		count += (uint32_t)__builtin_popcount(masks[q]);
+	return count;
+}
+
+// Each alpha's quad, its pixels in the offsets' order: the samples each covered, by select bit, and how many.
+static void log_alphas(uint32_t samples, const char *label, const Coverage *c)
+{
+	for (uint32_t step = 0; step <= ALPHA_STEPS; step++) {
+		const uint8_t *const m = c->masks[step];
+		xsdk_log_write(
+			"msaa: %s: alpha %2u/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples %X %X %X %X, %u %u %u %u of %u; %u "
+			"of the quad's %u",
+			label, (unsigned)step, m[0], m[1], m[2], m[3], __builtin_popcount(m[0]), __builtin_popcount(m[1]),
+			__builtin_popcount(m[2]), __builtin_popcount(m[3]), (unsigned)samples, (unsigned)quad_count(m),
+			(unsigned)(QUAD_PIXELS * samples));
+	}
+}
+
+// Each pixel's thresholds: the first alpha at which it covers n samples, for each n.
+static void log_thresholds(uint32_t samples, const char *label, const Coverage *c)
+{
+	for (uint32_t q = 0; q < QUAD_PIXELS; q++) {
+		char firsts[TEXT_BYTES];
+		uint32_t length = 0;
+		for (uint32_t n = 1; n <= samples; n++) {
+			uint32_t step = 0;
+			while (step <= ALPHA_STEPS && (uint32_t)__builtin_popcount(c->masks[step][q]) < n)
+				step++;
+			if (step > ALPHA_STEPS)
+				length += (uint32_t)snprintf(firsts + length, sizeof firsts - length, ", %u never", (unsigned)n);
+			else
+				length += (uint32_t)snprintf(
+					firsts + length, sizeof firsts - length, ", %u at %u/16", (unsigned)n, (unsigned)step);
+		}
+		xsdk_log_write("msaa: %s: pixel (%u,%u), the first alpha covering n samples: %s", label, (unsigned)(q >> 1),
+			(unsigned)(q & 1), firsts + 2);
+	}
+}
+
+// Whether coverage only grows with alpha, is alike over the quad, and is n/4 at alpha n/4, by pixel where n/4 of its
+// samples is whole and over the quad.
+static void report_shape(uint32_t samples, const char *label, const Coverage *c)
+{
+	uint32_t lost = 0;
+	uint32_t uneven = 0;
+	uint32_t pixels_off = 0;
+	uint32_t pixels_whole = 0;
+	uint32_t quads_off = 0;
+	for (uint32_t step = 0; step <= ALPHA_STEPS; step++) {
+		const uint8_t *const m = c->masks[step];
+		bool even = true;
+		for (uint32_t q = 0; q < QUAD_PIXELS; q++) {
+			lost += step && (c->masks[step - 1][q] & ~m[q]);
+			even = even && __builtin_popcount(m[q]) == __builtin_popcount(m[0]);
+		}
+		uneven += !even;
+		const uint32_t quarters = step / QUARTER_STEPS;
+		if (step % QUARTER_STEPS)
+			continue;
+		quads_off += quad_count(m) != quarters * samples;
+		if (quarters * samples % 4)
+			continue;
+		for (uint32_t q = 0; q < QUAD_PIXELS; q++)
+			pixels_off += (uint32_t)__builtin_popcount(m[q]) * 4 != quarters * samples;
+		pixels_whole += QUAD_PIXELS;
+	}
+	char text[TEXT_BYTES];
+	snprintf(text, sizeof text, "%s: coverage only grows with alpha: %u steps of a pixel lost a sample", label,
+		(unsigned)lost);
+	verdict(!lost, text);
+	snprintf(text, sizeof text, "%s: symmetric, the quad's pixels cover as many samples: %u of %u alphas not", label,
+		(unsigned)uneven, (unsigned)(ALPHA_STEPS + 1));
+	verdict(!uneven, text);
+	snprintf(text, sizeof text, "%s: alpha n/4 covers n/4 of each pixel's samples, where whole: %u of %u pixels not",
+		label, (unsigned)pixels_off, (unsigned)pixels_whole);
+	verdict(!pixels_off, text);
+	snprintf(text, sizeof text, "%s: alpha n/4 covers n/4 of the quad's samples: %u of 5 alphas not", label,
+		(unsigned)quads_off);
+	verdict(!quads_off, text);
+}
+
+// The control first, xsdk's RB_COLORCONTROL, then alpha to mask on with the offsets for the quad's pixels in order.
+static bool run_atoc(uint32_t samples, const uint32_t offsets[QUAD_PIXELS])
+{
+	Coverage c;
+	char label[LABEL_BYTES];
+	snprintf(label, sizeof label, "atoc at %u: alpha to mask off, the control", (unsigned)samples);
+	if (!read_coverage(samples, COLOR_CONTROL, label, &c))
+		return false;
+	report_control(samples, label, &c);
+	uint32_t control = (COLOR_CONTROL & ~(0xFFu << ALPHA_TO_MASK_OFFSETS_SHIFT)) | ALPHA_TO_MASK_ENABLE;
+	for (uint32_t q = 0; q < QUAD_PIXELS; q++)
+		control |= offsets[q] << (ALPHA_TO_MASK_OFFSETS_SHIFT + 2 * q);
+	snprintf(label, sizeof label, "atoc at %u: offsets %u,%u,%u,%u, RB_COLORCONTROL %08X", (unsigned)samples,
+		(unsigned)offsets[0], (unsigned)offsets[1], (unsigned)offsets[2], (unsigned)offsets[3], (unsigned)control);
+	if (!read_coverage(samples, control, label, &c))
+		return false;
+	log_alphas(samples, label, &c);
+	log_thresholds(samples, label, &c);
+	report_shape(samples, label, &c);
+	return true;
+}
+
+// Offsets 2 should make coverage symmetric, and libxenon's 3, 1, 0, 2 dither it (xenia:src/xenia/gpu/registers.h:
+// 710-721).
+static bool run_atoc_symmetric(uint32_t samples)
+{
+	static const uint32_t offsets[QUAD_PIXELS] = { 2, 2, 2, 2 };
+	return run_atoc(samples, offsets);
+}
+
+static bool run_atoc_dithered(uint32_t samples)
+{
+	static const uint32_t offsets[QUAD_PIXELS] = { 3, 1, 0, 2 };
+	return run_atoc(samples, offsets);
+}
+
 typedef struct {
 	const char *name;
 	// "default", or a fresh boot case's own name, so it runs alone.
@@ -1434,6 +1722,13 @@ static const ProbeCase cases[] = {
 	// Depth resolves at 2 and 4 samples, under every select, are new.
 	{ "depth_2", "depth_2", "which sample a depth resolve copies at 2 samples, under each select", run_depth, 2 },
 	{ "depth_4", "depth_4", "which sample a depth resolve copies at 4 samples", run_depth, 4 },
+	// RB_COLORCONTROL with alpha to mask on is new; each case draws its control, alpha to mask off, first.
+	{ "atoc_sym_1", "atoc_sym_1", "alpha to coverage at 1 sample, offsets 2,2,2,2", run_atoc_symmetric, 1 },
+	{ "atoc_sym_2", "atoc_sym_2", "alpha to coverage at 2 samples, offsets 2,2,2,2", run_atoc_symmetric, 2 },
+	{ "atoc_sym_4", "atoc_sym_4", "alpha to coverage at 4 samples, offsets 2,2,2,2", run_atoc_symmetric, 4 },
+	{ "atoc_dither_1", "atoc_dither_1", "alpha to coverage at 1 sample, offsets 3,1,0,2", run_atoc_dithered, 1 },
+	{ "atoc_dither_2", "atoc_dither_2", "alpha to coverage at 2 samples, offsets 3,1,0,2", run_atoc_dithered, 2 },
+	{ "atoc_dither_4", "atoc_dither_4", "alpha to coverage at 4 samples, offsets 3,1,0,2", run_atoc_dithered, 4 },
 };
 
 enum { CASES = sizeof cases / sizeof cases[0] };
