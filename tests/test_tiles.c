@@ -19,13 +19,16 @@
 #include "xsdk/thread.h"
 #include "xsdk/xsc.h"
 
-// Tiled passes at one sample (docs/scope/44-tiling-and-msaa.md, step 2). Each tiled frame is checked against the same
-// draws made untiled into a target small enough to fit, moved by the viewport so its rows line up, every pixel of every
+// Tiled passes (docs/scope/44-tiling-and-msaa.md, steps 2 and 3). Each tiled frame is checked against the same draws
+// made untiled into a target small enough to fit, moved by the viewport so its rows line up, every pixel of every
 // target equal:
 // - 1280x720, one 8_8_8_8 target with depth, in 2 and 3 bands and with depth whole in 3, from tile 0 and at eDRAM's
 //   top: a gl_FragCoord gradient from xost compiled on the console, triangles whose shallow and steep edges cross the
 //   bands, near and far quads over a depth clear tested against the hierarchical buffer, and a triangle given band 0's
 //   rows that reaches every band;
+// - the same at 2 samples in 2 bands and with depth whole in 3, against 1280x512 pieces, and at 4 samples in 3 bands,
+//   against 1280x256 pieces, the bands as few as fit and the gradient a flat tint, as a piece's gl_FragCoord starts at
+//   its own top;
 // - a pass drawing its own texture back first, as vulkan4xenon loads an attachment, band 0's clear leaving it alone;
 // - two passes laid out the same back to back, clearing to different colours, the second's band 0 its own clear;
 // - four targets of four formats at 1280x720 with depth, in as many bands as they need, each read by value;
@@ -57,6 +60,8 @@ enum {
 	// The four targets' bands, and the reference's pieces: 6 tiles a 16 rows of 1280, so 256 rows a band.
 	FOUR_ROWS = 256,
 	FOUR_DRAWS = 4,
+	// 1280x512 at 2 samples with depth takes eDRAM's 2048 tiles.
+	HALF_ROWS = 512,
 	CHUNK_ROWS = 32,
 	MAX_TEXEL_BYTES = 8,
 	MAX_MISSES_LOGGED = 4,
@@ -89,15 +94,29 @@ typedef struct {
 	uint32_t near_argb;
 	uint32_t far_argb;
 	bool depth_top;
+	uint32_t samples;
+	// The bands as few as fit, which band_rows is then what they come to; else band_rows asked for.
+	bool fewest;
 } Variant;
 
 static const Variant variants[] = {
-	{ "1280x720 in 2 bands of 384 rows", 384, false, 0xFF202040, 0xFF000060, 0xFF40E040, 0xFFE04040, false },
-	{ "1280x720 in 3 bands of 256 rows", 256, false, 0xFF402020, 0xFF0000C0, 0xFF40E0E0, 0xFFE0A040, false },
+	{ "1280x720 in 2 bands of 384 rows", 384, false, 0xFF202040, 0xFF000060, 0xFF40E040, 0xFFE04040, false, 1, false },
+	{ "1280x720 in 3 bands of 256 rows", 256, false, 0xFF402020, 0xFF0000C0, 0xFF40E0E0, 0xFFE0A040, false, 1, false },
 	{ "1280x720 with depth whole in 3 bands of 256 rows", 256, true, 0xFF204020, 0xFF0000FF, 0xFFE040E0, 0xFF4040E0,
-		false },
+		false, 1, false },
 	{ "1280x720 with depth whole at eDRAM's top in 3 bands of 256 rows", 256, true, 0xFF203838, 0xFF00A0A0, 0xFFA0E040,
-		0xFFE0E0E0, true },
+		0xFFE0E0E0, true, 1, false },
+};
+
+// Hierarchical depth on in the bands of the first and last, 384 rows at 2 samples and 256 at 4, and in their
+// references' pieces (src/gpu_draw.c, xsdk_gpu_hiz_fits).
+static const Variant sampled_variants[] = {
+	{ "1280x720 at 2 samples in 2 bands of 384 rows", 384, false, 0xFF283048, 0xFF305078, 0xFF60E0A0, 0xFFE08060, false,
+		2, true },
+	{ "1280x720 at 2 samples with depth whole in 3 bands of 256 rows", 256, true, 0xFF482830, 0xFF784060, 0xFFA0E060,
+		0xFF6080E0, false, 2, true },
+	{ "1280x720 at 4 samples in 3 bands of 256 rows", 256, false, 0xFF304828, 0xFF507830, 0xFFE0A0E0, 0xFF60E0E0, false,
+		4, true },
 };
 
 // The back-to-back passes' clears.
@@ -190,6 +209,8 @@ typedef struct {
 	XsdkCommandBuffer commands;
 	XsdkTexture frames[FRAMES];
 	XsdkTexture reference;
+	// The reference's pieces at 2 samples, 512 rows each; at 4 they're pieces[0], 256 rows.
+	XsdkTexture half;
 	XsdkTexture four[XSDK_COLOR_TARGETS];
 	XsdkTexture pieces[XSDK_COLOR_TARGETS];
 	XsdkTexture big_depth;
@@ -266,13 +287,14 @@ static void set_gradient_literals(const XsdkXscShader *gradient)
 	}
 }
 
-// The single target's draws; untiled, band 0's triangle is scissored to band 0's rows, where a tiled pass predicates
-// it.
-static void draw_single(const Scene *s, const Variant *v, bool tiled)
+// The single target's draws; untiled, into rows top on of a target `rows` tall, band 0's triangle is scissored to band
+// 0's rows, where a tiled pass predicates it.
+static void draw_single(const Scene *s, const Variant *v, bool tiled, uint32_t top, uint32_t rows)
 {
-	xsdk_gpu_set_shaders(&s->rect_vertex, &s->gradient_pixel);
+	xsdk_gpu_set_shaders(&s->rect_vertex, v->samples == 1 ? &s->gradient_pixel : &s->flat_pixel);
 	xsdk_gpu_set_vertices(0, s->square, sizeof square);
-	set_gradient_literals(&s->gradient);
+	if (v->samples == 1)
+		set_gradient_literals(&s->gradient);
 	draw_rect(&whole, v->tint_argb);
 	xsdk_gpu_set_shaders(&s->colored_vertex, &s->flat_pixel);
 	xsdk_gpu_set_vertices(0, s->triangles, TRIANGLES * TRIANGLE_VERTICES * COLORED_FLOATS * 4);
@@ -289,13 +311,14 @@ static void draw_single(const Scene *s, const Variant *v, bool tiled)
 		TRIANGLE_VERTICES * COLORED_FLOATS * 4);
 	if (tiled)
 		xsdk_gpu_set_draw_rows(0, v->band_rows);
-	else
-		xsdk_gpu_set_scissor(0, 0, WIDTH, v->band_rows);
-	xsdk_gpu_draw(XSDK_PRIMITIVE_TRIANGLE_LIST, TRIANGLE_VERTICES);
+	else if (top < v->band_rows)
+		xsdk_gpu_set_scissor(0, 0, WIDTH, v->band_rows - top);
+	if (tiled || top < v->band_rows)
+		xsdk_gpu_draw(XSDK_PRIMITIVE_TRIANGLE_LIST, TRIANGLE_VERTICES);
 	if (tiled)
 		xsdk_gpu_set_draw_rows(0, HEIGHT);
 	else
-		xsdk_gpu_set_scissor(0, 0, WIDTH, HEIGHT);
+		xsdk_gpu_set_scissor(0, 0, WIDTH, rows);
 }
 
 // The four targets' draws, each with its colour for each target from c0 to c3 (tools/gen_target_shaders.py).
@@ -363,47 +386,75 @@ static void show(Scene *s, const XsdkTexture *frame)
 	(void)xsdk_thread_sleep(VARIANT_SHOW_MS);
 }
 
-// The tiled frame, then the reference, one target's frame of 1280x720 whole; depth whole is the title's to clear, here
-// by a target with it where the pass keeps it, at tile 0 with the colour past it or at the top with the colour at 0.
-static bool draw_variant(Scene *s, const Variant *v, const XsdkTexture *frame)
+// Depth whole is the title's to clear, here by a target with it where the pass keeps it, at tile 0 with the colour past
+// it or at the top with the colour at 0; at 2 samples, where the colour doesn't fit beside it, on its tiles, clearing
+// depth alone.
+static void clear_depth_whole(const Variant *v, const XsdkTexture *frame)
+{
+	const uint32_t depth_tiles = xsdk_gpu_target_tiles(WIDTH, HEIGHT);
+	if (v->samples > 1)
+		xsdk_gpu_set_target_samples_at(WIDTH, HEIGHT, v->samples, 0, 0);
+	else if (v->depth_top)
+		xsdk_gpu_set_target_at(WIDTH, HEIGHT, 0, XSDK_EDRAM_TILES - depth_tiles);
+	else
+		xsdk_gpu_set_target_at(WIDTH, HEIGHT, depth_tiles, 0);
+	xsdk_gpu_set_resolve_clears(v->samples == 1, true);
+	xsdk_gpu_resolve_texture(frame, v->clear_argb);
+	xsdk_gpu_set_resolve_clears(true, true);
+}
+
+// The tiled frame, one target's frame of 1280x720 whole.
+static bool draw_tiled(Scene *s, const Variant *v, const XsdkTexture *frame)
 {
 	const XsdkTiling tiling = { .width = WIDTH,
 		.height = HEIGHT,
-		.samples = 1,
+		.samples = v->samples,
 		.targets = { { .format = XSDK_TARGET_8_8_8_8 } },
 		.count = 1,
 		.depth = true,
 		.depth_whole = v->depth_whole,
-		.band_rows = v->band_rows,
+		.band_rows = v->fewest ? 0 : v->band_rows,
 		.depth_top = v->depth_top };
 	XsdkTileResolve resolve = { .target = 0, .texture = frame };
 	rgba_of(v->clear_argb, resolve.clear_rgba);
-	const uint32_t depth_tiles = xsdk_gpu_target_tiles(WIDTH, HEIGHT);
-	if (v->depth_whole) {
-		if (v->depth_top)
-			xsdk_gpu_set_target_at(WIDTH, HEIGHT, 0, XSDK_EDRAM_TILES - depth_tiles);
-		else
-			xsdk_gpu_set_target_at(WIDTH, HEIGHT, depth_tiles, 0);
-		xsdk_gpu_resolve_texture(frame, v->clear_argb);
-	}
+	if (v->depth_whole)
+		clear_depth_whole(v, frame);
 	if (!NT_SUCCESS(xsdk_gpu_begin_tiles(&tiling, &s->commands)))
 		return false;
-	draw_single(s, v, true);
-	if (!NT_SUCCESS(xsdk_gpu_end_tiles(&resolve, 1)))
-		return false;
-	xsdk_gpu_set_target(WIDTH, HEIGHT);
-	xsdk_gpu_resolve_texture(&s->reference, v->clear_argb);
-	xsdk_gpu_set_target(WIDTH, HEIGHT);
-	draw_single(s, v, false);
-	xsdk_gpu_resolve_texture(&s->reference, v->clear_argb);
+	draw_single(s, v, true, 0, HEIGHT);
+	return NT_SUCCESS(xsdk_gpu_end_tiles(&resolve, 1));
+}
+
+// The reference's rows from top, untiled into a target as tall as the piece at the variant's samples, its depth from
+// tile 0 and its colour after, the viewport moved up by top.
+static bool draw_piece(const Scene *s, const Variant *v, const XsdkTexture *piece, uint32_t top)
+{
+	const XsdkColorTarget target = { .format = XSDK_TARGET_8_8_8_8,
+		.tile = xsdk_gpu_target_sample_tiles(WIDTH, piece->height, v->samples) };
+	float clear[CHANNELS];
+	rgba_of(v->clear_argb, clear);
+	xsdk_gpu_set_targets_samples(WIDTH, piece->height, v->samples, &target, 1, 0);
+	xsdk_gpu_resolve_target(0, piece, clear);
+	xsdk_gpu_set_targets_samples(WIDTH, piece->height, v->samples, &target, 1, 0);
+	xsdk_gpu_set_viewport(0.0f, -(float)top, WIDTH, HEIGHT, 0.0f, 1.0f);
+	draw_single(s, v, false, top, piece->height);
+	xsdk_gpu_resolve_target(0, piece, clear);
 	return finished(v->what);
 }
 
+// The tiled frame against the reference, which fits eDRAM whole at 1 sample, and in pieces of 512 rows at 2 samples and
+// 256 at 4.
 static void check_variant(Scene *s, const Variant *v)
 {
 	const XsdkTexture *const frame = &s->frames[s->frame++ % FRAMES];
-	const bool drawn = draw_variant(s, v, frame);
-	const uint32_t differing = drawn ? count_differing(v->what, frame, 0, &s->reference, 0, HEIGHT, 4) : 0;
+	const XsdkTexture *const piece = v->samples == 1 ? &s->reference : v->samples == 2 ? &s->half : &s->pieces[0];
+	bool drawn = draw_tiled(s, v, frame);
+	uint32_t differing = 0;
+	for (uint32_t top = 0; drawn && top < HEIGHT; top += piece->height) {
+		const uint32_t rows = HEIGHT - top < piece->height ? HEIGHT - top : piece->height;
+		drawn = draw_piece(s, v, piece, top);
+		differing += drawn ? count_differing(v->what, frame, top, piece, 0, rows, 4) : 0;
+	}
 	xsdk_log_write(
 		"tiles: %s: %u of %u pixels differ from untiled", v->what, (unsigned)differing, (unsigned)(WIDTH * HEIGHT));
 	char name[LABEL_BYTES];
@@ -839,6 +890,7 @@ static bool load_shaders(Scene *s)
 static bool make_textures(Scene *s)
 {
 	bool made = NT_SUCCESS(xsdk_texture_create(&s->reference, XSDK_FORMAT_B8G8R8A8, WIDTH, HEIGHT, 1, true)) &&
+		NT_SUCCESS(xsdk_texture_create(&s->half, XSDK_FORMAT_B8G8R8A8, WIDTH, HALF_ROWS, 1, true)) &&
 		NT_SUCCESS(xsdk_texture_create(&s->big_depth, XSDK_FORMAT_D24S8, BIG, BIG, 1, true)) &&
 		NT_SUCCESS(xsdk_texture_create(&s->big_sampled, XSDK_FORMAT_B8G8R8A8, BIG, BIG, 1, true));
 	for (uint32_t i = 0; made && i < FRAMES; i++)
@@ -851,7 +903,7 @@ static bool make_textures(Scene *s)
 
 static void free_textures(Scene *s)
 {
-	XsdkTexture *const all[] = { &s->reference, &s->big_depth, &s->big_sampled, &s->frames[0], &s->frames[1],
+	XsdkTexture *const all[] = { &s->reference, &s->half, &s->big_depth, &s->big_sampled, &s->frames[0], &s->frames[1],
 		&s->four[0], &s->four[1], &s->four[2], &s->four[3], &s->pieces[0], &s->pieces[1], &s->pieces[2],
 		&s->pieces[3] };
 	for (uint32_t i = 0; i < sizeof all / sizeof all[0]; i++) {
@@ -884,6 +936,8 @@ static void run(Scene *s)
 		check_variant(s, &variants[i]);
 	check_drawn_back(s);
 	check_back_to_back(s);
+	for (uint32_t i = 0; i < sizeof sampled_variants / sizeof sampled_variants[0]; i++)
+		check_variant(s, &sampled_variants[i]);
 	check_four(s);
 	check_big(s);
 	if (s->has_display)
