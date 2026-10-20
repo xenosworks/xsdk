@@ -694,7 +694,15 @@ static const BandCase band_cases[] = {
 		3 },
 	{ "2048x2048 depth alone", { BIG, BIG, 1, { { 0 } }, 0, true, false, 0, false }, 2 },
 	{ "2048x2048 8_8_8_8 alone", { BIG, BIG, 1, { { XSDK_TARGET_8_8_8_8 } }, 1, false, false, 0, false }, 2 },
-	{ "2 samples", { WIDTH, HEIGHT, 2, { { XSDK_TARGET_8_8_8_8 } }, 1, true, false, 0, false }, 0 },
+	{ "1280x720, 8_8_8_8 and depth, at 2 samples",
+		{ WIDTH, HEIGHT, 2, { { XSDK_TARGET_8_8_8_8 } }, 1, true, false, 0, false }, 2 },
+	{ "the same at 2 samples with depth whole",
+		{ WIDTH, HEIGHT, 2, { { XSDK_TARGET_8_8_8_8 } }, 1, true, true, 0, false }, 3 },
+	{ "1280x720, 8_8_8_8 and depth, at 4 samples",
+		{ WIDTH, HEIGHT, 4, { { XSDK_TARGET_8_8_8_8 } }, 1, true, false, 0, false }, 3 },
+	{ "16_16_16_16_FLOAT at 2 samples, which doesn't take them",
+		{ WIDTH, HEIGHT, 2, { { .format = XSDK_TARGET_16_16_16_16_FLOAT } }, 1, true, false, 0, false }, 0 },
+	{ "3 samples", { WIDTH, HEIGHT, 3, { { XSDK_TARGET_8_8_8_8 } }, 1, true, false, 0, false }, 0 },
 	{ "bands of 48 rows", { WIDTH, HEIGHT, 1, { { XSDK_TARGET_8_8_8_8 } }, 1, true, false, 48, false }, 0 },
 	{ "8193 rows", { WIDTH, 8193, 1, { { XSDK_TARGET_8_8_8_8 } }, 1, true, false, 0, false }, 0 },
 	{ "nothing drawn", { WIDTH, HEIGHT, 1, { { 0 } }, 0, false, false, 0, false }, 0 },
@@ -713,7 +721,7 @@ static void check_band_counts(Scene *s)
 	for (uint32_t i = 0; i < sizeof band_cases / sizeof band_cases[0]; i++) {
 		const BandCase *const c = &band_cases[i];
 		const uint32_t bands = xsdk_gpu_tiling_bands(&c->tiling);
-		const NTSTATUS refused = c->tiling.samples == 1 ? STATUS_INVALID_PARAMETER : STATUS_NOT_IMPLEMENTED;
+		const NTSTATUS refused = STATUS_INVALID_PARAMETER;
 		const NTSTATUS begun = bands ? refused : xsdk_gpu_begin_tiles(&c->tiling, &s->commands);
 		xsdk_log_write("tiles: %s: %u bands, for %u%s", c->what, (unsigned)bands, (unsigned)c->bands,
 			bands                  ? ""

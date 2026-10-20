@@ -8,8 +8,8 @@
 #include "gpu_private.h"
 #include "xsdk/log.h"
 
-// Tiled passes at one sample (docs/scope/44-tiling-and-msaa.md, "Tiled passes in xsdk"), on what the console showed
-// of the window offset, the moved resolve and depth, and predication (docs/HARDWARE.md, "Tiling's registers and
+// Tiled passes at 1, 2 and 4 samples (docs/scope/44-tiling-and-msaa.md, "Tiled passes in xsdk"), on what the console
+// showed of the window offset, the moved resolve and depth, and predication (docs/HARDWARE.md, "Tiling's registers and
 // packets, milestone 44 step 1").
 
 enum {
@@ -59,9 +59,10 @@ void xsdk_gpu_tiles_forget(void)
 // A band of rows: its colour targets and its depth, or the whole depth that stays.
 static uint32_t band_tiles(const XsdkTiling *t, uint32_t rows)
 {
-	uint32_t tiles = t->depth ? xsdk_gpu_target_tiles(t->width, t->depth_whole ? t->height : rows) : 0;
+	const uint32_t depth_rows = t->depth_whole ? t->height : rows;
+	uint32_t tiles = t->depth ? xsdk_gpu_target_sample_tiles(t->width, depth_rows, t->samples) : 0;
 	for (uint32_t i = 0; i < t->count; i++)
-		tiles += xsdk_gpu_color_target_tiles(t->width, rows, t->targets[i].format);
+		tiles += xsdk_gpu_color_target_sample_tiles(t->width, rows, t->targets[i].format, t->samples);
 	return tiles;
 }
 
@@ -78,10 +79,19 @@ static uint32_t rows_of(const XsdkTiling *t)
 	return 0;
 }
 
+// 1, 2 or 4 samples, each colour target's format taking them.
+static bool takes_samples(const XsdkTiling *t)
+{
+	bool takes = t->samples == 1 || t->samples == 2 || t->samples == 4;
+	for (uint32_t i = 0; takes && i < t->count; i++)
+		takes = xsdk_gpu_target_takes_samples(t->targets[i].format, t->samples);
+	return takes;
+}
+
 uint32_t xsdk_gpu_tiling_bands(const XsdkTiling *t)
 {
-	const bool valid = t->samples == 1 && t->width && t->width <= MAX_SIDE && t->height && t->height <= MAX_SIDE &&
-		t->count <= XSDK_COLOR_TARGETS && (t->count || t->depth) && (t->depth || !t->depth_whole) &&
+	const bool valid = t->width && t->width <= MAX_SIDE && t->height && t->height <= MAX_SIDE &&
+		t->count <= XSDK_COLOR_TARGETS && takes_samples(t) && (t->count || t->depth) && (t->depth || !t->depth_whole) &&
 		(t->depth_whole || !t->depth_top) && t->band_rows % XSDK_TILE_ROWS == 0;
 	const uint32_t rows = valid ? rows_of(t) : 0;
 	const uint32_t bands = rows ? (t->height + rows - 1) / rows : 0;
@@ -104,28 +114,28 @@ static uint32_t rows_in(uint32_t band)
 static void place_targets(void)
 {
 	const bool first = pass.depth && !pass.depth_top;
-	uint32_t tile = first ? xsdk_gpu_target_tiles(pass.width, pass.depth_whole ? pass.height : band_rows) : 0;
+	const uint32_t depth_rows = pass.depth_whole ? pass.height : band_rows;
+	uint32_t tile = first ? xsdk_gpu_target_sample_tiles(pass.width, depth_rows, pass.samples) : 0;
 	for (uint32_t i = 0; i < pass.count; i++) {
 		placed[i] = (XsdkColorTarget){ .format = pass.targets[i].format, .tile = tile };
-		tile += xsdk_gpu_color_target_tiles(pass.width, band_rows, pass.targets[i].format);
+		tile += xsdk_gpu_color_target_sample_tiles(pass.width, band_rows, pass.targets[i].format, pass.samples);
 	}
 }
 
 // Depth whole moves its base down by the band's rows.
 static uint32_t depth_tile_of(uint32_t band)
 {
-	const uint32_t whole = pass.depth_top ? XSDK_EDRAM_TILES - xsdk_gpu_target_tiles(pass.width, pass.height) : 0;
-	return pass.depth_whole ? whole + band * xsdk_gpu_target_tiles(pass.width, band_rows) : 0;
+	const uint32_t whole_tiles = xsdk_gpu_target_sample_tiles(pass.width, pass.height, pass.samples);
+	const uint32_t whole = pass.depth_top ? XSDK_EDRAM_TILES - whole_tiles : 0;
+	return pass.depth_whole ? whole + band * xsdk_gpu_target_sample_tiles(pass.width, band_rows, pass.samples) : 0;
 }
 
 NTSTATUS xsdk_gpu_begin_tiles(const XsdkTiling *t, XsdkCommandBuffer *buffer)
 {
 	assert(!tiling);
-	if (t->samples == 2 || t->samples == 4)
-		return STATUS_NOT_IMPLEMENTED;
 	if (!xsdk_gpu_tiling_bands(t)) {
-		xsdk_log_write("gpu: a %ux%u pass of %u colour targets%s can't be tiled", (unsigned)t->width,
-			(unsigned)t->height, (unsigned)t->count, t->depth ? " and depth" : "");
+		xsdk_log_write("gpu: a %ux%u pass of %u colour targets%s at %u samples can't be tiled", (unsigned)t->width,
+			(unsigned)t->height, (unsigned)t->count, t->depth ? " and depth" : "", (unsigned)t->samples);
 		return STATUS_INVALID_PARAMETER;
 	}
 	pass = *t;
@@ -181,8 +191,9 @@ static bool cleared_to(const XsdkTileResolve *r)
 static bool same_layout(const XsdkTileResolve *resolves, uint32_t count)
 {
 	bool same = band_clear && cleared_rows == band_rows && cleared_depth == xsdk_gpu_depth_clear() &&
-		cleared.width == pass.width && cleared.height == pass.height && cleared.count == pass.count &&
-		cleared.depth == pass.depth && cleared.depth_whole == pass.depth_whole && cleared.depth_top == pass.depth_top;
+		cleared.width == pass.width && cleared.height == pass.height && cleared.samples == pass.samples &&
+		cleared.count == pass.count && cleared.depth == pass.depth && cleared.depth_whole == pass.depth_whole &&
+		cleared.depth_top == pass.depth_top;
 	for (uint32_t i = 0; same && i < pass.count; i++)
 		same = cleared.targets[i].format == pass.targets[i].format;
 	for (uint32_t i = 0; same && i < count; i++)

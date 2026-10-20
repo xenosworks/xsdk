@@ -232,7 +232,7 @@ enum {
 typedef struct {
 	uint32_t width;
 	uint32_t height;
-	// 1; 2 and 4 are refused for now.
+	// 1, 2 or 4, each colour target's format taking that many (xsdk_gpu_set_targets_samples); resolves average them.
 	uint32_t samples;
 	// The colour targets' formats, xsdk placing them. With none the pass draws depth alone, in eDRAM's depth-only mode,
 	// which runs no pixel shader by Xenia's reading (xenia:src/xenia/gpu/xenos.h:886-910).
@@ -260,15 +260,14 @@ typedef struct {
 	bool drawn_back;
 } XsdkTileResolve;
 
-// The bands a pass takes, or 0 if it can't be tiled: samples other than 1, nothing drawn, a side past 8192, more than
-// XSDK_TILE_BANDS bands, a band_rows not a multiple of XSDK_TILE_ROWS, a band past eDRAM's tiles, or depth_top without
-// depth whole.
+// The bands a pass takes, or 0 if it can't be tiled: samples other than 1, 2 or 4, or a format that doesn't take them,
+// nothing drawn, a side past 8192, more than XSDK_TILE_BANDS bands, a band_rows not a multiple of XSDK_TILE_ROWS, a
+// band past eDRAM's tiles, or depth_top without depth whole.
 uint32_t xsdk_gpu_tiling_bands(const XsdkTiling *tiling);
-// Sets the pass's targets, as xsdk_gpu_set_targets sets them over the whole target, and records what follows into
-// buffer; STATUS_NOT_IMPLEMENTED for 2 or 4 samples, STATUS_INVALID_PARAMETER for a pass that can't be tiled. Until
-// xsdk_gpu_end_tiles: nothing a recording can't hold, no visibility queries and no targets set. Depth in bands of up to
-// half of eDRAM's tiles is tested against the hierarchical buffer, from a clear to the depth xsdk_gpu_set_depth_clear
-// set before.
+// Sets the pass's targets, as xsdk_gpu_set_targets_samples sets them over the whole target, and records what follows
+// into buffer; STATUS_INVALID_PARAMETER for a pass that can't be tiled. Until xsdk_gpu_end_tiles: nothing a recording
+// can't hold, no visibility queries and no targets set. Depth in bands the hierarchical buffer covers
+// (xsdk_gpu_set_depth_stencil) is tested against it, from a clear to the depth xsdk_gpu_set_depth_clear set before.
 NTSTATUS xsdk_gpu_begin_tiles(const XsdkTiling *tiling, XsdkCommandBuffer *buffer);
 // The draws after reach only rows top to bottom - 1, so the bands those rows miss skip them; rows 0 to the height
 // again for every band.
