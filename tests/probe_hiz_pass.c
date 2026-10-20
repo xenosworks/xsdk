@@ -273,6 +273,59 @@ static void check_after_clears(void)
 		"cleared far from 0.25, a 200x200 draw at 0.9 shown", SMALL_X, SMALL_Y, SMALL_SIZE, SMALL_SIZE, 0.9f, true);
 }
 
+// Milestone 30's small sequence at the rectangle: a draw at 0.4 over a clear to 0.25 from far, then one at 0.9 over a
+// clear to far, whose wrong pixels it counts.
+static bool wrong_after_clears(uint32_t x, uint32_t y, uint32_t w, uint32_t h, Wrong *shown)
+{
+	Wrong hidden;
+	clear(1.0f);
+	clear(0.25f);
+	(void)count_wrong("a draw at 0.4", x, y, w, h, 0.4f, false, &hidden);
+	clear(1.0f);
+	return count_wrong("a draw at 0.9", x, y, w, h, 0.9f, true, shown);
+}
+
+// Rectangles whose first block, their top right, lies in the top row of blocks, where the small passes are drawn: the
+// pass over the corner block left the draws starting in it wrong.
+static const uint32_t top_row[][4] = {
+	{ 0, 0, BLOCK_WIDTH, BLOCK_HEIGHT },
+	{ BLOCK_WIDTH, 0, BLOCK_WIDTH, BLOCK_HEIGHT },
+	{ 2 * BLOCK_WIDTH, 0, BLOCK_WIDTH, BLOCK_HEIGHT },
+	{ 19 * BLOCK_WIDTH, 0, BLOCK_WIDTH, BLOCK_HEIGHT },
+	{ 20 * BLOCK_WIDTH, 0, BLOCK_WIDTH, BLOCK_HEIGHT },
+	{ WIDTH - 2 * BLOCK_WIDTH, 0, BLOCK_WIDTH, BLOCK_HEIGHT },
+	{ WIDTH - BLOCK_WIDTH, 0, BLOCK_WIDTH, BLOCK_HEIGHT },
+	{ 0, 0, 2 * BLOCK_WIDTH, BLOCK_HEIGHT },
+	{ 0, 0, WIDTH / 2, BLOCK_HEIGHT },
+	{ 0, 0, 2 * BLOCK_WIDTH, 100 },
+	{ 0, 0, 1, 1 },
+	{ 2 * BLOCK_WIDTH - 1, BLOCK_HEIGHT - 1, 1, 1 },
+	{ WIDTH - 1, 0, 1, 1 },
+	{ WIDTH - 1, BLOCK_HEIGHT - 1, 1, 1 },
+	{ 0, BLOCK_HEIGHT, WIDTH, BLOCK_HEIGHT },
+	{ WIDTH - BLOCK_WIDTH, BLOCK_HEIGHT, BLOCK_WIDTH, BLOCK_HEIGHT },
+};
+
+static void check_top_row(void)
+{
+	uint32_t wrong_rects = 0;
+	for (uint32_t i = 0; i < sizeof top_row / sizeof top_row[0] && !stopped; i++) {
+		const uint32_t *const r = top_row[i];
+		Wrong shown;
+		if (!wrong_after_clears(r[0], r[1], r[2], r[3], &shown))
+			break;
+		if (!shown.wrong)
+			continue;
+		wrong_rects++;
+		xsdk_log_write("hiz pass: top row %ux%u at (%u, %u): %u pixels wrong, in (%u, %u) to (%u, %u)", (unsigned)r[2],
+			(unsigned)r[3], (unsigned)r[0], (unsigned)r[1], (unsigned)shown.wrong, (unsigned)shown.left,
+			(unsigned)shown.top, (unsigned)shown.right, (unsigned)shown.bottom);
+	}
+	xsdk_log_write("hiz pass: %u rectangles starting in the top rows: %u with wrong pixels",
+		(unsigned)(sizeof top_row / sizeof top_row[0]), (unsigned)wrong_rects);
+	check("hiz pass: rectangles starting in the top rows after clears, every pixel right", !stopped && !wrong_rects);
+}
+
 // Milestone 30's small sequence at rectangles of every size and place, from a fixed seed so every case draws the same.
 static void check_scattered(void)
 {
@@ -288,13 +341,8 @@ static void check_scattered(void)
 		const uint32_t x = (seed >> 8) % (WIDTH - w + 1);
 		seed = seed * 1664525 + 1013904223;
 		const uint32_t y = (seed >> 8) % (HEIGHT - h + 1);
-		Wrong hidden;
 		Wrong shown;
-		clear(1.0f);
-		clear(0.25f);
-		(void)count_wrong("a scattered draw at 0.4", x, y, w, h, 0.4f, false, &hidden);
-		clear(1.0f);
-		if (!count_wrong("a scattered draw at 0.9", x, y, w, h, 0.9f, true, &shown))
+		if (!wrong_after_clears(x, y, w, h, &shown))
 			break;
 		if (!shown.wrong)
 			continue;
@@ -382,6 +430,7 @@ int main(void)
 		xsdk_log_write("hiz pass: the first depth clear with the case, where a hang stops the log");
 		check_after_clears();
 		check_scattered();
+		check_top_row();
 		time_resolves();
 	}
 	check("hiz pass: GPU close", NT_SUCCESS(xsdk_gpu_close()));
