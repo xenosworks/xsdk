@@ -640,3 +640,157 @@ with this xost (local/m48/step5b_build.sh). The first build's failing logs are i
   `loop_break.frag` compiled on the console among them.
 - **`step5_dusklight.log`:** Dusklight's title scene with the rebuilt pack, at 26.6 to 30 fps as before. The vertex
   shaders' scalar forms are the ones the probe ran on the same ALUs, `muls` and `subsc` among them.
+
+## Step 6: programs that index constants
+
+Built on 2026-10-19 at `d3203de`, on `3b4a2b2` to `efa837e` (docs/scope/48-xost-code-quality-2.md, step 6).
+
+- **What the first round skipped:** every program that read a constant at a run-time index went to co_issue alone and
+  whole registers (`bool changed = !indexed`, src/xsc_optimize.c), so the copy the lowering makes of each row it reads
+  at a0 (`xsdk_xsc_block_register`, src/xsc_lower_block.c) stayed, `max r5, c[120+a0], c[120+a0]` before
+  `dp4 r6, r5, r0`. In Dusklight these are its three skinned vertex shaders, whose 137 copies at the baseline were 21
+  at step 5, most of the rest paired as `maxs`.
+- **a0 in the passes** (`074216f`):
+  - An operand knows it's a constant read at a0 (`Source.relative`, from `src_const_rel`), and `set_source` sets the
+    op's `is_const_address_register_relative` from its operands. So a reader that takes `c[n+a0]` reads it at a0, and
+    fetch grouping (`ordered`, src/xsc_program.c) and the exec rules (`stage_uses_a0`), which look at that flag, see it.
+  - **Spans** (`find_a0_spans`): each op's a0, a new one past every `maxa`, `maxas` and `maxasf`
+    (xenia:src/xenia/gpu/shader_interpreter.cc:600-602, 808-823), and past every alloc, where the console loses a0
+    (docs/HARDWARE.md, "a0 doesn't survive an alloc"). `same_values`, which copy propagation, common subexpressions and
+    fusing ask before they move an operand from one op into another, takes a constant at a0 to hold the same only
+    within one span, and `compute_in_place` sinks an export's writer that reads at a0 to the export only within one.
+    So no read at a0 crosses an a0 load or an alloc: the load again after an alloc (`set_a0`) stays before every read
+    that needs it, and a row read before an alloc stays a copy in a temp, which survives it. Plain exec boundaries
+    don't lose a0 (the same section: reads in the alloc region any number of execs later), so spans don't count them.
+  - **Two constants:** `constants_fit` counts `c[n]` and `c[n+a0]` as two, and takes a second and third constant as
+    one only with the same addressing, which they share (xenia:src/xenia/gpu/ucode.h:1945-1964, quoting the XNA
+    validator's X7100); `same_value` and `same_computation` tell them apart. The ranges read a literal only where it
+    isn't read at a0.
+  - **Unmodelled:** a program reading a constant at aL's index, with the instruction's own addressing bits, or with an
+    a0 load reading at a0 keeps the old path (`a0_modelled`). None of the corpus does; aL's are in hardware loops, out
+    of the first round anyway.
+  - **Milestone 45's rules:** the load again after an alloc and after arms stays the lowering's (`set_a0`,
+    `emit_predicated`); arms using a0 in plain execs (`exec_entry`) aren't reached, as predicated programs stay out of
+    the optimiser (`can_optimize`); co_issue moves nothing past an a0 load or an alloc, and still won't pair a scalar
+    op reading a constant with a vector op reading at a0.
+  - **Registers:** these programs' values are packed into components, as every optimised program's are.
+- **An operand an op names but doesn't read** (`19bb673`): the lowering names a one-operand op's operand twice, a
+  trunc of r1 reading r1 in operands 1 and 2. Copy propagation rewrote the one it reads, so once the copy went,
+  operand 2 named a temp nothing writes, which the allocator, counting every temp named, keeps as an input in its own
+  register: step 2's "found on the way". With the first round on, `vk_dynamic_rows.vert` and vulkan4xenon's
+  `matrix_index.vert`, which truncate a copy of their index, took 9 registers, 6 at step 5. Now an operand the op
+  doesn't read, named exactly as a rewritten one, follows it where the new source is a temp (a constant would move
+  the constants' slots). They take 2, and three of vulkan4xenon's programs that don't index lose registers too
+  (below).
+- **Exact:** a read moved within its span reads the same constant. A multiply by a row fused with its add rounds as
+  the GPU's mad does, where the two rounded apart: Xenia's interpreter rounds the product first, so the same, but the
+  console hasn't said, as at step 2. The folds keep results but for a zero's sign.
+- **The simulators** (`3b4a2b2`, `efa837e`): `xdis/simulate.py` loses a0 at an alloc and raises at a read at it with
+  no load since; `xdis/equivalence.py` gives that read undefined, as before any load. Both modelled Xenia's a0, which
+  survives allocs. `tools/gen_relative_constant_probe.py` and `tools/gen_loop_break_probe.py` ask what Xenia's model
+  reads, past an alloc with no load and at an a0 never loaded, so their runs pass `keep_a0` (`d3203de`). Every probe
+  header a generator builds with the simulator, the relative constants', a0 and the predicate's, the scalar forms',
+  the loop breaks', instancing's and the shader cost's, comes out byte for byte as with step 5's simulator and
+  generators.
+- **copy_kinds.py** (`28d310e`) sorts the copies of programs that read at a0 as any program's, with two reasons a
+  copy of a row at a0 stays, a reader past an a0 load and one past an alloc.
+
+**xost's tests:** all 48 pass. `tests/test_indexed_reads.py` runs `xsc/testdata/vk_indexed_reads.vert`, which reads
+`offsets[j]` at j, `m[j]`'s columns at 4j and `tints[i]` at i, uses `offsets[j]` past i's load and `tints[i]` past the
+interpolators' alloc before any load, then reads `scales[j]` and `offsets[i]`. A group of 64 vertices, i 0 to 15 and
+j 0 to 3, each its own a0, runs on `xdis/simulate.py`, the optimiser off and on: every export must be what the GLSL
+gives exactly, its rows dyadic so nothing rounds, every read at a0 must have a load since its alloc, and the program
+must take 30 ALU instructions and 14 copies off and 17 and 3 on, the copies kept being `offsets[j]`'s and
+`tints[i]`'s. It checks the simulators on a program built by hand, a read at a0 past an alloc raising and undefined,
+and `vk_dynamic_rows.vert`'s 6 registers off and 2 on. Against `3b4a2b2`'s compiler it failed on its counts, 28 ALU
+instructions and 11 copies, and before `19bb673` on the registers, 9. `test_optimize.py` adds eight hand-built cases,
+one for each rule above; its three a0 cases each lose the copy that goes. `test_dynamic_index.py`'s check of
+`vk_dynamic_interpolator.vert` takes the two reads past the reload in one instruction,
+`mul o0, c[16+a0], c[0+a0].wwww`.
+
+**Broken on purpose**, each in src/xsc_optimize.c alone, built, then the three tests and `check_optimize.py` over the
+twelve programs that read at a0:
+
+| Break | Fails |
+|---|---|
+| Spans not ended at an alloc | test_indexed_reads (the simulator raises at `tints[i]` read past the alloc), test_optimize's alloc case, check_optimize (`vk_indexed_reads.vert` differs) |
+| Spans not ended at an a0 load | test_indexed_reads (`offsets[j]` read at i, positions wrong), test_optimize's two load cases |
+| `same_values` taking every constant at a0 to hold | test_indexed_reads, test_optimize's three a0 cases |
+| An export's writer sunk past an a0 load | test_optimize's export case |
+| `constants_fit` blind to addressing | test_optimize's slot case |
+| Common subexpressions blind to it | test_optimize's sum case |
+| `set_source` not setting the a0 flag | all three tests; check_optimize can't simulate the twelve, whose reads at a0 become aL's |
+
+`test_dynamic_index.py` passes under the first six: its shaders' reads at a0 hold either way.
+
+**The counts,** `step6.txt` and `step6.json`, the baseline's command with `--baseline`; 0 shaders differ off against
+on, 50 not simulated and 15 not compiled, over 447 files, step 5's and `vk_indexed_reads.vert`; the table is over the
+shaders the baseline compiled. Optimiser on, baseline -> step 5 -> step 6:
+
+| | Corpus vertex, 135 | Corpus pixel, 290 | Dusklight vertex, 47 | Dusklight pixel, 103 | Costliest vertex, 10 | Costliest pixel, 15 |
+|---|---|---|---|---|---|---|
+| ALU | 4518 -> 4156 -> 4063 | 4225 -> 3798 -> 3790 | 3257 -> 2965 -> 2900 | 1342 -> 1000 -> 1000 | 1473 -> 1313 -> 1253 | 546 -> 369 -> 369 |
+| Copies | 636 -> 417 -> 378 | 1032 -> 965 -> 958 | 305 -> 147 -> 135 | 118 -> 94 -> 94 | 170 -> 55 -> 45 | 37 -> 17 -> 17 |
+| Co-issued | 528 -> 886 -> 806 | 199 -> 267 -> 267 | 471 -> 763 -> 685 | 159 -> 182 -> 182 | 222 -> 382 -> 310 | 96 -> 85 -> 85 |
+| Registers | 720 -> 721 -> 695 | 1403 -> 1376 -> 1366 | 300 -> 299 -> 289 | 466 -> 440 -> 440 | 94 -> 92 -> 86 | 124 -> 113 -> 113 |
+| Single-lane | 1921 -> 1520 -> 1666 | 578 -> 351 -> 355 | 1623 -> 1289 -> 1425 | 383 -> 202 -> 202 | 602 -> 475 -> 604 | 186 -> 101 -> 101 |
+
+- **This step's own effect:** Dusklight's three skinned vertex shaders take 266 ALU instructions, 331 at step 5 and
+  426 at the baseline: `04a469b1` 15 to 10, `93d36ce5` 150 to 121 and `c0ddfd45` 166 to 135, 19.6% fewer, with 21
+  registers for 31. Its 47 vertex shaders take 2.2% fewer than at step 5, its 10 costliest 4.6%; 11.0% and 14.9%
+  under the baseline. No shader takes more ALU instructions or registers than at step 5, off or on; with the
+  optimiser off none changes.
+- **The copies:** no copy of a row read at a0 is left in Dusklight. The three keep 9 copies, kinds any program has:
+  literals read beside a computed value in one operand, fetched values and a uniform into exports, and two values
+  computed before the export's alloc. Copies "in a program the optimiser leaves alone" fall in Dusklight's vertex
+  shaders from 21 to 0 and in the corpus's from 157 to 101; the corpus's 782 left alone are all in its 44 programs
+  with hardware loops and its 3 predicated ones, and no program of it takes the unmodelled path. Over the corpus, the
+  copies of a constant at a0 left are `vk_indexed_reads.vert`'s two, one for each reason, and four exports of one,
+  which need an instruction anyway.
+- **Co-issued and single-lane:** the three skinned shaders' co-issued slots fall from 142 to 64, as the copies that
+  co_issue paired as `maxs` go; their single-lane ops rise from 0 to 136, as `compute_in_place` writes each dot product
+  into its lane of the vector it was copied into, where the shaders wrote whole registers before. No op is added.
+
+**Containers that change,** compiled by `ce72878` and by this step, per program in `step6_containers.txt`:
+- **Dusklight:** its three skinned vertex shaders, optimiser on, none off; the pack's 3965 ALU instructions to 3900.
+  Its pack must be rebuilt.
+- **vulkan4xenon:** with the optimiser on, of `tests/shaders` `band.frag` (6 to 4) and `matrix_index.vert` (18 to 10),
+  which read at a0, and `lod_bias.frag`, `lod_computed.frag` and `lod_gradients.frag`, a register or two each from
+  `19bb673`; `src/shaders` and `bench/shaders` none. None with the optimiser off, as its bundles are built, but its
+  layer compiles a shader its bundle doesn't hold on the console with the optimiser on (vulkan4xenon:src/shader.c:351),
+  as `test_run_time_index.c` does `matrix_index.vert` and `band.frag`.
+- **xsdk_test's 47:** `vk_dynamic_interpolator.vert` 10 to 6 and `vk_dynamic_texcoord.frag` 9 to 5, and the new
+  `vk_indexed_reads.vert`; `tests/xsc_shaders.h` regenerated.
+
+**Compile time:** compiling Dusklight's 150 programs on the PC, the best of 25 runs in each of six alternations, took
+71.5 to 73.5 ms with step 5's compiler and 78.7 to 80.4 ms now. The three skinned shaders, through the whole first
+round now, took 1.2 and 6.6 ms; the other 147, whose output is the same, 69.9 to 70.9 and 71.6 to 72.7, of which the
+spans are half a millisecond at most. At that share the console's 1.235 s would be about 1.36 s, within 1.42.
+
+**xsdk_test's check** (`0b8690e`, `tests/test_indexed_reads.c`): `vk_indexed_reads.vert`, compiled on the console with
+the optimiser on, draws 64 by 36 quads of 20 pixels in one draw, 13,824 vertices, each quad its own i and j. A quad's
+red and green name its i and its blue its j; `m[j]` moves it to its place; `offsets` past j's count would move it off
+the target. Every quad's centre is checked in each of 29 frames. On `xdis/simulate.py`, the PC's compile with the
+test's rows and vertices places and colours all 2304 quads; with a0 loads out of the spans 1728 land off their place,
+every i past 3; with allocs out the colour reads `tints[i]` past the alloc, which the simulator refuses and on which
+the console has read other vertices' rows. Its break builds, from this commit with `find_a0_spans`'s alloc line or its
+load line taken out and `tests/xsc_shaders.h` made by that compiler, so the compiler check holds, are
+`build/xsdk_test_break_allocs.xex` and `build/xsdk_test_break_loads.xex`.
+
+**On the console, to run,** built clean from the M48 pair at `d3203de` (`make` builds `build/xsdk_test.xex` and the
+break builds stay beside it; `make build/probe_relative_constants.xex build/probe_a0_predicated.xex` the probes):
+- **xsdk_test,** `build/xsdk_test.xex`: the compiler check, 3 of 47 shaders new; the raster test's indexed grid,
+  `vk_dynamic_interpolator.vert` now `mul oPos, r1, c[0+a0]` and, after the reload, `mul o0, c[16+a0], c[0+a0].wwww`,
+  two rows at a0 in one instruction, and its `vk_dynamic_texcoord.frag` and `vk_dynamic_if.frag` grids; and the indexed
+  reads check. 468 should pass, the 2 controller checks failing with no pad.
+- **The break builds:** `build/xsdk_test_break_allocs.xex` and `build/xsdk_test_break_loads.xex`, each failing the
+  indexed reads check alone besides the pad's, the loads' with 1728 quads a frame off their place.
+- **vulkan4xenon_test,** twice, built against this xsdk: `test_run_time_index.c` compiles `matrix_index.vert`, dot
+  products of rows at a0 as Dusklight's skinning reads them, and `band.frag` on the console with the optimiser on.
+- **`probe_relative_constants`,** its stress mode among it, and **`probe_a0_predicated`**: shaders built by hand,
+  which the optimiser doesn't see, their headers as at step 5; they show the console's a0 as milestone 45 found it.
+- **With Dusklight's pack rebuilt with this xost** (its three skinned vertex shaders change): `probe_shader_cost`
+  (`make build/probe_shader_cost.xex XSC_PACK=...`), the vertex shaders' time and the 100 pixel pictures as the
+  baseline's; `probe_xsc`, 150 of 150 programs as the pack holds them, the 150 within 1.42 s; Dusklight's title scene;
+  and frame captures of Link and Epona, lit by the skinned shaders' normal matrix, `c[152..154+a0]`, read past the
+  interpolators' alloc.

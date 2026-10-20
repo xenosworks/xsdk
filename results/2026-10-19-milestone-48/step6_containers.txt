@@ -1,0 +1,44 @@
+Milestone 48 step 6: the programs whose container changed, compiled by xsdk ce72878 (step 5's compiler) and by step 6
+at xsdk's register split, the optimiser off and on, with their ALU instructions and registers; each list ends with its totals.
+A program step 5 didn't have, vk_indexed_reads.vert, is compiled by both.
+
+== Dusklight's GX shaders, as at dusklight-xenon 33b3874e5f, the same as at bf5a13e557, 150 programs
+optimiser off: 0 of 150 changed, ALU 8016 -> 8016
+04a469b1240c5698.vert on: ALU 15 -> 10, registers 6 -> 2
+93d36ce55e3f9bad.vert on: ALU 150 -> 121, registers 13 -> 10
+c0ddfd4547c71e5a.vert on: ALU 166 -> 135, registers 12 -> 9
+optimiser on: 3 of 150 changed, ALU 3965 -> 3900
+
+== vulkan4xenon's tests/shaders at 1cb5ac4, 80 programs
+optimiser off: 0 of 80 changed, ALU 2124 -> 2124
+band.frag on: ALU 6 -> 4, registers 4 -> 2
+lod_bias.frag on: ALU 3 -> 3, registers 4 -> 3
+lod_computed.frag on: ALU 3 -> 3, registers 4 -> 3
+lod_gradients.frag on: ALU 7 -> 7, registers 6 -> 4
+matrix_index.vert on: ALU 18 -> 10, registers 6 -> 2
+optimiser on: 5 of 80 changed, ALU 1234 -> 1224
+
+== vulkan4xenon's src/shaders at 1cb5ac4, 7 programs
+optimiser off: 0 of 7 changed, ALU 19 -> 19
+optimiser on: 0 of 7 changed, ALU 16 -> 16
+
+== vulkan4xenon's bench/shaders at 1cb5ac4, 8 programs
+optimiser off: 0 of 8 changed, ALU 39 -> 39
+optimiser on: 0 of 8 changed, ALU 26 -> 26
+
+== xost's testdata, 202 programs
+optimiser off: 0 of 202 changed, ALU 4101 -> 4101
+vk_dynamic_interpolator.vert.spv on: ALU 10 -> 6, registers 4 -> 2
+vk_dynamic_matrices.vert.spv on: ALU 13 -> 7, registers 6 -> 3
+vk_dynamic_rows.vert.spv on: ALU 18 -> 10, registers 6 -> 2
+vk_dynamic_texcoord.frag.spv on: ALU 9 -> 5, registers 4 -> 2
+vk_frag_coord.frag.spv on: ALU 6 -> 4, registers 4 -> 2
+vk_indexed_reads.vert.spv on: ALU 28 -> 17, registers 7 -> 4
+vk_instance_index.vert.spv on: ALU 20 -> 18, registers 7 -> 4
+optimiser on: 7 of 202 changed, ALU 2928 -> 2891
+
+== xsdk_test's compiler check, tests/xsc_shaders.h (tools/gen_xsc_shaders.py), optimiser on as it compiles them, 47 programs
+vk_dynamic_interpolator.vert.spv on: ALU 10 -> 6, registers 4 -> 2
+vk_dynamic_texcoord.frag.spv on: ALU 9 -> 5, registers 4 -> 2
+vk_indexed_reads.vert.spv on: ALU 28 -> 17, registers 7 -> 4
+optimiser on: 3 of 47 changed, ALU 1682 -> 1663
