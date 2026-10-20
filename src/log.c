@@ -1,8 +1,13 @@
 #include "xsdk/log.h"
 
+#include <arpa/inet.h>
+#include <errno.h>
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/socket.h>
 
 #include "xsdk/kernel.h"
 
@@ -11,6 +16,9 @@ enum {
 	// The log's name, the title's with .log, and the folder before it.
 	LOG_NAME_BYTES = 64,
 	LOG_PATH_BYTES = 128,
+	// A datagram of the network log: the line's sequence number, then the line.
+	NET_SEQUENCE_BYTES = 4,
+	NET_NOTE_BYTES = 96,
 };
 
 typedef struct {
@@ -31,6 +39,14 @@ static RTL_CRITICAL_SECTION log_lock;
 static HANDLE log_file;
 static char log_line[LOG_LINE_BYTES];
 static char log_path[LOG_PATH_BYTES];
+
+// The network log, on where net_log.txt beside the .xex names the PC as "<address> <port>": each line also goes there
+// as one UDP datagram, so the title never waits on the PC, numbered so a lost one shows. -1 when off.
+static int net_fd = -1;
+static struct sockaddr_in net_to;
+static uint32_t net_sequence;
+static uint32_t net_failures;
+static char net_datagram[NET_SEQUENCE_BYTES + LOG_LINE_BYTES];
 
 // The running .xex's name, from the path the loader leaves in ExLoadedImageName, with .log for its extension; xsdk.log
 // if there's no name or it doesn't fit.
@@ -68,15 +84,55 @@ static NTSTATUS create_file(HANDLE *handle, HANDLE root_directory, const char *p
 static void write_line(const char *line, size_t length_bytes)
 {
 	(void)DbgPrint("%s", line);
+	if (net_fd >= 0) {
+		const uint32_t sequence = htonl(net_sequence++);
+		memcpy(net_datagram, &sequence, NET_SEQUENCE_BYTES);
+		memcpy(net_datagram + NET_SEQUENCE_BYTES, line, length_bytes);
+		// Not retried: the gap in the numbers shows on the PC.
+		if (sendto(net_fd, net_datagram, NET_SEQUENCE_BYTES + length_bytes, 0, (const struct sockaddr *)&net_to,
+				sizeof net_to) < 0)
+			net_failures++;
+	}
 	if (!log_file)
 		return;
 	IO_STATUS_BLOCK io_status;
 	(void)NtWriteFile(log_file, 0, NULL, NULL, &io_status, line, (uint32_t)length_bytes, NULL);
 }
 
+// Opens the network log where net_log.txt names the PC; note says what it found, for the log once the file is open.
+static void open_net_log(char *note, size_t note_bytes)
+{
+	FILE *const file = fopen("net_log.txt", "r");
+	if (!file) {
+		(void)snprintf(note, note_bytes, "log: no net_log.txt beside the .xex, so not over the network");
+		return;
+	}
+	char address[16];
+	unsigned port = 0;
+	in_addr_t pc = 0;
+	const bool read = fscanf(file, "%15s %u", address, &port) == 2 && port <= UINT16_MAX &&
+		inet_pton(AF_INET, address, &pc) == 1;
+	fclose(file);
+	if (!read) {
+		(void)snprintf(note, note_bytes, "log: net_log.txt must hold \"<PC address> <port>\"");
+		return;
+	}
+	const int fd = socket(AF_INET, SOCK_DGRAM, 0);
+	if (fd < 0) {
+		(void)snprintf(note, note_bytes, "log: no socket for the network log: errno %d", errno);
+		return;
+	}
+	net_to = (struct sockaddr_in){ .sin_family = AF_INET, .sin_port = htons((in_port_t)port), .sin_addr = { pc } };
+	net_fd = fd;
+	(void)snprintf(note, note_bytes, "log: also over UDP to %s:%u", address, port);
+}
+
 NTSTATUS xsdk_log_open(void)
 {
 	RtlInitializeCriticalSection(&log_lock);
+	// Before the file, so the PC gets every line, the file's failures among them.
+	char net_note[NET_NOTE_BYTES];
+	open_net_log(net_note, sizeof net_note);
 	char name[LOG_NAME_BYTES];
 	log_name(name, sizeof name);
 	NTSTATUS status = STATUS_NOT_IMPLEMENTED;
@@ -90,10 +146,12 @@ NTSTATUS xsdk_log_open(void)
 			strcpy(log_path, path);
 			xsdk_log_write("log: %s", path);
 			xsdk_log_write("log: named after %s", ExLoadedImageName ? ExLoadedImageName : "nothing");
+			xsdk_log_write("%s", net_note);
 			return status;
 		}
 		xsdk_log_write("log: NtCreateFile(%s) failed: 0x%08X", path, (unsigned)status);
 	}
+	xsdk_log_write("%s", net_note);
 	return status;
 }
 
@@ -136,6 +194,9 @@ void xsdk_log_write_bytes(const char *bytes, size_t length_bytes)
 void xsdk_log_close(void)
 {
 	RtlEnterCriticalSection(&log_lock);
+	// The socket stays open for what's logged after; the title's end closes it.
+	if (net_failures)
+		xsdk_log_write("log: %u of %u lines not sent over the network", (unsigned)net_failures, (unsigned)net_sequence);
 	if (log_file)
 		(void)NtClose(log_file);
 	log_file = 0;

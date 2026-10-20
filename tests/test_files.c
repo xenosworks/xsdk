@@ -11,6 +11,9 @@
 enum {
 	PATH_BYTES = 64,
 	HOLD_MS = 50,
+	LOG_COST_LINES = 100,
+	LOG_COST_BAR_US = 200,
+	CHECK_NAME_BYTES = 64,
 };
 
 // game: is the launch folder on the console; Xenia mounts it read-only but lets titles write to cache:.
@@ -156,9 +159,29 @@ static void check_rename(const char *path)
 	(void)unlink(other);
 }
 
+// What a line of the log costs, to the file and, with net_log.txt beside the .xex, over the network too
+// (docs/scope/53-network-log.md).
+static void check_log_cost(void)
+{
+	struct timespec start, end;
+	(void)clock_gettime(CLOCK_MONOTONIC, &start);
+	for (unsigned line = 0; line < LOG_COST_LINES; line++)
+		xsdk_log_write("files: a line to time, %u of %u", line + 1, (unsigned)LOG_COST_LINES);
+	(void)clock_gettime(CLOCK_MONOTONIC, &end);
+	const long long elapsed_ns =
+		(long long)(end.tv_sec - start.tv_sec) * 1000000000LL + (long long)(end.tv_nsec - start.tv_nsec);
+	const long long line_ns = elapsed_ns / LOG_COST_LINES;
+	xsdk_log_write("files: %u log lines took %lld us, %lld.%03lld us a line", (unsigned)LOG_COST_LINES,
+		elapsed_ns / 1000, line_ns / 1000, line_ns % 1000);
+	char name[CHECK_NAME_BYTES];
+	(void)snprintf(name, sizeof name, "log: a line costs under %u us", (unsigned)LOG_COST_BAR_US);
+	check(name, line_ns < LOG_COST_BAR_US * 1000LL);
+}
+
 void test_files(void)
 {
 	check_log_readable();
+	check_log_cost();
 
 	char path[PATH_BYTES];
 	FILE *file = create_test_file(path);
