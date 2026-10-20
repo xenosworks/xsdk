@@ -50,7 +50,7 @@ KINDS = ("in a program the optimiser leaves alone", "a constant into a temp", "a
          "a fetched value into an export", "an input into an export", "a computed value step 2 can't move",
          "a clamp into a temp", "anything else")
 ALONE, CONSTANT_TEMP, CONSTANT_EXPORT, FETCHED_EXPORT, INPUT_EXPORT, COMPUTED, CLAMP, OTHER = KINDS
-INDEXED = "a constant read at a run-time index, which co_issue alone works on"
+INDEXED = "a constant read at a run-time index other than a0, which co_issue alone works on"
 CONSTANTS = ("a literal", "a uniform", "a constant at a run-time index")
 ZERO_ONE = ("the export's own 0 and 1", "a literal 0 or 1", "a vertex fetch's 0 or 1")
 
@@ -61,6 +61,14 @@ def elementwise(op):
 
 def component(swizzle, lane):
     return xu.AluInstruction.GetSwizzledComponentIndex(swizzle, lane)
+
+
+def loads_a0(alu):
+    return alu.scalar_opcode() in (S.kMaxAs, S.kMaxAsf) or alu.vector_opcode() == V.kMaxA
+
+
+def reads_at_index(alu):
+    return any(alu.src_const_is_addressed(n) for n in (1, 2, 3) if not alu.src_is_temp(n))
 
 
 def fetch_of(rec):
@@ -122,7 +130,7 @@ class Step:
 
 def left_alone(records):
     """Why the optimiser leaves the program alone (xsdk:src/xsc_optimize.c, can_optimize), or None; one reading a
-    constant at a run-time index goes through co_issue alone."""
+    constant at a run-time index other than a0, or loading a0 from one, goes through co_issue alone (a0_modelled)."""
     indexed = False
     for rec in records:
         if rec.kind == "cf":
@@ -145,7 +153,7 @@ def left_alone(records):
             if a.scalar_opcode() in SCALAR_PREVIOUS or (a.scalar_opcode() == S.kRetainPrev
                                                        and a.GetScalarOpResultWriteMask() and not a.is_export()):
                 return "the previous scalar result"
-            indexed = indexed or any(a.src_const_is_addressed(n) for n in (1, 2, 3) if not a.src_is_temp(n))
+            indexed = indexed or (reads_at_index(a) and (not a.is_const_address_register_relative() or loads_a0(a)))
     return INDEXED if indexed else None
 
 
@@ -202,12 +210,26 @@ class Program:
                 mine.append(n)
         if copy.src_is_temp(1):
             return None
+        if copy.src_const_is_addressed(1) and self.a0_lost(j, r):
+            return self.a0_lost(j, r)
         if any(reader.alu.src_reg(n) & 0x80 for n in mine):
             return "read as an absolute value, which a constant operand can't be"
-        constants = {n: reader.alu.src_reg(n) for n in reader.operands[pipe] if not reader.alu.src_is_temp(n)}
-        constants.update(dict.fromkeys(mine, copy.src_reg(1)))
+        # c[n] and c[n+a0] are two constants, and the second and third share their addressing (xsdk:src/xsc_optimize.c,
+        # constants_fit).
+        constants = {n: (reader.alu.src_reg(n), reader.alu.src_const_is_addressed(n)) for n in reader.operands[pipe]
+                     if not reader.alu.src_is_temp(n)}
+        constants.update(dict.fromkeys(mine, (copy.src_reg(1), copy.src_const_is_addressed(1))))
         if len(set(constants.values())) > 2 or (len(constants) == 3 and constants[2] != constants[3]):
             return "read where the instruction would read a third constant"
+        return None
+
+    def a0_lost(self, j, r):
+        """What between copy j and reader r leaves a0 not holding the index the copy read at (xsdk:src/xsc_optimize.c,
+        same_values), or None."""
+        if self.steps[r].stage != self.steps[j].stage:
+            return "read past an alloc, where a0 is lost"
+        if any(s.alu is not None and loads_a0(s.alu) for s in self.steps[j + 1:r]):
+            return "read past an a0 load"
         return None
 
     def why_move_stays(self, j):
