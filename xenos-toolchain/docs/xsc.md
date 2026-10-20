@@ -412,8 +412,6 @@ Refused, each by name, with xost's message where it's short:
 - **What GLSL can't do either** (Supported; Not yet / out of scope): a `discard` in a hardware loop (`a discard
   inside a hardware loop`), a fifth nested hardware loop, more than 255 passes of one, more than 64 registers.
 
-Wrong without a refusal, for GLSL too: `pow` of an exponent whose components differ takes its x in every lane.
-
 ## Literal constant pool (the host-upload contract)
 
 The Xenos has no ALU float immediates, so GLSL literals are allocated

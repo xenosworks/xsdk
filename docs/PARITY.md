@@ -2,8 +2,9 @@
 
 xsdk's goal is to let anyone make homebrew and port games to the Xbox 360 without Microsoft's SDK. This page is the
 map: for each area, what a title gets from xsdk today, how to use it, which test proves it on the console, and what's
-missing. It was drawn up on 2026-10-15, at xsdk `3e889a7`. SCOPE.md has the milestones and TODO.md the open items;
-where they and this page disagree, they win, and this page is out of date.
+missing. It was drawn up on 2026-10-15, at xsdk `3e889a7`, and brought up to date on 2026-10-20, at `e43c0e1`, after
+milestones 41 and 44 to 52. SCOPE.md has the milestones and TODO.md the open items; where they and this page disagree,
+they win, and this page is out of date.
 
 **Status:**
 - **Yes:** works, and a test proves it on the console.
@@ -14,7 +15,7 @@ where they and this page disagree, they win, and this page is out of date.
 **What retail titles call** is judged from Xenia (xenia-project/xenia `95a5c3e`, in `xenos-toolchain/reference/xenia`),
 which implements what the games it runs need:
 - **The kernel:** its table lists 922 xboxkrnl exports. 239 have code in Xenia, 200 of them more than a stub. xsdk
-  imports 55 (`imports/imports.txt`).
+  imports 56 (`imports/imports.txt`).
 - **XAM:** its table lists 1,735 exports. 169 have code in Xenia, 106 of them more than a stub. xsdk imports 47, 22 of
   them for sockets.
 
@@ -22,9 +23,9 @@ which implements what the games it runs need:
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
-| Toolchain: GCC 15, binutils, newlib for `powerpc-xsdk-elf` | Yes | `tools/toolchain/build.sh`, in WSL | every build | A prebuilt toolchain |
-| A `.xex` the retail loader takes, imports by ordinal | Yes | `tools/elf2xex.py`, `src/xsdk.ld`; a title ID and name of its own through `--title-id` and `--title-name`, or `xsdk_add_xex(target TITLE_ID id NAME "...")` | `tests/xex_checks.py`; the name, `make cmake_check` | Compression; an icon; signing, so it runs on RGH and JTAG consoles only. The loader finds the name; whether the dashboard shows it is untested, and XAM leaves it out of a save's header |
-| Make and CMake builds | Yes | `Makefile`; `cmake/xsdk.cmake` and its `xsdk_add_xex()` | `make cmake_check` (`tests/cmake/`) | Shared libraries: static only |
+| Toolchain: GCC 15, binutils, newlib for `powerpc-xsdk-elf`; counted loops end in `bdnz` | Yes | `tools/toolchain/build.sh`, in WSL; glslang-xenon for shaders (docs/GETTING_STARTED.md, section 4) | every build; `bdnz`, `tests/probe_ctr.c` (docs/HARDWARE.md, "Counted loops end in bdnz, milestone 52") | A prebuilt toolchain |
+| A `.xex` the retail loader takes, imports by ordinal | Yes | `tools/elf2xex.py`, `src/xsdk.ld`; a title ID and name of its own through `--title-id` and `--title-name`, or `xsdk_add_xex(target TITLE_ID id NAME "...")` | `tests/xex_checks.py`; the name, `make cmake_check` | Compression; an icon; signing, so it runs on RGH and JTAG consoles only. The loader finds the name, but the dashboard's storage view lists the title as an unknown game and XAM leaves the name out of a save's header (docs/HARDWARE.md, milestone 51) |
+| Make and CMake builds, shaders included | Yes | `Makefile`; `cmake/xsdk.cmake`, its `xsdk_add_xex()` and `xsdk_add_shaders()`, which builds GLSL and HLSL in one call | `make cmake_check` (`tests/cmake/`), its HLSL drawn on the console | Shared libraries: static only |
 | The boot logo before the title's first frame | Yes | `xsdk_splash_show` (`splash.h`) | xsdk_test | |
 
 ## C and C++ runtime
@@ -127,7 +128,7 @@ which implements what the games it runs need:
 | Draws, indexed or not: points, lines, line strips, triangle lists, strips and fans; up to 16 vertex streams (`XSDK_VERTEX_STREAMS`); 18 vertex formats, their components picked in any order; instanced, elements at the instance's rate, a list's instances in pieces of up to 65,535 vertices a packet, indexed from repeated indices, a strip's or a fan's a packet each | Yes | `gpu.h`, `shader.h` | `tests/test_triangle.c`, `test_indexed.c`, `test_vertex.c`, `test_instancing.c` | More than 65,535 indices a draw; primitive restart (TODO.md); 10-bit vertex formats |
 | Shader constants, set by the CPU or loaded by the GPU from memory | Yes | `gpu.h` | `tests/test_constants.c` | |
 | Depth, stencil, two-sided too, blending, write masks, culling, depth bias, scissor, viewport, user clip planes, point sizes from a vertex shader, wireframe and point fill | Yes | `gpu.h` | `tests/test_depth.c`, `test_raster.c` | |
-| Hierarchical depth | Yes | automatic after a depth clear, at 1, 2 and 4 samples, on targets up to 1280 wide and 1024 rows times samples | `tests/test_hiz.c`; at 2 and 4 samples `test_tiles.c` and `tests/probe_msaa.c` (results/2026-10-20-milestone-44-step-3) | Larger targets, untried |
+| Hierarchical depth | Yes | automatic after a depth clear, at 1, 2 and 4 samples, on targets up to 1280 wide and 1024 rows times samples; the pass that sets it up covers 8 rows, about 1 us where the whole target took 29 | `tests/test_hiz.c`; at 2 and 4 samples `test_tiles.c` and `tests/probe_msaa.c` (results/2026-10-20-milestone-44-step-3); the pass, `tests/probe_hiz_pass.c` (results/2026-10-20-milestone-49) | Larger targets, untried |
 | Textures: 24 formats with DXT1, 3 and 5, DXN and DXT5A; signed and gamma reads; linear and tiled; mips; anisotropy; swizzles | Yes | `texture.h` | `tests/test_texture.c`, `test_formats.c`, `test_anisotropy.c` | 32-bit floats in two and four channels, signed DXN and DXT5A (TODO.md); 128-bit textures (SCOPE.md); LOD clamps; mipped linear textures (TODO.md) |
 | Textures sampled in vertex shaders too, both stages' among the 32 fetch constants | Yes | xost (`xenos-toolchain/docs/xsc.md`, "Vertex textures"); `xsdk_shader_move_textures` (`shader.h`) | `tests/test_texture.c` moves a fetch; vulkan4xenon_test draws through it, on the console (vulkan4xenon milestone 22) | |
 | Mirror-once, halfway and border addressing, a black or white border | Yes | `XSDK_ADDRESS_*` and `XsdkSampler`'s `border` (`texture.h`) | `tests/test_sampling.c` | The YCbCr borders (TODO.md) |
@@ -146,9 +147,9 @@ which implements what the games it runs need:
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
-| GLSL to Xenos microcode, offline | Partial | glslang to SPIR-V, then xost (`xenos-toolchain/`) | xost's tests | A subset of GLSL (`xenos-toolchain/docs/xsc.md`): no bitwise operations; `if` on data as selects of both arms, a vertex shader's and one inside a loop too, and on a uniform in execs on the predicate; loops unrolled, or hardware loops where an int in a block counts them, with a break ending a pass on a uniform; `switch` as an if/else chain, no fall-through; no `continue`; `gl_ClipDistance` only as `dot(gl_Position, a plane from a block)`, no `gl_CullDistance` |
+| GLSL to Xenos microcode, offline | Partial | glslang to SPIR-V, then xost (`xenos-toolchain/`), `xsdk_add_shaders` | xost's tests; xsdk_test's grids | A subset of GLSL (`xenos-toolchain/docs/xsc.md`): `if` on data as selects of both arms, on a uniform in execs on the predicate; loops unrolled, or hardware loops where an int in a block counts them, a `break` or `continue` on data gated; early returns, but not in a loop; a `discard` anywhere but a hardware loop; `switch` as an if/else chain, no fall-through; no bitwise operations or shifts, which Xenos lacks; `gl_ClipDistance` only as `dot(gl_Position, a plane from a block)`, no `gl_CullDistance` |
 | SPIR-V to microcode on the console | Yes | `xsdk_xsc_compile` (`xsc.h`) | `tests/test_xsc.c` | Compiling GLSL on the console (docs/scope/shader-compiling.md) |
-| Shader model 3 HLSL to Xenos microcode, offline | Partial | glslang-xenon to SPIR-V, then xost, `xsdk_add_shaders` (`xenos-toolchain/docs/xsc.md`, "HLSL"); D3D9's semantics, `s#`, `c#`, `b#` and `i#`, the constant table (`xsdk_shader_constant`) | xost's `tests/test_hlsl_*.py`; xsdk_test's HLSL grid (`tests/test_hlsl.c`); `tests/cmake/cmake_check.cpp` | GLSL's gaps; shader model 4 and later, assembly shaders and Effects files |
+| Shader model 3 HLSL to Xenos microcode, offline | Yes | glslang-xenon to SPIR-V, then xost, `xsdk_add_shaders` (`xenos-toolchain/docs/xsc.md`, "HLSL"); D3D9's semantics, VPOS and VFACE; `s#`, `c#`, `b#` at boolean constant 128 + N and `i#` at loop constant 16 + N in a pixel shader, set by register or by name through the constant table (`xsdk_shader_constant`); HLSL's truncating `fmod`; `if`, early returns, `switch`, `clip` and `discard` anywhere; skinning from int indices | xost's `tests/test_hlsl_*.py`, 157 shaders of a corpus and 21 idioms against their GLSL twins (results/2026-10-20-milestone-50); xsdk_test's HLSL grid (`tests/test_hlsl.c`), each cell broken on purpose once; `tests/cmake/cmake_check.cpp` | The refusals xsc.md's "HLSL" names: a `discard` in a hardware loop, a `switch` case falling through or left from inside an if, two members in one register; shader model 4 and later, assembly shaders and Effects files |
 
 ## Networking
 
@@ -187,7 +188,7 @@ Each in its own repository under xenosworks.
 |---|---|---|---|---|
 | A log file per title, readable while it runs; `stdout` and `stderr` into it | Yes | `xsdk_log_*` (`log.h`) | `tests/test_files.c` | The log over the network |
 | `DbgPrint` | Yes | `kernel.h` | | |
-| Crash reports with function names | No | | | |
+| Crash reports with function names | No | | | Milestone 40, paused after its probe (SCOPE.md) |
 | Counters: the ring, presents, thread waits | Yes | `xsdk_gpu_stats`, `xsdk_present_stats`, `xsdk_thread_wait_counts` | xsdk_test | A CPU profiler; a GPU capture tool |
 
 ## Documentation and samples
@@ -206,20 +207,27 @@ Each in its own repository under xenosworks.
   marketplace, Live's secure transport. xsdk stays clear of anything that could serve online modding.
 - **The hypervisor:** no HV or HVX calls, and nothing that reaches the console's keys (CODE_GUIDELINES.md 1.2).
 
-## The order proposed for the gaps
+## The order proposed for the gaps, and where each stands
 
-What a porter would hit first, each a milestone agreed when it starts:
+What a porter would hit first, as proposed on 2026-10-15, each a milestone agreed when it starts:
 
 1. **Catching faults:** a report of every CPU exception in the log, with its address, registers and stack, and the
-   title ended back at the dashboard (SCOPE.md, milestone 40).
+   title ended back at the dashboard (SCOPE.md, milestone 40). Open: paused after its probe.
 2. **Docs and samples,** which make everything after them easier to use, for people and for the AI assistants most of
-   them will work through (SCOPE.md, milestone 41).
-3. **The log over the network,** so a title's failure can be seen without copying files back.
-4. **XAM's asynchronous calls, then save data and drives:** content packages, the device selector, `hdd:`, `usb:` and
-   `dvd:`.
-5. **Profiles and system UI:** sign-in, the keyboard, message boxes, pausing for the Guide, and ending under it.
-6. **Threading for Windows-style code:** waits on several objects, event resets, priorities, timers, semaphores.
-7. **Drawing for SDL3 ports:** a render driver, as SDL3 has none on the console.
-8. **The GPU's missing features:** float and 64-bit targets, MRT, predicated tiling, cube and 3D textures, queries.
-9. **Audio:** XMA decoding, speaker configuration.
-10. **Input and the system:** keyboards, controller types, language and region, launching titles, the SMC.
+   them will work through. Done, milestone 41.
+3. **The log over the network,** so a title's failure can be seen without copying files back. Open.
+4. **XAM's asynchronous calls, then save data and drives.** XAM's calls and saves on the hard disk done, milestone 51.
+   Open: memory units and USB drives, the device selector, `hdd:`, `usb:` and `dvd:`.
+5. **Profiles and system UI.** The signed-in user and gamertag, the keyboard, message boxes and pausing for the Guide
+   done, milestones 37 and 51. Open: writing profile settings, ending the title under the Guide, and what a cancelled
+   keyboard gives.
+6. **Threading for Windows-style code:** waits on several objects, event resets, priorities, timers, semaphores. Open.
+7. **Drawing for SDL3 ports:** a render driver, as SDL3 has none on the console. Open.
+8. **The GPU's missing features.** Float and 64-bit targets, MRT, predicated tiling, multisampling with alpha to
+   coverage, cube and 3D textures, instancing, and queries whether draws rasterized done, milestones 44 and 47 among
+   them. Open: sample counts in queries, memory export, and the formats and textures in the GPU table's Missing column.
+9. **Audio:** XMA decoding, speaker configuration. Open.
+10. **Input and the system:** keyboards, controller types, language and region, launching titles, the SMC. Open.
+
+Done since, beside the list: shader model 3 HLSL (milestone 50), loops in shaders (46), xost's code quality (45, 48),
+the pass after a depth clear (49), and counted loops in compiled CPU code (52).
