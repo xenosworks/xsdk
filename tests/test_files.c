@@ -180,20 +180,45 @@ static void check_pwrite(const char *path)
 		read_back && position_kept && file_size(path) == 27);
 }
 
-// ftruncate takes "line one\nline 2\n" to its first line, then to 16 bytes again, the 7 new ones zero.
+// A descriptor's size by fstat, or -1.
+static long long fd_size(int fd)
+{
+	struct stat info;
+	return fstat(fd, &info) == 0 ? (long long)info.st_size : -1;
+}
+
+// ftruncate takes "line one\nline 2\n" to its first line, then to 16 bytes again, the 7 new ones zero. Every step's
+// result is logged, the bytes read back in hex, and the size once closed, for the console to say which step fails.
 static void check_ftruncate(const char *path)
 {
 	const int fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0644);
-	char bytes[16] = "";
-	struct stat info;
-	const bool shortened = fd >= 0 && write(fd, "line one\nline 2\n", 16) == 16 && ftruncate(fd, 9) == 0 &&
-		fstat(fd, &info) == 0 && info.st_size == 9;
-	const bool lengthened = shortened && ftruncate(fd, 16) == 0 && fstat(fd, &info) == 0 && info.st_size == 16 &&
-		pread(fd, bytes, 16, 0) == 16 && memcmp(bytes, "line one\n\0\0\0\0\0\0\0", 16) == 0;
+	const ssize_t written = write(fd, "line one\nline 2\n", 16);
+	errno = 0;
+	const int shortened = ftruncate(fd, 9);
+	const int shorten_errno = errno;
+	const long long short_size = fd_size(fd);
+	errno = 0;
+	const int lengthened = ftruncate(fd, 16);
+	const int lengthen_errno = errno;
+	const long long long_size = fd_size(fd);
+	unsigned char bytes[16];
+	memset(bytes, 'x', sizeof(bytes));
+	const ssize_t read_bytes = pread(fd, bytes, sizeof(bytes), 0);
 	if (fd >= 0)
 		close(fd);
+	const long closed_size = file_size(path);
 	(void)unlink(path);
-	check("ftruncate: shortens a file, then lengthens it with zeros", lengthened);
+	char hex[sizeof(bytes) * 2 + 1];
+	for (size_t i = 0; i < sizeof(bytes); i++)
+		(void)snprintf(hex + 2 * i, 3, "%02X", bytes[i]);
+	xsdk_log_write(
+		"files: ftruncate: wrote %d; to 9 bytes %d (errno %d), fstat %lld; to 16 bytes %d (errno %d), fstat "
+		"%lld; pread %d: %s; %ld bytes once closed",
+		(int)written, shortened, shorten_errno, short_size, lengthened, lengthen_errno, long_size, (int)read_bytes, hex,
+		closed_size);
+	check("ftruncate: shortens a file, then lengthens it with zeros",
+		written == 16 && shortened == 0 && short_size == 9 && lengthened == 0 && long_size == 16 && read_bytes == 16 &&
+			memcmp(bytes, "line one\n\0\0\0\0\0\0\0", sizeof(bytes)) == 0);
 }
 
 // fsync and fdatasync flush a file; a socket has nothing to flush, which POSIX lets fail with EINVAL.
