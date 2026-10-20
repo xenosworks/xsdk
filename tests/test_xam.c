@@ -17,7 +17,7 @@
 enum {
 	// XamUserGetXUID's type mask 1, the first the probe tried.
 	XUID_TYPE_MASK = 1,
-	// The console's calls took 82 ms at most (probe_xam.log).
+	// The console's calls took 98 ms at most (probe_xam_t2.log).
 	TIMEOUT_MS = 1000,
 	POLL_MS = 1,
 	TEXT_BYTES = 64,
