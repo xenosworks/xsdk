@@ -9,6 +9,11 @@ an RGH console, and its GPU layer drives Xenos directly, writing the command pro
 in it comes from public reverse engineering, mainly Xenia, libxenon and xost, and from results on the console: no
 Microsoft tooling and no leaked SDK material.
 
+**New to xsdk?** Start with [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md): from a Windows PC and an RGH or JTAG
+console to a title of your own running on it. Then [docs/GUIDE.md](docs/GUIDE.md) has the calls by task,
+[docs/PITFALLS.md](docs/PITFALLS.md) what breaks a title on the console and not on a PC, and `samples/` titles to
+start from.
+
 **Status:** milestones 1 to 39 (SCOPE.md, section 4) passed on the console as of 2026-10-15. docs/HARDWARE.md records
 each fact the console settled, and TODO.md what's still open.
 
@@ -32,9 +37,9 @@ each fact the console settled, and TODO.md what's still open.
 
 ## Building
 
-The toolchain is GCC 15, binutils and newlib for `powerpc-xsdk-elf`, built in WSL Debian by
-`tools/toolchain/build.sh` (its specs and patches say what differs from a stock build) and installed at `~/xsdk-gcc`.
-Then, in the repository:
+docs/GETTING_STARTED.md takes it a step at a time. In short: the toolchain is GCC 15, binutils and newlib for
+`powerpc-xsdk-elf`, built in WSL Debian by `tools/toolchain/build.sh` (its specs and patches say what differs from a
+stock build) and installed at `~/xsdk-gcc`. Then, in the repository:
 
 ```
 make
@@ -43,7 +48,8 @@ make
 That makes `build/libxsdk.a` and the test title, `build/xsdk_test.xex`, as well as the bring-up probes. A title links
 its own objects and `libxsdk.a` with `src/xsdk.ld`, which starts it at `xsdk_start` in the library, then packs the ELF
 with `tools/elf2xex.py`; vulkan4xenon's Makefile does it that way. CMake projects get the same through
-`-DCMAKE_TOOLCHAIN_FILE=cmake/xsdk.cmake` and `xsdk_add_xex(<target>)`; `make cmake_check` builds a title that way.
+`-DCMAKE_TOOLCHAIN_FILE=cmake/xsdk.cmake` and `xsdk_add_xex(<target>)`, and compile their GLSL shaders with
+`xsdk_add_shaders(<target> <files>)`; `make samples` builds the samples that way, and `make cmake_check` a C++ title.
 
 ## Testing
 
@@ -54,9 +60,11 @@ checks, but the console decides; CLAUDE.md lists where Xenia differs.
 ## Layout
 
 - `include/xsdk/` and `src/`: the SDK; `imports/` the kernel and XAM imports it links by ordinal.
+- `samples/`: titles to learn from and start from, each a CMake project; `samples/template` is a new title's start.
 - `tests/`: the test title and the probes, titles that each answer one question on the console.
 - `tools/`: the XEX packer, the shader and import generators, and the toolchain build.
 - `SCOPE.md`: what the SDK covers and its milestones. `CODE_GUIDELINES.md`: how its code is written.
+- `docs/GETTING_STARTED.md`, `docs/GUIDE.md` and `docs/PITFALLS.md`: how to make a title with xsdk.
 - `docs/HARDWARE.md` and `results/`: what each console run showed, with its logs and captures.
 
 ## Related
