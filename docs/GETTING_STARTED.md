@@ -122,35 +122,46 @@ With a `PREFIX` other than the default, give make `TOOLCHAIN=<PREFIX>/bin/powerp
 
 ## 4. glslang
 
-Shaders are GLSL, which glslang turns into SPIR-V for xost. xsdk uses glslang 16.3.0, the version xost is checked
-with: the Linux build below gives the same SPIR-V, byte for byte, as the build xost's 196 test shaders were made with.
-Khronos's 16.3.0 release has its sources only, so build it, in about a minute and a half:
+Shaders are GLSL or shader model 3 HLSL, which glslang turns into SPIR-V for xost. xsdk uses glslang-xenon, Khronos's
+glslang 16.3.0 with two changes for HLSL: its `fmod` truncates, as HLSL's does, and it keeps a bool's `register(bN)`
+and an int's `register(iN)`, which xost puts where D3D9 does (xenos-toolchain/docs/xsc.md, "HLSL"). Its GLSL comes
+out as Khronos's 16.3.0's, the version xost is checked with: the same SPIR-V, byte for byte, for 596 GLSL programs of
+xost's tests, vulkan4xenon and Dusklight, and the 27 others refused alike (results/2026-10-20-milestone-50/README.md,
+"Step 7" and "Step 8"). glslang runs SPIR-V's optimiser on all HLSL, so glslang-xenon is built with it, from
+SPIRV-Tools and SPIRV-Headers at the revisions its `known_good.json` names, which `update_glslang_sources.py` fetches.
+In about a minute and a quarter:
 
 ```
-git clone --depth 1 --branch 16.3.0 https://github.com/KhronosGroup/glslang.git ~/glslang-16.3.0
-cmake -S ~/glslang-16.3.0 -B ~/glslang-16.3.0/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_OPT=OFF \
-  -DGLSLANG_TESTS=OFF
-cmake --build ~/glslang-16.3.0/build
+git clone --depth 1 --branch xenon https://github.com/xenosworks/glslang-xenon.git ~/glslang-xenon
+cd ~/glslang-xenon && python3 update_glslang_sources.py
+cmake -S ~/glslang-xenon -B ~/glslang-xenon/build -G Ninja -DCMAKE_BUILD_TYPE=Release -DENABLE_OPT=ON \
+  -DSPIRV_SKIP_EXECUTABLES=ON -DGLSLANG_TESTS=OFF
+cmake --build ~/glslang-xenon/build
 ```
 
-`ENABLE_OPT=OFF` leaves out SPIR-V's optimiser, which xsdk doesn't run and which would need sources of its own. The
-three print, at their ends:
+The second fetches SPIRV-Tools and SPIRV-Headers into `External/`, and googletest, which the build doesn't use;
+`SPIRV_SKIP_EXECUTABLES` leaves out SPIRV-Tools' own tools. The four print, at their ends:
 
 ```
-Cloning into '/home/<you>/glslang-16.3.0'...
+Cloning into '/home/<you>/glslang-xenon'...
 ...
--- Configuring done (9.4s)
--- Generating done (0.1s)
--- Build files have been written to: /home/<you>/glslang-16.3.0/build
+In External/spirv-tools/external/spirv-headers: ['git', 'checkout', '1a22b167081842915a1c78a0b5b5a353a23284aa']
+b''
 ...
-[63/64] Building CXX object StandAlone/CMakeFiles/glslang-standalone.dir/StandAlone.cpp.o
-[64/64] Linking CXX executable StandAlone/glslang
+CMake Deprecation Warning at CMakeLists.txt:111 (message):
+  ENABLE_HLSL is deprecated.  The HLSL front-end will be removed in a future
+...
+-- Build files have been written to: /home/<you>/glslang-xenon/build
+...
+[393/394] Building CXX object StandAlone/CMakeFiles/glslang-standalone.dir/StandAlone.cpp.o
+[394/394] Linking CXX executable StandAlone/glslang
 ```
 
-Put it beside the toolchain, where xsdk's CMake looks for it (`XSDK_GLSLANG` in `cmake/xsdk.cmake`):
+The warning is Khronos's: its HLSL front end takes fixes, no new work (KhronosGroup/glslang#4210). Put glslang beside
+the toolchain, where xsdk's CMake looks for it (`XSDK_GLSLANG` in `cmake/xsdk.cmake`):
 
 ```
-cp ~/glslang-16.3.0/build/StandAlone/glslang ~/xsdk-gcc/bin/
+cp ~/glslang-xenon/build/StandAlone/glslang ~/xsdk-gcc/bin/
 ~/xsdk-gcc/bin/glslang --version
 ```
 
@@ -160,8 +171,11 @@ ESSL Version: OpenGL ES GLSL 3.20 glslang Khronos. 16.3.0
 GLSL Version: 4.60 glslang Khronos. 16.3.0
 ```
 
-`tools/build_shaders.py`, run by hand, takes `--glslang ~/xsdk-gcc/bin/glslang`; without it, it uses the `glslang` on
-`PATH`, then a Windows build in `xenos-toolchain/tools/glslang/bin/glslang.exe`, if one is there.
+That's Khronos's version, which glslang-xenon keeps, so nothing tells the two apart: HLSL through Khronos's glslang
+builds too, with `fmod` floored and every bool and int at the lowest constant left. `tools/build_shaders.py`, run by
+hand, takes `--glslang ~/xsdk-gcc/bin/glslang`; without it, it uses the `glslang` on `PATH`, then, for GLSL alone, a
+Windows build in `xenos-toolchain/tools/glslang/bin/glslang.exe`, if one is there. That one is Khronos's, so for HLSL
+it stops instead and names this section.
 
 ## 5. Building xsdk and the samples
 
@@ -296,9 +310,9 @@ xenia_scan: 3 instructions Xenia skips; Xenia results through these functions ar
 
 That's `build/title.xex`, which runs as section 6 says and logs as section 7 does, to `title.log`. Rename the target
 in `CMakeLists.txt`, and the `.xex` and the log take its name. `AGENTS.md`, which `CLAUDE.md` imports, tells an
-assistant working in the folder how to build the title, check it, and stay clear of docs/PITFALLS.md. GLSL shaders
-join the build through `xsdk_add_shaders`, as `samples/triangle/CMakeLists.txt` adds its own; docs/GUIDE.md goes
-through the rest, a task at a time.
+assistant working in the folder how to build the title, check it, and stay clear of docs/PITFALLS.md. GLSL and HLSL
+shaders join the build through `xsdk_add_shaders`, as `samples/triangle/CMakeLists.txt` adds its GLSL and
+`tests/cmake/CMakeLists.txt` its HLSL; docs/GUIDE.md goes through the rest, a task at a time.
 
 ## 9. Xenia, as a smoke check
 
