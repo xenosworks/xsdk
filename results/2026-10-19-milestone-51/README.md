@@ -43,14 +43,15 @@ throughout (logs: `results/2026-10-19-milestone-51/`, `probe_xam.log` and, under
   the file's handle then failed writes and reads with 0xC000026E and closed fine, and the 7 bytes written before the
   close, with no flush, were there when the package opened again.
 
-## What xsdk_test checks, with nobody signed in
+## What xsdk_test checks
 
 `tests/test_xam.c`, each check under a second:
 
 | Check | On the console | Under Xenia |
 |---|---|---|
-| `xam: nobody is signed in` | pass | fails: user 0 always signed in (xenia:src/xenia/kernel/xam/user_profile.h:229) |
-| `xam: with nobody signed in, user 0's XUID and name fail as on the console` | pass | fails: both succeed (xam_user.cc:29-57, 105-120) |
+| `xam: nobody is signed in` | pass | not run: user 0 is always signed in (xenia:src/xenia/kernel/xam/user_profile.h:229), so it takes the gamertag check |
+| `xam: with nobody signed in, user 0's XUID and name fail as on the console` | pass | not run, as above |
+| `xam: the signed-in user's gamertag reads` | with a profile signed in, in place of the two above | pass (xam_user.cc:105-120) |
 | `xam: the device enumerator finds the hard disk` | pass | pass: a dummy hard disk, device 1 (xam_content_device.cc:35-40) |
 | `xam: an overlapped call completes through its event` | pass | pass, even broken (below) |
 | `xam: a save no profile owns mounts, takes a file and unmounts` | pass | pass: packages are host folders (content_manager.cc:129-154) |
@@ -58,7 +59,7 @@ throughout (logs: `results/2026-10-19-milestone-51/`, `probe_xam.log` and, under
 | `xam: a save mounted again opens the package and reads back what was written` | pass | pass |
 | `xam: the save is deleted` | pass | pass (content_manager.cc:231-245) |
 
-They need nobody signed in: with auto sign-in on, the first two fail.
+With a profile signed in, as after the person run's auto sign-in, the first two give way to the gamertag check.
 
 **Breaks** (`sh tests/breaks/build.sh` in WSL, `build/breaks/xsdk_test_<break>.xex`):
 - `xsdk_test_noflush.xex`, unmount with no flush: fails `xam: a save is flushed before it's unmounted` and nothing

@@ -10,9 +10,7 @@
 #include "xsdk/thread.h"
 #include "xsdk/xam.h"
 
-// Milestone 51's checks that need nobody at the console, run with no profile signed in (docs/scope/
-// 51-saves-and-profiles.md). Xenia signs user 0 in always (xenia:src/xenia/kernel/xam/user_profile.h:229), so the two
-// sign-in checks fail there.
+// Milestone 51's checks that need nobody at the console (docs/scope/51-saves-and-profiles.md).
 
 enum {
 	// XamUserGetXUID's type mask 1, the first the probe tried.
@@ -37,7 +35,9 @@ static uint32_t ms_since(const struct timespec *start)
 	return (uint32_t)((now.tv_sec - start->tv_sec) * 1000 + (now.tv_nsec - start->tv_nsec) / 1000000);
 }
 
-static void check_nobody_signed_in(void)
+// A console set to sign a profile in by itself, as Xenia always signs user 0 in (xenia:src/xenia/kernel/xam/
+// user_profile.h:229), takes the first check; one with nobody signed in, the other two.
+static void check_signed_in(void)
 {
 	uint32_t states = 0;
 	for (uint32_t user = 0; user < XSDK_XAM_USERS; user++)
@@ -47,7 +47,12 @@ static void check_nobody_signed_in(void)
 	const uint32_t result = xsdk_xam_signed_in_user(&user, gamertag);
 	xsdk_log_write("xam: sign-in states OR'd 0x%X; xsdk_xam_signed_in_user 0x%08X, user 0x%X, '%s'", (unsigned)states,
 		(unsigned)result, (unsigned)user, gamertag);
-	check("xam: nobody is signed in", states == 0 && result == ERROR_NO_SUCH_USER && user == XSDK_XAM_USER_NONE);
+	if (states) {
+		check("xam: the signed-in user's gamertag reads",
+			result == ERROR_SUCCESS && user < XSDK_XAM_USERS && gamertag[0] != '\0');
+		return;
+	}
+	check("xam: nobody is signed in", result == ERROR_NO_SUCH_USER && user == XSDK_XAM_USER_NONE);
 
 	uint64_t xuid = 0;
 	const uint32_t xuid_result = XamUserGetXUID(0, XUID_TYPE_MASK, &xuid);
@@ -171,7 +176,7 @@ static void check_save(void)
 
 void test_xam(void)
 {
-	check_nobody_signed_in();
+	check_signed_in();
 	check_device();
 	check_event();
 	check_save();

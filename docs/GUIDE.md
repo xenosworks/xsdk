@@ -270,6 +270,33 @@ ported in mbedtls-xenon.
   a thread of its own and hands the callback a finished frame.
 - **SDL3** has both, as gamepads and audio streams, through SDL-xenon (docs/PARITY.md, "Libraries ported to xsdk").
 
+## Saves, the user and XAM's dialogs
+
+[tests/save_check.c](../tests/save_check.c), [tests/test_xam.c](../tests/test_xam.c), through `xam.h`
+
+| Call | Leaves set | Undone by | Threads |
+|---|---|---|---|
+| `xsdk_xam_prepare(&overlapped)` | the overlapped zeroed, with an event of its own | `xsdk_xam_returned` if the call didn't pend, else `xsdk_xam_wait` once it's done | any |
+| `xsdk_xam_returned(&overlapped, XamCall(..., &overlapped))` | `ERROR_IO_PENDING` while XAM runs the call, else its result | | any |
+| `xsdk_xam_wait(&overlapped, timeout_ms, &length)` | `ERROR_IO_INCOMPLETE` until the call is done, then XAM's result and length | | any |
+| `xsdk_save_mount(&save, user_index, "save", file_name, display_name)` | the package opened, or made, as `save:` once `xsdk_save_wait` says it's done | `xsdk_save_unmount` | any |
+| `xsdk_save_unmount(&save)` | the package flushed then closed, once `xsdk_save_wait` says it's done; files still open in it fail | | any |
+| `xsdk_xam_signed_in_user(&user_index, gamertag)` | the first signed-in user and their gamertag; `ERROR_NO_SUCH_USER` with nobody | | any |
+| `xsdk_xam_keyboard(...)`, `xsdk_xam_message_box(...)` | the dialog open; its text or button lands once the call is done | | any, while the drawing thread presents |
+| `xsdk_system_ui_open()` | whether the Guide or a dialog of XAM's is up | | one thread, once a frame |
+
+- **Poll once a frame, with a timeout of 0.** The Guide and XAM's dialogs show only while the title keeps presenting
+  (docs/HARDWARE.md, "The Guide shows through VdSwap"), so a wait that blocks the drawing thread on a dialog never
+  ends. A timeout is for a thread that doesn't present.
+- **Keep the overlapped and the `XsdkSave` alive** until the call is done: XAM writes into them as it finishes.
+- **Saves with nobody signed in** belong to `XSDK_XAM_USER_NONE`; user 0's fail then
+  (results/2026-10-19-milestone-51/probe_xam.log). Delete an unmounted one with
+  `XamContentDelete(save.user_index, &save.data, &save.overlapped)`, prepared and waited for as above.
+- **A title ID keeps saves apart:** packages sit in `Content\0000000000000000\<title ID>\00000001\` on the hard disk,
+  a folder for each title ID, and every title without one of its own shares 0x5853444B's. Give it one, and the name
+  the dashboard shows, with `xsdk_add_xex(target TITLE_ID 0x... NAME "...")`.
+- **Pause for the Guide** while `xsdk_system_ui_open` says it's up; a dialog's own call says when it closes.
+
 ## Porting: the C and POSIX calls
 
 A C17 or C++23 program builds with newlib, libstdc++ and xsdk's POSIX layer. What links, by a link of every name below

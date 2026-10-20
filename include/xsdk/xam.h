@@ -10,16 +10,8 @@
 extern "C" {
 #endif
 
-// XAM's asynchronous calls, saves in content packages, the signed-in user and XAM's dialogs (milestone 51). Each call
-// gives XAM's own result unchanged and none waits unless told to, as the Guide and XAM's dialogs show only while the
-// title keeps presenting (docs/HARDWARE.md, "The Guide shows through VdSwap"). How to use them:
-// - Any XAM call that takes an overlapped: xsdk_xam_prepare it, pass the call's return through xsdk_xam_returned, and
-//   while that's ERROR_IO_PENDING, xsdk_xam_wait once a frame with timeout 0 until it stops saying ERROR_IO_INCOMPLETE.
-// - Saves: xsdk_save_mount, then xsdk_save_wait once a frame; files are then "save:/name" for fopen or open; after
-//   writing, xsdk_save_unmount and xsdk_save_wait again. To delete an unmounted one, XamContentDelete(save.user_index,
-//   &save.data, &save.overlapped), its overlapped prepared and waited for as above.
-// - Dialogs: xsdk_xam_keyboard or xsdk_xam_message_box, then xsdk_xam_wait as above; pause the game while one runs or
-//   xsdk_system_ui_open says XAM's UI is up.
+// XAM's asynchronous calls, saves, the signed-in user and XAM's dialogs: docs/GUIDE.md, "Saves, the user and XAM's
+// dialogs".
 
 enum {
 	XSDK_XAM_USERS = 4,
