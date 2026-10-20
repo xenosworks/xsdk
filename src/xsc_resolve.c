@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "xsc_private.h"
@@ -241,18 +242,26 @@ typedef struct {
 static const char *const usages[] = { "POSITION", "BLENDWEIGHT", "BLENDINDICES", "NORMAL", "PSIZE", "TEXCOORD",
 	"TANGENT", "BINORMAL", "TESSFACTOR", "POSITIONT", "COLOR", "FOG", "DEPTH", "SAMPLE" };
 
+// A string decoration's text, cut to fit; its length.
+static size_t decoration_text(const XscDecoration *d, char *text, size_t bytes)
+{
+	size_t length = 0;
+	for (; length < bytes - 1 && length < 4 * (size_t)d->arg_count; length++) {
+		text[length] = (char)(d->args[length / 4] >> 8 * (length % 4) & 0xFF);
+		if (!text[length])
+			break;
+	}
+	text[length] = '\0';
+	return length;
+}
+
 // The variable's semantic; false for one without, as GLSL's are.
 static bool semantic_of(const XscModule *m, uint32_t id, Semantic *s)
 {
 	const XscDecoration *const d = xsdk_xsc_decoration(m, id, SPV_DEC_USER_SEMANTIC);
 	if (!d)
 		return false;
-	size_t length = 0;
-	for (; length < SEMANTIC_BYTES - 1 && length < 4 * (size_t)d->arg_count; length++) {
-		s->name[length] = (char)(d->args[length / 4] >> 8 * (length % 4) & 0xFF);
-		if (!s->name[length])
-			break;
-	}
+	const size_t length = decoration_text(d, s->name, sizeof s->name);
 	size_t digits = length;
 	while (digits > 0 && s->name[digits - 1] >= '0' && s->name[digits - 1] <= '9')
 		digits--;
@@ -417,7 +426,7 @@ static bool assign_blocks(Xsc *x, const XscModule *m, const XscType *types, XscI
 					return false;
 			}
 			const XscConstantSlot slot = { name, (uint32_t)(reg + off / 16), (uint32_t)mregs, (int32_t)mi,
-				(int32_t)si->block_count - 1, false };
+				(int32_t)si->block_count - 1, false, 0, 0 };
 			if (!add_constant(x, si, &capacity->constants, slot))
 				return false;
 		}
@@ -640,7 +649,7 @@ static bool resolve_uniform_constant(Xsc *x, const XscModule *m, const XscType *
 			return false;
 	}
 	if (!add_constant(
-			x, si, &capacity->constants, (XscConstantSlot){ name, (uint32_t)reg, (uint32_t)regs, -1, -1, false }))
+			x, si, &capacity->constants, (XscConstantSlot){ name, (uint32_t)reg, (uint32_t)regs, -1, -1, false, 0, 0 }))
 		return false;
 	if (st->kind == XSC_TYPE_ARRAY)
 		return set_role(x, si, v->vid, (XscRole){ XSC_ROLE_ARRAY, reg, regs, elem_regs });
@@ -751,7 +760,8 @@ static bool assign_comparisons(
 		char text[NAME_BYTES];
 		const int length = snprintf(text, sizeof text, "_compare%u", (unsigned)use->a);
 		const char *const name = xsdk_xsc_copy_text(x, text, (size_t)length);
-		if (!name || !add_constant(x, si, &capacity->constants, (XscConstantSlot){ name, reg, 1, -1, -1, false }) ||
+		if (!name ||
+			!add_constant(x, si, &capacity->constants, (XscConstantSlot){ name, reg, 1, -1, -1, false, 0, 0 }) ||
 			!add_use(x, &si->comparisons, &si->comparison_count, &capacity->comparisons,
 				(XscVarUse){ use->var, reg, use->a }))
 			return false;
@@ -770,10 +780,76 @@ static bool integral(const XscModule *m, const XscType *types, const XscInterfac
 	return t && (t->kind == XSC_TYPE_INT || t->kind == XSC_TYPE_BOOL);
 }
 
+// A block member's components' int signedness: 1 for HLSL's int, 0 for its bool, which glslang makes an unsigned int,
+// and -1 for any other type.
+static int64_t int_signedness(
+	const XscModule *m, const XscType *types, const XscInterface *si, const XscConstantSlot *c)
+{
+	const XscType *const st = xsdk_xsc_type(m, types, si->blocks[c->block].struct_type);
+	uint32_t tid = st && (uint32_t)c->member < st->member_count ? st->members[c->member] : 0;
+	const XscType *t = xsdk_xsc_type(m, types, tid);
+	while (t && (t->kind == XSC_TYPE_VECTOR || t->kind == XSC_TYPE_ARRAY)) {
+		tid = t->comp;
+		t = xsdk_xsc_type(m, types, tid);
+	}
+	const XscInstr *const it = t && t->kind == XSC_TYPE_INT ? xsdk_xsc_by_result(m, tid) : NULL;
+	return it ? (int64_t)xsdk_xsc_operand(it, 1) : -1;
+}
+
+// A block member's register(bN) or register(iN), which glslang-xenon keeps as a UserSemantic beside any semantic
+// (glslang-xenon:SPIRV/GlslangToSpv.cpp, decorateStructType); false for a member without one.
+static bool member_register(const XscModule *m, uint32_t struct_type, uint32_t member, char *letter, uint32_t *index)
+{
+	static const char prefix[] = "register(";
+	const size_t at = sizeof prefix - 1;
+	for (size_t i = 0; i < m->member_decoration_count; i++) {
+		const XscDecoration *const d = &m->member_decorations[i];
+		if (d->target != struct_type || d->member != member || d->decoration != SPV_DEC_USER_SEMANTIC)
+			continue;
+		char text[SEMANTIC_BYTES];
+		char *end;
+		decoration_text(d, text, sizeof text);
+		if (strncmp(text, prefix, at) || (text[at] != 'b' && text[at] != 'i') || text[at + 1] < '0' ||
+			text[at + 1] > '9')
+			continue;
+		const unsigned long n = strtoul(text + at + 1, &end, 10);
+		if (strcmp(end, ")"))
+			continue;
+		*letter = text[at];
+		*index = (uint32_t)n;
+		return true;
+	}
+	return false;
+}
+
+// D3D9 keeps bools in boolean registers, b#, and ints in integer ones, i#, apart from the floats; an HLSL member keeps
+// its register for the constant xost reads it from (xsc_lower_flow.c). Another type in one, or two members in one
+// register, are refused.
+static bool d3d9_registers(Xsc *x, const XscModule *m, const XscType *types, XscInterface *si)
+{
+	for (size_t i = 0; i < si->constant_count; i++) {
+		XscConstantSlot *const c = &si->constants[i];
+		if (c->block < 0 ||
+			!member_register(
+				m, si->blocks[c->block].struct_type, (uint32_t)c->member, &c->d3d9_register, &c->d3d9_index))
+			continue;
+		if (int_signedness(m, types, si, c) != (c->d3d9_register == 'i'))
+			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "%s at register(%c%u): a b# register holds a bool, an i# an int",
+				c->name, c->d3d9_register, (unsigned)c->d3d9_index);
+		for (size_t j = 0; j < i; j++) {
+			const XscConstantSlot *const o = &si->constants[j];
+			if (o->d3d9_register == c->d3d9_register && o->d3d9_index == c->d3d9_index)
+				return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "%s and %s share register(%c%u)", o->name, c->name,
+					c->d3d9_register, (unsigned)c->d3d9_index);
+		}
+	}
+	return true;
+}
+
 // An HLSL bool or int glslang packed into a register another member of its block holds, as i10's b0 and i0 over c0's
-// array, takes a register of its own past the blocks, as glslang drops the b# and i# that D3D9 keeps apart
-// (glslang:glslang/HLSL/hlslParseHelper.cpp:6396-6431): the float D3D9 sets for it lands on no other constant. One
-// alone in its register stays there, as a register(cN) puts it.
+// array, takes a register of its own past the blocks, as glslang packs it beside the floats where D3D9 keeps b# and i#
+// apart (glslang:glslang/HLSL/hlslParseHelper.cpp:6396-6431): the float D3D9 sets for it lands on no other constant.
+// One alone in its register stays there, as a register(cN) puts it.
 static bool move_shared(Xsc *x, const XscModule *m, const XscType *types, XscInterface *si)
 {
 	bool *const shared = xsdk_xsc_alloc(x, si->constant_count + 1);
@@ -876,7 +952,7 @@ bool xsdk_xsc_resolve_interface(Xsc *x, const XscModule *m, XscInterface *si)
 		!assign_instance_index(x, si, vars, var_count, &end))
 		return false;
 	si->constant_end = (uint32_t)end;
-	if (xsdk_xsc_hlsl(m) && !move_shared(x, m, types, si))
+	if (xsdk_xsc_hlsl(m) && (!d3d9_registers(x, m, types, si) || !move_shared(x, m, types, si)))
 		return false;
 	if (!add_vulkan_samplers(x, m, types, si, vulkan_samplers, vulkan_count, &capacity) ||
 		!assign_comparisons(x, m, types, si, &capacity))

@@ -5,8 +5,9 @@
   without a register 0 and 2, the lowest no register names; its GLSL twin slots.frag, at Vulkan bindings 1, 4, 0 and 2,
   still packs from 0 in binding order.
 - integers_ps: glslang packs all four of its bools and ints into c2. Flip at b3, which an if reads, is boolean constant
-  128; Count at i2, which a loop counts, loop constant 16; Tint at b1 and Scale at i0, read as values, floats in
-  registers of their own past the block, c2 holding something else. Each value of Flip and Tint, Count 0 and 2.
+  131, 128 + 3; Count at i2, which a loop counts, loop constant 18, 16 + 2 (step 7); Tint at b1 and Scale at i0,
+  read as values, floats in registers of their own past the block, c2 holding something else. Each value of Flip and
+  Tint, Count 0 and 2.
 - unrolled_ps: an if on a bool past an unrolled loop, no hardware loop left, both values of the bool: the optimiser
   leaves alone a program with execs on a boolean constant, whose arms both write the register read after them.
 - table_ps: every entry of its table, register set, index and count, class, type, rows, columns and elements.
@@ -88,8 +89,8 @@ def integer_cases(optimize, tag):
     blob, manifest, table = compiled("hlsl/binding/integers_ps.hlsl", optimize)
     flip, count = entry(table, "Flip", "bool"), entry(table, "Count", "int4")
     tint, scale = entry(table, "Tint", "float4"), entry(table, "Scale", "float4")
-    if flip[2:] != (128, 1, SCALAR, BOOL, 1, 1, 1) or count[2:] != (16, 1, SCALAR, INT, 1, 1, 1):
-        fail(f"integers_ps, {tag}: Flip {flip}, Count {count}, not boolean 128 and loop constant 16")
+    if flip[2:] != (131, 1, SCALAR, BOOL, 1, 1, 1) or count[2:] != (18, 1, SCALAR, INT, 1, 1, 1):
+        fail(f"integers_ps, {tag}: Flip {flip}, Count {count}, not boolean 131 and loop constant 18")
     if tint[2] < 3 or scale[2] < 3 or tint[2] == scale[2] or tint[4:6] != (SCALAR, BOOL) or scale[4:6] != (SCALAR, INT):
         fail(f"integers_ps, {tag}: Tint {tint} and Scale {scale}, not floats of their own past the block's c0 to c2")
     if [e for e in table if e[0] in ("Flip", "Count") and e[1] == "float4"]:
@@ -99,12 +100,12 @@ def integer_cases(optimize, tag):
             for passes in (0, 2):
                 regs = literals(manifest)
                 regs.update({0: COLOURS[0], 1: COLOURS[1], 2: [99.0] * 4, tint[2]: [tints] * 4, scale[2]: [SCALE] * 4})
-                got = simulate.run(blob, {0: UV}, regs, loops={16: passes}, bools={128} if flips else set())
+                got = simulate.run(blob, {0: UV}, regs, loops={18: passes}, bools={131} if flips else set())
                 want = integers(passes, flips, tints)
                 if got.exports.get(0) != want:
                     fail(f"integers_ps, {tag}, Flip {flips}, Tint {tints}, Count {passes}: {got.exports.get(0)}, "
                          f"not {want}")
-    print(f"  PASS {tag}: integers_ps's Flip at boolean 128, Count at loop constant 16, Tint at c{tint[2]} and Scale "
+    print(f"  PASS {tag}: integers_ps's Flip at boolean 131, Count at loop constant 18, Tint at c{tint[2]} and Scale "
           f"at c{scale[2]}, each value right")
 
 

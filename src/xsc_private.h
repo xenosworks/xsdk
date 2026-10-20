@@ -120,6 +120,8 @@ enum {
 	SPV_RETURN_VALUE = 254,
 	// OpDecorateString, glslang's OpDecorateStringGOOGLE (SPIR-V 1.4, section 3.32.3).
 	SPV_DECORATE_STRING = 5632,
+	// OpMemberDecorateString, glslang's OpMemberDecorateStringGOOGLE (SPIR-V 1.4, section 3.32.3).
+	SPV_MEMBER_DECORATE_STRING = 5633,
 	SPV_STORAGE_PRIVATE = 6,
 	SPV_STORAGE_FUNCTION = 7,
 };
@@ -369,6 +371,9 @@ typedef struct {
 	int32_t member;
 	int32_t block;
 	bool moved;
+	// An HLSL bool's register(bN) or int's register(iN): 'b' or 'i', and N; 0 without one.
+	char d3d9_register;
+	uint32_t d3d9_index;
 } XscConstantSlot;
 
 typedef struct {

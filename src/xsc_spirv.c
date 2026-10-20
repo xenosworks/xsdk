@@ -171,6 +171,8 @@ static bool index_one(Xsc *x, XscModule *m, const XscInstr *ins, Capacities *cap
 		return add_decoration(x, &m->decorations, &m->decoration_count, &capacity->decorations,
 			(XscDecoration){ .target = w[0], .decoration = w[1], .args = w + 2, .arg_count = n - 2 });
 	case SPV_MEMBER_DECORATE:
+	// An HLSL member's register(bN) or register(iN), as glslang-xenon keeps it (xsc_resolve.c).
+	case SPV_MEMBER_DECORATE_STRING:
 		if (n < 3)
 			return xsdk_xsc_fail(x, XSDK_XSC_MALFORMED, "OpMemberDecorate without a decoration");
 		return add_decoration(x, &m->member_decorations, &m->member_decoration_count, &capacity->member_decorations,

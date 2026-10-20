@@ -3,8 +3,9 @@
 Shader model 3 HLSL for xsdk milestone 50 (xsdk:docs/scope/50-hlsl.md), each `.hlsl` with the SPIR-V glslang 16.3.0
 makes of it, `glslang -D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stage> -e <entry>`, as
 `tools/check_hlsl.py --refresh` writes it; the last flag keeps each varying's semantic for xost. Since step 7 it is
-glslang-xenon's, xsdk's glslang on 16.3.0, which makes the same SPIR-V but where HLSL's `fmod` truncates: `idioms/i05`
-and `fmod/`.
+glslang-xenon's, xsdk's glslang on 16.3.0, which makes the same SPIR-V but where HLSL's `fmod` truncates and where a
+bool or int keeps its `b#` or `i#`: `idioms/i05` and `i10`, `binding/`'s `integers_ps`, `unrolled_ps` and
+`refused_step_ps`, `grid_binding_ps`, `fmod/` and `registers/`.
 
 - **`corpus/`**: 157 shaders SPIRV-Cross (Debian's 2021.01.15 package) wrote at shader model 30 from Dusklight's 150 GX
   shaders and vkbench's 7, with D3D9's half-pixel lines dropped, each cbuffer flattened into uniforms at registers of
@@ -28,6 +29,8 @@ and `fmod/`.
   into (`integers_ps.hlsl`, `unrolled_ps.hlsl`), the constant table's entries (`table_ps.hlsl`) and a refusal,
   `refused_step_ps.hlsl`.
 - **`fmod/`**: `tests/test_hlsl_fmod.py`'s, HLSL's truncating `fmod`, step 7: a vector's lanes and scalars.
+- **`registers/`**: `tests/test_hlsl_registers.py`'s, D3D9's `b#` and `i#`, step 7: bools and ints at their registers
+  beside ones without (`registers_ps.hlsl`, `registers_vs.hlsl`) and three refusals, `refused_*`.
 - **`grid_*`**: xsdk_test's HLSL grid (xsdk:tests/test_hlsl.c), compiled on the console from this SPIR-V;
   `tests/test_hlsl_link.py` links `grid_gaps_*` on the PC, `tests/test_hlsl_rest.py` runs `grid_skin_vs` and
   `tests/test_hlsl_binding.py` `grid_binding_ps`.

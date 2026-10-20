@@ -140,7 +140,6 @@ typedef struct {
 	XscConstant *integers;
 	size_t integer_count;
 	size_t integer_capacity;
-	uint32_t boolean_count;
 } XscLower;
 
 // Enters one level of recursion, false with the error set past the bound.

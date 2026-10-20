@@ -376,6 +376,45 @@ static int64_t bool_member(XscLower *l, uint32_t value)
 	return xsdk_xsc_member_slot(l, xsdk_xsc_operand(load, 0));
 }
 
+// Whether the stage's boolean constant (letter 'b') or loop constant ('i') index is taken: by an HLSL member's
+// register(bN) or register(iN), first + N, or by a bool or loop count already lowered.
+static bool taken(const XscLower *l, char letter, uint32_t first, uint32_t index)
+{
+	for (size_t i = 0; i < l->si->constant_count; i++) {
+		const XscConstantSlot *const c = &l->si->constants[i];
+		if (c->d3d9_register == letter && first + c->d3d9_index == index)
+			return true;
+	}
+	for (size_t i = 0; letter == 'b' && i < l->integer_count; i++) {
+		if (l->integers[i].register_set == XSC_REGISTER_SET_BOOL && l->integers[i].register_index == index)
+			return true;
+	}
+	for (size_t i = 0; letter == 'i' && i < l->loop_need_count; i++) {
+		if (l->loop_needs[i].reg == index)
+			return true;
+	}
+	return false;
+}
+
+// The boolean or loop constant an HLSL bool or int at slot takes, of the stage's count from first: its register's, as
+// D3D9 sets b# and i# by number; else, a slot of -1 too, the lowest none takes, XSC_NONE where none is left.
+static int64_t d3d9_constant(XscLower *l, int64_t slot, char letter, uint32_t first, uint32_t count)
+{
+	const XscConstantSlot *const c = slot >= 0 ? &l->si->constants[slot] : NULL;
+	if (c && c->d3d9_register == letter) {
+		if (c->d3d9_index < count)
+			return first + c->d3d9_index;
+		xsdk_xsc_lower_refuse(
+			l, "%s at register(%c%u), past the stage's %u", c->name, letter, (unsigned)c->d3d9_index, (unsigned)count);
+		return XSC_NONE;
+	}
+	for (uint32_t index = first; index < first + count; index++) {
+		if (!taken(l, letter, first, index))
+			return index;
+	}
+	return XSC_NONE;
+}
+
 // An if on an HLSL bool in a pixel shader reads the bool's boolean constant, as D3D9's static branches read b#, its
 // arms run where it is when and where it isn't; boolean XSC_NONE for any other condition, which a setp tests.
 static bool boolean_condition(XscLower *l, uint32_t cond, int64_t *boolean, bool *when)
@@ -393,13 +432,14 @@ static bool boolean_condition(XscLower *l, uint32_t cond, int64_t *boolean, bool
 	if (slot < 0)
 		return true;
 	*when = *when == (ins->opcode == SPV_I_NOT_EQUAL);
-	const uint32_t next = PIXEL_FIRST_BOOLEAN + l->boolean_count;
+	const int64_t next = d3d9_constant(l, slot, 'b', PIXEL_FIRST_BOOLEAN, BOOLEANS_A_STAGE);
 	uint32_t index;
-	if (l->boolean_count == BOOLEANS_A_STAGE)
-		return xsdk_xsc_lower_refuse(l, "more than %d bools in ifs (v1)", BOOLEANS_A_STAGE);
-	if (!xsdk_xsc_integer_constant(l, slot, XSC_REGISTER_SET_BOOL, next, &index))
+	if (xsc_failed(l))
 		return false;
-	l->boolean_count += index == next;
+	if (next == XSC_NONE)
+		return xsdk_xsc_lower_refuse(l, "more than %d bools in ifs (v1)", BOOLEANS_A_STAGE);
+	if (!xsdk_xsc_integer_constant(l, slot, XSC_REGISTER_SET_BOOL, (uint32_t)next, &index))
+		return false;
 	*boolean = index;
 	return true;
 }
@@ -621,14 +661,15 @@ static bool count_constant(XscLower *l, const XscHardwareLoop *loop, uint32_t *l
 	}
 	// An HLSL int's entry in the table, D3D9's i# as the loop constant its loops read.
 	const int64_t slot = loop->count && xsdk_xsc_hlsl(l->m) ? xsdk_xsc_member_slot(l, loop->count) : -1;
-	const uint32_t next = (l->vertex ? VERTEX_FIRST_LOOP : PIXEL_FIRST_LOOP) + (uint32_t)l->loop_need_count;
+	const int64_t next = d3d9_constant(l, slot, 'i', l->vertex ? VERTEX_FIRST_LOOP : PIXEL_FIRST_LOOP, LOOPS_A_STAGE);
 	uint32_t index;
-	if (slot >= 0 && l->loop_need_count < LOOPS_A_STAGE &&
-		!xsdk_xsc_integer_constant(l, slot, XSC_REGISTER_SET_INT4, next, &index))
+	if (xsc_failed(l))
 		return false;
-	if (l->loop_need_count == LOOPS_A_STAGE)
+	if (next == XSC_NONE)
 		return xsdk_xsc_lower_refuse(l, "loops of more than %d counts (v1)", LOOPS_A_STAGE);
-	need.reg = *loop_constant = (l->vertex ? VERTEX_FIRST_LOOP : PIXEL_FIRST_LOOP) + (uint32_t)l->loop_need_count;
+	if (slot >= 0 && !xsdk_xsc_integer_constant(l, slot, XSC_REGISTER_SET_INT4, (uint32_t)next, &index))
+		return false;
+	need.reg = *loop_constant = (uint32_t)next;
 	if (!xsdk_xsc_room(l->x, &l->loop_needs, l->loop_need_count, &l->loop_need_capacity, sizeof *l->loop_needs))
 		return false;
 	l->loop_needs[l->loop_need_count++] = need;

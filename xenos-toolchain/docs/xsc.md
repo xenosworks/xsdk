@@ -282,20 +282,32 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
   and gives a sampler without one binding 0
   (glslang:glslang/HLSL/hlslParseHelper.cpp:6402-6412), so an HLSL sampler's
   fetch constant is its binding, as `SetTexture(N)` binds it; one sharing a
-  binding takes the lowest no binding names. glslang drops `b#` and `i#`
-  (hlslParseHelper.cpp:6396-6431) and packs bools and ints into `$Global`
-  beside the floats, so:
+  binding takes the lowest no binding names. glslang packs bools and ints
+  into `$Global` beside the floats, and drops `b#` and `i#`
+  (hlslParseHelper.cpp:6396-6431); glslang-xenon, xsdk's glslang, keeps
+  them under `--hlsl-dx9-compatible -fhlsl_functionality1` as a member's
+  UserSemantic, `register(b3)` or `register(i2)`, beside any semantic it has
+  (step 7; `tests/test_hlsl_registers.py`). So:
   - a bool or int in a register another member holds, as i10's `b0` and
     `i0` over `LightColor[0]`'s c0, gets a register of its own past the
     blocks; one alone in its register stays, as `register(cN)` puts it.
-    Read as a value, it is that register's float, 1.0 or 0.0 for a bool.
+    Read as a value, it is that register's float, 1.0 or 0.0 for a bool,
+    whatever its `b#` or `i#`: a title sets it by name.
   - a bool a pixel shader's if reads, where the if's arms go in execs, is a
     boolean constant from 128, libxenon's pixel half
     (libxenon:drivers/xenos/xe.c:2038-2064), the arms in `cexec b`*n* and
-    `cexec !b`*n* execs; an arm there using a0 is refused.
+    `cexec !b`*n* execs; an arm there using a0 is refused. At `b`*N* it is
+    128 + *N*, where `SetPixelShaderConstantB(N)` puts it; without a
+    register, the lowest no other bool and no member's `b#` takes.
   - an int a loop counts is the loop constant that loop reads, set to
     `xsdk_gpu_loop_constant(n, 0, 1)`; a loop from other than 0 by 1 is
-    refused, as a title setting the int by name can't count its passes.
+    refused, as a title setting the int by name can't count its passes. At
+    `i`*N* it is 16 + *N* in a pixel shader and *N* in a vertex shader, the
+    halves loops take below; without a register, the lowest no other count
+    and no member's `i#` takes.
+  - refused: a `b#` on other than a bool, an `i#` on other than an int, two
+    members in one register, and a bool or int read as a boolean or loop
+    constant past its stage's 128 or 16.
 - The constant table (XenosRecomp:XenosRecomp/constant_table.h) is GLSL's as
   before: samplers `tex`*slot*, uniforms as vectors. HLSL's names each sampler
   and member as declared, its register set, index and count, and its type:
