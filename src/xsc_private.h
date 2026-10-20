@@ -421,6 +421,12 @@ int64_t xsdk_xsc_instance_index_reg(const XscInterface *si);
 // The dim a slot's sampler has: false where Python's sampler_dims.get gives None for a missing slot.
 bool xsdk_xsc_sampler_dim(const XscInterface *si, uint32_t slot, int64_t *dim);
 
+// ---- loops in SSA form (xsc_ssa.c) ----
+
+// Loops in SSA form, from glslang's HLSL through spirv-opt, put in the memory form the unroller takes; a module whose
+// loops glslang wrote as for GLSL is left as it is.
+bool xsdk_xsc_ssa_loops(Xsc *x, XscModule *m);
+
 // ---- loops unrolled (xsc/unroll.py) ----
 
 // False with x's error set for a loop it can't unroll; refused says it was that and not memory.

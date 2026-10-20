@@ -399,6 +399,30 @@ executing the structured CFG. Each loop goes one of three ways:
 - **A count a bare uniform holds,** which only OpenGL's GLSL has, takes a
   lowering of its own (below).
 
+glslang's HLSL arrives otherwise: glslang always runs spirv-opt's
+legalisation on it, which leaves each loop in SSA form, Phis and the test in
+its header, the counter's step in the block branching back, and values read
+across blocks. A pass before the unroller (`xsdk:src/xsc_ssa.c`) puts such a
+module in the form above; one whose loop headers are a label, a merge and a
+branch alone, as glslang writes GLSL's, it leaves as it is:
+
+- each Phi a Function variable, stored on each edge into its block and loaded
+  where it was; a loop merge's Phi of a header's Phi from the test shares that
+  Phi's variable, stored at each break, as GLSL's one local;
+- the header its merge and a branch alone, what it held in a test block after
+  it, and a continue block of its own taking the branch back, a counter's step
+  `i + k` or `i - k` moved there, as GLSL's `for` has it;
+- a value the test block works out, which the unroller doesn't walk in a loop
+  it unrolls or counts, worked out again where it's read; one a do/while's
+  pass works out, read after the loop, from the variable of the header's Phi
+  that carries it.
+
+Refused: a do/while's header Phi read after the loop, a value the test block
+works out kept past the loop, one a do/while's pass works out read after it
+that no header Phi carries, a merge Phi of a header Phi that can't share its
+variable, and a switch, which spirv-opt's inliner makes of an early return
+(`tests/test_hlsl_loops.py`, each shape beside its GLSL twin).
+
 In an unrolled loop:
 
 - **mem2reg**: every Function-local variable is threaded through an environment,

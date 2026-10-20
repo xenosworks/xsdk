@@ -16,5 +16,7 @@ makes of it, `glslang -D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stag
 - **`static_globals_ps`, `splat_clamp_ps`, `undefined_ps` and `float2_position_ps`**: `tests/test_hlsl_front.py`'s, one
   for each of milestone 50 step 2's changes to xost's front.
 - **`semantics_*`, `vpos_*` and `refused_*`**: `tests/test_hlsl_semantics.py`'s, D3D9's semantics, step 4.
+- **`loops/`**: `tests/test_hlsl_loops.py`'s, loops in SSA form, step 3, each `<name>_ps.hlsl` beside its GLSL twin
+  `<name>.frag` with the SPIR-V `glslang -V` makes of it, and three refusals, `refused_*`.
 - **`grid_*`**: xsdk_test's HLSL grid (xsdk:tests/test_hlsl.c), compiled on the console from this SPIR-V;
   `tests/test_hlsl_link.py` links `grid_gaps_*` on the PC.
