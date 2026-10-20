@@ -781,6 +781,18 @@ static bool rewrite_reader(Optimizer *o, size_t i, const XscOp *mov, size_t r)
 		rewritten[n] = true;
 		any = true;
 	}
+	// An operand the op doesn't read but names as a rewritten one follows it to a temp: the allocator counts a temp
+	// named and never written as an input.
+	for (int m = 1; m <= 3; m++) {
+		const Source s = source(reader, m);
+		for (int n = 1; n <= 3 && !named[m] && !rewritten[m]; n++) {
+			const Source old = source(reader, n);
+			if (rewritten[n] && fresh[n].temp && same_value(&s, &old)) {
+				fresh[m] = fresh[n];
+				rewritten[m] = true;
+			}
+		}
+	}
 	if (!any)
 		return false;
 	const XscAlu saved = reader->alu;

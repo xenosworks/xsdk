@@ -120,10 +120,22 @@ def check_simulator():
           f"again reads c[4 + 3]")
 
 
+def check_unread_operand():
+    """vk_dynamic_rows.vert truncates a copy of its index with a trunc that names it in operand 2 too, which it doesn't
+    read. The copy goes into operand 1, and operand 2 must follow, or it names a temp nothing writes once the copy
+    goes, which the allocator keeps as an input, 9 registers on."""
+    name = "vk_dynamic_rows.vert"
+    found = {o: counts(lower_ex(module(name), XSDK_REGISTERS, o)[0])["registers"] for o in (False, True)}
+    if found != {False: 6, True: 2}:
+        raise SystemExit(f"  FAIL {name}: registers off and on {found}, not 6 and 2")
+    print(f"  PASS {name}: 6 registers off, 2 on")
+
+
 def main():
     check_simulator()
     for optimize in (False, True):
         check_program(optimize)
+    check_unread_operand()
     print("OK")
 
 
