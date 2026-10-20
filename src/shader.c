@@ -57,7 +57,8 @@ enum {
 };
 
 // The constant table: its size, then its header, from which its count's and its constants' offsets count; a constant's
-// name offset, then its register set and index (XenosRecomp:XenosRecomp/constant_table.h:54-88).
+// name offset, its register set and index, its register count, and its type's offset; a type's class and type, rows
+// and columns, then elements (XenosRecomp:XenosRecomp/constant_table.h:41-88).
 enum {
 	TABLE_SIZE_BYTES = 4,
 	TABLE_COUNT = 3,
@@ -65,10 +66,16 @@ enum {
 	TABLE_HEADER_BYTES = 7 * 4,
 	CONSTANT_NAME = 0,
 	CONSTANT_REGISTER = 1,
+	CONSTANT_COUNT = 2,
+	CONSTANT_TYPE = 3,
 	CONSTANT_BYTES = 5 * 4,
-	REGISTER_SET_FLOAT4 = 2,
 	REGISTER_INDEX_MASK = 0xFFFF,
 	REGISTER_SET_SHIFT = 16,
+	TYPE_SHAPE = 1,
+	TYPE_ELEMENTS = 2,
+	TYPE_BYTES = 4 * 4,
+	HALF_SHIFT = 16,
+	HALF_MASK = 0xFFFF,
 };
 
 // xost names its instance group so (xenos-toolchain/docs/xsc.md, "Interface conventions").
@@ -203,30 +210,45 @@ static const XsdkVertexElement *find_element(
 	return NULL;
 }
 
-// The float constant the container's constant table names _instance; false without one, as in libxenon's containers.
-static bool find_instance_group(const uint32_t *container, uint32_t size_bytes, uint32_t *reg)
+// The container's constant table and the bytes from it to the container's end; NULL without one, as in libxenon's
+// containers, or one whose entries run past the container.
+static const uint32_t *find_table(const uint32_t *container, uint32_t size_bytes, uint32_t *room)
 {
 	const uint32_t at = container[HEADER_CONSTANT_TABLE];
 	if (!at || at % 4 || at > size_bytes - TABLE_SIZE_BYTES - TABLE_HEADER_BYTES)
-		return false;
+		return NULL;
 	const uint32_t *const table = &container[(at + TABLE_SIZE_BYTES) / 4];
-	const uint32_t room = size_bytes - at - TABLE_SIZE_BYTES;
-	const uint32_t count = table[TABLE_COUNT];
+	*room = size_bytes - at - TABLE_SIZE_BYTES;
 	const uint32_t first = table[TABLE_CONSTANTS];
-	if (first % 4 || first > room || count > (room - first) / CONSTANT_BYTES)
-		return false;
-	for (uint32_t i = 0; i < count; i++) {
-		const uint32_t *const constant = &table[(first + i * CONSTANT_BYTES) / 4];
-		const uint32_t name = constant[CONSTANT_NAME];
-		const uint32_t index = constant[CONSTANT_REGISTER] & REGISTER_INDEX_MASK;
-		if (name > room - sizeof instance_name ||
-			constant[CONSTANT_REGISTER] >> REGISTER_SET_SHIFT != REGISTER_SET_FLOAT4 || index >= XSDK_FLOAT_CONSTANTS ||
-			memcmp((const char *)table + name, instance_name, sizeof instance_name))
+	if (first % 4 || first > *room || table[TABLE_COUNT] > (*room - first) / CONSTANT_BYTES)
+		return NULL;
+	return table;
+}
+
+static bool find_constant(
+	const uint32_t *table, uint32_t room, const char *name, uint32_t set, XsdkShaderConstant *constant)
+{
+	const size_t length = strlen(name) + 1;
+	for (uint32_t i = 0; table && i < table[TABLE_COUNT]; i++) {
+		const uint32_t *const c = &table[(table[TABLE_CONSTANTS] + i * CONSTANT_BYTES) / 4];
+		const uint32_t type = c[CONSTANT_TYPE];
+		if (c[CONSTANT_REGISTER] >> REGISTER_SET_SHIFT != set || length > room || c[CONSTANT_NAME] > room - length ||
+			memcmp((const char *)table + c[CONSTANT_NAME], name, length) || type % 4 || type > room - TYPE_BYTES)
 			continue;
-		*reg = index;
+		const uint32_t *const t = &table[type / 4];
+		*constant = (XsdkShaderConstant){ .index = c[CONSTANT_REGISTER] & REGISTER_INDEX_MASK,
+			.count = c[CONSTANT_COUNT] >> HALF_SHIFT,
+			.rows = t[TYPE_SHAPE] >> HALF_SHIFT,
+			.columns = t[TYPE_SHAPE] & HALF_MASK,
+			.elements = t[TYPE_ELEMENTS] >> HALF_SHIFT };
 		return true;
 	}
 	return false;
+}
+
+bool xsdk_shader_constant(const XsdkShader *shader, const char *name, uint32_t set, XsdkShaderConstant *constant)
+{
+	return find_constant(shader->table, shader->table_bytes, name, set, constant);
 }
 
 // Xe_LoadShaderFromMemory and Xe_InstantiateShader (xe.c:613-629, 935-947).
@@ -260,8 +282,11 @@ NTSTATUS xsdk_shader_load(XsdkShader *shader, const uint32_t *container, uint32_
 	const uint32_t slot_dword = interpolator_dword + interpolator_count;
 	const uint32_t slot_count = is_vertex && slot_dword < microcode_offset / 4 ? microcode_offset / 4 - slot_dword : 0;
 
-	uint32_t instance_constant = 0;
-	const bool instanced = is_vertex && find_instance_group(container, size_bytes, &instance_constant);
+	uint32_t table_bytes = 0;
+	const uint32_t *const table = find_table(container, size_bytes, &table_bytes);
+	XsdkShaderConstant group = { 0 };
+	const bool instanced = is_vertex && find_constant(table, table_bytes, instance_name, XSDK_SHADER_FLOAT, &group) &&
+		group.index < XSDK_FLOAT_CONSTANTS;
 	volatile uint32_t *const microcode = xsdk_microcode_alloc(microcode_bytes);
 	if (!microcode)
 		return STATUS_NO_MEMORY;
@@ -283,8 +308,10 @@ NTSTATUS xsdk_shader_load(XsdkShader *shader, const uint32_t *container, uint32_
 		.export_slots = &container[slot_dword],
 		.export_slot_count = slot_count,
 		.source = &container[microcode_offset / 4],
+		.table = table,
+		.table_bytes = table_bytes,
 		.instanced = instanced,
-		.instance_constant = instance_constant,
+		.instance_constant = group.index,
 	};
 	return STATUS_SUCCESS;
 }

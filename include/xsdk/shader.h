@@ -77,11 +77,33 @@ typedef struct {
 	const uint32_t *export_slots;
 	uint32_t export_slot_count;
 	const uint32_t *source;
+	// The container's constant table from its header, and the bytes from there to the container's end; NULL for none.
+	const uint32_t *table;
+	uint32_t table_bytes;
 	// An instanced vertex shader's group, the float constant its instanced draws write (include/xsdk/xsc.h,
 	// XSDK_XSC_INSTANCE), from the _instance its container's constant table names.
 	bool instanced;
 	uint32_t instance_constant;
 } XsdkShader;
+
+// The register sets a constant table holds constants in (XenosRecomp:XenosRecomp/constant_table.h).
+enum {
+	XSDK_SHADER_BOOL,
+	XSDK_SHADER_INT,
+	XSDK_SHADER_FLOAT,
+	XSDK_SHADER_SAMPLER,
+};
+
+// Where a constant lands: its first float constant and how many it takes, its boolean constant, bit index % 32 of word
+// index / 32 for xsdk_gpu_set_bool_constants, its loop constant, or its texture's fetch constant before
+// xsdk_shader_move_textures; and its rows, columns and array elements as the shader declares it.
+typedef struct {
+	uint32_t index;
+	uint32_t count;
+	uint32_t rows;
+	uint32_t columns;
+	uint32_t elements;
+} XsdkShaderConstant;
 
 // Which of a format's components an attribute's x, y, z or w reads, counted as the formats above lay them out; 0 reads
 // its own, so x reads the first.
@@ -122,6 +144,11 @@ NTSTATUS xsdk_shader_move_textures(XsdkShader *shader, uint32_t first_slot);
 // a vertex shader drawn with pixel shaders that read different semantics is loaded for each. GLSL's link by location
 // and need none; one of each is refused.
 NTSTATUS xsdk_shader_link(XsdkShader *vertex, const XsdkShader *pixel);
+// The constant named name in register set set, XSDK_SHADER_*, as its container's table gives it, so a port binds HLSL's
+// constants by name; false where the shader has none of that name there. An HLSL bool an if reads is a boolean
+// constant, and an int a loop counts a loop constant, written xsdk_gpu_loop_constant(n, 0, 1) for n; read as a value,
+// either is a float constant, a bool 1.0 or 0.0 (xenos-toolchain/docs/xsc.md, "Interface conventions").
+bool xsdk_shader_constant(const XsdkShader *shader, const char *name, uint32_t set, XsdkShaderConstant *constant);
 void xsdk_shader_free(XsdkShader *shader);
 
 #ifdef __cplusplus
