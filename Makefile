@@ -305,7 +305,7 @@ cpu_probes: $(BUILD)/probe_ctr.xex $(BUILD)/probe_atomics.xex
 
 # Milestone 54 steps 4 and 5's probes of the title-terminate notification and of what places the scaled picture;
 # outside all.
-system_probes: $(BUILD)/probe_terminate.xex
+system_probes: $(BUILD)/probe_terminate.xex $(BUILD)/probe_letterbox.xex
 
 # Milestone 51 step 1's probe of XAM, presenting the bar scene while XAM's calls and dialogs run, and the same title
 # under a second title ID, to see whether XAM keeps content apart by title; outside all.
