@@ -201,8 +201,19 @@ static bool same_layout(const XsdkTileResolve *resolves, uint32_t count)
 	return same;
 }
 
-// A band's resolves, each clearing its colour, the last its depth too unless it stays whole; band 0's clear, before the
-// first band, leaves out those the recording draws back.
+// Whether a resolve after the one at `at` copies the same colour target, as a multisampled attachment is copied both
+// into its own image and into the one its average goes to.
+static bool resolved_again(const XsdkTileResolve *resolves, uint32_t count, uint32_t at, bool before)
+{
+	for (uint32_t i = at + 1; i < count; i++) {
+		if (resolves[i].target == resolves[at].target && (!before || !resolves[i].drawn_back))
+			return true;
+	}
+	return false;
+}
+
+// A band's resolves, each clearing its colour unless a later one copies that target too, the last its depth too unless
+// it stays whole; band 0's clear, before the first band, leaves out those the recording draws back.
 static void resolve_band(const XsdkTileResolve *resolves, uint32_t count, uint32_t band, bool before)
 {
 	uint32_t last = count;
@@ -216,8 +227,9 @@ static void resolve_band(const XsdkTileResolve *resolves, uint32_t count, uint32
 		assert(r->texture->width == pass.width && r->texture->height == pass.height);
 		if (before && r->drawn_back)
 			continue;
+		const bool color = !resolved_again(resolves, count, i, before);
 		const bool depth = pass.depth && !pass.depth_whole && i == last;
-		xsdk_gpu_resolve_band(r->target, r->texture, r->clear_rgba, band * band_rows, rows_in(band), depth);
+		xsdk_gpu_resolve_band(r->target, r->texture, r->clear_rgba, band * band_rows, rows_in(band), color, depth);
 	}
 }
 

@@ -273,11 +273,12 @@ NTSTATUS xsdk_gpu_begin_tiles(const XsdkTiling *tiling, XsdkCommandBuffer *buffe
 // again for every band.
 void xsdk_gpu_set_draw_rows(uint32_t top, uint32_t bottom);
 // Ends the recording and queues each band: its targets, the recording, then each of count resolves into the band's rows
-// of its texture, the last clearing depth for the next band. Before the first band, the resolves not drawn back clear
-// band 0, the last of them depth too, unless the pass before was laid out the same, cleared each of their targets to
-// the same and its depth to the same, and since then no target was set, resolved or run from a recording; with every
-// resolve drawn back, nothing clears band 0's depth. A colour target no resolve names isn't cleared between bands.
-// Fails as xsdk_gpu_record_end does, queuing nothing.
+// of its texture, the last clearing depth for the next band, and a colour target named twice cleared by its last
+// resolve alone. Before the first band, the resolves not drawn back clear band 0, the last of them depth too, unless
+// the pass before was laid out the same, cleared each of their targets to the same and its depth to the same, and since
+// then no target was set, resolved or run from a recording; with every resolve drawn back, nothing clears band 0's
+// depth. A colour target no resolve names isn't cleared between bands. Fails as xsdk_gpu_record_end does, queuing
+// nothing.
 NTSTATUS xsdk_gpu_end_tiles(const XsdkTileResolve *resolves, uint32_t count);
 
 // Loads both shaders with IM_LOAD and sets the program registers, an HLSL pair as xsdk_shader_link linked it; a resolve
