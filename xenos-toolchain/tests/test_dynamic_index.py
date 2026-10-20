@@ -325,11 +325,11 @@ def check_interpolator():
         loads = [i for i, (_, kind, _) in enumerate(ops) if kind == "load"]
         past = [i for i, (allocs, kind, _) in enumerate(ops) if kind == "read" and allocs == 2]
         # The position's load and reads after alloc position, then the reload right before the colour's read and the
-        # scale's after alloc interpolators.
-        if (len(loads) != 2 or len(past) != 2 or ops[loads[0]][0] != 1 or ops[loads[1]][0] != 2
+        # scale's after alloc interpolators, which the optimiser reads in one instruction.
+        if (len(loads) != 2 or len(past) != (1 if optimize else 2) or ops[loads[0]][0] != 1 or ops[loads[1]][0] != 2
                 or loads[1] != past[0] - 1 or ops[loads[0]][2] != ops[loads[1]][2]):
             print(f"  FAIL {name}: optimiser {'on' if optimize else 'off'}: a0 loads and reads {ops}: want the "
-                  f"position's load again after alloc interpolators, right before the first of its two reads there")
+                  f"position's load again after alloc interpolators, right before the first of its reads there")
             return False
         consts = registers([x for row in scales + colors for x in row], 0)
         consts.update({reg: list(values) for reg, values in manifest})

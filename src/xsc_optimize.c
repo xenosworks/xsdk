@@ -27,6 +27,8 @@ typedef struct {
 	bool absolute;
 	int components[4];
 	bool negate;
+	// A constant read at a0 past its register.
+	bool relative;
 } Source;
 
 // What a value may be: a number from lo to hi, NaN where nan says, and -0 where negative_zero says.
@@ -63,6 +65,9 @@ typedef struct {
 	size_t key_capacity;
 	size_t write_capacity;
 	size_t reader_capacity;
+	// Which a0 each op reads: two ops read the same one where no a0 load or alloc lies between them.
+	size_t *a0_span;
+	size_t span_capacity;
 	uint8_t *live;
 	// Each op's results' ranges, RANGE_SLOTS an op, as fold_by_ranges finds them.
 	Range *ranges;
@@ -149,6 +154,13 @@ static bool scalar_previous(int64_t op)
 		op == XSC_SCALAR_SUBS_PREV;
 }
 
+// a0 changes only at maxa, maxas and maxasf (xenia:src/xenia/gpu/shader_interpreter.cc:600-602, 808-823).
+static bool loads_a0(const XscAlu *f)
+{
+	return f->vector_opcode == XSC_VECTOR_MAX_A || f->scalar_opcode == XSC_SCALAR_MAX_AS ||
+		f->scalar_opcode == XSC_SCALAR_MAX_ASF;
+}
+
 // ---- an instruction's fields ----
 
 static Source source(const XscOp *op, int n)
@@ -156,6 +168,7 @@ static Source source(const XscOp *op, int n)
 	const XscAlu *const f = &op->alu;
 	Source s = { .temp = f->src_is_temp[n - 1], .reg = f->src_reg[n - 1], .negate = f->src_negate[n - 1] };
 	s.absolute = s.temp && (s.reg & XSC_ABS_SOURCE);
+	s.relative = !s.temp && f->src_const_rel[n - 1];
 	if (s.temp)
 		s.reg &= XSC_ABS_SOURCE - 1;
 	for (int lane = 0; lane < 4; lane++)
@@ -163,22 +176,27 @@ static Source source(const XscOp *op, int n)
 	return s;
 }
 
+// Sets operand n; the op reads its constants at a0 where an operand is one read at a0 (xsc_encode.c).
 static void set_source(XscOp *op, int n, const Source *s)
 {
 	XscAlu *const f = &op->alu;
 	f->src_reg[n - 1] = s->reg | (s->absolute ? XSC_ABS_SOURCE : 0);
 	f->src_is_temp[n - 1] = s->temp;
+	f->src_const_rel[n - 1] = s->relative;
 	int64_t swizzle = 0;
 	for (int lane = 0; lane < 4; lane++)
 		swizzle += (int64_t)((s->components[lane] - lane) & 3) << (2 * lane);
 	f->src_swizzle[n - 1] = swizzle;
 	f->src_negate[n - 1] = s->negate;
+	f->is_const_address_register_relative = false;
+	for (int k = 0; k < 3; k++)
+		f->is_const_address_register_relative |= !f->src_is_temp[k] && f->src_const_rel[k];
 }
 
 static bool same_value(const Source *a, const Source *b)
 {
 	return a->temp == b->temp && a->reg == b->reg && a->absolute == b->absolute && a->negate == b->negate &&
-		!memcmp(a->components, b->components, sizeof a->components);
+		a->relative == b->relative && !memcmp(a->components, b->components, sizeof a->components);
 }
 
 static bool is_alu(const XscOp *op)
@@ -344,7 +362,8 @@ static bool constants_fit(const XscOp *op)
 		const bool constant = n == 3 && with_constant(op->alu.scalar_opcode);
 		if (!named[n] || (s.temp && !constant))
 			continue;
-		const int64_t reg = constant ? op->alu.scalar_constant : s.reg;
+		// A constant read at a0 is another constant; the second and third share their addressing (ucode.h:1945-1964).
+		const int64_t reg = 2 * (constant ? op->alu.scalar_constant : s.reg) + s.relative;
 		consts[n] = reg;
 		has[n] = true;
 		count++;
@@ -422,6 +441,25 @@ static bool grow(Xsc *x, void *items, size_t *capacity, size_t needed, size_t it
 	return true;
 }
 
+// Each op's a0: a new one past each a0 load, and past each alloc, where a0 is lost (docs/HARDWARE.md, "a0 doesn't
+// survive an alloc").
+static bool find_a0_spans(Optimizer *o)
+{
+	size_t capacity = o->span_capacity;
+	if (!grow(o->x, &o->a0_span, &capacity, o->count + 1, sizeof *o->a0_span))
+		return false;
+	o->span_capacity = capacity;
+	size_t span = 0, at = 0;
+	for (size_t si = 0; si < o->p->stage_count; si++) {
+		for (size_t i = 0; i < o->p->stages[si].count; i++, at++) {
+			o->a0_span[at] = span;
+			span += is_alu(o->p->stages[si].ops[i]) && loads_a0(&o->p->stages[si].ops[i]->alu);
+		}
+		span += o->p->stages[si].alloc_after != XSC_NONE;
+	}
+	return true;
+}
+
 // The flow from each instruction's reads and defs as they stand.
 static bool index_flow(Optimizer *o)
 {
@@ -466,7 +504,7 @@ static bool index_flow(Optimizer *o)
 		for (size_t k = 0; k < o->defs[i].count; k++)
 			o->write_list[o->fill[o->defs[i].keys[k]]++] = i;
 	}
-	return true;
+	return find_a0_spans(o);
 }
 
 // Op i's reads and defs, found again as compute_in_place changes it, so the flow needn't be built again.
@@ -531,10 +569,11 @@ static size_t readers_of(const Optimizer *o, int64_t w, int64_t k, size_t *out, 
 	return out_count;
 }
 
+// Whether s holds the same at ops i and j: a temp's components have the same writers, a constant at a0 the same a0.
 static bool same_values(const Optimizer *o, const Source *s, const int *components, int count, size_t i, size_t j)
 {
 	if (!s->temp)
-		return true;
+		return !s->relative || o->a0_span[i] == o->a0_span[j];
 	for (int c = 0; c < count; c++) {
 		if (flow_at(o, i, key(s->reg, components[c])) != flow_at(o, j, key(s->reg, components[c])))
 			return false;
@@ -640,7 +679,8 @@ static bool same_computation(const Optimizer *o, const XscOp *a, const XscOp *b,
 	for (int k = 1; k <= count; k++) {
 		const Source sa = source(a, k);
 		const Source sb = source(b, k);
-		if (sa.temp != sb.temp || sa.reg != sb.reg || sa.absolute != sb.absolute || sa.negate != sb.negate)
+		if (sa.temp != sb.temp || sa.reg != sb.reg || sa.absolute != sb.absolute || sa.negate != sb.negate ||
+			sa.relative != sb.relative)
 			return false;
 		const int64_t used = elementwise(op) ? lanes[k] : ALL;
 		for (int lane = 0; lane < 4; lane++) {
@@ -684,7 +724,7 @@ static bool common_subexpressions(Optimizer *o, bool *changed)
 				remove_ops(o, &doomed, 1);
 				return true;
 			}
-			const Source move = { true, a->alu.vector_dest, false, { 0, 1, 2, 3 }, false };
+			const Source move = { .temp = true, .reg = a->alu.vector_dest, .components = { 0, 1, 2, 3 } };
 			b->alu.vector_opcode = XSC_VECTOR_MAX;
 			b->alu.vector_clamp = false;
 			set_source(b, 1, &move);
@@ -720,7 +760,7 @@ static bool rewrite_reader(Optimizer *o, size_t i, const XscOp *mov, size_t r)
 			if (!(mask >> old.components[lane] & 1) || flow_at(o, r, key(dest, old.components[lane])) != (int64_t)i)
 				return false;
 		}
-		Source candidate = { .temp = src.temp, .reg = src.reg };
+		Source candidate = { .temp = src.temp, .reg = src.reg, .relative = src.relative };
 		for (int lane = 0; lane < 4; lane++)
 			candidate.components[lane] = src.components[(lanes[n] >> lane & 1) ? old.components[lane] : 0];
 		if (old.absolute) {
@@ -919,7 +959,7 @@ static Range operand_range(const Optimizer *o, size_t i, const Source *s, int la
 	Range r = ANY;
 	if (!s->temp) {
 		const int64_t at = s->reg - o->p->literal_base;
-		if (!addresses_constants(&o->ops[i]->alu) && at >= 0 && (size_t)at < o->p->literal_count)
+		if (!s->relative && at >= 0 && (size_t)at < o->p->literal_count)
 			r = exactly(o->p->literals[4 * at + c]);
 	} else {
 		const int64_t w = flow_at(o, i, key(s->reg, c));
@@ -1403,6 +1443,7 @@ static bool merge(const XscProgram *p, XscOp *y, const XscOp *x, bool convert)
 	merged.scalar_clamp = sca->scalar_clamp;
 	merged.is_scalar_dest_relative = sca->is_scalar_dest_relative;
 	merged.src_reg[2] = sca->src_reg[2];
+	merged.src_const_rel[2] = sca->src_const_rel[2];
 	merged.src_is_temp[2] = sca->src_is_temp[2];
 	merged.src_swizzle[2] = sca->src_swizzle[2];
 	merged.src_negate[2] = sca->src_negate[2];
@@ -1658,8 +1699,10 @@ static bool lands(const Optimizer *o, const Place *pl)
 static bool place_free(const Optimizer *o, const Place *pl)
 {
 	const XscAlu *const copy = &o->ops[pl->j]->alu;
-	// An export's writer moves to the copy instead, so nothing between may write what it reads.
+	// An export's writer moves to the copy instead, so nothing between may write what it reads, a0 among it.
 	if (copy->is_export) {
+		if (addresses_constants(&o->ops[pl->i]->alu) && o->a0_span[pl->i] != o->a0_span[pl->j])
+			return false;
 		for (size_t k = pl->i + 1; k < pl->j; k++) {
 			if (intersects(&o->defs[k], &o->reads[pl->i]))
 				return false;
@@ -2008,10 +2051,24 @@ static bool compute_in_place(Optimizer *o, bool *changed)
 	return true;
 }
 
-// Programs the passes leave alone (optimize.py can_optimize); indexed if one reads a constant at a run-time index.
-static bool can_optimize(const XscProgram *p, bool *indexed)
+// Whether the passes model how an op reads constants: at a0 alone, through the operands' own flags, and no a0 load
+// reading one at a0.
+static bool a0_modelled(const XscAlu *f)
 {
-	*indexed = false;
+	if (f->is_const_0_addressed || f->is_const_1_addressed)
+		return false;
+	for (int n = 0; n < 3; n++) {
+		if (f->src_const_rel[n] && !f->src_is_temp[n] && (!f->is_const_address_register_relative || loads_a0(f)))
+			return false;
+	}
+	return true;
+}
+
+// Programs the passes leave alone (optimize.py can_optimize); unmodelled if one reads a constant at a run-time index
+// in a way the passes don't model, which co_issue alone takes.
+static bool can_optimize(const XscProgram *p, bool *unmodelled)
+{
+	*unmodelled = false;
 	if (!p->whole_sources || p->loop_count)
 		return false;
 	for (size_t si = 0; si < p->stage_count; si++) {
@@ -2025,7 +2082,7 @@ static bool can_optimize(const XscProgram *p, bool *indexed)
 			const XscAlu *const f = &op->alu;
 			if (f->is_vector_dest_relative || f->is_predicated || f->abs_constants)
 				return false;
-			*indexed = *indexed || addresses_constants(f);
+			*unmodelled = *unmodelled || !a0_modelled(f);
 			int64_t scalar_mask = f->scalar_write_mask;
 			if (f->is_export)
 				scalar_mask &= ~f->vector_write_mask;
@@ -2055,24 +2112,25 @@ static bool first_round(Optimizer *o, bool *changed)
 
 bool xsdk_xsc_optimize(Xsc *x, XscProgram *p, bool *ran)
 {
-	bool indexed;
+	bool unmodelled;
 	*ran = false;
-	if (!can_optimize(p, &indexed))
+	if (!can_optimize(p, &unmodelled))
 		return true;
 	Optimizer o = { .x = x, .p = p, .key_count = (p->max_reg + 2) * 4 };
 	o.live = xsdk_xsc_alloc(x, (size_t)o.key_count + 1);
 	if (!o.live)
 		return false;
-	// Only co_issue takes a constant read at a run-time index: it moves nothing past the op that sets a0.
-	bool changed = !indexed;
+	// The first round moves a read at a0 only where it reads the same a0 (same_values); co_issue moves nothing past
+	// the op that sets a0, nor past an alloc.
+	bool changed = !unmodelled;
 	while (changed) {
 		if (!first_round(&o, &changed))
 			return false;
 	}
 	if (!pair_ops(&o))
 		return false;
-	*ran = !indexed;
-	return indexed || remove_dead(&o, &changed);
+	*ran = !unmodelled;
+	return unmodelled || remove_dead(&o, &changed);
 }
 
 // ---- what the allocator needs to pack values into components (xsc_program.c) ----
