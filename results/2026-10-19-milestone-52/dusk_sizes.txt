@@ -1,0 +1,16 @@
+old/dusklight-diag/dusklight text 36325937 xex 38486016 xenia_scan 958 bdnz 3837 cmpdi_loops 4724 cmpwi_loops 1528
+new/dusklight-diag/dusklight text 36286773 xex 38486016 xenia_scan 957 bdnz 7393 cmpdi_loops 1147 cmpwi_loops 1482
+new/dusklight/dusklight text 36263957 xex 38420480 xenia_scan 957 bdnz 7387 cmpdi_loops 1147 cmpwi_loops 1480
+new_unrollsdk/dusklight-diag/dusklight text 36450125 xex 38617088 xenia_scan 998 bdnz 7273 cmpdi_loops 1147 cmpwi_loops 1460
+old/xsdk-diag/build/libxsdk.a text 511020 xex - xenia_scan 2 bdnz 214 cmpdi_loops 16 cmpwi_loops 10
+old/v4x-diag/build/libvulkan4xenon.a text 126884 xex - xenia_scan 1 bdnz 50 cmpdi_loops 3 cmpwi_loops 2
+new/xsdk-diag/build/libxsdk.a text 509892 xex - xenia_scan 2 bdnz 322 cmpdi_loops 1 cmpwi_loops 9
+new/v4x-diag/build/libvulkan4xenon.a text 126672 xex - xenia_scan 1 bdnz 81 cmpdi_loops 0 cmpwi_loops 0
+new_unrollsdk/xsdk-diag/build/libxsdk.a text 637076 xex - xenia_scan 44 bdnz 230 cmpdi_loops 0 cmpwi_loops 9
+new_unrollsdk/v4x-diag/build/libvulkan4xenon.a text 163944 xex - xenia_scan 0 bdnz 53 cmpdi_loops 0 cmpwi_loops 0
+new/xsdk/build/libxsdk.a text 509416 xex - xenia_scan 2 bdnz 321 cmpdi_loops 1 cmpwi_loops 9
+new/v4x/build/libvulkan4xenon.a text 122017 xex - xenia_scan 1 bdnz 80 cmpdi_loops 0 cmpwi_loops 0
+new_unrollsdk/xsdk/build/libxsdk.a text 636284 xex - xenia_scan 44 bdnz 230 cmpdi_loops 0 cmpwi_loops 9
+new_unrollsdk/v4x/build/libvulkan4xenon.a text 158893 xex - xenia_scan 0 bdnz 53 cmpdi_loops 0 cmpwi_loops 0
+new/v4x/build/vkbench.elf text 794784 xex 3608576 xenia_scan 4 bdnz 518 cmpdi_loops 6 cmpwi_loops 37
+new_unrollsdk/v4x/build/vkbench.elf text 957432 xex 3739648 xenia_scan 45 bdnz 400 cmpdi_loops 6 cmpwi_loops 15

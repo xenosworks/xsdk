@@ -1,0 +1,10 @@
+old libxsdk.a text 510544 xenia_scan 2 bdnz 213 cmpdi_loops 16 cmpwi_loops 10
+old libvulkan4xenon.a text 122229 xenia_scan 1 bdnz 49 cmpdi_loops 2 cmpwi_loops 2
+old xsdk_test.elf text 3121533 xenia_scan 43 bdnz 451 cmpdi_loops 234 cmpwi_loops 141
+old vulkan4xenon_test.elf text 1373664 xenia_scan 6 bdnz 376 cmpdi_loops 202 cmpwi_loops 39
+old vkbench.elf text 796888 xenia_scan 4 bdnz 318 cmpdi_loops 143 cmpwi_loops 41
+new libxsdk.a text 509416 xenia_scan 2 bdnz 321 cmpdi_loops 1 cmpwi_loops 9
+new libvulkan4xenon.a text 122017 xenia_scan 1 bdnz 80 cmpdi_loops 0 cmpwi_loops 0
+new xsdk_test.elf text 3118897 xenia_scan 43 bdnz 704 cmpdi_loops 6 cmpwi_loops 138
+new vulkan4xenon_test.elf text 1371676 xenia_scan 6 bdnz 584 cmpdi_loops 5 cmpwi_loops 36
+new vkbench.elf text 794784 xenia_scan 4 bdnz 518 cmpdi_loops 6 cmpwi_loops 37

@@ -1,0 +1,20 @@
+log: game:\probe_atomics.log
+log: named after \Device\Harddisk0\Partition1\cpuprobe\probe_atomics.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+atomics probe: 1000000 passes a loop, best and worst of 5 rounds, on hardware thread 0
+atomics probe: alone, empty loop: 0.63 ns (2.0 clocks) a pass at best, 0.63 ns at worst
+atomics probe: alone, plain increment: 16.06 ns (51.3 clocks) a pass at best, 16.07 ns at worst
+atomics probe: alone, relaxed: 54.68 ns (174.6 clocks) a pass at best, 56.49 ns at worst
+atomics probe: alone, acquire: 69.62 ns (222.2 clocks) a pass at best, 71.18 ns at worst
+atomics probe: alone, release: 69.40 ns (221.5 clocks) a pass at best, 75.38 ns at worst
+atomics probe: alone, acq_rel: 84.71 ns (270.4 clocks) a pass at best, 85.10 ns at worst
+atomics probe: alone, seq_cst: 124.54 ns (397.5 clocks) a pass at best, 126.24 ns at worst
+atomics probe: alone, lwsync: 11.63 ns (37.1 clocks) a pass at best, 11.63 ns at worst
+atomics probe: alone, sync: 53.08 ns (169.4 clocks) a pass at best, 53.11 ns at worst
+atomics probe: alone, isync: 12.14 ns (38.8 clocks) a pass at best, 12.35 ns at worst
+atomics probe: two threads on two cores (2 and 4), relaxed: 118.60 and 103.16 ns (378.6 and 329.3 clocks) an increment, count 2000000 of 2000000
+atomics probe: two threads on one core (2 and 3), relaxed: 145.67 and 173.15 ns (465.0 and 552.7 clocks) an increment, count 2000000 of 2000000
+atomics probe: two threads on two cores (2 and 4), seq_cst: 139.22 and 150.46 ns (444.4 and 480.3 clocks) an increment, count 2000000 of 2000000
+atomics probe: two threads on one core (2 and 3), seq_cst: 284.74 and 284.50 ns (908.9 and 908.1 clocks) an increment, count 2000000 of 2000000
+atomics probe: every contended count came out right
+exit: status 0

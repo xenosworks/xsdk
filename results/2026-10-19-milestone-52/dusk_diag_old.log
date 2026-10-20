@@ -1,0 +1,1722 @@
+log: game:\dusk_diag_old.log
+log: named after \Device\Harddisk0\Partition1\dusklight\dusk_diag_old.xex
+sbrk: the heap may grow to 438 MB from 0x00070000, the title's free memory
+dusklight: started, with the game linked and its static constructors run
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 27130 us
+dusklight: 512 MB in all, 3 MB the kernel's; the title has 437 MB free
+dusklight: title pages: 9392 image, 96 heap, 256 stack, 920 physical, 80 virtual, 2 pool
+dusklight: the heap holds 260 KB, 253 KB of it in use
+mkdir: NtCreateFile(game:\TwilitRealm) failed: 0xC0000035
+mkdir: NtCreateFile(game:\TwilitRealm\Dusklight) failed: 0xC0000035
+mkdir: NtCreateFile(game:\TwilitRealm) failed: 0xC0000035
+[0m[INFO | dusk][0m Build: UNKNOWN-VERSION (rev , built , type RelWithDebInfo)
+[0m[INFO | dusk][0m Platform: generic
+[0m[INFO | dusk::config][0m Loading config from 'game:\TwilitRealm\Dusklight\/config.json'
+open: NtCreateFile(game:\TwilitRealm\Dusklight\config.json) failed: 0xC0000034
+[0m[INFO | dusk::config][0m Config file did not exist, staying with defaults
+[0m[INFO | aurora][0m Aurora initializing
+[0m[INFO | aurora::system_info][0m CPU model: Unknown
+[0m[INFO | aurora::system_info][0m Memory: 0 MiB
+[0m[INFO | aurora::system_info][0m Architecture: Unknown
+[0m[INFO | aurora::system_info][0m OS: Unknown
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 28428 us
+[0m[INFO | aurora::vulkan4xenon][0m CMPR textures as BC1 where opaque
+[0m[INFO | aurora::thread][0m Aurora GPU waiter on hardware thread 1
+[0m[INFO | aurora::vulkan4xenon][0m Shader pack: 150 programs
+[0m[INFO | aurora::vulkan4xenon][0m Programs the pack doesn't hold are kept in game:\TwilitRealm\Dusklight\/shaders/glslang-16.3.0
+[0m[INFO | aurora::vulkan4xenon][0m vulkan4xenon backend: 1280x720 EFB
+[0m[INFO | aurora::thread][0m Main thread on hardware thread 0
+[0m[INFO | aurora::gfx::pipeline_cache][0m Pipeline compilation: 2 at a time
+[0m[INFO | aurora::thread][0m Aurora render worker on hardware thread 2
+[31m[ERROR | aurora::gfx::pipeline_cache][0m Failed to open pipeline cache database: out of memory
+[0m[INFO | aurora::thread][0m Pipeline compilation thread on hardware thread 3
+[0m[INFO | aurora::thread][0m Pipeline compilation thread on hardware thread 3
+[0m[INFO | aurora][0m Using framebuffer size 1280x720 scale 1
+[0m[INFO | aurora::thread][0m Aurora FIFO processor on hardware thread 4
+[33m[WARNING | aurora::window][0m Failed to set window title: Video subsystem has not been initialized
+[33m[WARNING | aurora::gfx::texture_replacement][0m Texture packs and dumps are supported only by the Dawn backend
+[0m[INFO | dusk][0m Texture replacement directory loaded: 0 registration(s)
+[0m[INFO | aurora::rmlui][0m Loaded font face 'Fira Sans' [regular] from 'res/FiraSans-Regular.ttf'.
+[0m[INFO | aurora::rmlui][0m Loaded font face 'Fira Sans' [bold] from 'res/FiraSans-Bold.ttf'.
+[0m[INFO | aurora::rmlui][0m Loaded font face 'Fira Sans Condensed' [regular] from 'res/FiraSansCondensed-Regular.ttf'.
+[0m[INFO | aurora::rmlui][0m Loaded font face 'Fira Sans Condensed' [bold] from 'res/FiraSansCondensed-Bold.ttf'.
+[0m[INFO | aurora::rmlui][0m Loaded font face 'Alegreya SC' [regular] from 'res/AlegreyaSC-Regular.ttf'.
+[0m[INFO | aurora::rmlui][0m Loaded font face 'Alegreya SC' [bold] from 'res/AlegreyaSC-Bold.ttf'.
+[0m[INFO | aurora::rmlui][0m Loaded font face 'Material Symbols Rounded' [regular] from 'res/MaterialSymbolsRounded-Regular.ttf'.
+[0m[INFO | aurora::rmlui][0m Loaded font face 'Noto Mono' [regular] from 'res/NotoMono-Regular.ttf'.
+[0m[INFO | dusk][0m Loading DVD image: game:\dusklight.iso
+[0m[INFO | dusk][0m Loaded game disc is GZ2E01
+[0m[INFO | dusk][0m Initializing mods...
+[0m[INFO | dusk::mods::manifest][0m no symbol manifest embedded; by-name resolution unavailable
+open: NtCreateFile(game:\TwilitRealm\Dusklight\mods\.cache) failed: 0xC000003A
+[0m[INFO | dusk::mods::loader][0m no mods found
+[36m[DEBUG | dusk::mods::overlay][0m Registering 0 overlay file(s).
+[0m[INFO | dusk::osReport][0m Starting main01 (Game Loop)...
+[0m[INFO | dusk::osReport][0m [JKRHeap] initArena: Lo=0x3dad320 Hi=0xcda9320 Size=0x8FFC000
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread system initialized (multi-threaded mode)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Created thread 0x3dae1a0 (priority=6, stackSize=3072)
+[36m[DEBUG | aurora::ar][0m Initialized 0x1800000 bytes of ARAM!
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Created thread 0x3daf260 (priority=8, stackSize=3072)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Started thread 0x3daf260
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread 0x3daf260 on hardware thread 1
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Created thread 0x3dafea0 (priority=7, stackSize=2048)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Started thread 0x3dafea0
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread 0x3dafea0 on hardware thread 1
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Started thread 0x3dae1a0
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread 0x3dae1a0 on hardware thread 1
+open: NtCreateFile(game:\TwilitRealm\Dusklight\keyboard_bindings.dat) failed: 0xC0000034
+[0m[INFO | dusk::osReport][0m [32mコマンドヒープ    = 05daeca0-05db0ca0 size=8 KB
+[m
+[0m[INFO | aurora::thread][0m Aurora tex preconv on hardware thread 3
+[0m[INFO | dusk::osReport][0m [32mアーカイブヒープ = 05db0cb0-06f6f4b0 size=18170 KB
+[m
+[0m[INFO | dusk::osReport][0m [32mＪ２Ｄ用ヒープ    = 06f6f4c0-070694c0 size=1000 KB
+[m
+[0m[INFO | dusk::osReport][0m [32mゲームヒープ       = 070694d0-0c6814d0 size=88160 KB
+[m
+[0m[INFO | dusk::osReport][0m [32mゼルダヒープ       = 03e55b30-05d9d3e0 size=32030 KB
+[m
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Created thread 0x84385308 (priority=14, stackSize=4096)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Started thread 0x84385308
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread 0x84385308 on hardware thread 1
+[0m[INFO | aurora::card][0m CARD API Initialized BUILT <Oct 19 2026 21:19:42>
+[0m[INFO | aurora::card][0m Loaded GC Card Image: game:\TwilitRealm\Dusklight\/USA/Card A
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Created thread 0x84386980 (priority=17, stackSize=4096)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Started thread 0x84386980
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread 0x84386980 on hardware thread 1
+[0m[INFO | dusk::osReport][0m Calling fapGm_Create()...
+[0m[INFO | dusk][0m COPYDATE=[2006/11/06 18:16
+]
+[0m[INFO | dusk::osReport][0m Calling fopAcM_initManager()...
+[0m[INFO | dusk::osReport][0m Calling cDyl_InitAsync()...
+[36m[DEBUG | dusk][0m [DIAG] cDyl_InitCallback: START
+[0m[INFO | dusk::osReport][0m Entering Main Loop (main01)...
+[36m[DEBUG | dusk][0m fopScnM_CreateReq: procName=9 fade=32767
+[36m[DEBUG | dusk][0m fopScnM_CreateReq: result=0 (error=4294967295)
+[36m[DEBUG | dusk][0m cDyl_InitCallback: fpcNm_LOGO_SCENE_e created, DONE
+[36m[DEBUG | dusk][0m fapGm_Execute frame=0
+[36m[DEBUG | dusk][0m fpcDw_Handler: before BeforeOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: before draw iteration
+[36m[DEBUG | dusk][0m fpcDw_Handler: before AfterOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: done
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: name=9 layer=0x84399f78
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: creating_id=1 (error=4294967295)
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m fapGm_Execute frame=1
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=9 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=9
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=1 profname=fpcNm_LOGO_SCENE_e (9) profile=0x82177074 procSize=688 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m dScnLogo_c::create START
+[36m[DEBUG | dusk][0m dScnLogo_c::create resLoad=0 (need 4 for complete)
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcDw_Handler: before BeforeOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: before draw iteration
+[36m[DEBUG | dusk][0m fpcDw_Handler: before AfterOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: done
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m fapGm_Execute frame=2
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcDw_Handler: before BeforeOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: before draw iteration
+[36m[DEBUG | dusk][0m fpcDw_Handler: before AfterOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: done
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m fapGm_Execute frame=3
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcDw_Handler: before BeforeOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: before draw iteration
+[36m[DEBUG | dusk][0m fpcDw_Handler: before AfterOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: done
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m fapGm_Execute frame=4
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcDw_Handler: before BeforeOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: before draw iteration
+[36m[DEBUG | dusk][0m fpcDw_Handler: before AfterOfDraw
+[36m[DEBUG | dusk][0m fpcDw_Handler: done
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m fapGm_Execute frame=5
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m fapGm_Execute frame=6
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m fapGm_Execute frame=7
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m fapGm_Execute frame=8
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m fapGm_Execute frame=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_SubCreateProcess: pid=1 procName=0009 ret=0
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m fpcNdRq_Handler: queue size=1
+[36m[DEBUG | dusk][0m fopScnRq_phase_Execute: ret=0 name=9
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m fpcCtRq_Do: phase=0 process=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Created thread 0x3fde760 (priority=3, stackSize=4096)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Started thread 0x3fde760
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread 0x3fde760 on hardware thread 1
+audio: the callback runs on hardware thread 0
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m [DIAG] dScnLogo_Create: entry i_this=0x5d9d034
+[36m[DEBUG | dusk][0m Loading Resource: dolby_p2_232_112.bti (Size: 26016)
+[36m[DEBUG | dusk][0m Loading Resource: nintendo_376x104.bti (Size: 78240)
+[36m[DEBUG | dusk][0m Loading Resource: progressive_choice.bti (Size: 15008)
+[36m[DEBUG | dusk][0m Loading Resource: progressive_inter.bti (Size: 15008)
+[36m[DEBUG | dusk][0m Loading Resource: progressive_no.bti (Size: 2592)
+[36m[DEBUG | dusk][0m Loading Resource: progressive_pro.bti (Size: 15008)
+[36m[DEBUG | dusk][0m Loading Resource: progressive_yes.bti (Size: 2848)
+[36m[DEBUG | dusk][0m Loading Resource: warning.bti (Size: 136224)
+[36m[DEBUG | dusk][0m Loading Resource: warning_pstart.bti (Size: 14624)
+[36m[DEBUG | dusk][0m dScnLogo_c::create resLoad COMPLETE, continuing init...
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=120
+[0m[INFO | dusk][0m Logo scene: warning in
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=119
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=118
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=117
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=116
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=115
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=114
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=113
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=112
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[36m[DEBUG | dusk][0m dScnLogo_c::draw: mExecCommand=0 mTimer=111
+[36m[DEBUG | dusk][0m dDlst_2D_c::draw: pos=(0,0) size=(608,448) alpha=255
+[0m[INFO | dusk][0m Logo scene: warning
+[36m[DEBUG | dusk][0m fapGm_Execute frame=300
+vulkan4xenon: profile, the last 10 s: 1247 draws, 12383 commands, 461 submits, 461 presents; a present 2.7 draws, 61.9 us submitting; a submit 2.7 draws, 61.9 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 268 ns a draw, 226 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: push 180 ns a draw, 158 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4191 ns a draw, 4169 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 384 ns a draw, 337 less its 2.2 laps
+vulkan4xenon: profile, the last 10 s: resources 1060 ns a draw, 991 less its 3.2 laps
+vulkan4xenon: profile, the last 10 s: checks 1106 ns a draw, 1062 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 229 ns a draw, 207 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 13858 ns a draw, 13644 less its 9.9 laps
+vulkan4xenon: profile, the last 10 s: submit 1619 ns a draw, 1603 less its 0.7 laps
+vulkan4xenon: profile, the last 10 s: all 22894 ns a draw, 22397 less its 23.0 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 23 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 9 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 3 us a present, 0 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 464 frames in 10.0 s, 46.3 fps
+[0m[INFO | dusk][0m Memory: 151 MB free; the title's pages: 45 MB physical, 232 MB virtual, 0 MB heap, 14 MB stack; newlib's heap 232 MB, 230 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=600
+[36m[DEBUG | dusk][0m fapGm_Execute frame=900
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 1793 of 1864 draws found their vertices, 96.38% of 0.2 MiB; 0.0 MiB decoded; 0 entries evicted, 0 forgotten, 0 without room; at most 0.00 MiB a frame and 0.01 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 0 kept in 0.00 MiB
+vulkan4xenon: profile, the last 10 s: 1764 draws, 17034 commands, 588 submits, 588 presents; a present 3.0 draws, 58.1 us submitting; a submit 3.0 draws, 58.1 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 242 ns a draw, 199 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: push 168 ns a draw, 147 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: pipeline 3834 ns a draw, 3813 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 350 ns a draw, 299 less its 2.3 laps
+vulkan4xenon: profile, the last 10 s: resources 989 ns a draw, 917 less its 3.3 laps
+vulkan4xenon: profile, the last 10 s: checks 1005 ns a draw, 962 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 194 ns a draw, 173 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 11133 ns a draw, 10925 less its 9.7 laps
+vulkan4xenon: profile, the last 10 s: submit 1450 ns a draw, 1436 less its 0.7 laps
+vulkan4xenon: profile, the last 10 s: all 19365 ns a draw, 18870 less its 23.0 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 22 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 9 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 590 frames in 10.0 s, 59.0 fps
+[0m[INFO | dusk][0m Memory: 151 MB free; the title's pages: 45 MB physical, 232 MB virtual, 0 MB heap, 14 MB stack; newlib's heap 232 MB, 230 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=1200
+[36m[DEBUG | dusk][0m fapGm_Execute frame=1500
+vulkan4xenon: profile, the last 10 s: 1770 draws, 17090 commands, 590 submits, 590 presents; a present 3.0 draws, 69.0 us submitting; a submit 3.0 draws, 69.0 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 258 ns a draw, 214 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: push 189 ns a draw, 168 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: pipeline 3919 ns a draw, 3897 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 360 ns a draw, 310 less its 2.3 laps
+vulkan4xenon: profile, the last 10 s: resources 926 ns a draw, 854 less its 3.3 laps
+vulkan4xenon: profile, the last 10 s: checks 1611 ns a draw, 1567 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 209 ns a draw, 187 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 14090 ns a draw, 13882 less its 9.7 laps
+vulkan4xenon: profile, the last 10 s: submit 1455 ns a draw, 1441 less its 0.7 laps
+vulkan4xenon: profile, the last 10 s: all 23016 ns a draw, 22520 less its 23.0 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 27 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 10 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: command type 3 (src/objects.h), 2 us a present, 3 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 587 frames in 10.0 s, 58.5 fps
+[0m[INFO | dusk][0m Memory: 151 MB free; the title's pages: 45 MB physical, 232 MB virtual, 0 MB heap, 14 MB stack; newlib's heap 232 MB, 230 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=1800
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 2000 of 2000 draws found their vertices, 100.00% of 0.2 MiB; 0.0 MiB decoded; 0 entries evicted, 0 forgotten, 0 without room; at most 0.00 MiB a frame and 0.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 0 kept in 0.00 MiB
+[36m[DEBUG | dusk][0m fapGm_Execute frame=2100
+vulkan4xenon: profile, the last 10 s: 1752 draws, 16918 commands, 584 submits, 584 presents; a present 3.0 draws, 58.0 us submitting; a submit 3.0 draws, 58.0 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 248 ns a draw, 205 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: push 170 ns a draw, 148 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: pipeline 3833 ns a draw, 3812 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 353 ns a draw, 303 less its 2.3 laps
+vulkan4xenon: profile, the last 10 s: resources 992 ns a draw, 920 less its 3.3 laps
+vulkan4xenon: profile, the last 10 s: checks 998 ns a draw, 955 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 203 ns a draw, 181 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 11100 ns a draw, 10892 less its 9.7 laps
+vulkan4xenon: profile, the last 10 s: submit 1421 ns a draw, 1407 less its 0.7 laps
+vulkan4xenon: profile, the last 10 s: all 19319 ns a draw, 18824 less its 23.0 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 22 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 9 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 592 frames in 10.0 s, 59.2 fps
+[0m[INFO | dusk][0m Memory: 151 MB free; the title's pages: 45 MB physical, 232 MB virtual, 0 MB heap, 14 MB stack; newlib's heap 232 MB, 230 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=2400
+[36m[DEBUG | dusk][0m fapGm_Execute frame=2700
+vulkan4xenon: profile, the last 10 s: 1779 draws, 17177 commands, 593 submits, 593 presents; a present 3.0 draws, 69.0 us submitting; a submit 3.0 draws, 69.0 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 261 ns a draw, 218 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: push 190 ns a draw, 168 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: pipeline 5100 ns a draw, 5078 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 356 ns a draw, 306 less its 2.3 laps
+vulkan4xenon: profile, the last 10 s: resources 1511 ns a draw, 1439 less its 3.3 laps
+vulkan4xenon: profile, the last 10 s: checks 1025 ns a draw, 982 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 189 ns a draw, 168 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 12322 ns a draw, 12114 less its 9.7 laps
+vulkan4xenon: profile, the last 10 s: submit 2045 ns a draw, 2031 less its 0.7 laps
+vulkan4xenon: profile, the last 10 s: all 22998 ns a draw, 22503 less its 23.0 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 25 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 9 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 594 frames in 10.0 s, 59.3 fps
+[0m[INFO | dusk][0m Memory: 151 MB free; the title's pages: 45 MB physical, 232 MB virtual, 0 MB heap, 14 MB stack; newlib's heap 232 MB, 230 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=3000
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 2000 of 2000 draws found their vertices, 100.00% of 0.2 MiB; 0.0 MiB decoded; 0 entries evicted, 0 forgotten, 0 without room; at most 0.00 MiB a frame and 0.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 0 kept in 0.00 MiB
+[36m[DEBUG | dusk][0m fapGm_Execute frame=3300
+vulkan4xenon: profile, the last 10 s: 1776 draws, 17150 commands, 592 submits, 592 presents; a present 3.0 draws, 58.2 us submitting; a submit 3.0 draws, 58.2 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 244 ns a draw, 200 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: push 172 ns a draw, 151 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: pipeline 3829 ns a draw, 3807 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 365 ns a draw, 315 less its 2.3 laps
+vulkan4xenon: profile, the last 10 s: resources 1023 ns a draw, 952 less its 3.3 laps
+vulkan4xenon: profile, the last 10 s: checks 982 ns a draw, 939 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 187 ns a draw, 165 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 11191 ns a draw, 10983 less its 9.7 laps
+vulkan4xenon: profile, the last 10 s: submit 1422 ns a draw, 1408 less its 0.7 laps
+vulkan4xenon: profile, the last 10 s: all 19416 ns a draw, 18920 less its 23.0 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 22 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 9 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 592 frames in 10.0 s, 59.2 fps
+[0m[INFO | dusk][0m Memory: 151 MB free; the title's pages: 45 MB physical, 232 MB virtual, 0 MB heap, 14 MB stack; newlib's heap 232 MB, 230 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=3600
+[0m[INFO | dusk][0m Logo scene: warning out
+[0m[INFO | dusk][0m Logo scene: Nintendo in
+[0m[INFO | dusk][0m Logo scene: Nintendo out
+[0m[INFO | dusk][0m Logo scene: Dolby in
+[36m[DEBUG | dusk][0m fapGm_Execute frame=3900
+[0m[INFO | dusk][0m Logo scene: Dolby out
+[0m[INFO | dusk][0m Logo scene: Dolby out 2
+[0m[INFO | dusk][0m Logo scene: disc wait
+[36m[DEBUG | dusk][0m Loading Resource: ef_mizubashira.bck (Size: 672)
+[36m[DEBUG | dusk][0m Loading Resource: f_znc_r_impact.bck (Size: 704)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_hutk.bck (Size: 416)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_hutu.bck (Size: 416)
+[36m[DEBUG | dusk][0m Loading Resource: waita.bck (Size: 768)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_red.bck (Size: 512)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_yellow.bck (Size: 416)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_hart.bmd (Size: 5472)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_hutk.bmd (Size: 29376)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_hutu.bmd (Size: 29376)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_rupy.bmd (Size: 8224)
+[36m[DEBUG | dusk][0m Loading Resource: breakwoodbox.bmd (Size: 3744)
+[36m[DEBUG | dusk][0m Loading Resource: d_brockbrk.bmd (Size: 2848)
+[36m[DEBUG | dusk][0m Loading Resource: ef_mizubashira.bmd (Size: 12224)
+[36m[DEBUG | dusk][0m Loading Resource: ef_screen_suityu.bmd (Size: 4128)
+[36m[DEBUG | dusk][0m Loading Resource: ef_thunder01.bmd (Size: 10016)
+[36m[DEBUG | dusk][0m Loading Resource: ef_thunder02.bmd (Size: 10304)
+[36m[DEBUG | dusk][0m Loading Resource: mpm_tubo.bmd (Size: 4704)
+[36m[DEBUG | dusk][0m Loading Resource: nv.bmd (Size: 4256)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_arow.bmd (Size: 4960)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_arow_taba.bmd (Size: 22304)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_tane.bmd (Size: 13152)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_red.bmd (Size: 7808)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_yellow.bmd (Size: 10688)
+[36m[DEBUG | dusk][0m Loading Resource: f_znc_r_impact.bpk (Size: 416)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_red.bpk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_yellow.bpk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: ef_mizubashira.brk (Size: 480)
+[36m[DEBUG | dusk][0m Loading Resource: ef_thunder.brk (Size: 640)
+[36m[DEBUG | dusk][0m Loading Resource: f_g_hart.brk (Size: 384)
+[36m[DEBUG | dusk][0m Loading Resource: f_g_rupy.brk (Size: 800)
+[36m[DEBUG | dusk][0m Loading Resource: f_znc_r_impact.brk (Size: 384)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_hutk.brk (Size: 416)
+[36m[DEBUG | dusk][0m Loading Resource: o_g_hutu.brk (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_red.brk (Size: 288)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_red_02.brk (Size: 224)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_yellow.brk (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_yellow_02.brk (Size: 224)
+[36m[DEBUG | dusk][0m Loading Resource: ef_mizubashira.btk (Size: 704)
+[36m[DEBUG | dusk][0m Loading Resource: ef_screen_suityu.btk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: f_znc_r_impact.btk (Size: 256)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_red.btk (Size: 256)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_notice_cursor_yellow.btk (Size: 576)
+[36m[DEBUG | dusk][0m Loading Resource: mpm_tubo.btp (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: areamapres.bin (Size: 444)
+[36m[DEBUG | dusk][0m Loading Resource: item_table.bin (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: a_kusa_rgba.bti (Size: 2080)
+[36m[DEBUG | dusk][0m Loading Resource: ball32_i4.bti (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: im_enter_4i_32.bti (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: im_map_icon_circle_4i.bti (Size: 64)
+[36m[DEBUG | dusk][0m Loading Resource: im_map_icon_enter_4i.bti (Size: 160)
+[36m[DEBUG | dusk][0m Loading Resource: im_map_icon_nijumaru_4i.bti (Size: 160)
+[36m[DEBUG | dusk][0m Loading Resource: im_map_icon_square_4i.bti (Size: 64)
+[36m[DEBUG | dusk][0m Loading Resource: im_map_icon_tresurebox_4i.bti (Size: 64)
+[36m[DEBUG | dusk][0m Loading Resource: im_map_icon_try_force_4i.bti (Size: 160)
+[36m[DEBUG | dusk][0m Loading Resource: map_icon_circle16x16_4i.bti (Size: 160)
+[36m[DEBUG | dusk][0m Loading Resource: moya.bti (Size: 1056)
+[36m[DEBUG | dusk][0m Loading Resource: rope.bti (Size: 160)
+[36m[DEBUG | dusk][0m Loading Resource: snow.bti (Size: 160)
+[36m[DEBUG | dusk][0m Loading Resource: snow_tex.bti (Size: 1056)
+[36m[DEBUG | dusk][0m Loading Resource: txa_ring_a_32hafe.bti (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: txa_tuki_as.bti (Size: 2080)
+[36m[DEBUG | dusk][0m Loading Resource: txa_tuki_bs.bti (Size: 2080)
+[36m[DEBUG | dusk][0m Loading Resource: txa_tuki_cs.bti (Size: 2080)
+[36m[DEBUG | dusk][0m Loading Resource: txa_tuki_ds.bti (Size: 2080)
+[36m[DEBUG | dusk][0m Loading Resource: vr_lenzf_tex.bti (Size: 1056)
+[36m[DEBUG | dusk][0m Loading Resource: warp_tex.bti (Size: 1056)
+[36m[DEBUG | dusk][0m Loading Resource: zl2_polygon_ia8 (Size: 64)
+[36m[DEBUG | dusk][0m Loading Resource: crod_ball_revive_demo.bck (Size: 288)
+[36m[DEBUG | dusk][0m Loading Resource: crod_ball_wait_a.bck (Size: 288)
+[36m[DEBUG | dusk][0m Loading Resource: crod_ball_wait_a_t.bck (Size: 288)
+[36m[DEBUG | dusk][0m Loading Resource: crod_ball_wait_a_t_start.bck (Size: 288)
+[36m[DEBUG | dusk][0m Loading Resource: crod_ball_wait_b.bck (Size: 352)
+[36m[DEBUG | dusk][0m Loading Resource: crod_ball_wait_c.bck (Size: 384)
+[36m[DEBUG | dusk][0m Loading Resource: ef_shippu.bck (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: pb_move.bck (Size: 2816)
+[36m[DEBUG | dusk][0m Loading Resource: pb_wait.bck (Size: 928)
+[36m[DEBUG | dusk][0m Loading Resource: spout.bck (Size: 1088)
+[36m[DEBUG | dusk][0m Loading Resource: ef_setboom.bmd (Size: 15392)
+[36m[DEBUG | dusk][0m Loading Resource: al_arrow.bmd (Size: 5024)
+[36m[DEBUG | dusk][0m Loading Resource: al_arrowb.bmd (Size: 9696)
+[36m[DEBUG | dusk][0m Loading Resource: al_bomb.bmd (Size: 11104)
+[36m[DEBUG | dusk][0m Loading Resource: al_boom.bmd (Size: 20000)
+[36m[DEBUG | dusk][0m Loading Resource: al_pachi_nut.bmd (Size: 2176)
+[36m[DEBUG | dusk][0m Loading Resource: al_sp.bmd (Size: 21824)
+[36m[DEBUG | dusk][0m Loading Resource: crod_ball.bmd (Size: 3840)
+[36m[DEBUG | dusk][0m Loading Resource: footmark.bmd (Size: 2272)
+[36m[DEBUG | dusk][0m Loading Resource: hk.bmd (Size: 3648)
+[36m[DEBUG | dusk][0m Loading Resource: inochidama.bmd (Size: 13120)
+[36m[DEBUG | dusk][0m Loading Resource: pb.bmd (Size: 34976)
+[36m[DEBUG | dusk][0m Loading Resource: pg.bmd (Size: 20736)
+[36m[DEBUG | dusk][0m Loading Resource: rod_ukia.bmd (Size: 4384)
+[36m[DEBUG | dusk][0m Loading Resource: rod_ukib.bmd (Size: 2656)
+[36m[DEBUG | dusk][0m Loading Resource: rod_ukic.bmd (Size: 2656)
+[36m[DEBUG | dusk][0m Loading Resource: sango_fook.bmd (Size: 9984)
+[36m[DEBUG | dusk][0m Loading Resource: sfook.bmd (Size: 3456)
+[36m[DEBUG | dusk][0m Loading Resource: uki.bmd (Size: 4928)
+[36m[DEBUG | dusk][0m Loading Resource: uki_saki.bmd (Size: 4160)
+[36m[DEBUG | dusk][0m Loading Resource: wl_change.bmd (Size: 44256)
+[36m[DEBUG | dusk][0m Loading Resource: worm.bmd (Size: 8256)
+[36m[DEBUG | dusk][0m Loading Resource: worm_hole.bmd (Size: 2816)
+[36m[DEBUG | dusk][0m Loading Resource: ef_shippu.bmd (Size: 33216)
+[36m[DEBUG | dusk][0m Loading Resource: al_podm.bmd (Size: 21504)
+[36m[DEBUG | dusk][0m Loading Resource: al_swm.bmd (Size: 22720)
+[36m[DEBUG | dusk][0m Loading Resource: al_poda.bmd (Size: 12032)
+[36m[DEBUG | dusk][0m Loading Resource: al_swa.bmd (Size: 11808)
+[36m[DEBUG | dusk][0m Loading Resource: al_swm.brk (Size: 256)
+[36m[DEBUG | dusk][0m Loading Resource: crod_ball.brk (Size: 736)
+[36m[DEBUG | dusk][0m Loading Resource: inochidama.brk (Size: 288)
+[36m[DEBUG | dusk][0m Loading Resource: al_swa.btk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: al_swm.btk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: crod_ball.btk (Size: 416)
+[36m[DEBUG | dusk][0m Loading Resource: ef_setboom.btk (Size: 704)
+[36m[DEBUG | dusk][0m Loading Resource: ef_shippu.btk (Size: 1120)
+[36m[DEBUG | dusk][0m Loading Resource: inochidama.btk (Size: 672)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_orange.blo (Size: 2368)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_orange.brk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_orange_02.brk (Size: 384)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_red.blo (Size: 2368)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_red.brk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_red_02.brk (Size: 384)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_yellow.bck (Size: 2016)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_yellow.blo (Size: 2336)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_yellow.bpk (Size: 448)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_yellow.brk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: zelda_v_cursor_new_yellow_02.brk (Size: 352)
+[36m[DEBUG | dusk][0m Loading Resource: blur.bti (Size: 96)
+[36m[DEBUG | dusk][0m Loading Resource: rock_mark.bti (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: tt_v_point_128_00_4ia_02.bti (Size: 16416)
+[36m[DEBUG | dusk][0m Loading Resource: tt_map_icon_link_40_4ia_00.bti (Size: 1632)
+[36m[DEBUG | dusk][0m Loading Resource: tt_navi_l.bti (Size: 544)
+[0m[INFO | dusk][0m 556 frames in 10.6 s, 52.3 fps
+vulkan4xenon: profile, the last 10 s: 1548 draws, 15334 commands, 567 submits, 567 presents; a present 2.7 draws, 57.3 us submitting; a submit 2.7 draws, 57.3 us; a lap 21.6 ns
+[0m[INFO | dusk][0m Memory: 150 MB free; the title's pages: 45 MB physical, 232 MB virtual, 0 MB heap, 14 MB stack; newlib's heap 232 MB, 231 MB of it in use
+vulkan4xenon: profile, the last 10 s: dispatch 264 ns a draw, 221 less its 2.0 laps
+[0m[INFO | dusk][0m Logo scene: scene change
+vulkan4xenon: profile, the last 10 s: push 175 ns a draw, 154 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4013 ns a draw, 3992 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 342 ns a draw, 297 less its 2.1 laps
+vulkan4xenon: profile, the last 10 s: resources 993 ns a draw, 927 less its 3.1 laps
+vulkan4xenon: profile, the last 10 s: checks 1027 ns a draw, 984 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 196 ns a draw, 174 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 12402 ns a draw, 12188 less its 9.9 laps
+vulkan4xenon: profile, the last 10 s: submit 1578 ns a draw, 1563 less its 0.7 laps
+vulkan4xenon: profile, the last 10 s: all 20991 ns a draw, 20500 less its 22.8 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 22 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 9 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=0 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=2 profname=fpcNm_OVERLAP0_e (0) profile=0x82176d44 procSize=220 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9cf48
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 1784 of 1820 draws found their vertices, 98.47% of 0.1 MiB; 0.0 MiB decoded; 0 entries evicted, 0 forgotten, 0 without room; at most 0.00 MiB a frame and 0.01 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 0 kept in 0.00 MiB
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: name=12 layer=0x84399f78
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: creating_id=3 (error=4294967295)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=12 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=12
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=3 profname=fpcNm_OPENING_SCENE_e (12) profile=0x821772d0 procSize=476 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9d098
+[0m[INFO | dusk][0m Stage: F_SP102
+[0m[INFO | dusk][0m Memory: 149 MB free; the title's pages: 45 MB physical, 233 MB virtual, 0 MB heap, 14 MB stack; newlib's heap 233 MB, 232 MB of it in use
+[36m[DEBUG | dusk][0m Loading Resource: vrbox_kasumim.bmd (Size: 2272)
+[36m[DEBUG | dusk][0m Loading Resource: vrbox_kumo.bmd (Size: 69664)
+[36m[DEBUG | dusk][0m Loading Resource: vrbox_sora.bmd (Size: 6624)
+[36m[DEBUG | dusk][0m Loading Resource: vrbox_sun.bmd (Size: 12032)
+[36m[DEBUG | dusk][0m Loading Resource: vrbox_sun.btk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: colordata_tbl.dat (Size: 800)
+[36m[DEBUG | dusk][0m Loading Resource: pol_arg.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_effcol.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_effcol2.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_efftbl.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_efftbl2.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_sound.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: room0.dzs (Size: 5440)
+[36m[DEBUG | dusk][0m Loading Resource: stage.dzs (Size: 1952)
+[36m[DEBUG | dusk][0m Loading Resource: cloudtx_01.bti (Size: 4128)
+[36m[DEBUG | dusk][0m Loading Resource: cloudtx_02.bti (Size: 4128)
+[36m[DEBUG | dusk][0m Loading Resource: cloudtx_03.bti (Size: 4128)
+[36m[DEBUG | dusk][0m Loading Resource: f_moon.bti (Size: 8224)
+[36m[DEBUG | dusk][0m Loading Resource: f_moon_a.bti (Size: 2080)
+[36m[DEBUG | dusk][0m Loading Resource: f_moon_a_a00.bti (Size: 64)
+[36m[DEBUG | dusk][0m Loading Resource: f_moon_a_a01.bti (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: f_moon_a_a02.bti (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: f_moon_a_a03.bti (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: event_list.dat (Size: 106476)
+[36m[DEBUG | dusk][0m Loading Resource: camstyle.dat (Size: 43328)
+[36m[DEBUG | dusk][0m Loading Resource: camtype.dat (Size: 14560)
+[36m[DEBUG | dusk][0m fopScnM_CreateReq: procName=18 fade=32767
+[36m[DEBUG | dusk][0m fopScnM_CreateReq: result=2 (error=4294967295)
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=7 profname=fpcNm_KANKYO_e (19) profile=0x8216e5c8 procSize=252 unkSize=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=9 profname=fpcNm_KYEFF_e (785) profile=0x8216e618 procSize=252 unkSize=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=11 profname=fpcNm_KYEFF2_e (786) profile=0x8216e640 procSize=252 unkSize=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=13 profname=fpcNm_ENVSE_e (21) profile=0x8216d1f4 procSize=272 unkSize=0
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: name=18 layer=0x5d9d158
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: creating_id=16 (error=4294967295)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=737 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=737
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=4 profname=fpcNm_TITLE_e (737) profile=0x821ed7a8 procSize=1556 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9c014
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=781 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=781
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=5 profname=fpcNm_CAMERA_e (781) profile=0x8216d118 procSize=3688 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9b19c
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=730 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=730
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=14 profname=fpcNm_VRBOX_e (730) profile=0x8217f50c procSize=1412 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9ac08
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=731 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=731
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=15 profname=fpcNm_VRBOX2_e (731) profile=0x8217f58c procSize=1452 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9a64c
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=18 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=18
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=16 profname=fpcNm_ROOM_SCENE_e (18) profile=0x82177324 procSize=480 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9a45c
+[36m[DEBUG | dusk][0m Loading Resource: titlelogo.bck (Size: 704)
+[36m[DEBUG | dusk][0m Loading Resource: titlelogo_r.bmd (Size: 1995456)
+[36m[DEBUG | dusk][0m Loading Resource: titlelogo.bpk (Size: 576)
+[36m[DEBUG | dusk][0m Loading Resource: titlelogo.brk (Size: 704)
+[36m[DEBUG | dusk][0m Loading Resource: titlelogo.btk (Size: 672)
+[36m[DEBUG | dusk][0m Loading Resource: model.bmd (Size: 927520)
+[36m[DEBUG | dusk][0m Loading Resource: model1.bmd (Size: 7488)
+[36m[DEBUG | dusk][0m Loading Resource: model2.bmd (Size: 22752)
+[36m[DEBUG | dusk][0m Loading Resource: model3.bmd (Size: 166848)
+[36m[DEBUG | dusk][0m Loading Resource: model4.bmd (Size: 10400)
+[36m[DEBUG | dusk][0m Loading Resource: model.btk (Size: 576)
+[36m[DEBUG | dusk][0m Loading Resource: model1.btk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: model2.btk (Size: 352)
+[36m[DEBUG | dusk][0m Loading Resource: model4.btk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: room.dzr (Size: 7456)
+[36m[DEBUG | dusk][0m Loading Resource: event_list.dat (Size: 5304)
+[36m[DEBUG | dusk][0m Loading Resource: room.kcl (Size: 449804)
+[36m[DEBUG | dusk][0m Loading Resource: room.plc (Size: 608)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=253 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=253
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=17 profname=fpcNm_ALINK_e (253) profile=0x8216813c procSize=14660 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d96b08
+[36m[DEBUG | dusk][0m Loading Resource: demo38_wl_cut01_gp_1_o.bck (Size: 8000)
+[36m[DEBUG | dusk][0m Loading Resource: demo38_wl_cut01_gp_1_l.bck (Size: 5088)
+[36m[DEBUG | dusk][0m Loading Resource: demo38_wl_cut00_gp_1_o.bmd (Size: 239584)
+[36m[DEBUG | dusk][0m Loading Resource: demo38_twfilm_cut00_gp_1_o.bmd (Size: 45376)
+[36m[DEBUG | dusk][0m Loading Resource: demo38_01.stb (Size: 9368)
+[36m[DEBUG | dusk][0m Loading Resource: demo38_twfilm_cut00_gp_1_l.btk (Size: 832)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=732 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=732
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=18 profname=fpcNm_BG_e (732) profile=0x8217b328 procSize=1536 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d95994
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=222 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=222
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=19 profname=fpcNm_OBJ_IHASI_e (222) profile=0x821da9d0 procSize=1488 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d953b4
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=187 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=187
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=20 profname=fpcNm_CSTAF_e (187) profile=0x82181e80 procSize=2952 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9481c
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=733 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=733
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=21 profname=fpcNm_SET_BG_OBJ_e (733) profile=0x8217e25c procSize=1420 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d94280
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=238 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=238
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=22 profname=fpcNm_HORSE_e (238) profile=0x821a7e70 procSize=6500 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9290c
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=784 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=784
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=23 profname=fpcNm_GRASS_e (784) profile=0x82184858 procSize=1404 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d92380
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=784 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=784
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=24 profname=fpcNm_GRASS_e (784) profile=0x82184858 procSize=1404 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d91df4
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=784 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=784
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=25 profname=fpcNm_GRASS_e (784) profile=0x82184858 procSize=1404 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d91868
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=784 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=784
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=26 profname=fpcNm_GRASS_e (784) profile=0x82184858 procSize=1404 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d912dc
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=784 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=784
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=27 profname=fpcNm_GRASS_e (784) profile=0x82184858 procSize=1404 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d90d50
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=784 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=784
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=28 profname=fpcNm_GRASS_e (784) profile=0x82184858 procSize=1404 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d907c4
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=333 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=333
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=29 profname=fpcNm_Obj_Yobikusa_e (333) profile=0x8218cf3c procSize=1916 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d90038
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=333 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=333
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=30 profname=fpcNm_Obj_Yobikusa_e (333) profile=0x8218cf3c procSize=1916 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8f8ac
+[36m[DEBUG | dusk][0m Loading Resource: al_umakusa.bmd (Size: 5984)
+[36m[DEBUG | dusk][0m Loading Resource: j_umakusa.bmd (Size: 13152)
+[36m[DEBUG | dusk][0m Loading Resource: j_umakusa_c.bmd (Size: 9536)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=333 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=333
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=31 profname=fpcNm_Obj_Yobikusa_e (333) profile=0x8218cf3c procSize=1916 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8f120
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=333 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=333
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=32 profname=fpcNm_Obj_Yobikusa_e (333) profile=0x8218cf3c procSize=1916 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8e994
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=333 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=333
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=33 profname=fpcNm_Obj_Yobikusa_e (333) profile=0x8218cf3c procSize=1916 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8e208
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=333 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=333
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=34 profname=fpcNm_Obj_Yobikusa_e (333) profile=0x8218cf3c procSize=1916 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8da7c
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=733 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=733
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=35 profname=fpcNm_SET_BG_OBJ_e (733) profile=0x8217e25c procSize=1420 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8d4e0
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=733 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=733
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=36 profname=fpcNm_SET_BG_OBJ_e (733) profile=0x8217e25c procSize=1420 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8cf44
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=733 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=733
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=37 profname=fpcNm_SET_BG_OBJ_e (733) profile=0x8217e25c procSize=1420 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8c9a8
+[36m[DEBUG | dusk][0m Loading Resource: model0.bmd (Size: 13312)
+[36m[DEBUG | dusk][0m Loading Resource: model1.bmd (Size: 10656)
+[36m[DEBUG | dusk][0m Loading Resource: model0.dzb (Size: 832)
+[36m[DEBUG | dusk][0m Loading Resource: spec.dat (Size: 148)
+[36m[DEBUG | dusk][0m Loading Resource: al_kantera.bmd (Size: 21024)
+[36m[DEBUG | dusk][0m Loading Resource: ef_ktglow.bmd (Size: 3040)
+[36m[DEBUG | dusk][0m Loading Resource: al.bmd (Size: 140448)
+[36m[DEBUG | dusk][0m Loading Resource: al_bootsh.bmd (Size: 22048)
+[36m[DEBUG | dusk][0m Loading Resource: al_face.bmd (Size: 72576)
+[36m[DEBUG | dusk][0m Loading Resource: al_hands.bmd (Size: 61056)
+[36m[DEBUG | dusk][0m Loading Resource: al_head.bmd (Size: 34400)
+[36m[DEBUG | dusk][0m Loading Resource: al_swb.bmd (Size: 23552)
+[36m[DEBUG | dusk][0m Loading Resource: ef_ktglow.btk (Size: 512)
+[36m[DEBUG | dusk][0m Loading Resource: i_bajyohasiparts.bmd (Size: 76032)
+[36m[DEBUG | dusk][0m Loading Resource: i_bajyohasiparts_ef.bmd (Size: 37088)
+[36m[DEBUG | dusk][0m Loading Resource: i_bajyohasiparts_ef.btk (Size: 512)
+[36m[DEBUG | dusk][0m Loading Resource: i_bajyohasiparts.dzb (Size: 6848)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_b_fall.bck (Size: 448)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_b_swing_reaction.bck (Size: 416)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_b_walk.bck (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_b.bmd (Size: 66176)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_cover.bmd (Size: 30112)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_b_start.brk (Size: 352)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_b_stop.brk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_cover_vanish.brk (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_b_start.btk (Size: 512)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_cover_vanish.btk (Size: 896)
+[36m[DEBUG | dusk][0m Loading Resource: cs_f_b.dzb (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: model0.bmd (Size: 22624)
+[36m[DEBUG | dusk][0m Loading Resource: spec.dat (Size: 16)
+[36m[DEBUG | dusk][0m Loading Resource: hs_back_walk.bck (Size: 5536)
+[36m[DEBUG | dusk][0m Loading Resource: hs_back_walk_start.bck (Size: 6304)
+[36m[DEBUG | dusk][0m Loading Resource: hs_excitement.bck (Size: 11968)
+[36m[DEBUG | dusk][0m Loading Resource: hs_excitement_2.bck (Size: 14144)
+[36m[DEBUG | dusk][0m Loading Resource: hs_jump_end.bck (Size: 5344)
+[36m[DEBUG | dusk][0m Loading Resource: hs_jump_middle.bck (Size: 4640)
+[36m[DEBUG | dusk][0m Loading Resource: hs_jump_start.bck (Size: 4832)
+[36m[DEBUG | dusk][0m Loading Resource: hs_jump_start_clift.bck (Size: 5248)
+[36m[DEBUG | dusk][0m Loading Resource: hs_lash.bck (Size: 3200)
+[36m[DEBUG | dusk][0m Loading Resource: hs_neck_waitback_left.bck (Size: 2880)
+[36m[DEBUG | dusk][0m Loading Resource: hs_neck_waitback_right.bck (Size: 2848)
+[36m[DEBUG | dusk][0m Loading Resource: hs_run_dash.bck (Size: 7680)
+[36m[DEBUG | dusk][0m Loading Resource: hs_run_fast.bck (Size: 6688)
+[36m[DEBUG | dusk][0m Loading Resource: hs_run_slow.bck (Size: 7712)
+[36m[DEBUG | dusk][0m Loading Resource: hs_stand.bck (Size: 17984)
+[36m[DEBUG | dusk][0m Loading Resource: hs_stop_slow.bck (Size: 14208)
+[36m[DEBUG | dusk][0m Loading Resource: hs_stop_stand.bck (Size: 16352)
+[36m[DEBUG | dusk][0m Loading Resource: hs_turn_left.bck (Size: 9632)
+[36m[DEBUG | dusk][0m Loading Resource: hs_turn_left_start.bck (Size: 5248)
+[36m[DEBUG | dusk][0m Loading Resource: hs_turn_right.bck (Size: 9472)
+[36m[DEBUG | dusk][0m Loading Resource: hs_turn_right_start.bck (Size: 5344)
+[36m[DEBUG | dusk][0m Loading Resource: hs_wait_01.bck (Size: 4768)
+[36m[DEBUG | dusk][0m Loading Resource: hs_wait_01b.bck (Size: 4672)
+[36m[DEBUG | dusk][0m Loading Resource: hs_wait_01b_connect.bck (Size: 4672)
+[36m[DEBUG | dusk][0m Loading Resource: hs_wait_02.bck (Size: 8928)
+[36m[DEBUG | dusk][0m Loading Resource: hs_wait_03.bck (Size: 7552)
+[36m[DEBUG | dusk][0m Loading Resource: hs_wait_04.bck (Size: 12640)
+[36m[DEBUG | dusk][0m Loading Resource: hs_wait_05.bck (Size: 10528)
+[36m[DEBUG | dusk][0m Loading Resource: hs_walk_fast.bck (Size: 5792)
+[36m[DEBUG | dusk][0m Loading Resource: hs_walk_slow.bck (Size: 5600)
+[36m[DEBUG | dusk][0m Loading Resource: hs.bmd (Size: 131264)
+[36m[DEBUG | dusk][0m Loading Resource: hs_eye.btp (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: tazuna.bti (Size: 160)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=734 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=734
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=38 profname=fpcNm_BG_OBJ_e (734) profile=0x8217b400 procSize=3340 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8bc8c
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=43 profname=fpcNm_Tag_Attp_e (346) profile=0x8218167c procSize=1396 unkSize=0
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=734 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=734
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=39 profname=fpcNm_BG_OBJ_e (734) profile=0x8217b400 procSize=3340 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d8a9ec
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=734 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=734
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=40 profname=fpcNm_BG_OBJ_e (734) profile=0x8217b400 procSize=3340 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d89cd0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=45 profname=fpcNm_Tag_Attp_e (346) profile=0x8218167c procSize=1396 unkSize=0
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=734 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=734
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=41 profname=fpcNm_BG_OBJ_e (734) profile=0x8217b400 procSize=3340 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d88a30
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=47 profname=fpcNm_Tag_Attp_e (346) profile=0x8218167c procSize=1396 unkSize=0
+[36m[DEBUG | dusk][0m Loading Resource: al_sha.bmd (Size: 24288)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=255 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=255
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=48 profname=fpcNm_MIDNA_e (255) profile=0x82180db4 procSize=2584 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d960e0
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hands.bmd (Size: 19776)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_mask.bmd (Size: 15424)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_gokou.bmd (Size: 3008)
+[36m[DEBUG | dusk][0m Loading Resource: s_md.bmd (Size: 69984)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hair_hand.bmd (Size: 18944)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_appear.brk (Size: 352)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_gokou_appear.brk (Size: 256)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hair_hand_appear.brk (Size: 288)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_mask_appear.brk (Size: 256)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hair_hand_moya.btk (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hands_moya.btk (Size: 608)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_mask_moya.btk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_moya.btk (Size: 512)
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=50 profname=fpcNm_DEMO00_e (718) profile=0x8217fc10 procSize=10652 unkSize=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=52 profname=fpcNm_DEMO00_e (718) profile=0x8217fc10 procSize=10652 unkSize=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=54 profname=fpcNm_DEMO00_e (718) profile=0x8217fc10 procSize=10652 unkSize=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=56 profname=fpcNm_DEMO00_e (718) profile=0x8217fc10 procSize=10652 unkSize=0
+[36m[DEBUG | dusk][0m frameInterp: onTypeChange 41 -> 40 (event_type_id=40, leaving_event=false, entering_event=true)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread system initialized (multi-threaded mode)
+vulkan4xenon: not supported: colour attachments with mips, or 16 texels or less on a side
+[0m[INFO | aurora::thread][0m Aurora decode helper on hardware thread 5
+[31m[ERROR | aurora::vulkan4xenon][0m vkCreateImage: -8
+[31m[ERROR | aurora::vulkan4xenon][0m No image for Resolved Texture (20x11)
+vulkan4xenon: not supported: colour attachments with mips, or 16 texels or less on a side
+[31m[ERROR | aurora::vulkan4xenon][0m vkCreateImage: -8
+[31m[ERROR | aurora::vulkan4xenon][0m No image for Resolved Texture (20x11)
+vulkan4xenon: profile, the last 10 s: 19522 draws, 124916 commands, 183 submits, 183 presents; a present 106.7 draws, 569.8 us submitting; a submit 106.7 draws, 569.8 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 157 ns a draw, 118 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 56 ns a draw, 38 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 1074 ns a draw, 1052 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 455 ns a draw, 349 less its 4.9 laps
+vulkan4xenon: profile, the last 10 s: resources 795 ns a draw, 667 less its 5.9 laps
+vulkan4xenon: profile, the last 10 s: checks 457 ns a draw, 414 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 63 ns a draw, 41 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 2247 ns a draw, 2109 less its 6.4 laps
+vulkan4xenon: profile, the last 10 s: submit 38 ns a draw, 38 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 5342 ns a draw, 4827 less its 23.9 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 73 us a present, 16 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 68 us a present, 16 a present
+vulkan4xenon: profile, the last 10 s: command type 5 (src/objects.h), 14 us a present, 162 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 51 us a present, 1 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 206 frames in 10.0 s, 20.6 fps
+[0m[INFO | dusk][0m Memory: 127 MB free; the title's pages: 53 MB physical, 246 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 241 MB, 235 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=4200
+[33m[WARNING | aurora::gx::fifo][0m 65538 bytes written between publishes, more than a 65536 byte chunk: given a chunk of their own
+[0m[INFO | aurora::vulkan4xenon][0m Read 3534e73acf5c631f.frag from the disk; 0 compiled and 1 read this run
+vulkan4xenon: SPIR-V 8DF156C62DA6F40C read from the shader cache
+vulkan4xenon: profile, the last 10 s: 72763 draws, 438445 commands, 295 submits, 295 presents; a present 246.7 draws, 1006.4 us submitting; a submit 246.7 draws, 1006.4 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 168 ns a draw, 128 less its 1.9 laps
+vulkan4xenon: profile, the last 10 s: push 69 ns a draw, 51 less its 0.9 laps
+vulkan4xenon: profile, the last 10 s: pipeline 793 ns a draw, 772 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 454 ns a draw, 354 less its 4.6 laps
+vulkan4xenon: profile, the last 10 s: resources 707 ns a draw, 586 less its 5.6 laps
+vulkan4xenon: profile, the last 10 s: checks 420 ns a draw, 377 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 59 ns a draw, 37 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 1394 ns a draw, 1264 less its 6.0 laps
+vulkan4xenon: profile, the last 10 s: submit 16 ns a draw, 15 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 4080 ns a draw, 3585 less its 23.0 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 119 us a present, 27 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 119 us a present, 27 a present
+vulkan4xenon: profile, the last 10 s: command type 3 (src/objects.h), 20 us a present, 247 a present
+vulkan4xenon: profile, the last 10 s: command type 5 (src/objects.h), 31 us a present, 337 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 292 frames in 10.0 s, 29.2 fps
+[0m[INFO | dusk][0m Memory: 116 MB free; the title's pages: 61 MB physical, 249 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 243 MB, 238 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=4500
+[0m[INFO | aurora::vulkan4xenon][0m Wrote frame capture to game:\dusklight_title.ppm
+vulkan4xenon: profile, the last 10 s: 51127 draws, 321207 commands, 281 submits, 281 presents; a present 181.9 draws, 816.3 us submitting; a submit 181.9 draws, 816.3 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 159 ns a draw, 120 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 53 ns a draw, 35 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 965 ns a draw, 944 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 446 ns a draw, 340 less its 4.9 laps
+vulkan4xenon: profile, the last 10 s: resources 797 ns a draw, 670 less its 5.9 laps
+vulkan4xenon: profile, the last 10 s: checks 432 ns a draw, 389 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 61 ns a draw, 39 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 1553 ns a draw, 1417 less its 6.3 laps
+vulkan4xenon: profile, the last 10 s: submit 20 ns a draw, 20 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 4486 ns a draw, 3974 less its 23.7 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 102 us a present, 25 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 103 us a present, 25 a present
+vulkan4xenon: profile, the last 10 s: command type 5 (src/objects.h), 23 us a present, 271 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 284 frames in 10.0 s, 28.4 fps
+[0m[INFO | dusk][0m Memory: 114 MB free; the title's pages: 61 MB physical, 251 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 247 MB, 245 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=4800
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 162118 of 181550 draws found their vertices, 97.75% of 1600.0 MiB; 36.0 MiB decoded; 11677 entries evicted, 0 forgotten, 0 without room; at most 1.91 MiB a frame and 8.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 376 index lists built, 376 kept in 3.85 MiB
+vulkan4xenon: profile, the last 10 s: 56076 draws, 346905 commands, 294 submits, 294 presents; a present 190.7 draws, 829.9 us submitting; a submit 190.7 draws, 829.9 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 161 ns a draw, 122 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 51 ns a draw, 34 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 903 ns a draw, 882 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 441 ns a draw, 338 less its 4.8 laps
+vulkan4xenon: profile, the last 10 s: resources 765 ns a draw, 641 less its 5.8 laps
+vulkan4xenon: profile, the last 10 s: checks 425 ns a draw, 382 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 60 ns a draw, 39 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 1524 ns a draw, 1391 less its 6.2 laps
+vulkan4xenon: profile, the last 10 s: submit 20 ns a draw, 19 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 4351 ns a draw, 3848 less its 23.3 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 103 us a present, 25 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 105 us a present, 25 a present
+vulkan4xenon: profile, the last 10 s: command type 5 (src/objects.h), 25 us a present, 284 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 298 frames in 10.0 s, 29.7 fps
+[0m[INFO | dusk][0m Memory: 112 MB free; the title's pages: 61 MB physical, 253 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 247 MB, 241 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=5100
+vulkan4xenon: profile, the last 10 s: 52307 draws, 327063 commands, 294 submits, 294 presents; a present 177.9 draws, 822.5 us submitting; a submit 177.9 draws, 822.5 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 181 ns a draw, 142 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 54 ns a draw, 37 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 943 ns a draw, 921 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 492 ns a draw, 387 less its 4.9 laps
+vulkan4xenon: profile, the last 10 s: resources 775 ns a draw, 648 less its 5.9 laps
+vulkan4xenon: profile, the last 10 s: checks 438 ns a draw, 395 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 61 ns a draw, 40 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 1656 ns a draw, 1522 less its 6.3 laps
+vulkan4xenon: profile, the last 10 s: submit 22 ns a draw, 22 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 4623 ns a draw, 4114 less its 23.6 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 105 us a present, 25 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 108 us a present, 25 a present
+vulkan4xenon: profile, the last 10 s: command type 5 (src/objects.h), 24 us a present, 264 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 294 frames in 10.0 s, 29.4 fps
+[0m[INFO | dusk][0m Memory: 112 MB free; the title's pages: 61 MB physical, 253 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 247 MB, 242 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=5400
+vulkan4xenon: profile, the last 10 s: 71057 draws, 428444 commands, 298 submits, 298 presents; a present 238.4 draws, 958.1 us submitting; a submit 238.4 draws, 958.1 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 162 ns a draw, 122 less its 1.9 laps
+vulkan4xenon: profile, the last 10 s: push 55 ns a draw, 37 less its 0.9 laps
+vulkan4xenon: profile, the last 10 s: pipeline 785 ns a draw, 763 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 482 ns a draw, 371 less its 5.1 laps
+vulkan4xenon: profile, the last 10 s: resources 716 ns a draw, 583 less its 6.1 laps
+vulkan4xenon: profile, the last 10 s: checks 426 ns a draw, 383 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 59 ns a draw, 38 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 1317 ns a draw, 1187 less its 6.0 laps
+vulkan4xenon: profile, the last 10 s: submit 17 ns a draw, 17 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 4018 ns a draw, 3500 less its 24.0 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 108 us a present, 26 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 107 us a present, 26 a present
+vulkan4xenon: profile, the last 10 s: command type 3 (src/objects.h), 21 us a present, 238 a present
+vulkan4xenon: profile, the last 10 s: command type 5 (src/objects.h), 29 us a present, 329 a present
+vulkan4xenon: profile, the last 10 s: command type 10 (src/objects.h), 19 us a present, 226 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 294 frames in 10.0 s, 29.4 fps
+[0m[INFO | dusk][0m Memory: 111 MB free; the title's pages: 61 MB physical, 254 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 249 MB, 242 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=5700
+vulkan4xenon: profile, the last 10 s: 69600 draws, 412604 commands, 289 submits, 289 presents; a present 240.8 draws, 1142.9 us submitting; a submit 240.8 draws, 1142.9 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 185 ns a draw, 145 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 85 ns a draw, 67 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 826 ns a draw, 804 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 584 ns a draw, 485 less its 4.6 laps
+vulkan4xenon: profile, the last 10 s: resources 892 ns a draw, 771 less its 5.6 laps
+vulkan4xenon: profile, the last 10 s: checks 468 ns a draw, 425 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 89 ns a draw, 68 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 1601 ns a draw, 1473 less its 5.9 laps
+vulkan4xenon: profile, the last 10 s: submit 17 ns a draw, 17 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 4745 ns a draw, 4254 less its 22.8 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 140 us a present, 27 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 132 us a present, 27 a present
+vulkan4xenon: profile, the last 10 s: command type 3 (src/objects.h), 26 us a present, 241 a present
+vulkan4xenon: profile, the last 10 s: command type 5 (src/objects.h), 33 us a present, 320 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m Diagnostics: the still shot found 69.0 s into the title scene
+[0m[INFO | dusk][0m 290 frames in 10.0 s, 29.0 fps
+[0m[INFO | dusk][0m Memory: 108 MB free; the title's pages: 61 MB physical, 257 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 257 MB, 253 MB of it in use
+[0m[INFO | aurora::vulkan4xenon][0m Wrote frame capture to game:\dusklight_shot_start.ppm
+[0m[INFO | dusk][0m Diagnostics, phase 0 (skipping nothing): 48 frames in 1.65 s, 29.0 fps, 34.5 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 0.0 ms for a frame slot, 0.0 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 4.0 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 12.0 ms; render worker 3.3 ms: acquire 0.0, replay 1.0, present 0.0, the rest 2.2
+[0m[INFO | dusk][0m   GPU 13.1 ms from submit, 12.1 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 12.0; passes 17.0
+[0m[INFO | dusk][0m   stream 27816 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 109 draws, 75357 vertices; fog: 81 draws, 69126 vertices; range fog: 75 draws, 69090 vertices; indirect: 3 draws, 1518 vertices; PNMTXIDX: 133 draws, 23550 vertices; TEXnMTXIDX: 49 draws, 9030 vertices; none: 34 draws, 5949 vertices
+vulkan4xenon: profile, phase 0: 12201 draws, 70756 commands, 49 submits, 49 presents; a present 249.0 draws, 1001.8 us submitting; a submit 249.0 draws, 1001.8 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 0: dispatch 170 ns a draw, 131 less its 1.8 laps
+vulkan4xenon: profile, phase 0: push 54 ns a draw, 37 less its 0.8 laps
+vulkan4xenon: profile, phase 0: pipeline 770 ns a draw, 748 less its 1.0 laps
+vulkan4xenon: profile, phase 0: constants 517 ns a draw, 426 less its 4.2 laps
+vulkan4xenon: profile, phase 0: resources 602 ns a draw, 489 less its 5.2 laps
+vulkan4xenon: profile, phase 0: checks 401 ns a draw, 358 less its 2.0 laps
+vulkan4xenon: profile, phase 0: draws 61 ns a draw, 39 less its 1.0 laps
+vulkan4xenon: profile, phase 0: commands 1432 ns a draw, 1307 less its 5.8 laps
+vulkan4xenon: profile, phase 0: submit 17 ns a draw, 17 less its 0.0 laps
+vulkan4xenon: profile, phase 0: all 4023 ns a draw, 3553 less its 21.8 laps
+[0m[INFO | dusk][0m   resolve rectangles: 31.6 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+[36m[DEBUG | dusk][0m fapGm_Execute frame=6000
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 188839 of 208983 draws found their vertices, 99.62% of 1590.3 MiB; 6.1 MiB decoded; 6654 entries evicted, 0 forgotten, 0 without room; at most 1.89 MiB a frame and 8.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 44 index lists built, 420 kept in 3.86 MiB
+[0m[INFO | dusk][0m Diagnostics, phase 1 (skipping lit): 48 frames in 1.68 s, 28.5 fps, 35.1 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 0.0 ms for a frame slot, 0.0 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 4.4 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 12.0 ms; render worker 4.2 ms: acquire 0.0, replay 0.6, present 0.0, the rest 3.6
+[0m[INFO | dusk][0m   GPU 8.1 ms from submit, 7.5 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 12.0; passes 17.0
+[0m[INFO | dusk][0m   stream 15046 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 0 draws, 0 vertices; fog: 2 draws, 54 vertices; range fog: 2 draws, 54 vertices; indirect: 0 draws, 0 vertices; PNMTXIDX: 91 draws, 16290 vertices; TEXnMTXIDX: 49 draws, 9030 vertices; none: 34 draws, 5939 vertices
+vulkan4xenon: profile, phase 1: 6860 draws, 43855 commands, 49 submits, 49 presents; a present 140.0 draws, 601.4 us submitting; a submit 140.0 draws, 601.4 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 1: dispatch 184 ns a draw, 142 less its 2.0 laps
+vulkan4xenon: profile, phase 1: push 66 ns a draw, 45 less its 1.0 laps
+vulkan4xenon: profile, phase 1: pipeline 543 ns a draw, 521 less its 1.0 laps
+vulkan4xenon: profile, phase 1: constants 551 ns a draw, 476 less its 3.5 laps
+vulkan4xenon: profile, phase 1: resources 393 ns a draw, 297 less its 4.5 laps
+vulkan4xenon: profile, phase 1: checks 327 ns a draw, 284 less its 2.0 laps
+vulkan4xenon: profile, phase 1: draws 62 ns a draw, 40 less its 1.0 laps
+vulkan4xenon: profile, phase 1: commands 2141 ns a draw, 2004 less its 6.4 laps
+vulkan4xenon: profile, phase 1: submit 29 ns a draw, 29 less its 0.0 laps
+vulkan4xenon: profile, phase 1: all 4296 ns a draw, 3838 less its 21.3 laps
+[0m[INFO | dusk][0m   resolve rectangles: 31.6 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+[0m[INFO | dusk][0m Diagnostics, phase 2 (skipping fog, range fog): 48 frames in 1.66 s, 29.0 fps, 34.5 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 0.0 ms for a frame slot, 0.0 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 4.3 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 12.0 ms; render worker 2.7 ms: acquire 0.0, replay 0.7, present 0.0, the rest 2.0
+[0m[INFO | dusk][0m   GPU 10.9 ms from submit, 10.2 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 12.0; passes 17.0
+[0m[INFO | dusk][0m   stream 17234 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 30 draws, 6285 vertices; fog: 0 draws, 0 vertices; range fog: 0 draws, 0 vertices; indirect: 1 draws, 585 vertices; PNMTXIDX: 91 draws, 16290 vertices; TEXnMTXIDX: 49 draws, 9030 vertices; none: 34 draws, 5959 vertices
+vulkan4xenon: profile, phase 2: 8232 draws, 50127 commands, 49 submits, 49 presents; a present 168.0 draws, 724.5 us submitting; a submit 168.0 draws, 724.5 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 2: dispatch 173 ns a draw, 134 less its 1.8 laps
+vulkan4xenon: profile, phase 2: push 56 ns a draw, 38 less its 0.8 laps
+vulkan4xenon: profile, phase 2: pipeline 588 ns a draw, 566 less its 1.0 laps
+vulkan4xenon: profile, phase 2: constants 376 ns a draw, 303 less its 3.4 laps
+vulkan4xenon: profile, phase 2: resources 442 ns a draw, 348 less its 4.4 laps
+vulkan4xenon: profile, phase 2: checks 481 ns a draw, 438 less its 2.0 laps
+vulkan4xenon: profile, phase 2: draws 61 ns a draw, 39 less its 1.0 laps
+vulkan4xenon: profile, phase 2: commands 2110 ns a draw, 1979 less its 6.1 laps
+vulkan4xenon: profile, phase 2: submit 25 ns a draw, 25 less its 0.0 laps
+vulkan4xenon: profile, phase 2: all 4312 ns a draw, 3870 less its 20.5 laps
+[0m[INFO | dusk][0m   resolve rectangles: 31.6 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+[0m[INFO | dusk][0m Diagnostics, phase 3 (skipping indirect): 48 frames in 1.65 s, 29.1 fps, 34.4 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 0.0 ms for a frame slot, 0.0 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 5.9 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 11.9 ms; render worker 3.3 ms: acquire 0.0, replay 1.1, present 0.0, the rest 2.2
+[0m[INFO | dusk][0m   GPU 13.0 ms from submit, 11.9 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 12.0; passes 17.0
+[0m[INFO | dusk][0m   stream 26803 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 106 draws, 73839 vertices; fog: 79 draws, 68193 vertices; range fog: 74 draws, 68163 vertices; indirect: 0 draws, 0 vertices; PNMTXIDX: 133 draws, 23550 vertices; TEXnMTXIDX: 49 draws, 9030 vertices; none: 34 draws, 5949 vertices
+vulkan4xenon: profile, phase 3: 12054 draws, 69874 commands, 49 submits, 49 presents; a present 246.0 draws, 1064.5 us submitting; a submit 246.0 draws, 1064.5 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 3: dispatch 166 ns a draw, 128 less its 1.8 laps
+vulkan4xenon: profile, phase 3: push 53 ns a draw, 37 less its 0.8 laps
+vulkan4xenon: profile, phase 3: pipeline 734 ns a draw, 712 less its 1.0 laps
+vulkan4xenon: profile, phase 3: constants 515 ns a draw, 424 less its 4.2 laps
+vulkan4xenon: profile, phase 3: resources 674 ns a draw, 562 less its 5.2 laps
+vulkan4xenon: profile, phase 3: checks 394 ns a draw, 351 less its 2.0 laps
+vulkan4xenon: profile, phase 3: draws 60 ns a draw, 38 less its 1.0 laps
+vulkan4xenon: profile, phase 3: commands 1627 ns a draw, 1502 less its 5.8 laps
+vulkan4xenon: profile, phase 3: submit 104 ns a draw, 103 less its 0.0 laps
+vulkan4xenon: profile, phase 3: all 4327 ns a draw, 3858 less its 21.8 laps
+[0m[INFO | dusk][0m   resolve rectangles: 31.6 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+vulkan4xenon: profile, the last 10 s: 50562 draws, 300669 commands, 247 submits, 247 presents; a present 204.7 draws, 865.3 us submitting; a submit 204.7 draws, 865.3 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 172 ns a draw, 133 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 56 ns a draw, 39 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 700 ns a draw, 678 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 499 ns a draw, 414 less its 3.9 laps
+vulkan4xenon: profile, the last 10 s: resources 560 ns a draw, 453 less its 4.9 laps
+vulkan4xenon: profile, the last 10 s: checks 401 ns a draw, 358 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 61 ns a draw, 39 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 1737 ns a draw, 1609 less its 5.9 laps
+vulkan4xenon: profile, the last 10 s: submit 41 ns a draw, 41 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 4227 ns a draw, 3764 less its 21.5 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 120 us a present, 27 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 130 us a present, 27 a present
+vulkan4xenon: profile, the last 10 s: command type 3 (src/objects.h), 25 us a present, 205 a present
+vulkan4xenon: profile, the last 10 s: command type 5 (src/objects.h), 27 us a present, 252 a present
+vulkan4xenon: profile, the last 10 s: command type 10 (src/objects.h), 19 us a present, 192 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 240 frames in 10.0 s, 24.0 fps
+[0m[INFO | dusk][0m Memory: 108 MB free; the title's pages: 61 MB physical, 257 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 249 MB, 241 MB of it in use
+[0m[INFO | dusk][0m Diagnostics, phase 4 (skipping PNMTXIDX, TEXnMTXIDX): 48 frames in 1.69 s, 28.5 fps, 35.1 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 0.0 ms for a frame slot, 0.0 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 4.0 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 11.9 ms; render worker 2.7 ms: acquire 0.0, replay 0.7, present 0.0, the rest 2.0
+[0m[INFO | dusk][0m   GPU 12.9 ms from submit, 12.2 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 12.0; passes 17.0
+[0m[INFO | dusk][0m   stream 19905 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 67 draws, 68097 vertices; fog: 39 draws, 61866 vertices; range fog: 33 draws, 61830 vertices; indirect: 3 draws, 1518 vertices; PNMTXIDX: 0 draws, 0 vertices; TEXnMTXIDX: 0 draws, 0 vertices; none: 34 draws, 5949 vertices
+vulkan4xenon: profile, phase 4: 5684 draws, 37877 commands, 49 submits, 49 presents; a present 116.0 draws, 694.3 us submitting; a submit 116.0 draws, 694.3 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 4: dispatch 157 ns a draw, 124 less its 1.5 laps
+vulkan4xenon: profile, phase 4: push 44 ns a draw, 33 less its 0.5 laps
+vulkan4xenon: profile, phase 4: pipeline 1291 ns a draw, 1269 less its 1.0 laps
+vulkan4xenon: profile, phase 4: constants 351 ns a draw, 278 less its 3.4 laps
+vulkan4xenon: profile, phase 4: resources 884 ns a draw, 790 less its 4.4 laps
+vulkan4xenon: profile, phase 4: checks 570 ns a draw, 527 less its 2.0 laps
+vulkan4xenon: profile, phase 4: draws 68 ns a draw, 46 less its 1.0 laps
+vulkan4xenon: profile, phase 4: commands 2586 ns a draw, 2443 less its 6.7 laps
+vulkan4xenon: profile, phase 4: submit 35 ns a draw, 34 less its 0.0 laps
+vulkan4xenon: profile, phase 4: all 5986 ns a draw, 5544 less its 20.5 laps
+[0m[INFO | dusk][0m   resolve rectangles: 31.6 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+[0m[INFO | dusk][0m Diagnostics, phase 5 (skipping lit, fog, range fog, indirect, PNMTXIDX, TEXnMTXIDX): 48 frames in 1.66 s, 28.9 fps, 34.6 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 0.0 ms for a frame slot, 0.0 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 3.5 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 11.9 ms; render worker 2.3 ms: acquire 0.0, replay 0.5, present 0.0, the rest 1.8
+[0m[INFO | dusk][0m   GPU 7.7 ms from submit, 7.2 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 12.0; passes 17.0
+[0m[INFO | dusk][0m   stream 9655 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 0 draws, 0 vertices; fog: 0 draws, 0 vertices; range fog: 0 draws, 0 vertices; indirect: 0 draws, 0 vertices; PNMTXIDX: 0 draws, 0 vertices; TEXnMTXIDX: 0 draws, 0 vertices; none: 34 draws, 5939 vertices
+vulkan4xenon: profile, phase 5: 2303 draws, 21021 commands, 49 submits, 49 presents; a present 47.0 draws, 476.7 us submitting; a submit 47.0 draws, 476.7 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 5: dispatch 184 ns a draw, 143 less its 1.9 laps
+vulkan4xenon: profile, phase 5: push 531 ns a draw, 512 less its 0.9 laps
+vulkan4xenon: profile, phase 5: pipeline 1239 ns a draw, 1217 less its 1.0 laps
+vulkan4xenon: profile, phase 5: constants 779 ns a draw, 727 less its 2.4 laps
+vulkan4xenon: profile, phase 5: resources 595 ns a draw, 521 less its 3.4 laps
+vulkan4xenon: profile, phase 5: checks 454 ns a draw, 411 less its 2.0 laps
+vulkan4xenon: profile, phase 5: draws 82 ns a draw, 61 less its 1.0 laps
+vulkan4xenon: profile, phase 5: commands 6191 ns a draw, 5994 less its 9.1 laps
+vulkan4xenon: profile, phase 5: submit 88 ns a draw, 87 less its 0.0 laps
+vulkan4xenon: profile, phase 5: all 10143 ns a draw, 9673 less its 21.8 laps
+[0m[INFO | dusk][0m   resolve rectangles: 31.6 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+[36m[DEBUG | dusk][0m fapGm_Execute frame=6300
+[0m[INFO | dusk][0m Diagnostics, phase 6 (skipping pixels (1x1 scissor)): 48 frames in 1.64 s, 29.2 fps, 34.2 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 0.0 ms for a frame slot, 0.0 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 3.3 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 11.9 ms; render worker 3.3 ms: acquire 0.0, replay 1.0, present 0.0, the rest 2.2
+[0m[INFO | dusk][0m   GPU 6.5 ms from submit, 5.5 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 12.0; passes 17.0
+[0m[INFO | dusk][0m   stream 27750 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 107 draws, 75357 vertices; fog: 81 draws, 69126 vertices; range fog: 75 draws, 69090 vertices; indirect: 3 draws, 1518 vertices; PNMTXIDX: 133 draws, 23550 vertices; TEXnMTXIDX: 49 draws, 9030 vertices; none: 34 draws, 5949 vertices
+vulkan4xenon: profile, phase 6: 12123 draws, 70346 commands, 49 submits, 49 presents; a present 247.4 draws, 999.6 us submitting; a submit 247.4 draws, 999.6 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 6: dispatch 171 ns a draw, 133 less its 1.8 laps
+vulkan4xenon: profile, phase 6: push 54 ns a draw, 37 less its 0.8 laps
+vulkan4xenon: profile, phase 6: pipeline 690 ns a draw, 668 less its 1.0 laps
+vulkan4xenon: profile, phase 6: constants 431 ns a draw, 340 less its 4.2 laps
+vulkan4xenon: profile, phase 6: resources 607 ns a draw, 494 less its 5.2 laps
+vulkan4xenon: profile, phase 6: checks 401 ns a draw, 358 less its 2.0 laps
+vulkan4xenon: profile, phase 6: draws 60 ns a draw, 38 less its 1.0 laps
+vulkan4xenon: profile, phase 6: commands 1610 ns a draw, 1485 less its 5.8 laps
+vulkan4xenon: profile, phase 6: submit 17 ns a draw, 17 less its 0.0 laps
+vulkan4xenon: profile, phase 6: all 4040 ns a draw, 3570 less its 21.8 laps
+[0m[INFO | dusk][0m   resolve rectangles: 31.6 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+[0m[INFO | dusk][0m Diagnostics, phase 7 (skipping pixels past 3/4 (scissor)): 48 frames in 1.62 s, 29.6 fps, 33.8 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 0.0 ms for a frame slot, 0.0 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 2.5 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 11.4 ms; render worker 3.1 ms: acquire 0.0, replay 1.0, present 0.0, the rest 2.1
+[0m[INFO | dusk][0m   GPU 10.2 ms from submit, 9.2 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 12.0; passes 17.0
+[0m[INFO | dusk][0m   stream 27561 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 103 draws, 75341 vertices; fog: 81 draws, 69127 vertices; range fog: 75 draws, 69090 vertices; indirect: 3 draws, 1518 vertices; PNMTXIDX: 133 draws, 23550 vertices; TEXnMTXIDX: 49 draws, 9030 vertices; none: 34 draws, 5959 vertices
+vulkan4xenon: profile, phase 7: 11919 draws, 69530 commands, 49 submits, 49 presents; a present 243.2 draws, 994.7 us submitting; a submit 243.2 draws, 994.7 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 7: dispatch 177 ns a draw, 139 less its 1.8 laps
+vulkan4xenon: profile, phase 7: push 141 ns a draw, 124 less its 0.8 laps
+vulkan4xenon: profile, phase 7: pipeline 703 ns a draw, 682 less its 1.0 laps
+vulkan4xenon: profile, phase 7: constants 432 ns a draw, 341 less its 4.2 laps
+vulkan4xenon: profile, phase 7: resources 611 ns a draw, 498 less its 5.2 laps
+vulkan4xenon: profile, phase 7: checks 401 ns a draw, 358 less its 2.0 laps
+vulkan4xenon: profile, phase 7: draws 148 ns a draw, 127 less its 1.0 laps
+vulkan4xenon: profile, phase 7: commands 1458 ns a draw, 1333 less its 5.8 laps
+vulkan4xenon: profile, phase 7: submit 17 ns a draw, 17 less its 0.0 laps
+vulkan4xenon: profile, phase 7: all 4089 ns a draw, 3617 less its 21.9 laps
+[0m[INFO | dusk][0m   resolve rectangles: 31.6 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+vulkan4xenon: profile, the last 10 s: 41916 draws, 257934 commands, 245 submits, 245 presents; a present 171.1 draws, 837.4 us submitting; a submit 171.1 draws, 837.4 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 172 ns a draw, 134 less its 1.7 laps
+vulkan4xenon: profile, the last 10 s: push 104 ns a draw, 87 less its 0.7 laps
+vulkan4xenon: profile, the last 10 s: pipeline 872 ns a draw, 850 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 438 ns a draw, 352 less its 4.0 laps
+vulkan4xenon: profile, the last 10 s: resources 676 ns a draw, 569 less its 5.0 laps
+vulkan4xenon: profile, the last 10 s: checks 481 ns a draw, 438 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 113 ns a draw, 91 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 2015 ns a draw, 1882 less its 6.2 laps
+vulkan4xenon: profile, the last 10 s: submit 24 ns a draw, 24 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 4895 ns a draw, 4428 less its 21.6 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 120 us a present, 27 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 135 us a present, 27 a present
+vulkan4xenon: profile, the last 10 s: command type 3 (src/objects.h), 21 us a present, 171 a present
+vulkan4xenon: profile, the last 10 s: command type 5 (src/objects.h), 21 us a present, 227 a present
+vulkan4xenon: profile, the last 10 s: command type 10 (src/objects.h), 19 us a present, 158 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 252 frames in 10.0 s, 25.1 fps
+[0m[INFO | dusk][0m Memory: 108 MB free; the title's pages: 61 MB physical, 257 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 249 MB, 241 MB of it in use
+[0m[INFO | dusk][0m Diagnostics, phase 8 (skipping pixels past 1/2 (scissor)): 48 frames in 1.87 s, 25.7 fps, 38.9 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 4.4 ms for a frame slot, 0.0 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 2.9 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 11.9 ms; render worker 8.3 ms: acquire 0.0, replay 1.1, present 5.1, the rest 2.2
+[0m[INFO | dusk][0m   GPU 8.1 ms from submit, 7.0 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 12.0; passes 17.0
+[0m[INFO | dusk][0m   stream 27749 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 106 draws, 75340 vertices; fog: 81 draws, 69127 vertices; range fog: 75 draws, 69090 vertices; indirect: 3 draws, 1518 vertices; PNMTXIDX: 133 draws, 23550 vertices; TEXnMTXIDX: 49 draws, 9030 vertices; none: 35 draws, 5965 vertices
+vulkan4xenon: profile, phase 8: 12079 draws, 70219 commands, 49 submits, 49 presents; a present 246.5 draws, 1054.9 us submitting; a submit 246.5 draws, 1054.9 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 8: dispatch 175 ns a draw, 136 less its 1.8 laps
+vulkan4xenon: profile, phase 8: push 55 ns a draw, 38 less its 0.8 laps
+vulkan4xenon: profile, phase 8: pipeline 705 ns a draw, 683 less its 1.0 laps
+vulkan4xenon: profile, phase 8: constants 438 ns a draw, 347 less its 4.2 laps
+vulkan4xenon: profile, phase 8: resources 618 ns a draw, 506 less its 5.2 laps
+vulkan4xenon: profile, phase 8: checks 495 ns a draw, 452 less its 2.0 laps
+vulkan4xenon: profile, phase 8: draws 62 ns a draw, 40 less its 1.0 laps
+vulkan4xenon: profile, phase 8: commands 1715 ns a draw, 1589 less its 5.8 laps
+vulkan4xenon: profile, phase 8: submit 17 ns a draw, 17 less its 0.0 laps
+vulkan4xenon: profile, phase 8: all 4279 ns a draw, 3809 less its 21.8 laps
+[0m[INFO | dusk][0m   resolve rectangles: 31.6 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=0 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=57 profname=fpcNm_OVERLAP0_e (0) profile=0x82176d44 procSize=220 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d7dc50
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: name=11 layer=0x84399f78
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: creating_id=58 (error=4294967295)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=11 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=11
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=58 profname=fpcNm_PLAY_SCENE_e (11) profile=0x821772f8 procSize=476 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9d098
+[0m[INFO | dusk][0m Stage: S_MV000
+[0m[INFO | dusk][0m Memory: 108 MB free; the title's pages: 61 MB physical, 257 MB virtual, 0 MB heap, 15 MB stack; newlib's heap 249 MB, 241 MB of it in use
+[36m[DEBUG | dusk][0m Loading Resource: colordata_tbl.dat (Size: 800)
+[36m[DEBUG | dusk][0m Loading Resource: pol_arg.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_effcol.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_effcol2.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_efftbl.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_efftbl2.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: pol_sound.dat (Size: 128)
+[36m[DEBUG | dusk][0m Loading Resource: room0.dzs (Size: 64)
+[36m[DEBUG | dusk][0m Loading Resource: stage.dzs (Size: 448)
+[36m[DEBUG | dusk][0m Loading Resource: event_list.dat (Size: 106476)
+[36m[DEBUG | dusk][0m Loading Resource: camstyle.dat (Size: 43328)
+[36m[DEBUG | dusk][0m Loading Resource: camtype.dat (Size: 14560)
+[36m[DEBUG | dusk][0m fopScnM_CreateReq: procName=18 fade=32767
+[36m[DEBUG | dusk][0m fopScnM_CreateReq: result=4 (error=4294967295)
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=61 profname=fpcNm_KANKYO_e (19) profile=0x8216e5c8 procSize=252 unkSize=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=63 profname=fpcNm_KYEFF_e (785) profile=0x8216e618 procSize=252 unkSize=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=65 profname=fpcNm_KYEFF2_e (786) profile=0x8216e640 procSize=252 unkSize=0
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=67 profname=fpcNm_ENVSE_e (21) profile=0x8216d1f4 procSize=272 unkSize=0
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: name=18 layer=0x5d9d158
+[36m[DEBUG | dusk][0m fpcNdRq_phase_Create: creating_id=68 (error=4294967295)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=781 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=781
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=59 profname=fpcNm_CAMERA_e (781) profile=0x8216d118 procSize=3688 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d7cdd8
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=18 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=18
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=68 profname=fpcNm_ROOM_SCENE_e (18) profile=0x82177324 procSize=480 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9c710
+[36m[DEBUG | dusk][0m Loading Resource: room.dzr (Size: 384)
+[36m[DEBUG | dusk][0m Loading Resource: event_list.dat (Size: 1176)
+[36m[DEBUG | dusk][0m Loading Resource: room.kcl (Size: 326)
+[36m[DEBUG | dusk][0m Loading Resource: room.plc (Size: 32)
+[0m[INFO | dusk][0m Diagnostics, phase 9 (skipping nothing): 48 frames in 2.19 s, 22.0 fps, 45.6 ms a frame
+[0m[INFO | dusk][0m   game thread's waits a frame: 0.0 ms for a frame slot, 0.1 ms for the backend's slot
+[0m[INFO | dusk][0m   audio callback 2.2 ms a frame
+[0m[INFO | dusk][0m   FIFO worker 8.2 ms; render worker 3.1 ms: acquire 0.7, replay 0.7, present 0.0, the rest 1.7
+[0m[INFO | dusk][0m   GPU 10.7 ms from submit, 10.0 ms after the replay
+[0m[INFO | dusk][0m   uploads 0.00 (0.0 KB), replayed 0.00: 0.00 ms waiting for the GPU, 0.00 ms copying; copies 8.5; passes 12.3
+[0m[INFO | dusk][0m   stream 20098 dwords, 0.00 waits for room, 0.00 ms waiting
+[0m[INFO | dusk][0m   draws by feature: lit: 72 draws, 51796 vertices; fog: 56 draws, 47525 vertices; range fog: 52 draws, 47499 vertices; indirect: 2 draws, 1044 vertices; PNMTXIDX: 91 draws, 16191 vertices; TEXnMTXIDX: 34 draws, 6208 vertices; none: 25 draws, 4112 vertices
+vulkan4xenon: profile, phase 9: 8452 draws, 49433 commands, 49 submits, 49 presents; a present 172.5 draws, 714.2 us submitting; a submit 172.5 draws, 714.2 us; a lap 21.6 ns
+vulkan4xenon: profile, phase 9: dispatch 176 ns a draw, 137 less its 1.8 laps
+vulkan4xenon: profile, phase 9: push 55 ns a draw, 38 less its 0.8 laps
+vulkan4xenon: profile, phase 9: pipeline 720 ns a draw, 699 less its 1.0 laps
+vulkan4xenon: profile, phase 9: constants 430 ns a draw, 339 less its 4.2 laps
+vulkan4xenon: profile, phase 9: resources 613 ns a draw, 501 less its 5.2 laps
+vulkan4xenon: profile, phase 9: checks 411 ns a draw, 368 less its 2.0 laps
+vulkan4xenon: profile, phase 9: draws 62 ns a draw, 40 less its 1.0 laps
+vulkan4xenon: profile, phase 9: commands 1647 ns a draw, 1521 less its 5.8 laps
+vulkan4xenon: profile, phase 9: submit 26 ns a draw, 26 less its 0.0 laps
+vulkan4xenon: profile, phase 9: all 4140 ns a draw, 3670 less its 21.8 laps
+[0m[INFO | dusk][0m   resolve rectangles: 23.4 hits, 0.0 evictions, 0.0 waits for the GPU, 0.00 ms waiting; 9 sizes: 384x384 192x192 1280x720 640x360 960x360 320x180 160x90 96x45 64x22
+[36m[DEBUG | dusk][0m Loading Resource: demo04_01.stb (Size: 132)
+[36m[DEBUG | dusk][0m Loading Resource: demo98_00.stb (Size: 132)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=253 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=253
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=69 profname=fpcNm_ALINK_e (253) profile=0x8216813c procSize=14660 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d79484
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=732 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=732
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=70 profname=fpcNm_BG_e (732) profile=0x8217b328 procSize=1536 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d9c020
+[0m[INFO | aurora::vulkan4xenon][0m Wrote frame capture to game:\dusklight_shot_end.ppm
+[36m[DEBUG | dusk][0m Loading Resource: al_kantera.bmd (Size: 21024)
+[36m[DEBUG | dusk][0m Loading Resource: ef_ktglow.bmd (Size: 3040)
+[36m[DEBUG | dusk][0m Loading Resource: al.bmd (Size: 140448)
+[36m[DEBUG | dusk][0m Loading Resource: al_bootsh.bmd (Size: 22048)
+[36m[DEBUG | dusk][0m Loading Resource: al_face.bmd (Size: 72576)
+[36m[DEBUG | dusk][0m Loading Resource: al_hands.bmd (Size: 61056)
+[36m[DEBUG | dusk][0m Loading Resource: al_head.bmd (Size: 34400)
+[36m[DEBUG | dusk][0m Loading Resource: al_swb.bmd (Size: 23552)
+[36m[DEBUG | dusk][0m Loading Resource: ef_ktglow.btk (Size: 512)
+[36m[DEBUG | dusk][0m Loading Resource: al_sha.bmd (Size: 24288)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=255 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=255
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=71 profname=fpcNm_MIDNA_e (255) profile=0x82180db4 procSize=2584 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d78a5c
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hands.bmd (Size: 19776)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_mask.bmd (Size: 15424)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_gokou.bmd (Size: 3008)
+[36m[DEBUG | dusk][0m Loading Resource: s_md.bmd (Size: 69984)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hair_hand.bmd (Size: 18944)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_appear.brk (Size: 352)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_gokou_appear.brk (Size: 256)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hair_hand_appear.brk (Size: 288)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_mask_appear.brk (Size: 256)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hair_hand_moya.btk (Size: 544)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_hands_moya.btk (Size: 608)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_mask_moya.btk (Size: 320)
+[36m[DEBUG | dusk][0m Loading Resource: s_md_moya.btk (Size: 512)
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=73 profname=fpcNm_DEMO00_e (718) profile=0x8217fc10 procSize=10652 unkSize=0
+[36m[DEBUG | dusk][0m frameInterp: onTypeChange 41 -> 40 (event_type_id=40, leaving_event=false, entering_event=true)
+[36m[DEBUG | dusk][0m [DIAG] fpcSCtRq_phase_Load: procName=736 ret=4
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: procName=736
+[36m[DEBUG | dusk][0m fpcBs_Create: pid=74 profname=fpcNm_MOVIE_PLAYER_e (736) profile=0x821a9af4 procSize=1420 unkSize=0
+[36m[DEBUG | dusk][0m fpcSCtRq_phase_CreateProcess: fpcBs_Create OK proc=0x5d75b14
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Created thread 0x843eeaa8 (priority=20, stackSize=8)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Created thread 0x843eee54 (priority=12, stackSize=8)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Created thread 0x843ef178 (priority=8, stackSize=8)
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Started thread 0x843eeaa8
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread 0x843eeaa8 on hardware thread 1
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Started thread 0x843eee54
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread 0x843eee54 on hardware thread 1
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Started thread 0x843ef178
+[0m[INFO | dusk::osReport][0m [PC-OSThread] Thread 0x843ef178 on hardware thread 1
+[0m[INFO | dusk][0m A minute into the title scene. The heaps at their peaks:
+[0m[INFO | dusk][0m   root: 140176 KB of 147439 KB
+[0m[INFO | dusk][0m   system: 32738 KB of 32767 KB
+[0m[INFO | dusk][0m   zelda: 5163 KB of 32030 KB
+[0m[INFO | dusk][0m   game: 17634 KB of 88159 KB
+[0m[INFO | dusk][0m   archive: 7110 KB of 18169 KB
+[0m[INFO | dusk][0m   j2d: 41 KB of 999 KB
+[0m[INFO | dusk][0m   command: 1 KB of 7 KB
+[0m[INFO | dusk][0m   dbPrint: 0 KB of 5 KB
+[0m[INFO | dusk][0m   hostIO: 0 KB of 0 KB
+[0m[INFO | dusk][0m   audio: 2667 KB of 2667 KB
+[0m[INFO | dusk][0m   newlib's: 259937 KB
+[0m[INFO | dusk][0m Aurora's frame pools at their peaks, a frame's:
+[0m[INFO | dusk][0m   vertex: 526 KB
+[0m[INFO | dusk][0m   uniform: 451 KB
+[0m[INFO | dusk][0m   index: 222 KB
+[0m[INFO | dusk][0m   storage: 448 KB
+[0m[INFO | dusk][0m   texture upload: 3514 KB
+[36m[DEBUG | dusk][0m fapGm_Execute frame=6600
+vulkan4xenon: profile, the last 10 s: 19579 draws, 118419 commands, 225 submits, 225 presents; a present 87.0 draws, 677.6 us submitting; a submit 87.0 draws, 677.6 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 178 ns a draw, 140 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 58 ns a draw, 41 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 912 ns a draw, 891 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 433 ns a draw, 345 less its 4.1 laps
+vulkan4xenon: profile, the last 10 s: resources 646 ns a draw, 536 less its 5.1 laps
+vulkan4xenon: profile, the last 10 s: checks 604 ns a draw, 561 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 68 ns a draw, 46 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 4839 ns a draw, 4708 less its 6.0 laps
+vulkan4xenon: profile, the last 10 s: submit 50 ns a draw, 49 less its 0.0 laps
+vulkan4xenon: profile, the last 10 s: all 7787 ns a draw, 7317 less its 21.8 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 84 us a present, 14 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 72 us a present, 14 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 220 us a present, 1 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 228 frames in 10.0 s, 22.7 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 249 MB, 242 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=6900
+vulkan4xenon: profile, the last 10 s: 1764 draws, 17931 commands, 294 submits, 294 presents; a present 6.0 draws, 725.6 us submitting; a submit 6.0 draws, 725.6 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 250 ns a draw, 210 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 129 ns a draw, 111 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4081 ns a draw, 4060 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 442 ns a draw, 409 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1415 ns a draw, 1361 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1288 ns a draw, 1245 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 202 ns a draw, 180 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 112391 ns a draw, 112171 less its 10.2 laps
+vulkan4xenon: profile, the last 10 s: submit 737 ns a draw, 730 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 120934 ns a draw, 120477 less its 21.2 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 50 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 35 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 584 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 295 frames in 10.0 s, 29.4 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 249 MB, 242 MB of it in use
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 104962 of 112878 draws found their vertices, 99.91% of 755.1 MiB; 0.7 MiB decoded; 2505 entries evicted, 0 forgotten, 0 without room; at most 1.58 MiB a frame and 8.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 420 kept in 3.86 MiB
+[36m[DEBUG | dusk][0m fapGm_Execute frame=7200
+vulkan4xenon: profile, the last 10 s: 1758 draws, 17805 commands, 293 submits, 293 presents; a present 6.0 draws, 668.3 us submitting; a submit 6.0 draws, 668.3 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 241 ns a draw, 202 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 124 ns a draw, 106 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4084 ns a draw, 4062 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 431 ns a draw, 399 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1421 ns a draw, 1367 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1270 ns a draw, 1227 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 210 ns a draw, 189 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 102878 ns a draw, 102659 less its 10.1 laps
+vulkan4xenon: profile, the last 10 s: submit 723 ns a draw, 716 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 111382 ns a draw, 110927 less its 21.1 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 49 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 35 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 527 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 295 frames in 10.0 s, 29.5 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 249 MB, 242 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=7500
+vulkan4xenon: profile, the last 10 s: 1776 draws, 18043 commands, 296 submits, 296 presents; a present 6.0 draws, 848.0 us submitting; a submit 6.0 draws, 848.0 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 251 ns a draw, 211 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 126 ns a draw, 108 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 5882 ns a draw, 5861 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 436 ns a draw, 404 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1996 ns a draw, 1942 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1316 ns a draw, 1273 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 200 ns a draw, 178 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 129812 ns a draw, 129593 less its 10.2 laps
+vulkan4xenon: profile, the last 10 s: submit 1319 ns a draw, 1312 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 141339 ns a draw, 140882 less its 21.2 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 50 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 42 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 681 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 296 frames in 10.0 s, 29.5 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 249 MB, 241 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=7800
+vulkan4xenon: profile, the last 10 s: 1770 draws, 17993 commands, 295 submits, 295 presents; a present 6.0 draws, 730.8 us submitting; a submit 6.0 draws, 730.8 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 257 ns a draw, 218 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 129 ns a draw, 111 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4074 ns a draw, 4053 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 437 ns a draw, 405 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1423 ns a draw, 1369 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1295 ns a draw, 1252 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 201 ns a draw, 180 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 113252 ns a draw, 113032 less its 10.2 laps
+vulkan4xenon: profile, the last 10 s: submit 737 ns a draw, 730 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 121805 ns a draw, 121349 less its 21.2 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 50 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 35 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 588 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 294 frames in 10.0 s, 29.3 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 249 MB, 241 MB of it in use
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 2000 of 2000 draws found their vertices, 100.00% of 0.3 MiB; 0.0 MiB decoded; 0 entries evicted, 0 forgotten, 0 without room; at most 0.00 MiB a frame and 0.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 420 kept in 3.86 MiB
+vulkan4xenon: profile, the last 10 s: 1764 draws, 17919 commands, 294 submits, 294 presents; a present 6.0 draws, 715.4 us submitting; a submit 6.0 draws, 715.4 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 256 ns a draw, 216 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 131 ns a draw, 113 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4086 ns a draw, 4065 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 436 ns a draw, 404 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1426 ns a draw, 1372 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1313 ns a draw, 1270 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 198 ns a draw, 176 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 110650 ns a draw, 110431 less its 10.2 laps
+vulkan4xenon: profile, the last 10 s: submit 736 ns a draw, 729 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 119232 ns a draw, 118776 less its 21.2 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 49 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 35 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 573 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[36m[DEBUG | dusk][0m fapGm_Execute frame=8100
+[0m[INFO | dusk][0m 294 frames in 10.0 s, 29.4 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 249 MB, 241 MB of it in use
+vulkan4xenon: profile, the last 10 s: 1758 draws, 17866 commands, 293 submits, 293 presents; a present 6.0 draws, 835.1 us submitting; a submit 6.0 draws, 835.1 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 256 ns a draw, 216 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 133 ns a draw, 115 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 5262 ns a draw, 5241 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 438 ns a draw, 405 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 2583 ns a draw, 2529 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1288 ns a draw, 1245 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 202 ns a draw, 180 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 128285 ns a draw, 128066 less its 10.2 laps
+vulkan4xenon: profile, the last 10 s: submit 733 ns a draw, 726 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 139180 ns a draw, 138724 less its 21.2 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 63 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 46 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 654 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[36m[DEBUG | dusk][0m fapGm_Execute frame=8400
+[0m[INFO | dusk][0m 291 frames in 10.0 s, 29.1 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 250 MB, 242 MB of it in use
+vulkan4xenon: profile, the last 10 s: 1752 draws, 17768 commands, 292 submits, 292 presents; a present 6.0 draws, 792.5 us submitting; a submit 6.0 draws, 792.5 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 247 ns a draw, 208 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 129 ns a draw, 111 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4053 ns a draw, 4031 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 423 ns a draw, 391 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1401 ns a draw, 1347 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1273 ns a draw, 1229 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 204 ns a draw, 182 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 123626 ns a draw, 123407 less its 10.1 laps
+vulkan4xenon: profile, the last 10 s: submit 728 ns a draw, 721 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 132083 ns a draw, 131628 less its 21.1 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 56 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 42 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 637 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[36m[DEBUG | dusk][0m fapGm_Execute frame=8700
+[0m[INFO | dusk][0m 294 frames in 10.0 s, 29.3 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 250 MB, 242 MB of it in use
+vulkan4xenon: profile, the last 10 s: 1764 draws, 17925 commands, 294 submits, 294 presents; a present 6.0 draws, 815.0 us submitting; a submit 6.0 draws, 815.0 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 254 ns a draw, 214 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 725 ns a draw, 707 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4054 ns a draw, 4033 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 432 ns a draw, 400 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1993 ns a draw, 1939 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1296 ns a draw, 1252 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 201 ns a draw, 179 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 126134 ns a draw, 125915 less its 10.2 laps
+vulkan4xenon: profile, the last 10 s: submit 747 ns a draw, 740 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 135834 ns a draw, 135378 less its 21.2 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 50 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 46 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 655 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[36m[DEBUG | dusk][0m fapGm_Execute frame=9000
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 2000 of 2000 draws found their vertices, 100.00% of 0.3 MiB; 0.0 MiB decoded; 0 entries evicted, 0 forgotten, 0 without room; at most 0.00 MiB a frame and 0.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 420 kept in 3.86 MiB
+[0m[INFO | dusk][0m 291 frames in 10.0 s, 29.1 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 250 MB, 242 MB of it in use
+vulkan4xenon: profile, the last 10 s: 1746 draws, 17727 commands, 291 submits, 291 presents; a present 6.0 draws, 713.0 us submitting; a submit 6.0 draws, 713.0 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 254 ns a draw, 214 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 132 ns a draw, 114 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4061 ns a draw, 4039 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 438 ns a draw, 406 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1420 ns a draw, 1366 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1306 ns a draw, 1263 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 204 ns a draw, 182 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 110277 ns a draw, 110058 less its 10.2 laps
+vulkan4xenon: profile, the last 10 s: submit 746 ns a draw, 739 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 118838 ns a draw, 118382 less its 21.2 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 57 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 35 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 564 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 295 frames in 10.0 s, 29.5 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 250 MB, 243 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=9300
+vulkan4xenon: profile, the last 10 s: 1752 draws, 17735 commands, 292 submits, 292 presents; a present 6.0 draws, 651.7 us submitting; a submit 6.0 draws, 651.7 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 250 ns a draw, 211 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 128 ns a draw, 110 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4072 ns a draw, 4050 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 435 ns a draw, 403 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1426 ns a draw, 1372 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1295 ns a draw, 1252 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 203 ns a draw, 182 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 100090 ns a draw, 99872 less its 10.1 laps
+vulkan4xenon: profile, the last 10 s: submit 713 ns a draw, 706 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 108613 ns a draw, 108158 less its 21.1 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 49 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 35 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 511 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 292 frames in 10.0 s, 29.1 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 250 MB, 243 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=9600
+vulkan4xenon: profile, the last 10 s: 1764 draws, 17904 commands, 294 submits, 294 presents; a present 6.0 draws, 701.7 us submitting; a submit 6.0 draws, 701.7 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 255 ns a draw, 215 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 129 ns a draw, 111 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4059 ns a draw, 4038 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 444 ns a draw, 412 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1414 ns a draw, 1360 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1301 ns a draw, 1258 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 207 ns a draw, 185 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 108403 ns a draw, 108185 less its 10.1 laps
+vulkan4xenon: profile, the last 10 s: submit 741 ns a draw, 734 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 116953 ns a draw, 116497 less its 21.1 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 50 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 35 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 560 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 295 frames in 10.0 s, 29.5 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 250 MB, 243 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=9900
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 2000 of 2000 draws found their vertices, 100.00% of 0.3 MiB; 0.0 MiB decoded; 0 entries evicted, 0 forgotten, 0 without room; at most 0.00 MiB a frame and 0.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 420 kept in 3.86 MiB
+vulkan4xenon: profile, the last 10 s: 1764 draws, 17874 commands, 294 submits, 294 presents; a present 6.0 draws, 756.5 us submitting; a submit 6.0 draws, 756.5 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 248 ns a draw, 208 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 129 ns a draw, 111 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4037 ns a draw, 4015 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 429 ns a draw, 397 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1383 ns a draw, 1329 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1273 ns a draw, 1230 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 203 ns a draw, 182 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 117060 ns a draw, 116841 less its 10.1 laps
+vulkan4xenon: profile, the last 10 s: submit 1317 ns a draw, 1310 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 126078 ns a draw, 125623 less its 21.1 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 63 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 35 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 598 us a present, 2 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 292 frames in 10.0 s, 29.2 fps
+[0m[INFO | dusk][0m Memory: 97 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 18 MB stack; newlib's heap 251 MB, 243 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=10200
+vulkan4xenon: profile, the last 10 s: 1740 draws, 17434 commands, 290 submits, 290 presents; a present 6.0 draws, 482.7 us submitting; a submit 6.0 draws, 482.7 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 232 ns a draw, 193 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 719 ns a draw, 701 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 3976 ns a draw, 3955 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 423 ns a draw, 390 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1338 ns a draw, 1284 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1252 ns a draw, 1209 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 202 ns a draw, 181 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 71612 ns a draw, 71396 less its 10.0 laps
+vulkan4xenon: profile, the last 10 s: submit 697 ns a draw, 689 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 80450 ns a draw, 79997 less its 21.0 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 55 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 38 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 7 (src/objects.h), 331 us a present, 1 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 294 frames in 10.0 s, 29.4 fps
+[0m[INFO | dusk][0m Memory: 98 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 17 MB stack; newlib's heap 252 MB, 244 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=10500
+vulkan4xenon: profile, the last 10 s: 1770 draws, 17405 commands, 295 submits, 295 presents; a present 6.0 draws, 133.2 us submitting; a submit 6.0 draws, 133.2 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 203 ns a draw, 164 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 110 ns a draw, 92 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 3796 ns a draw, 3774 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 406 ns a draw, 374 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1246 ns a draw, 1192 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1158 ns a draw, 1115 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 208 ns a draw, 187 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 14446 ns a draw, 14234 less its 9.8 laps
+vulkan4xenon: profile, the last 10 s: submit 632 ns a draw, 625 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 22205 ns a draw, 21756 less its 20.8 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 45 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 36 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 298 frames in 10.0 s, 29.8 fps
+[0m[INFO | dusk][0m Memory: 98 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 17 MB stack; newlib's heap 252 MB, 244 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=10800
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 2000 of 2000 draws found their vertices, 100.00% of 0.3 MiB; 0.0 MiB decoded; 0 entries evicted, 0 forgotten, 0 without room; at most 0.00 MiB a frame and 0.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 420 kept in 3.86 MiB
+vulkan4xenon: profile, the last 10 s: 1782 draws, 17523 commands, 297 submits, 297 presents; a present 6.0 draws, 129.7 us submitting; a submit 6.0 draws, 129.7 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 204 ns a draw, 164 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 109 ns a draw, 91 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 3800 ns a draw, 3779 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 410 ns a draw, 377 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1238 ns a draw, 1185 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1160 ns a draw, 1117 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 207 ns a draw, 186 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 13848 ns a draw, 13636 less its 9.8 laps
+vulkan4xenon: profile, the last 10 s: submit 635 ns a draw, 628 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 21611 ns a draw, 21162 less its 20.8 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 45 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 33 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 298 frames in 10.0 s, 29.7 fps
+[0m[INFO | dusk][0m Memory: 98 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 17 MB stack; newlib's heap 252 MB, 243 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=11100
+vulkan4xenon: profile, the last 10 s: 1788 draws, 17582 commands, 298 submits, 298 presents; a present 6.0 draws, 147.3 us submitting; a submit 6.0 draws, 147.3 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 203 ns a draw, 164 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 109 ns a draw, 91 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4968 ns a draw, 4946 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 411 ns a draw, 379 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1236 ns a draw, 1183 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1158 ns a draw, 1115 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 208 ns a draw, 187 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 15636 ns a draw, 15424 less its 9.8 laps
+vulkan4xenon: profile, the last 10 s: submit 628 ns a draw, 621 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 24557 ns a draw, 24108 less its 20.8 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 49 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 40 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 297 frames in 10.0 s, 29.6 fps
+[0m[INFO | dusk][0m Memory: 98 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 17 MB stack; newlib's heap 252 MB, 243 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=11400
+vulkan4xenon: profile, the last 10 s: 1770 draws, 17405 commands, 295 submits, 295 presents; a present 6.0 draws, 140.1 us submitting; a submit 6.0 draws, 140.1 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 200 ns a draw, 161 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 108 ns a draw, 90 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 4381 ns a draw, 4360 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 407 ns a draw, 375 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1223 ns a draw, 1169 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1157 ns a draw, 1114 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 208 ns a draw, 187 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 15031 ns a draw, 14819 less its 9.8 laps
+vulkan4xenon: profile, the last 10 s: submit 642 ns a draw, 634 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 23357 ns a draw, 22908 less its 20.8 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 45 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 40 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 295 frames in 10.0 s, 29.5 fps
+[0m[INFO | dusk][0m Memory: 98 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 17 MB stack; newlib's heap 252 MB, 243 MB of it in use
+[36m[DEBUG | dusk][0m fapGm_Execute frame=11700
+vulkan4xenon: profile, the last 10 s: 1776 draws, 17464 commands, 296 submits, 296 presents; a present 6.0 draws, 147.1 us submitting; a submit 6.0 draws, 147.1 us; a lap 21.6 ns
+vulkan4xenon: profile, the last 10 s: dispatch 204 ns a draw, 164 less its 1.8 laps
+vulkan4xenon: profile, the last 10 s: push 110 ns a draw, 92 less its 0.8 laps
+vulkan4xenon: profile, the last 10 s: pipeline 3808 ns a draw, 3786 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: constants 403 ns a draw, 370 less its 1.5 laps
+vulkan4xenon: profile, the last 10 s: resources 1223 ns a draw, 1169 less its 2.5 laps
+vulkan4xenon: profile, the last 10 s: checks 1170 ns a draw, 1127 less its 2.0 laps
+vulkan4xenon: profile, the last 10 s: draws 208 ns a draw, 187 less its 1.0 laps
+vulkan4xenon: profile, the last 10 s: commands 15593 ns a draw, 15381 less its 9.8 laps
+vulkan4xenon: profile, the last 10 s: submit 1790 ns a draw, 1783 less its 0.3 laps
+vulkan4xenon: profile, the last 10 s: all 24509 ns a draw, 24060 less its 20.8 laps
+vulkan4xenon: profile, the last 10 s: command type 0 (src/objects.h), 45 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: command type 1 (src/objects.h), 43 us a present, 6 a present
+vulkan4xenon: profile, the last 10 s: the replay's waits for the GPU, 0 us a present, 0.0 a present
+[0m[INFO | dusk][0m 298 frames in 10.0 s, 29.8 fps
+[0m[INFO | dusk][0m Memory: 98 MB free; the title's pages: 69 MB physical, 257 MB virtual, 0 MB heap, 17 MB stack; newlib's heap 252 MB, 243 MB of it in use
+[0m[INFO | aurora::vulkan4xenon][0m Vertex cache, last 1000 frames: 2000 of 2000 draws found their vertices, 100.00% of 0.3 MiB; 0.0 MiB decoded; 0 entries evicted, 0 forgotten, 0 without room; at most 0.00 MiB a frame and 0.00 MiB held, of 8.00; waited 0 times for frames in flight, 0.0 ms in all, 0.00 ms at most; 0 index lists built, 420 kept in 3.86 MiB
+[36m[DEBUG | dusk][0m fapGm_Execute frame=12000

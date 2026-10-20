@@ -1,0 +1,11 @@
+log: game:\probe_ctr.log
+log: named after \Device\Harddisk0\Partition1\cpuprobe\probe_ctr.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+ctr probe: CTR 0000000000000003: bdnz passed 3 times, CTR left 0000000000000000
+ctr probe: CTR 0000000100000003: bdnz passed 3 times, CTR left 0000000100000000
+ctr probe: CTR FFFFFFFF00000003: bdnz passed 3 times, CTR left FFFFFFFF00000000
+ctr probe: bdnz tests CTR's low word only, as in 32-bit mode
+ctr probe: 0xFFFFFFFF + 1 carried 1, as in 32-bit mode
+ctr probe: reading MSR; nothing after this line means mfmsr faulted
+ctr probe: MSR 0000000000009030: SF 0, HV 0, PR 0
+exit: status 0

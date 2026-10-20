@@ -4389,3 +4389,24 @@ reading back what its scalar or vector op wrote. Log: `results/2026-10-19-milest
   uniform in its temp's lane in the vector unit, and leaves the temp in its lanes when it packs registers. xost's
   simulators (xdis/simulate.py, xdis/equivalence.py) read the temp for both, and with them the probe's cases expect what
   the console gave, all 695.
+## Counted loops end in bdnz, milestone 52 (2026-10-19)
+
+With the spec's `-mpowerpc64`, GCC 15's `rs6000_preferred_doloop_mode` gave a counted loop's counter the word mode, 64
+bits, which `doloop_end` refuses for 32-bit code (gcc/config/rs6000/rs6000.md:13686-13696; gcc/loop-doloop.cc:756-778),
+so every counted loop ended in `addi`, `cmpdi` and `bne` instead of `bdnz`. gcc-xsdk.patch makes it the pointer mode.
+Logs: `results/2026-10-19-milestone-52/`.
+- **A title runs in 32-bit mode:** `probe_ctr` read MSR 0x9030, SF clear, and `bdnz` counted only CTR's low word,
+  3 passes from 0xFFFFFFFF00000003 as from 3. So a counter moved to CTR from a 32-bit value is safe whatever its high
+  word holds.
+- **What it changed:** xsdk_test's loops ending in `cmpdi` went from 234 to 6, Dusklight's from 4,724 to 1,147 (SDL3,
+  prebuilt with the old toolchain, holds 1,111), and code got slightly smaller. Of probe_unroll's loops typical of game
+  code, 8 multiply-add chains ran 6% faster and a word copy 5%, a 4x4 matrix times vectors 3% slower, the rest within
+  1%. Dusklight's CPU frame didn't change: its hot loops aren't counted loops of this kind.
+- **Every title passed as before** with the new toolchain: xsdk_test, vulkan4xenon_test and vkbench.
+- **Unrolling, measured again,** libxsdk and libvulkan4xenon alone with `-funroll-loops`: vkbench's CPU 0 to 5% less,
+  Dusklight's the same, libxsdk's code a quarter larger and tools/xenia_scan.py's count in it from 2 to 44 (`rldic`,
+  which Xenia skips). It stays off, as milestone 35 left it.
+- **What an atomic costs** (`probe_atomics`), one thread: a relaxed `__atomic_fetch_add` 54.7 ns, acquire or release
+  69.5, acq_rel 84.7, seq_cst 124.5; `sync` alone 53 ns, `lwsync` and `isync` 12. C++'s `operator++` on an atomic and
+  `__sync_*` are seq_cst, so a counter that needs no ordering costs less than half as much as relaxed. Two threads on
+  one core contending: 146 to 173 ns relaxed, 285 seq_cst.
