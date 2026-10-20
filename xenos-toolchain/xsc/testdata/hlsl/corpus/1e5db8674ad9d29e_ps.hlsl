@@ -1,0 +1,27 @@
+uniform float4 umat_tevreg[4] : register(c0);
+uniform float4 umat_kcolor[4] : register(c4);
+uniform float4 umat_texcoord_scale[8] : register(c8);
+uniform float4 umat_tex_size_bias[8] : register(c16);
+
+
+static float4 o_color;
+
+struct SPIRV_Cross_Output
+{
+    float4 o_color : COLOR0;
+};
+
+void frag_main()
+{
+    float3 s0_color = clamp(0.0f.xxx + umat_tevreg[1].xyz, 0.0f.xxx, 1.0f.xxx);
+    float s0_alpha = clamp(0.0f + umat_tevreg[1].w, 0.0f, 1.0f);
+    o_color = float4(s0_color, s0_alpha);
+}
+
+SPIRV_Cross_Output main()
+{
+    frag_main();
+    SPIRV_Cross_Output stage_output;
+    stage_output.o_color = float4(o_color);
+    return stage_output;
+}

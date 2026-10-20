@@ -1,0 +1,1541 @@
+{
+ "trials": 20,
+ "seed": 1,
+ "sets": {
+  "corpus": {
+   "shaders": {
+    "017c19da20649fa0_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %50",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "01c8b343f41ff9f4_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "020233a3aaada7e9_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "041a85f07c74ec96_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %82",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "04a469b1240c5698_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "05716a5bd2aae204_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %189",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "05b63b9d751d5736_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "093884ef391dfddc_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "0963325b37f04df0_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "09bef7f9a3ac5df7_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "0c5faf5ad1250944_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "0c9a6858fbbe328e_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "0f8714b3c758a3b1_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "12d30073b6d47043_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "cannot resolve scalar %180",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "1510c05add37f2b3_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %332",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "15a57b221b955025_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %22",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "1675a46dea18c182_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "16a9a335fb71c29a_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "172ccfa9a454e318_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "1ad5c2f8e1cc2653_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %73",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "1e5db8674ad9d29e_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %49",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "2013a34320f17698_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "20a291c66ca7e0fd_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "22d6a7758d2d5d84_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %51",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "233aa73af10f83bc_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %101",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "246ca2b33bb1fdf4_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %87",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "251e226c8a088a82_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "29fab4bb2516d607_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %183",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "2a1a218d5688204a_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "2bc4ebf687f545b6_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "2e7f30cdc49bd211_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "2eefbbd89e53921c_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %254",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "31871ebc6e90765a_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "32d160ecc3deb658_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "33d3ad7a449b966c_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %58",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "349b6ed78d720732_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %90",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "350248024002ce37_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "35fc826ad15e1872_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %22",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "39662e66d545c874_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "3ba44326990edfeb_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "3de421fc6f9f3122_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "cannot resolve scalar %109",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "407248b726bcb428_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "412f75e329bbe3a2_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "46d1eea9e1360669_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %138",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "48cd8f549b507826_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "4a2fde48317fee5f_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %142",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "4e6272cd5ea024f5_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "4ee5b3c093bea8ab_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %256",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "4f41862f49358139_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %50",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "4f939ba938f196ae_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "5264b90e6f50c901_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %44",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "551fb86c6ef59def_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "556ea181d0d34829_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "55a0066e2650ed99_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "58786ba1a7e49515_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "607a7b7110387a22_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %77",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "60bcbd6f4104ab13_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %166",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "61cdb76b69b6489b_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "64f76a18fb37dd48_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %44",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "66457dda201609ed_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %225",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "676ff8c4689eaf91_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %185",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "68b11762bd80366b_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "695e15b366c72818_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %160",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "6a05b1f88a016fb2_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "6b7ff186cc28cce5_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "6c429f0c99b0524f_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "6dd3a70373df59bf_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %219",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "6e690d475f0af5fe_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "70ee109df12524e4_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "71ac4a48df92e5b7_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "72abd6191dcd7bfe_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "75422301f0e22829_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %224",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "820f98f280587ea8_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %182",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "84e4d80e1fc6e615_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "8586b077d3e63bc1_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "858b7f6b67e42fd6_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %134",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "85ae52ee303f618c_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %70",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "85c8b022385334bf_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %191",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "88a3de8e328f385a_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "8b4ce5184129a25a_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %36",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "8e555ecc28e3d240_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "8ecfa22174a91d18_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "8f974c0335e452d5_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "92f6cc89e68fccea_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %22",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "93d36ce55e3f9bad_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "946541a3cc485e48_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %70",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "987a188c27a802e5_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %95",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "9f1eca9bebdc35b6_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %75",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "a122a58ca77e3270_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %50",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "a2beec39ae2b951c_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "a35e191254f5ef46_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "a478595f52157a73_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %78",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "a479ce42ba36b7d8_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %128",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "a48b96d69ff86daf_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "ad037db0d56a10dd_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "b331aaa6bee56ee9_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %22",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "b40238367bc2ae70_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %212",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "b4a8c01218dcffe9_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %191",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "b4bd0f33bde7fc52_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "b624738d17bc5ca0_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %44",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "b72c3e79097987b4_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "ba930563b1db79f4_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %50",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "bacc292ad5a86eb3_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "bde83fec0182df1d_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "be7931e3ec0bb85e_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %59",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "c0887c56621045a9_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "c0ddfd4547c71e5a_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "c165aaa5a5be8de5_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "c2679fcd0788b78d_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %108",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "c359885760b8a624_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "c4bb20c5e14ce9d8_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "c8673f02f09b439d_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %44",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "c91470b682614340_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "c98a0ca2e68f85a1_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %94",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "ca44599827bbdb23_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %163",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "cad12b640d1cfd9c_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %133",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "cbed2c9db6f723a5_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "ce4bffbb0b973310_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %15",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "cefc467138f9dac7_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "d1441271ff15f72c_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %36",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "d5d99e338acc096e_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "d8658b0e39305f51_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "d8d724f61446ecbb_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "d90889c31c82dbe8_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "da2593920df168c8_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "dae9addf7280e276_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %76",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "dee3af7655c47a63_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e09e6878603dc742_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e19f86ee747cb140_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %113",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e2cfed9f9f80cbf0_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %258",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e2f1c3a692fdfb84_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %57",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e3fba406929fde97_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %224",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e4c0798e6cc9e4ba_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %130",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e5c535debebde1ed_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e5ea8b62e2ebf4ac_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "e6ec5aee8cc08f41_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %55",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e7fe951996d1f40b_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %161",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "e9d14d2c939cffe4_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "e9e5df17e9c42a02_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %126",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "ece2618e566d8623_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "ed3667059b5c9028_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %142",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "f12926532ee0b4d0_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "f1f88472976e4bfb_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "f2f1d4cd60de5251_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %66",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "f3825523049d31cf_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "f526e9ffb3616812_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %39",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "f544e71db9210106_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %32",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "f5cb41c6eaf01a5f_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %169",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "f6b5e1536572c9a5_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %50",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "f7c1df6fe6364447_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %21",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "mesh_gray_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %40",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "mesh_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %19",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "mesh_uniform_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %19",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "mesh_uniform_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "mesh_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    },
+    "sprite_ps.hlsl": {
+     "status": "refused",
+     "cause": "a static global (Private variable)",
+     "message": "fragment: unresolved Load %19",
+     "comparison": [
+      "not comparable",
+      "a static global (Private variable)"
+     ]
+    },
+    "sprite_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position",
+     "comparison": [
+      "not comparable",
+      "D3D9 semantics: POSITION out a location (step 4)"
+     ]
+    }
+   },
+   "totals": {
+    "counts": {
+     "refused": 157
+    },
+    "causes": {
+     "a static global (Private variable)": 107,
+     "D3D9 semantics: POSITION out a location (step 4)": 50
+    },
+    "comparisons": {
+     "not comparable": 157
+    }
+   }
+  },
+  "idioms": {
+   "shaders": {
+    "i01_transform_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position"
+    },
+    "i02_rowmajor_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position"
+    },
+    "i03_samplers_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i04_vpos_vface_ps.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: inputs, VPOS or VFACE among them, as locations (step 4)",
+     "message": "declare inputs in r0,r1,... order"
+    },
+    "i05_math_ps.hlsl": {
+     "status": "refused",
+     "cause": "a splat constant (OpConstantComposite)",
+     "message": "%224 is not a constant scalar"
+    },
+    "i06_half_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i07_branch_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i08_depth_mrt_ps.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: DEPTH out a colour's location (step 4)",
+     "message": "a colour output at location 4, past oC3"
+    },
+    "i09_skin_vs.hlsl": {
+     "status": "refused",
+     "cause": "D3D9 semantics: POSITION out a location (step 4)",
+     "message": "no write to gl_Position"
+    },
+    "i10_boolint_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i11_lighting_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i12_dx10sem_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i13_dx10sem_vs.hlsl": {
+     "status": "compiled"
+    },
+    "i14_cbuffer_ps.hlsl": {
+     "status": "compiled"
+    },
+    "i15_postfx_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i16_intloop_ps.hlsl": {
+     "status": "refused",
+     "cause": "a loop in SSA form (step 3)",
+     "message": "unexpected loop header terminator; real-loop v1: missing structured loop header"
+    },
+    "i17_boolbranch_ps.hlsl": {
+     "status": "refused",
+     "cause": "an int or bool constant (step 5)",
+     "message": "integer Load must be a foldable local"
+    },
+    "m1_colmajor_vs.hlsl": {
+     "status": "compiled"
+    },
+    "m2_rowmajor_vs.hlsl": {
+     "status": "compiled"
+    },
+    "m3_colmajor_mv_vs.hlsl": {
+     "status": "compiled"
+    },
+    "m4_slots_ps.hlsl": {
+     "status": "compiled"
+    }
+   },
+   "totals": {
+    "counts": {
+     "refused": 12,
+     "compiled": 9
+    },
+    "causes": {
+     "D3D9 semantics: POSITION out a location (step 4)": 3,
+     "D3D9 semantics: inputs, VPOS or VFACE among them, as locations (step 4)": 1,
+     "a splat constant (OpConstantComposite)": 1,
+     "a loop in SSA form (step 3)": 5,
+     "D3D9 semantics: DEPTH out a colour's location (step 4)": 1,
+     "an int or bool constant (step 5)": 1
+    },
+    "comparisons": {}
+   }
+  }
+ }
+}

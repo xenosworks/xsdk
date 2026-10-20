@@ -1,0 +1,9 @@
+#version 450
+layout(set = 0, binding = 0) uniform sampler2D source;
+layout(location = 0) in vec2 in_uv;
+layout(location = 0) out vec4 o_color;
+void main() {
+    vec4 sampled = texture(source, in_uv);
+    vec4 c = vec4(sampled.rgb, 1.0);
+    o_color = vec4(vec3(floor(c.r * 16.0) / 15.0), floor(c.a * 16.0) / 15.0);
+}

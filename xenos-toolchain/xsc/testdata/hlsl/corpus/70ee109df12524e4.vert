@@ -1,0 +1,91 @@
+#version 450
+layout(set = 0, binding = 0, std140) uniform View {
+    vec4 viewport_sizes; // render, then logical
+    vec4 line_params;
+    vec4 proj[4];
+    vec4 tex_mtx[30];
+    vec4 channel_colors[8]; // per channel: ambient, material, alpha ambient, alpha material
+    vec4 postmtx[60];
+    vec4 fog[5];
+    vec4 ind_mtx[6];
+} uview;
+layout(set = 0, binding = 3, std140) uniform Lights {
+    vec4 lights[40];
+    vec4 light_state;
+} ulights;
+layout(push_constant, std140) uniform Push {
+    vec4 pos_mtx[3];
+    vec4 nrm_mtx[3];
+} upush;
+layout(location = 0) in vec3 in_pos;
+layout(location = 2) in vec2 in_tex0_uv;
+layout(location = 3) in vec3 in_nrm;
+layout(location = 0) out vec4 out_cc0;
+layout(location = 1) out vec2 out_tex0_uv;
+layout(location = 2) out vec2 out_fog_zw;
+void main() {
+    vec4 pos4 = vec4(in_pos, 1.0);
+    vec4 mv_pos4 = vec4(vec3(dot(upush.pos_mtx[0], pos4), dot(upush.pos_mtx[1], pos4), dot(upush.pos_mtx[2], pos4)), 1.0);
+    vec4 clip_pos = vec4(dot(uview.proj[0], mv_pos4), dot(uview.proj[1], mv_pos4), dot(uview.proj[2], mv_pos4), dot(uview.proj[3], mv_pos4));
+    gl_Position = clip_pos * vec4(1.0, -1.0, 1.0, 1.0);
+    vec4 nrm4 = vec4(in_nrm, 0.0);
+    vec3 nrm_tmp = vec3(dot(upush.nrm_mtx[0], nrm4), dot(upush.nrm_mtx[1], nrm4), dot(upush.nrm_mtx[2], nrm4));
+    float nrm_len2 = dot(nrm_tmp, nrm_tmp);
+    vec3 mv_nrm = nrm_tmp * mix(1.0, inversesqrt(max(nrm_len2, 1e-10)), step(1e-10, nrm_len2));
+    vec3 light2_vec = ulights.lights[10].xyz - mv_pos4.xyz;
+    float light2_dist2 = dot(light2_vec, light2_vec);
+    float light2_dist = sqrt(light2_dist2);
+    vec3 light2_dir = light2_vec / light2_dist;
+    float cc0_cos2 = clamp(dot(light2_dir, ulights.lights[11].xyz), 0.0, 1.0);
+    float cc0_attn2 = max(0.0, dot(ulights.lights[13].xyz, vec3(1.0, cc0_cos2, cc0_cos2 * cc0_cos2)) / dot(ulights.lights[14].xyz, vec3(1.0, light2_dist, light2_dist2)));
+    float cc0_diff2 = max(0.0, dot(light2_dir, mv_nrm));
+    vec4 cc0_sum2 = uview.channel_colors[0] + cc0_attn2 * cc0_diff2 * ulights.lights[12];
+    vec3 light3_vec = ulights.lights[15].xyz - mv_pos4.xyz;
+    float light3_dist2 = dot(light3_vec, light3_vec);
+    float light3_dist = sqrt(light3_dist2);
+    vec3 light3_dir = light3_vec / light3_dist;
+    float cc0_cos3 = clamp(dot(light3_dir, ulights.lights[16].xyz), 0.0, 1.0);
+    float cc0_attn3 = max(0.0, dot(ulights.lights[18].xyz, vec3(1.0, cc0_cos3, cc0_cos3 * cc0_cos3)) / dot(ulights.lights[19].xyz, vec3(1.0, light3_dist, light3_dist2)));
+    float cc0_diff3 = max(0.0, dot(light3_dir, mv_nrm));
+    vec4 cc0_sum3 = cc0_sum2 + cc0_attn3 * cc0_diff3 * ulights.lights[17];
+    vec3 light4_vec = ulights.lights[20].xyz - mv_pos4.xyz;
+    float light4_dist2 = dot(light4_vec, light4_vec);
+    float light4_dist = sqrt(light4_dist2);
+    vec3 light4_dir = light4_vec / light4_dist;
+    float cc0_cos4 = clamp(dot(light4_dir, ulights.lights[21].xyz), 0.0, 1.0);
+    float cc0_attn4 = max(0.0, dot(ulights.lights[23].xyz, vec3(1.0, cc0_cos4, cc0_cos4 * cc0_cos4)) / dot(ulights.lights[24].xyz, vec3(1.0, light4_dist, light4_dist2)));
+    float cc0_diff4 = max(0.0, dot(light4_dir, mv_nrm));
+    vec4 cc0_sum4 = cc0_sum3 + cc0_attn4 * cc0_diff4 * ulights.lights[22];
+    vec3 light5_vec = ulights.lights[25].xyz - mv_pos4.xyz;
+    float light5_dist2 = dot(light5_vec, light5_vec);
+    float light5_dist = sqrt(light5_dist2);
+    vec3 light5_dir = light5_vec / light5_dist;
+    float cc0_cos5 = clamp(dot(light5_dir, ulights.lights[26].xyz), 0.0, 1.0);
+    float cc0_attn5 = max(0.0, dot(ulights.lights[28].xyz, vec3(1.0, cc0_cos5, cc0_cos5 * cc0_cos5)) / dot(ulights.lights[29].xyz, vec3(1.0, light5_dist, light5_dist2)));
+    float cc0_diff5 = max(0.0, dot(light5_dir, mv_nrm));
+    vec4 cc0_sum5 = cc0_sum4 + cc0_attn5 * cc0_diff5 * ulights.lights[27];
+    vec3 light6_vec = ulights.lights[30].xyz - mv_pos4.xyz;
+    float light6_dist2 = dot(light6_vec, light6_vec);
+    float light6_dist = sqrt(light6_dist2);
+    vec3 light6_dir = light6_vec / light6_dist;
+    float cc0_cos6 = clamp(dot(light6_dir, ulights.lights[31].xyz), 0.0, 1.0);
+    float cc0_attn6 = max(0.0, dot(ulights.lights[33].xyz, vec3(1.0, cc0_cos6, cc0_cos6 * cc0_cos6)) / dot(ulights.lights[34].xyz, vec3(1.0, light6_dist, light6_dist2)));
+    float cc0_diff6 = max(0.0, dot(light6_dir, mv_nrm));
+    vec4 cc0_sum6 = cc0_sum5 + cc0_attn6 * cc0_diff6 * ulights.lights[32];
+    vec3 light7_vec = ulights.lights[35].xyz - mv_pos4.xyz;
+    float light7_dist2 = dot(light7_vec, light7_vec);
+    float light7_dist = sqrt(light7_dist2);
+    vec3 light7_dir = light7_vec / light7_dist;
+    float cc0_cos7 = clamp(dot(light7_dir, ulights.lights[36].xyz), 0.0, 1.0);
+    float cc0_attn7 = max(0.0, dot(ulights.lights[38].xyz, vec3(1.0, cc0_cos7, cc0_cos7 * cc0_cos7)) / dot(ulights.lights[39].xyz, vec3(1.0, light7_dist, light7_dist2)));
+    float cc0_diff7 = max(0.0, dot(light7_dir, mv_nrm));
+    vec4 cc0_sum7 = cc0_sum6 + cc0_attn7 * cc0_diff7 * ulights.lights[37];
+    vec4 cc0_lit = uview.channel_colors[1] * clamp(cc0_sum7, 0.0, 1.0);
+    vec4 cc0 = vec4(cc0_lit.rgb, uview.channel_colors[3].a);
+    out_cc0 = cc0;
+    vec4 tc0 = vec4(in_tex0_uv, 1.0, 1.0);
+    vec3 tc0_mtx = tc0.xyz;
+    vec3 tc0_tmp = vec3(tc0_mtx.xy, 1.0);
+    out_tex0_uv = tc0_tmp.xy;
+    out_fog_zw = clip_pos.zw;
+}
