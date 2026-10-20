@@ -968,3 +968,120 @@ testdata, nor the 291 HLSL pixel shaders of xost's testdata and the corpus, took
 (`if (uv.y > 0.25) { if (uv.x > 0.5) { o = ...; return; } } discard;`) did. HLSL's `clip` followed by an if, the shape
 D3D9 ports meet most, is refused, not miscompiled: `v1 fragment: unhandled op Phi; a discard or return inside an
 if/else on data`.
+
+## Discards beside other control flow
+
+Built on the PC on 2026-10-20 at bc7dd38 and fba0415; nothing here has run on the console. HLSL's `clip`, `discard`
+and texkill may sit anywhere in a ps_3_0 shader, so this is in step 8 by the parity rule.
+
+**What xost got.** glslang makes `clip(x)` `if (any(x < 0)) discard;`, `x < 0` alone for a scalar, fxc's meaning by
+glslang's own note (glslang-xenon a607c3a, glslang/HLSL/hlslParseHelper.cpp:5033-5085), and a discard an `OpKill`
+ending its block; spirv-opt's WrapOpKill, early in the legalisation (SPIRV/SpvTools.cpp:200), wraps one only in a
+function a continue construct calls (SPIRV-Tools 2ec8457a, source/opt/wrap_opkill.cpp:22-26), so in the entry point
+each stays an `OpKill`. xost took a discard only as the fragment lowering's kill-if, planned from the module's first
+if/else (src/xsc_lower_fragment.c, `plan`, `plan_kill`), which went wrong two ways:
+- **Silently:** where an arm of that if/else discarded, it killed on its comparison alone and ignored every other
+  branch, so `if (uv.y > 0.25) { if (uv.x > 0.5) { o = vec4(uv, 0, 1); return; } } discard;` compiled, leaving alive
+  the pixels whose y passed and whose x didn't, 20 of the 49 points `discard/nested.frag` and its HLSL twin are checked
+  at, by 04d6cbd.
+- **Refused:** a discard beside any other if, `clip(uv.y - 0.25); if (uv.x > 0.5) c.rgb *= 0.5;` as `v1 fragment:
+  unhandled op Phi; a discard or return inside an if/else on data`, and a discard after a return on data where the
+  unroller took the shader.
+
+**The change:**
+- **Deferred in the unroller** (src/xsc_unroll.c, `discard`, `kill_at_end`), as it gates a return on data: a discard
+  sets `killed = killed || (running && c)`, `c` the conditions of the arms the walk is in and `running` the returns'
+  flag and each unrolled loop's it's in, so a pixel that returned, or left a loop, isn't killed by a later discard. An
+  arm a discard ends gives its merge nothing, as one a return ends; in an unrolled loop the discard leaves the loop as
+  a break does; in a hardware loop it is refused, `a discard inside a hardware loop (v1)`, as `killed` would be one
+  more value the loop carries across passes. Where the function ends the unroller leaves one if on `killed` around an
+  `OpKill`, which the fragment lowering lowers as it always lowered a shader's one if/discard: `kill_gt killed,
+  -killed` on a bool, or the comparison's own kill where `killed` is one comparison (`emit_kill`). Every pixel runs
+  every instruction till then, and the kill comes after the samples and derivatives the fragment lowering gathers
+  first, so a killed pixel feeds its quad's derivatives, as D3D9's texkill leaves a pixel running and as Xenia kills
+  one once its derivatives are done (xenia:src/xenia/gpu/spirv_shader_translator_rb.cc:456-468) or demotes it to a
+  helper (spirv_shader_translator_alu.cc:42-59).
+- **The kill-if where it sees every path** (src/xsc_lower_fragment.c, `kill_unseen`): only where the discard ends the
+  first block of an arm of the module's one if/else, a block storing nothing, so the last store of each variable is a
+  live pixel's. Any other discard is refused there, `a discard beside another if/else, outside the kill-if's arms or
+  after a store in one`, and `lower_pixel` retries the shader through the unroller (src/xsc_compile.c), one with a
+  discard and no if/else among them, which the unroller's `wanted` now counts as branching.
+- **Messages:** the unroller's refusals that named a discard beside a return name the return alone: `a return inside
+  an if/else on data in a loop (v1)`, `a return inside a loop (v1)` and `a return inside a hardware loop (v1)`. `a
+  discard after a return on data (v1)` is gone.
+
+**Compiled before, compiled as before:** step 7's GLSL set with step 8's three, 627 sources of which glslang takes 600,
+and the 255 HLSL testdata shaders of 04d6cbd, the optimiser off and on, compiled by 04d6cbd's libxsc.so and by
+bc7dd38's: 880 the same containers, manifests and resources byte for byte, or refused alike with the same messages, so
+none holds a discard the kill-if doesn't see. Only the two refused for a discard after a return on data differ: they
+compile now, moved from `return/refused_discard_ps.hlsl` and `refused_discard.frag` to `discard/after_return_ps.hlsl`
+and `after_return.frag`. Of the new testdata 04d6cbd refused all but three: `nested.frag` and `nested_ps.hlsl`, which
+it compiled killing on the outer if alone, and `vector_only_ps.hlsl`, a lone clip on a float4, which compiles as it
+did, byte for byte. check_hlsl.py over the corpus and idioms gives `step7.json` and `step7.txt` byte for byte, and its
+`--refresh` over every folder of the HLSL testdata, 267 shaders, leaves every `.spv` as it is. `clip_if_ps.hlsl`,
+`if_discard.frag` and `nested.frag` are, as SPIR-V byte for byte, the scratch shaders that showed the two faults.
+
+**On the simulator:** `tests/test_hlsl_discard.py`, new, runs `xsc/testdata/hlsl/discard` and the grid's cell, the
+optimiser off and on: each pixel killed exactly where HLSL or GLSL kills it, and each that lives exactly the colour they
+define, at 49 points, x and y each from an eighth to seven eighths.
+
+| Shader | What | ALU, CF off | on |
+|---|---|---|---|
+| `clip_if_ps` | a clip, then an if | 15, 4 | 6, 2 |
+| `if_clip_ps` | an if, then a clip on the value it changed | 10, 4 | 7, 4 |
+| `if_discard.frag` | a discard under an if, then an if | 8, 4 | 5, 2 |
+| `nested.frag` | a discard after a return in an if inside another | 9, 4 | 7, 4 |
+| `nested_ps` | its HLSL twin, the same values | 9, 4 | 7, 4 |
+| `inner_ps` | a discard in an if inside another, values changed before and after it | 17, 4 | 8, 4 |
+| `beside_return_ps` | a discard beside an early return | 14, 4 | 9, 4 |
+| `after_return_ps` | after a return in an unrolled loop | 57, 12 | 44, 10 |
+| `after_return.frag` | after a return the unroller takes, a local stored again | 7, 4 | 4, 2 |
+| `vector_ps` | a clip on a float4, any component below 0, then an if | 23, 6 | 10, 4 |
+| `vector_only_ps` | a clip on a float4 alone, the kill-if's | 20, 6 | 8, 4 |
+| `sampled_ps` | a clip on a sample's alpha, then an if and a second sample | 14, 6 | 7, 4 |
+| `loop_ps` | a discard in an unrolled loop, beside a break | 82, 16 | 56, 12 |
+| `nested_loop_ps` | in an unrolled loop inside another, past the outer loop's break | 113, 20 | 75, 14 |
+| `grid_discard_ps` | the cell, all 80 columns, 30 killed | 28, 6 | 13, 4 |
+
+`sampled_ps` runs as two 2x2 quads, the second's right half killed by its alpha: every live pixel's second sample
+takes the quad's whole gradients, twice the first's, from the killed pixels' coordinates too. And a refusal,
+`refused_counted_ps` (`a discard inside a hardware loop`). Each piece broken on purpose failed it:
+- the kill at the end dropped: `clip_if_ps.hlsl, optimiser off, uv [0.125, 0.125]: [0.125, 0.125, 0.25, 1.0], not
+  killed`;
+- the kill-if allowed beside other branches again: `nested.frag, optimiser off, uv [0.125, 0.375]: [0.125, 0.375, 0.0,
+  1.0], not killed`;
+- each discard taking the place of those before it (`tests/breaks/hlsl/discard.patch`): `loop_ps.hlsl, optimiser off,
+  uv [0.125, 0.25]: [0.125, 0.25, 0.875, 0.75], not killed`;
+- the returns' `running` left out: `nested.frag, optimiser off, uv [0.625, 0.375]: killed, not [0.625, 0.375, 0.0,
+  1.0]`;
+- the loops' `running` left out: `loop_ps.hlsl, optimiser off, uv [0.125, 0.125]: killed, not [0.25, 0.125, 0.875,
+  0.75]`; the outer loops' alone: `nested_loop_ps.hlsl, optimiser off, uv [0.125, 0.25]: killed, not [0.375, -0.375,
+  1.125, 0.75]`.
+
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, 62 with `test_hlsl_discard.py`,
+`test_scalar_unit.py` with its corpus at `/mnt/z/vulkan4xenon`. `test_hlsl_return.py` drops its two discard refusals.
+
+**xsdk_test:** `tests/test_hlsl.c` draws `grid_discard_ps.hlsl` in a cell left of the link's, at column 860, row 420,
+linked to `grid_vs.hlsl` and checked by pixel in the grid's 10 frames, so it adds no time but a quad a frame: a clip
+where TEXCOORD0's x, u, is below an eighth, then an if on u > 0.5 changing red with a discard in an if inside it where
+u < 0.75. The 30 columns it kills must keep the clear, what the eDRAM held before the draw, and the others draw what
+HLSL defines:
+
+`hlsl: a pixel shader's clip before an if and discard in an if inside another, on TEXCOORD0's x, kill the columns HLSL
+kills, which keep the clear, and draw what HLSL defines at the others: %u of %u pixels wrong`, 0 of 28800.
+
+`tests/xsc_shaders.h` regenerates with `grid_discard_ps.hlsl` added and nothing else changed. The break,
+`tests/breaks/hlsl/discard.patch`, built by `tests/breaks/hlsl/build.sh` and `local/m50/build.sh`: each discard's kill
+takes the place of those before it, so of xsdk_test's 61 shaders only `grid_discard_ps.hlsl` compiles otherwise,
+killing where its nested discard does and drawing the 10 columns its clip kills, 10 of 80 wrong on the simulator. It
+must fail the discards' check, 3600 of 28800 pixels, and `xsc: hlsl/grid_discard_ps.hlsl compiles into the PC's
+container, literals and resources`. `if.patch` is made again against the unroller, its four hunks the same; it swaps
+the arms of every select the unroller makes for an if/else the fragment lowering refused, so under it the early
+returns', switch's and discards' shaders compile otherwise too, the first two since d81369c, and on the simulator 40,
+80 and 50 of their 80 columns go wrong beside `grid_if_ps`'s 80.
+
+**Builds:** at fba0415, `make clean` and `make -j32`, the HLSL breaks, `make cmake_check` and `make cmake_check_break`
+(through xost's Windows glslang), then vulkan4xenon against it, clean: 0 warnings each. The console set is in
+`local/m50/set10/`: `xsdk_test.xex` and `x_hlsl_discard.xex`.
+
+**Still refused:** a discard in a hardware loop, and as before a return in a loop the unroller walks.
