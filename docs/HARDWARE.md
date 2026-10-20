@@ -4566,6 +4566,9 @@ xsdk_test's HLSL grid (`tests/test_hlsl.c`), its shaders compiled by xost from H
   2041-2059).
 - **A hardware loop an int in `$Global` counts,** from HLSL's loop in SSA form put back in the shape GLSL's takes, ran
   as its GLSL twin with each pixel leaving at its own pass.
+- **Skinning from int4 BLENDINDICES** fetched as UBYTE4, a0 loaded from each index lane in turn times a bone's 3
+  registers, picked each corner's four float4x3 bones: the quad landed and shaded as the CPU skins it, and a palette
+  with two bones swapped, or the indices unscaled, drew elsewhere (`step5_probe_skin.log`).
 
 ## A band's depth clear goes on a colour resolve, milestone 44 step 5 (2026-10-20)
 

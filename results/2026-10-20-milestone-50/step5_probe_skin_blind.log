@@ -1,0 +1,12 @@
+log: game:\probe_skin.log
+log: named after \Device\Harddisk0\Partition1\skinprobe\probe_skin.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+open: NtCreateFile(game:\skin_start.txt) failed: 0xC0000034
+skin probe: every case, as game:\skin_start.txt names none; the CPU's quad from columns 859.5 to 939.5, rows 644.5 to -4294966784.0
+skin probe: pc, the PC's container, which xsdk_test draws: 0 of 6400 pixels of its cell wrong; drawn over columns 860 to 939, rows 0 to 644
+skin probe: lanex, the PC's container from tests/probe_skin.patch's compiler: 0 of 6400 pixels of its cell wrong; nothing drawn
+skin probe: the title's compile is the lanex case's container, 892 bytes
+skin probe: title, this title's own compile, by tests/probe_skin.patch's compiler, as x_hlsl_skin's: 0 of 6400 pixels of its cell wrong; nothing drawn
+skin probe: swapped, the PC's container, bones 0 and 1 swapped in the constants: 0 of 6400 pixels of its cell wrong; drawn over columns 740 to 939, rows 0 to 644
+skin probe: done; xsdk_gpu_close 0x00000000
+exit: status 0

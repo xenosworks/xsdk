@@ -471,3 +471,25 @@ fail `hlsl: a quad skinned by float4x3 bones ...` and `xsc: hlsl/grid_skin_vs.hl
   check, 0 of 28800 pixels, with a container that on Xenia's model (xenia:src/xenia/gpu/ucode.h:1138-1143) reads the
   first index's bone four times and collapses the quad; it works out no other index, so no reading of its loads' lanes
   explains it. `tests/probe_skin.c`'s result goes here.
+
+## The skin check was blind, and is fixed
+
+The probe answered (`step5_probe_skin_blind.log`): the break's container, compiled on the PC and on the console alike,
+drew nothing, as on the simulator, and still counted 0 of its cell's pixels wrong; the swapped bones did too. The
+check couldn't fail. `CLEAR_ARGB = 0xFF202020` sat in the enum with `CELL_HEIGHT`, and a value past INT_MAX gives an
+enum's constants an unsigned type in GCC, so `-CELL_HEIGHT / (HEIGHT / 2.0f)` came out +11930465 where -0.111 was
+meant: the palette threw the quad's bottom edge off the screen's top, where the console and the simulator both drew it
+(rows 0 to 644), and the reference's box was empty, so the check expected the clear everywhere it looked. 62b7e34
+moves the colours out of the enum and checks the gaps, loop and skin cells' middle columns, which a DEPTH-margin
+`continue` had skipped; cc9f057 puts the quad 8 pixels inside its cell and requires its shade inside its box and the
+clear around it. docs/PITFALLS.md, "Colours in an enum", warns of it.
+
+On the console, at cc9f057 rebased on main 17c6e91 (`step5_*.log`):
+- xsdk_test 522 of 524, the controller's two failing with the pad idle; the skin check passes, "lands where the
+  palette puts it, the clear around it", 0 of 28800 wrong.
+- The skin break (maxasf, the index unscaled) fails the skin check and its compile check.
+- `step5_probe_skin.log`: the PC's container right, drawn over columns 868 to 931, rows 653 to 676; the old break's
+  container, PC's and console's alike, 3072 of 6400 wrong, drawn at columns 1012 to 1027; bones 0 and 1 swapped, 3408
+  wrong. The console agrees with the simulator.
+- vulkan4xenon_test 515 of 515 twice, vkbench 17 of 17.
+- The loop, link, VPOS, VFACE and DEPTH breaks at cdcbb2f (`step5_xsdk_test_hlsl_*.log`) each failed what they name.

@@ -103,6 +103,14 @@ where the evidence is; docs/HARDWARE.md is cited by section.
   aligned. Code built by another compiler, or assembly, must keep float loads aligned.
 - **Evidence:** "Dusklight runs the title scene"; "Floats at any address, milestone 23".
 
+## Colours in an enum
+
+- **Looks like:** a check that can't fail, or geometry thrown off screen, where a negated or subtracted size meets a
+  float: `-CELL_HEIGHT / 360.0f` comes out about 1.2e7.
+- **Do:** keep 32-bit colours and other values past INT_MAX out of an enum of sizes, as `static const uint32_t`. GCC
+  gives an enum holding such a value an unsigned type, every constant in it with it, so a negated member wraps.
+- **Evidence:** results/2026-10-20-milestone-50/README.md, "The skin check was blind, and is fixed".
+
 ## Data held in LR
 
 - **Looks like:** a 64-bit value comes back with its high word zeroed, about once a millisecond.
