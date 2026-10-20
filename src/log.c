@@ -39,6 +39,8 @@ static RTL_CRITICAL_SECTION log_lock;
 static HANDLE log_file;
 static char log_line[LOG_LINE_BYTES];
 static char log_path[LOG_PATH_BYTES];
+// Each line to DbgPrint as well; off unless dbgprint.txt or xsdk_log_set_dbgprint turns it on.
+static bool log_dbgprint;
 
 // The network log, on where net_log.txt beside the .xex names the PC as "<address> <port>": each line also goes there
 // as one UDP datagram, so the title never waits on the PC, numbered so a lost one shows. -1 when off.
@@ -83,7 +85,8 @@ static NTSTATUS create_file(HANDLE *handle, HANDLE root_directory, const char *p
 
 static void write_line(const char *line, size_t length_bytes)
 {
-	(void)DbgPrint("%s", line);
+	if (log_dbgprint)
+		(void)DbgPrint("%s", line);
 	if (net_fd >= 0) {
 		const uint32_t sequence = htonl(net_sequence++);
 		memcpy(net_datagram, &sequence, NET_SEQUENCE_BYTES);
@@ -130,7 +133,12 @@ static void open_net_log(char *note, size_t note_bytes)
 NTSTATUS xsdk_log_open(void)
 {
 	RtlInitializeCriticalSection(&log_lock);
-	// Before the file, so the PC gets every line, the file's failures among them.
+	// Both before the file, so they get every line, the file's failures among them.
+	FILE *const dbgprint = fopen("dbgprint.txt", "r");
+	if (dbgprint) {
+		fclose(dbgprint);
+		log_dbgprint = true;
+	}
 	char net_note[NET_NOTE_BYTES];
 	open_net_log(net_note, sizeof net_note);
 	char name[LOG_NAME_BYTES];
@@ -147,12 +155,23 @@ NTSTATUS xsdk_log_open(void)
 			xsdk_log_write("log: %s", path);
 			xsdk_log_write("log: named after %s", ExLoadedImageName ? ExLoadedImageName : "nothing");
 			xsdk_log_write("%s", net_note);
+			if (log_dbgprint)
+				xsdk_log_write("log: to DbgPrint too, as dbgprint.txt asks");
 			return status;
 		}
 		xsdk_log_write("log: NtCreateFile(%s) failed: 0x%08X", path, (unsigned)status);
 	}
 	xsdk_log_write("%s", net_note);
 	return status;
+}
+
+bool xsdk_log_set_dbgprint(bool on)
+{
+	RtlEnterCriticalSection(&log_lock);
+	const bool was = log_dbgprint;
+	log_dbgprint = on;
+	RtlLeaveCriticalSection(&log_lock);
+	return was;
 }
 
 const char *xsdk_log_path(void)

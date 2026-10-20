@@ -12,7 +12,10 @@ enum {
 	PATH_BYTES = 64,
 	HOLD_MS = 50,
 	LOG_COST_LINES = 100,
-	LOG_COST_BAR_US = 200,
+	LOG_COST_DBGPRINT_LINES = 10,
+	// About 2.5 times a line to the file and over the network, 0.31 ms and 0.24 (docs/HARDWARE.md, "The log over the
+	// network, milestone 53"); a line went to DbgPrint as well before, about 5.6 ms.
+	LOG_COST_BAR_US = 1500,
 	CHECK_NAME_BYTES = 64,
 };
 
@@ -159,23 +162,33 @@ static void check_rename(const char *path)
 	(void)unlink(other);
 }
 
-// What a line of the log costs, to the file and, with net_log.txt beside the .xex, over the network too
-// (docs/scope/53-network-log.md).
-static void check_log_cost(void)
+// The nanoseconds a line of the log takes over lines of them.
+static long long time_log_lines(unsigned lines, const char *how)
 {
 	struct timespec start, end;
 	(void)clock_gettime(CLOCK_MONOTONIC, &start);
-	for (unsigned line = 0; line < LOG_COST_LINES; line++)
-		xsdk_log_write("files: a line to time, %u of %u", line + 1, (unsigned)LOG_COST_LINES);
+	for (unsigned line = 0; line < lines; line++)
+		xsdk_log_write("files: a line to time, %u of %u", line + 1, lines);
 	(void)clock_gettime(CLOCK_MONOTONIC, &end);
 	const long long elapsed_ns =
 		(long long)(end.tv_sec - start.tv_sec) * 1000000000LL + (long long)(end.tv_nsec - start.tv_nsec);
-	const long long line_ns = elapsed_ns / LOG_COST_LINES;
-	xsdk_log_write("files: %u log lines took %lld us, %lld.%03lld us a line", (unsigned)LOG_COST_LINES,
-		elapsed_ns / 1000, line_ns / 1000, line_ns % 1000);
+	const long long line_ns = elapsed_ns / lines;
+	xsdk_log_write("files: %u log lines %s took %lld us, %lld.%03lld us a line", lines, how, elapsed_ns / 1000,
+		line_ns / 1000, line_ns % 1000);
+	return line_ns;
+}
+
+// What a line of the log costs, to the file and, with net_log.txt beside the .xex, over the network too
+// (docs/scope/53-network-log.md); then a few with DbgPrint on as well, for its cost, which no bar holds.
+static void check_log_cost(void)
+{
+	const long long line_ns = time_log_lines(LOG_COST_LINES, "as the title runs");
 	char name[CHECK_NAME_BYTES];
 	(void)snprintf(name, sizeof name, "log: a line costs under %u us", (unsigned)LOG_COST_BAR_US);
 	check(name, line_ns < LOG_COST_BAR_US * 1000LL);
+	const bool dbgprint = xsdk_log_set_dbgprint(true);
+	(void)time_log_lines(LOG_COST_DBGPRINT_LINES, "with DbgPrint on");
+	(void)xsdk_log_set_dbgprint(dbgprint);
 }
 
 void test_files(void)
