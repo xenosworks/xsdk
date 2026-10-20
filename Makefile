@@ -82,8 +82,8 @@ PROBE_FAULT_OBJECTS := $(BUILD)/tests/probe_fault.o $(BUILD)/tests/probe_fault_s
 UNROLL_O2_FLAGS := -munroll-only-small-loops -fno-rename-registers
 UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_loops_unrolled.o
 
-.PHONY: all clean cmake_check samples sample_breaks occlusion_tries tiles_probe loop_break_probes instancing_probes \
-	cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe
+.PHONY: all clean cmake_check cmake_check_break samples sample_breaks occlusion_tries tiles_probe loop_break_probes \
+	instancing_probes cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -95,10 +95,17 @@ cmake_configure = cmake \
 	$$(grep -qsF '_COMPILER "$(XSDK_TOOLCHAIN)/bin/' $(2)/CMakeFiles/*/CMake*Compiler.cmake || echo --fresh) \
 	-S $(1) -B $(2) -G Ninja -DCMAKE_TOOLCHAIN_FILE=$(CURDIR)/cmake/xsdk.cmake -DXSDK_TOOLCHAIN=$(XSDK_TOOLCHAIN)
 
-# A title built through cmake/xsdk.cmake, as CMake projects such as Dusklight build; needs CMake and Ninja.
-cmake_check: $(BUILD)/libxsdk.a
+# A title built through cmake/xsdk.cmake, as CMake projects such as Dusklight build; needs CMake, Ninja and, for its
+# HLSL, glslang-xenon (docs/GETTING_STARTED.md, section 4). cmake_check_break builds it into $(BUILD)/cmake_check_brk
+# with its HLSL through xost's Windows glslang, Khronos's, which drops b# and i#, so its HLSL check fails.
+cmake_check: $(BUILD)/libxsdk.a $(BUILD)/host/libxsc.so
 	$(call cmake_configure,tests/cmake,$(BUILD)/cmake_check)
 	cmake --build $(BUILD)/cmake_check
+
+cmake_check_break: $(BUILD)/libxsdk.a $(BUILD)/host/libxsc.so
+	$(call cmake_configure,tests/cmake,$(BUILD)/cmake_check_brk) \
+		-DXSDK_GLSLANG=$(CURDIR)/xenos-toolchain/tools/glslang/bin/glslang.exe
+	cmake --build $(BUILD)/cmake_check_brk
 
 # The samples, each a CMake project built as a title's is, into build/samples/<sample>/<sample>.xex; sdl3 is built when
 # SDL3_DIR names SDL-xenon's build. sample_breaks builds each one broken on purpose, into build/samples/<sample>_brk.
