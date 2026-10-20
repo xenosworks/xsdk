@@ -1,0 +1,12 @@
+--- a/src/xsc_lower_fragment.c
++++ b/src/xsc_lower_fragment.c
+@@ -20,7 +20,8 @@
+ 	COLOR_OUTPUTS = 4,
+ 	// D3D9's VFACE on a face the pipeline takes for its front, positive as D3D9's; unverified till xsdk_test's "hlsl:
+ 	// VFACE" check runs on the console.
+-	VFACE_FRONT = 1,
++	// Broken on purpose: a front face's VFACE -1.
++	VFACE_FRONT = -1,
+ };
+ 
+ typedef struct Region Region;

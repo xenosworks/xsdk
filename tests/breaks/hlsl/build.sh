@@ -1,0 +1,23 @@
+#!/bin/sh
+# Milestone 50 step 4's breaks: xsdk_test built with each patch here applied, as
+# build/breaks/xsdk_test_hlsl_<break>.xex. Each breaks xost in the title, which compiles the HLSL grid's shaders on the
+# console (tests/test_hlsl.c), so test_xsc's check of that shader against the PC's container fails too. Run in WSL from
+# anywhere: sh tests/breaks/hlsl/build.sh. Each patch is taken back out after its build, even a failed one.
+# - link: a vertex shader's outputs at their locations; fails "hlsl: a vertex shader's TEXCOORD0 and COLOR0 meet ...",
+#   "hlsl: DEPTH from TEXCOORD0's x ..." and "xsc: hlsl/grid_vs.hlsl compiles into the PC's container ...".
+# - vpos: VPOS as gl_FragCoord; fails "hlsl: VPOS is each pixel's whole column and row ..." and
+#   "xsc: hlsl/grid_vpos_ps.hlsl compiles into the PC's container ...".
+# - vface: a front face's VFACE -1; fails "hlsl: VFACE is -1 on a front face, clockwise, and +1 on a back one ..." and
+#   "xsc: hlsl/grid_vface_ps.hlsl compiles into the PC's container ...".
+# - depth: DEPTH left a colour at its location; fails "hlsl: DEPTH from TEXCOORD0's x ..." and
+#   "xsc: hlsl/grid_depth_ps.hlsl compiles into the PC's container ...".
+set -eu
+cd "$(dirname "$0")/../../.."
+for name in link vpos vface depth; do
+	patch -p1 --forward --quiet < "tests/breaks/hlsl/$name.patch"
+	trap 'patch -p1 -R --quiet < "tests/breaks/hlsl/$name.patch"' EXIT INT TERM
+	make -j32 BUILD="build/breaks/hlsl_$name" "build/breaks/hlsl_$name/xsdk_test.xex"
+	patch -p1 -R --quiet < "tests/breaks/hlsl/$name.patch"
+	trap - EXIT INT TERM
+	cp "build/breaks/hlsl_$name/xsdk_test.xex" "build/breaks/xsdk_test_hlsl_$name.xex"
+done

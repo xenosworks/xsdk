@@ -1,0 +1,12 @@
+--- a/src/xsc_resolve.c
++++ b/src/xsc_resolve.c
+@@ -536,7 +536,8 @@
+ 	}
+ 	uint32_t loc = location_or_zero(v);
+ 	if (!si->pixel) {
+-		if (hlsl && !semantic_interpolator(x, v, &s, si->interp_out, si->interp_out_count, &loc))
++		// Broken on purpose: a vertex shader's outputs at their locations, not their semantics' interpolators.
++		if (false && !semantic_interpolator(x, v, &s, si->interp_out, si->interp_out_count, &loc))
+ 			return false;
+ 		if (!add_use(x, &si->interp_out, &si->interp_out_count, &capacity->interp_out,
+ 				(XscVarUse){ v, loc, usage_for_vector(m, types, v->pointee) }))

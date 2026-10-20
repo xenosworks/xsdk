@@ -159,6 +159,9 @@ void test_instancing(void);
 // Constants read at run-time indices through xost's optimiser (milestone 48 step 6).
 void test_indexed_reads(void);
 
+// D3D9's semantics through glslang's HLSL (milestone 50 step 4).
+void test_hlsl(void);
+
 // Recorded command buffers (milestone 18).
 void test_replay(void);
 

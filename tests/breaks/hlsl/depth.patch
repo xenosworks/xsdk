@@ -1,0 +1,12 @@
+--- a/src/xsc_resolve.c
++++ b/src/xsc_resolve.c
+@@ -530,7 +530,8 @@
+ 		si->point_size = v;
+ 		return true;
+ 	}
+-	if (hlsl && si->pixel && is_semantic(&s, "DEPTH")) {
++	// Broken on purpose: DEPTH left at its location, a colour.
++	if (hlsl && si->pixel && is_semantic(&s, "DEPTH_")) {
+ 		si->frag_depth = v;
+ 		return true;
+ 	}

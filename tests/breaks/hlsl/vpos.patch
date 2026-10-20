@@ -1,0 +1,12 @@
+--- a/src/xsc_lower_fragment.c
++++ b/src/xsc_lower_fragment.c
+@@ -136,7 +136,8 @@
+ static bool vpos_register(XscLower *l, const XscInterface *si, int64_t param_reg)
+ {
+ 	const int64_t vpos = xsdk_xsc_fresh(l);
+-	const int64_t zw[2] = { 2, 3 };
++	// Broken on purpose: VPOS as gl_FragCoord, c255's xy, not 0.5 less.
++	const int64_t zw[2] = { 0, 1 };
+ 	const XscSrc top = xsc_src(xsc_const(XSDK_XSC_FRAG_COORD_CONSTANT), false, xsdk_xsc_swz(zw, 2));
+ 	if (!xsc_emit2(l, XSC_VECTOR_ADD, xsc_temp(param_reg | XSC_ABS_SOURCE), top, vpos, false, 0x3))
+ 		return false;
