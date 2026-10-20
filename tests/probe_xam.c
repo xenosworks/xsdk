@@ -939,6 +939,8 @@ static uint32_t show_keyboard(const uint16_t *title, const uint16_t *description
 	return XamShowKeyboardUI(0, 0, keyboard_default, title, description, keyboard_text, KEYBOARD_CHARS, o);
 }
 
+static void settle_ui(const char *what, uint32_t closings);
+
 static void log_keyboard_text(const char *what)
 {
 	char text[KEYBOARD_CHARS + 1];
@@ -950,6 +952,7 @@ static void log_keyboard_text(const char *what)
 static void run_keyboard(void)
 {
 	static XAM_OVERLAPPED o;
+	const uint32_t closings = ui_closings;
 	// Accepted, looked at straight after the call, not waiting.
 	overlapped_start(&o, true);
 	const uint32_t frames = frames_presented;
@@ -958,6 +961,8 @@ static void run_keyboard(void)
 	xsdk_log_write("keyboard: accepted, XamIsUIActive %u, %u frames", (unsigned)XamIsUIActive(),
 		(unsigned)(frames_presented - frames));
 	log_keyboard_text("keyboard: accepted");
+	// XAM refuses a dialog with 5 until its UI says it closed, a moment after the call completes.
+	settle_ui("keyboard: accepted", closings);
 	// Cancelled, with XamGetOverlappedResult told to wait straight after the call.
 	static BlockingCall wait_call = { .what =
 										  "keyboard: XamGetOverlappedResult(wait 1) straight after the keyboard "
@@ -972,6 +977,7 @@ static void run_keyboard(void)
 		xsdk_log_write("%s: length 0x%08X", wait_call.what, (unsigned)waited_length);
 	(void)complete("keyboard: cancelled", returned, &o, QUICK_TIMEOUT_MS, false);
 	log_keyboard_text("keyboard: cancelled");
+	settle_ui("keyboard: cancelled", ui_closings);
 }
 
 static void run_message_box(void)
@@ -983,6 +989,7 @@ static void run_message_box(void)
 		XamShowMessageBoxUI(0, box_title, box_text, BUTTONS, buttons, 0, 0, &pressed, &o), &o, PERSON_TIMEOUT_MS,
 		false);
 	xsdk_log_write("message_box: result 0x%08X, button 0x%08X (the second is 1)", (unsigned)result, (unsigned)pressed);
+	settle_ui("message_box", ui_closings);
 }
 
 static uint32_t box_without_overlapped(void)
