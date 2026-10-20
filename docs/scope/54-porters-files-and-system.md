@@ -35,10 +35,12 @@ Each step probes on the console first where Xenia can't answer.
      set at start-up as newlib's time zone, so `localtime` and `mktime` give the console's local time;
    - the language through `XGetLanguage` (XAM 0x3CD) and the country through `XamGetLocaleEx` (XAM 0x5D7), as
      `xsdk_system_language` and `xsdk_system_country`.
-4. **Xbox Home:** xsdk registers a title-terminate notification with `ExRegisterTitleTerminateNotification` (0x15),
-   which Xenia runs on the terminating thread (xenia:src/xenia/kernel/kernel_state.cc:495-504). The probe settles which
-   thread runs it on the console, how long it has, and whether file writes from it complete. Then, on Xbox Home, xsdk
-   flushes stdio's streams, closes the log and calls a routine the title registers (`xsdk_on_terminate`).
+4. **Xbox Home:** `xsdk_on_terminate` registers a title's routine with `ExRegisterTitleTerminateNotification` (0x15),
+   which Xenia never calls (its call is commented out, xenia:src/xenia/kernel/kernel_state.cc:489-504). On the console
+   the routine runs on a system thread with every title thread frozen, the title's handles closed and `game:` gone,
+   and it was given 2 s; a registration left in place froze the console as the next title started
+   (results/2026-10-20-milestone-54/, the terminate probe), so xsdk's routine always takes the registration out before
+   it returns. stdio's unflushed bytes have no handle left and are lost; the docs say so.
 5. **Letterboxing on 4:3:** where `VdQueryVideoMode` says the output isn't widescreen, the display controller shows
    1280x720 at the output's width with bars above and below, in place of stretching. The probe settles which of the
    scaler's registers place the picture.
@@ -73,6 +75,7 @@ what's there.
 
 1. **Drive names in src/path.c:** xsdk maps `hdd:` and the rest itself, with nothing left behind in the kernel, rather
    than `ObCreateSymbolicLink`'s names the whole console sees.
-2. **Xbox Home:** stdio flushed and the log closed, and the title's routine called; `atexit` handlers only if the probe
-   shows the notification has the time and the threads' locks to run them.
+2. **Xbox Home:** flushing and closing was agreed first; the probe showed the title's handles already closed when the
+   routine runs, so on the user's choice xsdk gives the safe hook alone: `xsdk_on_terminate`, its routine on a system
+   thread, the registration always taken out, and the docs saying what's lost.
 3. **Letterboxing** is in this milestone; you set the console to 4:3 once and look.

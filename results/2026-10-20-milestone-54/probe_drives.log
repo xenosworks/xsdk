@@ -1,0 +1,45 @@
+log: game:\probe_drives.log
+log: named after \Device\Harddisk0\Partition1\xsdk\probe\probe_drives.xex
+log: no net_log.txt beside the .xex, so not over the network
+drives: 14 device paths
+drives: \Device\Harddisk0\Partition1: opened, 8 entries or more: name.txt,Cache/,Content/,PCSX360/,SHAR/,Plugins/,launch.ini,xbdm.ini (listing ended 0x00000000); as a folder 0x00000000 with its backslash, 0xC0000103 without
+drives: \Device\Harddisk0\Partition1: statvfs: 16384-byte units, 8495648 of 9453636 free
+drives: \Device\Harddisk0\Partition0: not opened, 0xC000014F with its backslash, 0xC0000103 without
+drives: \Device\Harddisk0\Partition0: statvfs: 512-byte units, 312581808 of 312581808 free
+drives: \Device\Mass0: opened, 5 entries: name.txt,Content/,System Volume Information/,Simple 360 NAND Flasher/,xsdk_dirtest/ (listing ended 0x80000006); as a folder 0x00000000 with its backslash, 0xC0000103 without
+drives: \Device\Mass0: statvfs: 32768-byte units, 1875724 of 1877248 free
+drives: \Device\Mass1: not opened, 0xC00002B6 with its backslash, 0xC0000103 without
+statvfs: NtQueryVolumeInformationFile(\Device\Mass1) failed: 0xC00002B6
+drives: \Device\Mass1: statvfs failed, errno 5
+drives: \Device\Mass2: not opened, 0xC00002B6 with its backslash, 0xC0000103 without
+statvfs: NtQueryVolumeInformationFile(\Device\Mass2) failed: 0xC00002B6
+drives: \Device\Mass2: statvfs failed, errno 5
+drives: \Device\Mass0PartitionFile\Storage: not opened, 0xC000003A with its backslash, 0xC000003A without
+statvfs: NtCreateFile(\Device\Mass0PartitionFile\Storage) failed: 0xC000003A
+drives: \Device\Mass0PartitionFile\Storage: statvfs failed, errno 2
+drives: \Device\Mass1PartitionFile\Storage: not opened, 0xC000003A with its backslash, 0xC000003A without
+statvfs: NtCreateFile(\Device\Mass1PartitionFile\Storage) failed: 0xC000003A
+drives: \Device\Mass1PartitionFile\Storage: statvfs failed, errno 2
+drives: \Device\Mass2PartitionFile\Storage: not opened, 0xC000003A with its backslash, 0xC000003A without
+statvfs: NtCreateFile(\Device\Mass2PartitionFile\Storage) failed: 0xC000003A
+drives: \Device\Mass2PartitionFile\Storage: statvfs failed, errno 2
+drives: \Device\Mu0: not opened, 0xC00002B6 with its backslash, 0xC0000103 without
+statvfs: NtQueryVolumeInformationFile(\Device\Mu0) failed: 0xC00002B6
+drives: \Device\Mu0: statvfs failed, errno 5
+drives: \Device\Mu1: not opened, 0xC00002B6 with its backslash, 0xC0000103 without
+statvfs: NtQueryVolumeInformationFile(\Device\Mu1) failed: 0xC00002B6
+drives: \Device\Mu1: statvfs failed, errno 5
+drives: \Device\BuiltInMuSfc: not opened, 0xC00002B6 with its backslash, 0xC0000103 without
+statvfs: NtQueryVolumeInformationFile(\Device\BuiltInMuSfc) failed: 0xC00002B6
+drives: \Device\BuiltInMuSfc: statvfs failed, errno 5
+drives: \Device\BuiltInMuUsb\Storage: not opened, 0xC00002B6 with its backslash, 0xC0000103 without
+statvfs: NtQueryVolumeInformationFile(\Device\BuiltInMuUsb\Storage) failed: 0xC00002B6
+drives: \Device\BuiltInMuUsb\Storage: statvfs failed, errno 5
+drives: \Device\BuiltInMuMmc\Storage: not opened, 0xC000003A with its backslash, 0xC000003A without
+statvfs: NtCreateFile(\Device\BuiltInMuMmc\Storage) failed: 0xC000003A
+drives: \Device\BuiltInMuMmc\Storage: statvfs failed, errno 2
+drives: \Device\Cdrom0: not opened, 0xC0000013 with its backslash, 0xC0000103 without
+statvfs: NtQueryVolumeInformationFile(\Device\Cdrom0) failed: 0xC0000010
+drives: \Device\Cdrom0: statvfs failed, errno 5
+drives: done
+exit: status 0
