@@ -4529,3 +4529,25 @@ boot (docs/scope/44-tiling-and-msaa.md, step 3). Logs: `results/2026-10-20-miles
   and 1317 over the same four. Padding alone moved them 4 to 5%, and nothing this step changed runs in their draws, so
   the 15% is most likely where code lands; a change in those two scenes needs such a control before it's put down to
   the code.
+
+## Alpha to coverage, milestone 44 step 4 (2026-10-20)
+
+`tests/probe_msaa.c`'s six alpha to coverage cases on the console, each alone from a fresh boot
+(docs/scope/44-tiling-and-msaa.md, step 4). Logs: `results/2026-10-20-milestone-44-step-4/`.
+- **`RB_COLORCONTROL`'s `alpha_to_mask_enable`, bit 4, works at 1, 2 and 4 samples,** and nothing hung. With it off,
+  every sample was covered at every alpha.
+- **Offsets 2, 2, 2, 2 (0xAA000017) cover every pixel of a quad alike:** the share of its samples nearest its alpha, a
+  tie rounding up. The first alpha covering n samples: at 4 samples 2/16, 6/16, 10/16 and 14/16; at 2 samples 4/16 and
+  12/16; at 1 sample 8/16, an alpha test at 1/2. xsdk's `XsdkBlend.alpha_to_coverage` takes these.
+- **libxenon's 3, 1, 0, 2 (0x87000017) dither:** each pixel of a quad its own thresholds, the quad's total n/4 of its
+  samples at alpha n/4 at every count.
+- **The rule:** with offset o, a pixel's n-th of N samples is covered from alpha (4n - o) / (4N), as Xenia reads the
+  offsets (xenia:src/xenia/gpu/registers.h:710-721). Samples are covered in index order, sample 0 first.
+- **Offset i goes to the quad's pixel at column i & 1, row i >> 1:** under 3, 1, 0, 2 at 4 samples the top right
+  pixel covered its first sample from 3/16 (offset 1) and the bottom left from 4/16 (offset 2). Xenia's code takes
+  the column as the high bit (xenia:src/xenia/gpu/dxbc_shader_translator_om.cc:1881-1894), so it gives those two
+  pixels each other's offsets; with 2, 2, 2, 2 it doesn't matter.
+- **On the console** (xsdk_test built clean at `747d3b5`): 501 of 503, the controller's two failing with the pad
+  idle, each count's squares covering the samples above at every alpha step and the colour control back to xsdk's
+  once the target is set; `xsdk_test_atoc_noenable` and `_offsets0` each failed the three coverage checks alone.
+  vulkan4xenon_test 492 of 492 twice and vkbench 17 of 17, vkbench's xsdk backend filling `XsdkBlend` by name.

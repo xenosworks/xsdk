@@ -99,35 +99,11 @@ milestone 51's and step 3's. Each must fail these checks, and the controller's w
 
 `... off again once the target is set ...` and `... the squares shown ...` pass under both.
 
-## The docs/HARDWARE.md section proposed
+## On the console
 
-```
-## Alpha to coverage, milestone 44 step 4 (2026-10-20)
-
-`tests/probe_msaa.c`'s six alpha to coverage cases on the console, each alone from a fresh boot
-(docs/scope/44-tiling-and-msaa.md, step 4). Logs: `results/2026-10-20-milestone-44-step-4/`.
-- **`RB_COLORCONTROL`'s `alpha_to_mask_enable`, bit 4, works at 1, 2 and 4 samples,** and nothing hung. With it off,
-  every sample was covered at every alpha.
-- **Offsets 2, 2, 2, 2 (0xAA000017) cover every pixel of a quad alike:** the share of its samples nearest its alpha, a
-  tie rounding up. The first alpha covering n samples: at 4 samples 2/16, 6/16, 10/16 and 14/16; at 2 samples 4/16 and
-  12/16; at 1 sample 8/16, an alpha test at 1/2. xsdk's `XsdkBlend.alpha_to_coverage` takes these.
-- **libxenon's 3, 1, 0, 2 (0x87000017) dither:** each pixel of a quad its own thresholds, the quad's total n/4 of its
-  samples at alpha n/4 at every count.
-- **The rule:** with offset o, a pixel's n-th of N samples is covered from alpha (4n - o) / (4N), as Xenia reads the
-  offsets (xenia:src/xenia/gpu/registers.h:710-721). Offset i goes to the pixel at x = i & 1, y = i >> 1, as Xenia's
-  code picks it (xenia:src/xenia/gpu/dxbc_shader_translator_om.cc:1881-1894), not as its comment names them
-  (registers.h:722-726). Samples are covered in index order, sample 0 first.
-- **On the console:** the xsdk_test run and the breaks', once they've run.
-```
-
-## To run on the console
-
-Build in WSL from the worktree: `make clean && make -j32`, then `sh tests/breaks/build.sh`. Then:
-1. `build/xsdk_test.xex` with `net_host.txt` and `tools/net_echo.py` as usual: every check passes but the controller's
-   when the pad is idle, the five new ones among them; a capture shows three bands of squares, orange at 1 sample,
-   green at 2 and purple at 4, stepping from the clear to the colour at the thresholds above, each band's last square
-   solid.
-2. `build/breaks/xsdk_test_atoc_noenable.xex` and `xsdk_test_atoc_offsets0.xex`, one at a time: each fails what "The
-   breaks" names.
-3. vulkan4xenon_test, twice, and vkbench, built against this xsdk once vkbench's two initializers take `false`: as
-   before.
+docs/HARDWARE.md, "Alpha to coverage, milestone 44 step 4", records the probe and the run: `xsdk_test.log` 501 of
+503 (the controller's two with the pad idle); `xsdk_test_atoc_noenable.log` and `xsdk_test_atoc_offsets0.log` each
+failing the three coverage checks; `vulkan4xenon_test_1.log`, `_2.log` 492 of 492; `vkbench.log` 17 of 17, built with
+vkbench's `XsdkBlend` initializers named (vulkan4xenon). Which pixel each dithered offset goes to is the other way
+round from what this README said before the run: column i & 1, row i >> 1, where Xenia's code takes the column as the
+high bit.
