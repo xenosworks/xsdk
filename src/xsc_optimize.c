@@ -666,6 +666,48 @@ static bool remove_dead(Optimizer *o, bool *changed)
 	return true;
 }
 
+// A temp's component as op i reads it: the write it holds, an input's where none, or a constant a move copied there.
+typedef struct {
+	bool constant;
+	int64_t writer;
+	int64_t reg;
+	int component;
+} Value;
+
+// What op i reads in component c of temp reg, through moves: max(x, x) is x, a NaN too, as any op reads it
+// (xenia:src/xenia/gpu/shader_interpreter.cc:347-354).
+static Value value_of(const Optimizer *o, size_t i, int64_t reg, int c)
+{
+	for (;;) {
+		const int64_t w = flow_at(o, i, key(reg, c));
+		const Value written = { .writer = w, .reg = reg, .component = c };
+		if (w == OUTSIDE || !is_move(o->ops[w]))
+			return written;
+		const Source s = source(o->ops[w], 1);
+		if (s.negate || s.absolute || s.relative)
+			return written;
+		if (!s.temp)
+			return (Value){ .constant = true, .reg = s.reg, .component = s.components[c] };
+		i = (size_t)w;
+		reg = s.reg;
+		c = s.components[c];
+	}
+}
+
+// Whether temps sa at op i and sb at op j hold the same in every lane given, though moves put them in two registers.
+static bool same_lanes(const Optimizer *o, const Source *sa, const Source *sb, int64_t lanes, size_t i, size_t j)
+{
+	for (int lane = 0; lane < 4; lane++) {
+		if (!(lanes >> lane & 1))
+			continue;
+		const Value va = value_of(o, i, sa->reg, sa->components[lane]);
+		const Value vb = value_of(o, j, sb->reg, sb->components[lane]);
+		if (va.constant != vb.constant || va.writer != vb.writer || va.reg != vb.reg || va.component != vb.component)
+			return false;
+	}
+	return true;
+}
+
 static bool same_computation(const Optimizer *o, const XscOp *a, const XscOp *b, size_t i, size_t j)
 {
 	const int64_t op = b->alu.vector_opcode;
@@ -679,17 +721,19 @@ static bool same_computation(const Optimizer *o, const XscOp *a, const XscOp *b,
 	for (int k = 1; k <= count; k++) {
 		const Source sa = source(a, k);
 		const Source sb = source(b, k);
-		if (sa.temp != sb.temp || sa.reg != sb.reg || sa.absolute != sb.absolute || sa.negate != sb.negate ||
-			sa.relative != sb.relative)
+		if (sa.temp != sb.temp || sa.absolute != sb.absolute || sa.negate != sb.negate || sa.relative != sb.relative)
 			return false;
+		if (sa.temp) {
+			if (!same_lanes(o, &sa, &sb, lanes[k], i, j))
+				return false;
+			continue;
+		}
 		const int64_t used = elementwise(op) ? lanes[k] : ALL;
 		for (int lane = 0; lane < 4; lane++) {
 			if ((used >> lane & 1) && sa.components[lane] != sb.components[lane])
 				return false;
 		}
-		int components[4];
-		const int distinct = component_set(&sa, used, components);
-		if (!same_values(o, &sa, components, distinct, i, j))
+		if (sa.reg != sb.reg || !same_values(o, &sa, NULL, 0, i, j))
 			return false;
 	}
 	return true;

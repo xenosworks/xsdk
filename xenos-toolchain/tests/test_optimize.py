@@ -273,6 +273,16 @@ CASES = [
      [move(3, c(3)), alu(V.kAdd, 2, 0x3, r(0), c(0)), move(3, r(2), 0x1), alu(V.kMul, 4, 0xF, r(3), r(1)),
       move(3, r(2), 0x2), alu(V.kAdd, 5, 0xF, r(3), r(4))],
      [export(r(5))], 5),
+    ("a row moved twice from the same constants takes one dot product",
+     [move(2, c(0), 0x3), move(2, c(1, "xxxx"), 0x4), move(3, c(0), 0x3), move(3, c(1, "xxxx"), 0x4),
+      alu(V.kDp3, 4, 0x1, r(2), r(0)), alu(V.kDp3, 5, 0x1, r(3), r(0)),
+      alu(V.kMul, 6, 0xF, r(4, "xxxx"), r(5, "xxxx"))],
+     [export(r(6))], 5),
+    ("a row moved from negated constants isn't the row's",
+     [move(2, c(0), 0x3), move(2, c(1, "xxxx"), 0x4), move(3, c(0, negate=True), 0x3), move(3, c(1, "xxxx"), 0x4),
+      alu(V.kDp3, 4, 0x1, r(2), r(0)), alu(V.kDp3, 5, 0x1, r(3), r(0)),
+      alu(V.kMul, 6, 0xF, r(4, "xxxx"), r(5, "xxxx"))],
+     [export(r(6))], 7),
 ]
 
 
