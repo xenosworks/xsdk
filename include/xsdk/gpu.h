@@ -443,20 +443,26 @@ typedef struct {
 	uint32_t alpha_dest;
 	uint32_t alpha_op;
 	uint32_t write_mask;
+	// Alpha to coverage: colour target 0's alpha also picks the share of each pixel's samples drawn, the share nearest
+	// it, a tie rounding up, alike in every pixel; at 4 samples n of them from alpha (4n - 2) / 16, at 2 from
+	// (4n - 2) / 8, at 1 from 1/2 (results/2026-10-20-milestone-44-step-4/probe_msaa_atoc_sym_<n>.log).
+	bool alpha_to_coverage;
 } XsdkBlend;
 
 typedef struct {
 	uint32_t blend_control;
 	uint32_t color_mask;
+	// RB_COLORCONTROL, alpha to coverage's.
+	uint32_t color_control;
 } XsdkBlendState;
 
 void xsdk_gpu_blend_state(XsdkBlendState *state, const XsdkBlend *setting);
-// Applies to the draws after, the first colour target alone, the others then written nowhere; xsdk_gpu_set_target turns
-// blending off and writes every channel.
+// Applies to the draws after, the first colour target alone, the others then written nowhere. Undone by
+// xsdk_gpu_set_target and resolves: blending and alpha to coverage off, every channel written.
 void xsdk_gpu_set_blend(const XsdkBlendState *state);
 // The same for count colour targets, target i blended and masked by states[i] (RB_BLENDCONTROL0 to 3,
-// xenia:src/xenia/gpu/register_table.inc:537-547; RB_COLOR_MASK, registers.h:755-777); the targets past count are
-// written nowhere.
+// xenia:src/xenia/gpu/register_table.inc:537-547; RB_COLOR_MASK, registers.h:755-777), alpha to coverage as states[0]
+// has it; the targets past count are written nowhere.
 void xsdk_gpu_set_blends(const XsdkBlendState *states, uint32_t count);
 // The colour the constant factors take, red to alpha, for the draws after; nothing else sets it, so a draw blending by
 // it sets it first (docs/HARDWARE.md, "Blend constants").

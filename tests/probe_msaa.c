@@ -1797,11 +1797,11 @@ static bool upload_vertices(void)
 static void make_states(void)
 {
 	const XsdkBlend opaque = { XSDK_BLEND_ONE, XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, XSDK_BLEND_ONE, XSDK_BLEND_ZERO,
-		XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL };
+		XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL, false };
 	const XsdkBlend additive = { XSDK_BLEND_ONE, XSDK_BLEND_ONE, XSDK_BLEND_OP_ADD, XSDK_BLEND_ONE, XSDK_BLEND_ONE,
-		XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL };
+		XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL, false };
 	const XsdkBlend alpha = { XSDK_BLEND_SRC_ALPHA, XSDK_BLEND_ONE_MINUS_SRC_ALPHA, XSDK_BLEND_OP_ADD, XSDK_BLEND_ONE,
-		XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL };
+		XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL, false };
 	xsdk_gpu_blend_state(&opaque_blend, &opaque);
 	xsdk_gpu_blend_state(&additive_blend, &additive);
 	xsdk_gpu_blend_state(&alpha_blend, &alpha);

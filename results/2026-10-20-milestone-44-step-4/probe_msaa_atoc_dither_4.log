@@ -1,0 +1,45 @@
+log: game:\probe_msaa.log
+log: named after \Device\Harddisk0\Partition1\msaaprobe\probe_msaa.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+msaa probe: from case atoc_dither_4, group atoc_dither_4 (game:\msaa_case.txt names a case or group)
+msaa probe: case atoc_dither_4: alpha to coverage at 4 samples, offsets 3,1,0,2
+msaa: atoc at 4: alpha to mask off, the control: copy sample select 0: sending
+msaa: atoc at 4: alpha to mask off, the control: copy sample select 1: sending
+msaa: atoc at 4: alpha to mask off, the control: copy sample select 2: sending
+msaa: atoc at 4: alpha to mask off, the control: copy sample select 3: sending
+msaa: atoc at 4: alpha to mask off, the control: the averaging select: sending
+PASS: msaa: atoc at 4: alpha to mask off, the control: read back: 0 pixels neither the shape nor the clear, 0 unlike their square's first quad, 0 off the squares covered, 0 averaged off the selects' count
+PASS: msaa: atoc at 4: alpha to mask off, the control: every sample covered at every alpha: 0 of 68 quad pixels not
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: copy sample select 0: sending
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: copy sample select 1: sending
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: copy sample select 2: sending
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: copy sample select 3: sending
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: the averaging select: sending
+PASS: msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: read back: 0 pixels neither the shape nor the clear, 0 unlike their square's first quad, 0 off the squares covered, 0 averaged off the selects' count
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  0/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 0 0 0 0, 0 0 0 0 of 4; 0 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  1/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 1 0 0 0, 1 0 0 0 of 4; 1 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  2/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 1 0 0 1, 1 0 0 1 of 4; 2 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  3/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 1 0 1 1, 1 0 1 1 of 4; 3 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  4/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 1 1 1 1, 1 1 1 1 of 4; 4 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  5/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 3 1 1 1, 2 1 1 1 of 4; 5 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  6/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 3 1 1 3, 2 1 1 2 of 4; 6 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  7/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 3 1 3 3, 2 1 2 2 of 4; 7 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  8/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 3 3 3 3, 2 2 2 2 of 4; 8 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha  9/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 7 3 3 3, 3 2 2 2 of 4; 9 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha 10/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 7 3 3 7, 3 2 2 3 of 4; 10 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha 11/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 7 3 7 7, 3 2 3 3 of 4; 11 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha 12/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples 7 7 7 7, 3 3 3 3 of 4; 12 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha 13/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples F 7 7 7, 4 3 3 3 of 4; 13 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha 14/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples F 7 7 F, 4 3 3 4 of 4; 14 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha 15/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples F 7 F F, 4 3 4 4 of 4; 15 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha 16/16: pixels (0,0) (0,1) (1,0) (1,1) cover samples F F F F, 4 4 4 4 of 4; 16 of the quad's 16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: pixel (0,0), the first alpha covering n samples: 1 at 1/16, 2 at 5/16, 3 at 9/16, 4 at 13/16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: pixel (0,1), the first alpha covering n samples: 1 at 4/16, 2 at 8/16, 3 at 12/16, 4 at 16/16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: pixel (1,0), the first alpha covering n samples: 1 at 3/16, 2 at 7/16, 3 at 11/16, 4 at 15/16
+msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: pixel (1,1), the first alpha covering n samples: 1 at 2/16, 2 at 6/16, 3 at 10/16, 4 at 14/16
+PASS: msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: coverage only grows with alpha: 0 steps of a pixel lost a sample
+DIFFERS: msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: symmetric, the quad's pixels cover as many samples: 12 of 17 alphas not
+PASS: msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha n/4 covers n/4 of each pixel's samples, where whole: 0 of 20 pixels not
+PASS: msaa: atoc at 4: offsets 3,1,0,2, RB_COLORCONTROL 87000017: alpha n/4 covers n/4 of the quad's samples: 0 of 5 alphas not
+msaa probe: done, 6 PASS, 1 DIFFERS; xsdk_gpu_close 0x00000000
+exit: status 0

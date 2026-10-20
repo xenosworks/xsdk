@@ -61,6 +61,7 @@ enum {
 	SQ_CONTEXT_MISC = 0x2181,
 	RB_DEPTHCONTROL = 0x2200,
 	RB_BLENDCONTROL0 = 0x2201,
+	RB_COLORCONTROL = 0x2202,
 	RB_HIZCONTROL = 0x2203,
 	PA_CL_CLIP_CNTL = 0x2204,
 	PA_SU_SC_MODE_CNTL = 0x2205,
@@ -143,6 +144,10 @@ enum {
 	// Turns the test to greater-than, on the console (docs/HARDWARE.md).
 	HIZ_GREATER = 1 << 4,
 };
+
+// RB_COLORCONTROL as libxenon writes it (xe.c:1403-1416): alpha test and alpha to mask off, the offsets 3, 1, 0, 2
+// (xenia:src/xenia/gpu/registers.h:682-731). Apart, as a value past INT_MAX makes an enum's constants unsigned.
+enum { COLOR_CONTROL = 0x87000007 };
 
 // Packets built in memory, then copied into the ring with xsdk_gpu_write; or, from gpu_reserve_packets, built straight
 // in the space reserved for them. Volatile, so the stores into the stream stay 32 bits.

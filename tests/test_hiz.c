@@ -429,7 +429,7 @@ void test_hiz(void)
 		xsdk_gpu_depth_stencil_state(&depth_states[compare], &setting);
 	}
 	const XsdkBlend no_colour_setting = { XSDK_BLEND_ONE, XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, XSDK_BLEND_ONE,
-		XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, 0 };
+		XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, 0, false };
 	xsdk_gpu_blend_state(&no_colour, &no_colour_setting);
 	volatile uint32_t *const vertices = upload_square();
 	volatile uint32_t *const buffer = xsdk_gpu_alloc(xsdk_gpu_resolve_bytes(WIDTH, HEIGHT));

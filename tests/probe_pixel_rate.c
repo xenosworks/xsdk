@@ -503,9 +503,9 @@ static void make_states(void)
 	xsdk_gpu_depth_stencil_state(&depth_states[DEPTH_WRITE_ALWAYS], &write);
 	xsdk_gpu_depth_stencil_state(&depth_states[DEPTH_TEST_LESS], &less);
 	const XsdkBlend opaque = { XSDK_BLEND_ONE, XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, XSDK_BLEND_ONE, XSDK_BLEND_ZERO,
-		XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL };
+		XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL, false };
 	const XsdkBlend alpha = { XSDK_BLEND_SRC_ALPHA, XSDK_BLEND_ONE_MINUS_SRC_ALPHA, XSDK_BLEND_OP_ADD, XSDK_BLEND_ONE,
-		XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL };
+		XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL, false };
 	XsdkBlend masked = opaque;
 	masked.write_mask = 0;
 	xsdk_gpu_blend_state(&blend_states[BLEND_OPAQUE], &opaque);

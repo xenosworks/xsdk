@@ -49,7 +49,8 @@ enum {
 	DRAW_DWORDS = 2,
 	DRAW_INDEXED_DWORDS = 5,
 	DEPTH_STENCIL_DWORDS = 2 * 2 + 3,
-	BLEND_DWORDS = 2 * 2,
+	// RB_BLENDCONTROL0 and RB_COLORCONTROL in one packet, then RB_COLOR_MASK.
+	BLEND_DWORDS = 1 + 2 + 2,
 	BLEND_CONSTANT_DWORDS = 1 + 4,
 	RASTER_DWORDS = 2 + 1 + 4,
 	SCISSOR_DWORDS = 1 + 2,
@@ -84,7 +85,6 @@ enum {
 	EDRAM_MODE_DEPTH_ONLY = 5,
 	// libxenon's control state from RB_DEPTHCONTROL on, less depth and culling (xe.c:1403-1416).
 	BLEND_ONE_ZERO = 0x00010001,
-	COLOR_CONTROL = 0x87000007,
 	CLIP_D3D_SPACE = 0x00080000,
 	SC_MODE_WINDOW_OFFSET_NO_CULL = 0x00010000,
 	VTE_VIEWPORT_AND_W0 = 0x0000043F,
@@ -146,6 +146,11 @@ enum {
 	ALPHA_SRCBLEND_SHIFT = 16,
 	ALPHA_COMB_FCN_SHIFT = 21,
 	ALPHA_DESTBLEND_SHIFT = 24,
+	// RB_COLORCONTROL's alpha_to_mask_enable and its four 2-bit offsets (xenia:src/xenia/gpu/registers.h:682-731); 2
+	// in each makes a quad's pixels cover alike (results/2026-10-20-milestone-44-step-4/probe_msaa_atoc_sym_4.log).
+	ALPHA_TO_MASK_ENABLE = 1 << 4,
+	ALPHA_TO_MASK_OFFSETS = 0xFFu << 24,
+	ALPHA_TO_MASK_SYMMETRIC = 0xAAu << 24,
 	// PA_SU_SC_MODE_CNTL's fields (registers.h:456-486); libxenon keeps the window offset on (xe.c:1403-1416).
 	CULL_FRONT = 1 << 0,
 	CULL_BACK = 1 << 1,
@@ -689,12 +694,16 @@ void xsdk_gpu_blend_state(XsdkBlendState *state, const XsdkBlend *setting)
 		setting->color_dest << COLOR_DESTBLEND_SHIFT | setting->alpha_source << ALPHA_SRCBLEND_SHIFT |
 		setting->alpha_op << ALPHA_COMB_FCN_SHIFT | setting->alpha_dest << ALPHA_DESTBLEND_SHIFT;
 	state->color_mask = setting->write_mask & XSDK_WRITE_ALL;
+	state->color_control = setting->alpha_to_coverage
+		? (COLOR_CONTROL & ~ALPHA_TO_MASK_OFFSETS) | ALPHA_TO_MASK_ENABLE | ALPHA_TO_MASK_SYMMETRIC
+		: COLOR_CONTROL;
 }
 
 void xsdk_gpu_set_blend(const XsdkBlendState *state)
 {
+	const uint32_t controls[] = { state->blend_control, state->color_control };
 	GpuPackets packets = gpu_reserve_packets(BLEND_DWORDS);
-	gpu_put_register(&packets, RB_BLENDCONTROL0, state->blend_control);
+	gpu_put_registers(&packets, RB_BLENDCONTROL0, controls, 2);
 	gpu_put_register(&packets, RB_COLOR_MASK, state->color_mask);
 	gpu_packets_done(&packets);
 }
@@ -708,8 +717,11 @@ void xsdk_gpu_set_blends(const XsdkBlendState *states, uint32_t count)
 		controls[i - 1] = states[i].blend_control;
 		color_mask |= states[i].color_mask << COLOR_MASK_BITS * i;
 	}
+	// One RB_COLORCONTROL for every target, alpha to mask taking oC0's alpha, by Xenia's reading
+	// (xenia:src/xenia/gpu/dxbc_shader_translator_om.cc:1858-1863).
+	const uint32_t first[] = { states[0].blend_control, states[0].color_control };
 	GpuPackets packets = gpu_reserve_packets(BLEND_DWORDS + (count > 1 ? count : 0));
-	gpu_put_register(&packets, RB_BLENDCONTROL0, states[0].blend_control);
+	gpu_put_registers(&packets, RB_BLENDCONTROL0, first, 2);
 	if (count > 1)
 		gpu_put_registers(&packets, RB_BLENDCONTROL1, controls, count - 1);
 	gpu_put_register(&packets, RB_COLOR_MASK, color_mask);

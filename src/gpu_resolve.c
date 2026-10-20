@@ -37,7 +37,7 @@
 #include "gpu_private.h"
 
 enum {
-	RESOLVE_MAX_DWORDS = 160,
+	RESOLVE_MAX_DWORDS = 168,
 	// A pass over the top 8 rows after a depth clear put every draw right where smaller ones didn't (docs/HARDWARE.md,
 	// "The pass after a depth clear, milestone 49").
 	HIZ_PASS_ROWS = 8,
@@ -357,6 +357,8 @@ static void resolve(uint32_t source, uint32_t target, uint32_t address, const Ar
 	gpu_put_register(&packets, RB_MODECONTROL, EDRAM_MODE_COPY);
 	gpu_put_register(&packets, RB_MODECONTROL, EDRAM_MODE_COPY);
 	gpu_put_register(&packets, RB_DEPTHCONTROL, DEPTH_STENCIL_ALWAYS_WRITE);
+	// Alpha to mask off, as the step 4 probe's resolves ran (tests/probe_msaa.c, draw_alphas).
+	gpu_put_register(&packets, RB_COLORCONTROL, COLOR_CONTROL);
 	gpu_put_register(&packets, WAIT_UNTIL, WAIT_3D_IDLE_CLEAN);
 	gpu_put_type3(&packets, PM4_INVALIDATE_STATE, 1);
 	gpu_put(&packets, INVALIDATE_VERTEX_SHADER);

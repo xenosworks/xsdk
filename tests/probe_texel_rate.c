@@ -309,7 +309,7 @@ static bool make_resources(void)
 	const XsdkDepthStencil off = { .depth_compare = XSDK_COMPARE_ALWAYS, .stencil_compare = XSDK_COMPARE_ALWAYS };
 	xsdk_gpu_depth_stencil_state(&depth_off, &off);
 	const XsdkBlend blend = { XSDK_BLEND_ONE, XSDK_BLEND_ZERO, XSDK_BLEND_OP_ADD, XSDK_BLEND_ONE, XSDK_BLEND_ZERO,
-		XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL };
+		XSDK_BLEND_OP_ADD, XSDK_WRITE_ALL, false };
 	xsdk_gpu_blend_state(&opaque, &blend);
 	return true;
 }
