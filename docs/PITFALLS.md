@@ -45,10 +45,13 @@ where the evidence is; docs/HARDWARE.md is cited by section.
 
 - **Looks like:** GPU memory runs out long before the sizes asked for add up to it.
 - **Do:** each `xsdk_gpu_alloc` takes whole 64 KiB pages, so allocate a few large blocks and place small buffers in
-  them; shaders' microcode already shares pages.
+  them; shaders' microcode already shares pages. A block starts on a 64 KiB page; start each vertex stream and index
+  list in it on 4 bytes, each texture on 4 KB and constants the GPU loads on 64 bytes. A vertex stream at an address
+  off 4 bytes is read, without a word, from the dword below it. docs/GUIDE.md, "Memory the GPU reads", has the rules.
 - **Evidence:** src/gpu.c, `allocate`; "Shaders' microcode in shared pages, milestone 25", where 201 shaders took
   3,216 of the kernel's 4 KB pages at an allocation each, and 16 sharing them; TODO.md, "Small GPU allocations other
-  than shaders".
+  than shaders"; for the boundaries, xenia:src/xenia/gpu/xenos.h:1113-1134 and "Indexed draws and topologies,
+  milestone 12".
 
 ## A mutex locked after it's freed
 

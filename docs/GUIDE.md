@@ -63,7 +63,20 @@ measure a title by. `display.h` is the display without the pacing, for a title t
 - **Don't write what a queued draw still reads.** `xsdk_gpu_fence` submits what's queued and returns a fence's
   number, and `xsdk_gpu_wait(fence, ms)` waits until the GPU has passed it; `xsdk_gpu_fence_done` asks without waiting.
   A frame's buffer from `xsdk_present_begin` is off screen, so the GPU is done with the frame that last used it.
-- **Allocate few, large blocks:** each allocation takes whole 64 KiB pages.
+- **Allocate few, large blocks:** each allocation takes whole 64 KiB pages, and starts on one (src/gpu.c,
+  `allocate`).
+- **Place buffers in a block on these boundaries:**
+  - **a vertex stream on 4 bytes,** as its fetch constant holds the address in dwords, the low 2 bits being the
+    constant's type, so an address off 4 bytes is taken as the dword below it, and its size as whole dwords too
+    (xenia:src/xenia/gpu/xenos.h:1113-1126; libxenon:drivers/xenos/xe.c:1181-1185). Strides and element offsets are
+    whole dwords, a stride up to 255 of them, which `xsdk_shader_set_vertex_layout` checks
+    (xenia:src/xenia/gpu/ucode.h:737-742). The console draws streams 144 bytes apart in one block
+    (tests/test_anisotropy.c; docs/HARDWARE.md, "Anisotropic filtering, milestone 33").
+  - **an index list on 4 bytes:** 16-bit indices need 2 and 32-bit ones 4, which `xsdk_gpu_draw_indexed` asserts
+    (xenia:src/xenia/gpu/command_processor.cc:1338-1342), and the console drew lists of both, each starting on 4 bytes
+    of one block (tests/test_indexed.c; docs/HARDWARE.md, "Indexed draws and topologies, milestone 12").
+  - **a texture on 4 KB,** for `xsdk_texture_attach` (`texture.h`; xenia:src/xenia/gpu/xenos.h:1129-1134), and
+    constants the GPU loads on 64 bytes (Shaders and their constants, below).
 - **Reading it back is slow,** as the CPU doesn't cache it; read only what's needed.
 
 Memory only the CPU uses comes from `malloc`, whose heap can grow into all the memory the title has free
@@ -76,12 +89,13 @@ Memory only the CPU uses comes from `malloc`, whose heap can grow into all the m
 Shaders are GLSL 4.50 for Vulkan, compiled when the title builds. In its `CMakeLists.txt`:
 
 ```
-xsdk_add_shaders(cube cube.vert cube.frag)
+xsdk_add_shaders(title cube.vert cube.frag)
 ```
 
-That runs `tools/build_shaders.py` into `cube_shaders.h` in the build folder: each `.vert` and `.frag` through
-glslang to SPIR-V, then through xost's compiler at xsdk's register split, optimised. Once a target; a target's shaders
-go in the one call. The header holds, for each file:
+That runs `tools/build_shaders.py` into `title_shaders.h` in the build folder: each `.vert` and `.frag` through
+glslang to SPIR-V, then through xost's compiler at xsdk's register split, optimised. The header takes the target's
+name, the first argument, and what's in it takes the files' names. Once a target; a target's shaders go in the one
+call. The header holds, for each file:
 - `cube_vert`, an `XsdkBuiltShader`: its container, for `xsdk_shader_load`, its stage and its literals;
 - an enum of where its resources landed: `CUBE_VERT_PUSH`, the first float constant of its push constants, and
   `CUBE_VERT_PUSH_REGISTERS`, how many; `CUBE_VERT_UNIFORM_<set>_<binding>` and its `_REGISTERS` for a uniform block;

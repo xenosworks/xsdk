@@ -11,9 +11,14 @@ In WSL Debian, from this folder (from PowerShell, `wsl.exe -d Debian --exec bash
 Bash rewrites absolute paths):
 
 ```
-cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=<xsdk>/cmake/xsdk.cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=<xsdk>/cmake/xsdk.cmake -DXSDK_TOOLCHAIN=<prefix> \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build
 ```
+
+`<prefix>` is where xsdk's toolchain is installed, the `PREFIX` its `tools/toolchain/build.sh` took; left out, it's
+`~/xsdk-gcc`, that script's default. A build folder keeps the compiler it was first configured with: to change
+toolchains, configure again with `cmake --fresh`.
 
 That makes `build/title.xex`, named after the CMake target. Code builds with `-Wall -Wextra -Werror`; keep it free of
 warnings. GLSL shaders go through `xsdk_add_shaders(title a.vert a.frag)`, which writes `title_shaders.h`
@@ -47,7 +52,8 @@ evidence):
   frame, and a shader's literals after each `xsdk_gpu_set_shaders`.
 - **Shaders are GLSL in xost's subset:** no bitwise operations, no `switch`, `sin` and `cos` near -pi to pi only. The
   build says what it refuses.
-- **Each `xsdk_gpu_alloc` takes at least 64 KiB;** allocate once and split the memory, not per object.
+- **Each `xsdk_gpu_alloc` takes at least 64 KiB;** allocate once and split the memory, not per object, starting each
+  vertex stream and index list on 4 bytes and each texture on 4 KB.
 - **A sleep takes up to a millisecond more than asked,** 2 ms for 1 ms; pace frames with `xsdk_present_begin`, not
   sleeps.
 - **Files open sharing nothing:** a second open of a file already open fails.

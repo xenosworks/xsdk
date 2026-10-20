@@ -86,8 +86,12 @@ console's calling convention and what Xenia gets wrong (`tools/toolchain/build.s
 differs from a stock build). The script downloads the three sources, 136 MB, checks their SHA-256, and builds them:
 
 ```
-cd ~/xsdk && JOBS=$(nproc) tools/toolchain/build.sh
+cd ~/xsdk && PREFIX=$HOME/xsdk-gcc WORK=$HOME/xsdk-gcc-work JOBS=$(nproc) tools/toolchain/build.sh
 ```
+
+It installs into `PREFIX` and builds in `WORK`, which can be deleted once it's done. Both are read from the
+environment, and the values above are what it takes when they aren't set. To put the toolchain somewhere else, change
+them. **Every `~/xsdk-gcc` or `$HOME/xsdk-gcc` from here on means your `PREFIX`.**
 
 It prints a line as each stage starts, and the stages' own output goes to logs in `$WORK/logs`:
 
@@ -101,9 +105,8 @@ It prints a line as each stage starts, and the stages' own output goes to logs i
 == done: /home/<you>/xsdk-gcc/bin/powerpc-xsdk-elf-gcc
 ```
 
-That's 9 minutes with 32 threads, once the sources are downloaded. It installs into `PREFIX`, `~/xsdk-gcc` unless set,
-and builds in `WORK`, `~/xsdk-gcc-work` unless set, which can be deleted once it's done. A stage that fails stops the
-script; its log says why. Run again, it skips the stages it has built. Then, to see the compiler runs:
+That's 9 minutes with 32 threads, once the sources are downloaded. A stage that fails stops the script; its log says
+why. Run again, it skips the stages it has built. Then, to see the compiler runs:
 
 ```
 ~/xsdk-gcc/bin/powerpc-xsdk-elf-gcc --version
@@ -113,8 +116,9 @@ script; its log says why. Run again, it skips the stages it has built. Then, to 
 powerpc-xsdk-elf-gcc (GCC) 15.3.0
 ```
 
-A toolchain somewhere else than `~/xsdk-gcc` is given to make as `TOOLCHAIN=<prefix>/bin/powerpc-xsdk-elf-` and to
-CMake as `-DXSDK_TOOLCHAIN=<prefix>`.
+With a `PREFIX` other than the default, give make `TOOLCHAIN=<PREFIX>/bin/powerpc-xsdk-elf-` on every run, as in
+`make -j$(nproc) TOOLCHAIN=$HOME/tc/bin/powerpc-xsdk-elf-`. `make samples`, `make sample_breaks` and
+`make cmake_check` hand it on to CMake. A title's own CMake build takes `-DXSDK_TOOLCHAIN=<PREFIX>` (section 8).
 
 ## 4. glslang
 
@@ -165,8 +169,9 @@ GLSL Version: 4.60 glslang Khronos. 16.3.0
 cd ~/xsdk && make -j$(nproc)
 ```
 
-That builds `build/libxsdk.a`, which titles link, xost's compiler for the PC (`build/host/libxsc.so`), the test title
-`build/xsdk_test.xex` and the probes, in about 15 seconds. Its last lines:
+With another `PREFIX`, add section 3's `TOOLCHAIN=` to this and to each `make` below. That builds `build/libxsdk.a`,
+which titles link, xost's compiler for the PC (`build/host/libxsc.so`), the test title `build/xsdk_test.xex` and the
+probes, in about 15 seconds. Its last lines:
 
 ```
 xenia_scan: _dtoa_r: 822f70b0 rldic r10,r9,32,1
@@ -205,7 +210,7 @@ They land in `build/samples/<sample>/<sample>.xex`:
 | `triangle` | GLSL shaders, vertices in GPU memory, a draw, a resolve and a present: a triangle whose colours move round once a second | Back |
 | `cube` | an indexed, textured cube with depth, its matrix in shader constants, turned by the left stick | Back |
 | `sound` | a tone through the kernel's audio driver, its pitch on the triggers, the logo left up | Back |
-| `sdl3` | SDL3's gamepad and audio beside xsdk's drawing | Back |
+| `sdl3` | SDL3's gamepad and audio beside xsdk's drawing; its gamepad check fails unless a controller is connected as it starts | Back |
 | `template` | the start of a title of your own: it clears the screen; built as `title.xex` | Back |
 
 `sdl3` needs SDL3 built for xsdk: SDL-xenon, built as its `docs/README-xsdk.md` says, then
@@ -272,9 +277,13 @@ Copy the template out of xsdk and build it there:
 ```
 cp -r ~/xsdk/samples/template ~/mytitle
 cd ~/mytitle
-cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$HOME/xsdk/cmake/xsdk.cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE=$HOME/xsdk/cmake/xsdk.cmake -DXSDK_TOOLCHAIN=$HOME/xsdk-gcc \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo
 cmake --build build
 ```
+
+`XSDK_TOOLCHAIN` is your `PREFIX`; left out, it's build.sh's default one. A build folder keeps the compiler it was first
+configured with, whatever `XSDK_TOOLCHAIN` says after; to change toolchains, configure again with `cmake --fresh`.
 
 ```
 -- Build files have been written to: /home/<you>/mytitle/build
