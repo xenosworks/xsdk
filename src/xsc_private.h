@@ -37,6 +37,7 @@ uint32_t xsdk_xsc_bits_of_float(double value);
 
 enum {
 	SPV_MAGIC = 0x07230203,
+	SPV_UNDEF = 1,
 	SPV_NAME = 5,
 	SPV_MEMBER_NAME = 6,
 	SPV_EXT_INST = 12,
@@ -58,6 +59,7 @@ enum {
 	SPV_CONSTANT_FALSE = 42,
 	SPV_CONSTANT = 43,
 	SPV_CONSTANT_COMPOSITE = 44,
+	SPV_CONSTANT_NULL = 46,
 	SPV_FUNCTION = 54,
 	SPV_FUNCTION_END = 56,
 	SPV_VARIABLE = 59,
@@ -116,6 +118,7 @@ enum {
 	SPV_KILL = 252,
 	SPV_RETURN = 253,
 	SPV_RETURN_VALUE = 254,
+	SPV_STORAGE_PRIVATE = 6,
 	SPV_STORAGE_FUNCTION = 7,
 };
 
@@ -236,12 +239,16 @@ typedef struct {
 
 bool xsdk_xsc_spirv_parse(Xsc *x, const uint32_t *words, size_t word_count, XscModule *m);
 bool xsdk_xsc_spirv_index(Xsc *x, XscModule *m);
+// Each OpUndef and OpConstantNull of a scalar or vector before the functions made a constant zero.
+bool xsdk_xsc_spirv_zero_nulls(Xsc *x, XscModule *m);
 // The instruction's operands, past its result type and id.
 const uint32_t *xsdk_xsc_operands(const XscInstr *ins, uint32_t *count);
 // Operand i, 0 past the last.
 uint32_t xsdk_xsc_operand(const XscInstr *ins, uint32_t i);
 uint32_t xsdk_xsc_operand_count(const XscInstr *ins);
 const XscInstr *xsdk_xsc_by_result(const XscModule *m, uint32_t id);
+// Whether instruction i declares a local: a Function variable between first and end, or a Private one anywhere.
+bool xsdk_xsc_declares_local(const XscModule *m, size_t i, size_t first, size_t end);
 // The last OpName for id, or fallback.
 const char *xsdk_xsc_name(const XscModule *m, uint32_t id, const char *fallback);
 const char *xsdk_xsc_member_name(const XscModule *m, uint32_t target, uint32_t member);

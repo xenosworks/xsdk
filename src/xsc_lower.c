@@ -635,7 +635,8 @@ bool xsdk_xsc_const_scalar(XscLower *l, uint32_t ssa, double *value)
 		*value = xsdk_xsc_scalar_const(l, ssa);
 		return true;
 	}
-	if (ins->opcode == SPV_COMPOSITE_CONSTRUCT) {
+	// A splat, a constant one too.
+	if (ins->opcode == SPV_COMPOSITE_CONSTRUCT || ins->opcode == SPV_CONSTANT_COMPOSITE) {
 		uint32_t count;
 		const uint32_t *const ops = xsdk_xsc_operands(ins, &count);
 		bool same = count > 0;

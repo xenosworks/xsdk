@@ -13,3 +13,4 @@ it.
 - **`idioms/`**: 21 written by hand for D3D9's idioms, the trial's of 2026-10-19: transforms, samplers, VPOS and VFACE,
   intrinsics, half, branches, depth and four targets, skinning, bool and int constants, lighting, DX10 semantics,
   cbuffers, a post-process pass, and where a matrix's majorness and a sampler's register put them.
+- **The rest**: `tests/test_hlsl_front.py`'s, one for each of milestone 50 step 2's changes to xost's front.

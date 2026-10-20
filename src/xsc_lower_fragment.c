@@ -65,12 +65,17 @@ static int64_t origin_swizzle(XscOrigin o)
 
 // Whether any use reads gl_FragCoord's z or w: through any use but one component's, all four (lower.py
 // _frag_coord_reads).
-static bool reads_depth(Xsc *x, const XscModule *m, const XscType *types, uint32_t var, bool *depth)
+static bool reads_depth(Xsc *x, const XscModule *m, const XscType *types, const XscVar *coord, bool *depth)
 {
+	*depth = false;
+	// A float2 FragCoord, as HLSL may declare SV_Position, has no z or w.
+	const XscType *const t = xsdk_xsc_type(m, types, (uint64_t)coord->pointee);
+	if (t && t->kind == XSC_TYPE_VECTOR && t->count <= 2)
+		return true;
+	const uint32_t var = coord->vid;
 	bool *const loads = xsdk_xsc_alloc(x, m->id_limit);
 	if (!loads)
 		return false;
-	*depth = false;
 	for (size_t i = 0; i < m->instr_count; i++) {
 		const XscInstr *const ins = &m->instrs[i];
 		if (ins->opcode == SPV_LOAD && xsdk_xsc_operand(ins, 0) == var && ins->result_id < m->id_limit) {
@@ -746,7 +751,7 @@ static bool declare_inputs(Xsc *x, const XscModule *m, const XscType *types, Xsc
 	if (!si->frag_coord && !si->front_facing && !si->point_coord)
 		return true;
 	bool depth = false;
-	if (si->frag_coord && !reads_depth(x, m, types, si->frag_coord->vid, &depth))
+	if (si->frag_coord && !reads_depth(x, m, types, si->frag_coord, &depth))
 		return false;
 	if (depth)
 		return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "gl_FragCoord.zw: the pixel parameters hold no depth (v1)");

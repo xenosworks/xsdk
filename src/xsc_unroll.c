@@ -1915,11 +1915,10 @@ static bool find_locals(Unroller *u, size_t func_idx, size_t end_idx)
 		return false;
 	for (uint32_t id = 0; id < m->id_limit; id++)
 		u->pointer_of[id] = -1;
-	for (size_t i = func_idx; i < end_idx; i++) {
-		const XscInstr *const ins = &m->instrs[i];
-		if (ins->opcode == SPV_VARIABLE && xsdk_xsc_operand(ins, 0) == SPV_STORAGE_FUNCTION) {
-			u->func_var[ins->result_id] = true;
-			u->locals[u->local_count++] = ins->result_id;
+	for (size_t i = 0; i < m->instr_count; i++) {
+		if (xsdk_xsc_declares_local(m, i, func_idx, end_idx)) {
+			u->func_var[m->instrs[i].result_id] = true;
+			u->locals[u->local_count++] = m->instrs[i].result_id;
 		}
 	}
 	return true;
@@ -1992,9 +1991,8 @@ static bool stores_locals_again(Xsc *x, const XscModule *m, bool *again)
 	if (!local || !stored)
 		return false;
 	for (size_t i = 0; i < m->instr_count; i++) {
-		const XscInstr *const ins = &m->instrs[i];
-		if (ins->opcode == SPV_VARIABLE && xsdk_xsc_operand(ins, 0) == SPV_STORAGE_FUNCTION)
-			local[ins->result_id] = true;
+		if (xsdk_xsc_declares_local(m, i, 0, m->instr_count))
+			local[m->instrs[i].result_id] = true;
 	}
 	for (size_t i = 0; i < m->instr_count; i++) {
 		if (m->instrs[i].opcode != SPV_STORE)

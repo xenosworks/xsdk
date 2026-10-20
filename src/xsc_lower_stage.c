@@ -36,11 +36,9 @@ bool xsdk_xsc_store_map(Xsc *x, const XscModule *m, XscStores *stores)
 bool *xsdk_xsc_local_vars(Xsc *x, const XscModule *m, size_t first, size_t end)
 {
 	bool *const locals = xsdk_xsc_alloc(x, m->id_limit);
-	for (size_t i = first; locals && i < end; i++) {
-		const XscInstr *const ins = &m->instrs[i];
-		if (ins->opcode == SPV_VARIABLE && xsdk_xsc_operand(ins, 0) == SPV_STORAGE_FUNCTION &&
-			ins->result_id < m->id_limit)
-			locals[ins->result_id] = true;
+	for (size_t i = 0; locals && i < m->instr_count; i++) {
+		if (xsdk_xsc_declares_local(m, i, first, end) && m->instrs[i].result_id < m->id_limit)
+			locals[m->instrs[i].result_id] = true;
 	}
 	return locals;
 }

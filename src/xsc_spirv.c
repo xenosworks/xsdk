@@ -43,7 +43,7 @@ static const struct {
 static const uint16_t type_and_result[] = { 12, 43, 44, 54, 55, 57, 59, 61, 65, 79, 80, 81, 82, 84, 87, 88, 89, 90, 91,
 	92, 124, 127, 129, 130, 131, 133, 136, 141, 142, 144, 145, 146, 148, 169, 180, 182, 184, 186, 188, 190, 110, 111,
 	128, 132, 134, 135, 137, 138, 139, 154, 155, 166, 167, 168, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 194,
-	195, 196, 197, 198, 199, 200, 207, 208, 209, 41, 42, 245 };
+	195, 196, 197, 198, 199, 200, 207, 208, 209, 41, 42, 245, 1, 46 };
 static const uint16_t result_only[] = { 11, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 32, 33, 248 };
 
 static bool listed(const uint16_t *list, size_t count, uint32_t opcode)
@@ -265,11 +265,102 @@ bool xsdk_xsc_spirv_parse(Xsc *x, const uint32_t *words, size_t word_count, XscM
 	return xsdk_xsc_spirv_index(x, m);
 }
 
+// The opcode of a 32-bit scalar type's zero, or 0 for another type.
+static uint32_t zero_opcode(const XscInstr *type)
+{
+	if (type && type->opcode == SPV_TYPE_BOOL)
+		return SPV_CONSTANT_FALSE;
+	const bool number = type && (type->opcode == SPV_TYPE_FLOAT || type->opcode == SPV_TYPE_INT);
+	return number && xsdk_xsc_operand(type, 0) == 32 ? SPV_CONSTANT : 0;
+}
+
+// A constant of type and id: a zero, or the lane zeros of a vector, lane_count of them.
+static bool make_constant(
+	Xsc *x, XscInstr *ins, uint32_t opcode, uint32_t type, uint32_t id, uint32_t lane_zero, uint32_t lane_count)
+{
+	const uint32_t count = opcode == SPV_CONSTANT_COMPOSITE ? 2 + lane_count : opcode == SPV_CONSTANT ? 3 : 2;
+	uint32_t *const words = xsdk_xsc_alloc(x, count * sizeof *words);
+	if (!words)
+		return false;
+	words[0] = type;
+	words[1] = id;
+	for (uint32_t i = 2; opcode == SPV_CONSTANT_COMPOSITE && i < count; i++)
+		words[i] = lane_zero;
+	*ins = (XscInstr){ opcode, type, id, words, count };
+	return true;
+}
+
+// An undefined value may be any (SPIR-V 1.0, section 3.32.1, OpUndef), and a null one is 0, +0.0 or false in each
+// component (section 3.32.7, OpConstantNull). A vector's lanes take a zero minted before the first vector that needs
+// it.
+bool xsdk_xsc_spirv_zero_nulls(Xsc *x, XscModule *m)
+{
+	size_t head = 0;
+	while (head < m->instr_count && m->instrs[head].opcode != SPV_FUNCTION)
+		head++;
+	uint32_t *const lane_zero = xsdk_xsc_alloc(x, (size_t)m->id_limit * sizeof *lane_zero);
+	XscInstr *const minted = xsdk_xsc_alloc(x, (head + 1) * sizeof *minted);
+	if (!lane_zero || !minted)
+		return false;
+	size_t minted_count = 0;
+	size_t at = head;
+	for (size_t i = 0; i < head; i++) {
+		XscInstr *const ins = &m->instrs[i];
+		if (ins->opcode != SPV_UNDEF && ins->opcode != SPV_CONSTANT_NULL)
+			continue;
+		const XscInstr *const type = xsdk_xsc_by_result(m, ins->result_type);
+		const uint32_t opcode = zero_opcode(type);
+		if (opcode) {
+			if (!make_constant(x, ins, opcode, ins->result_type, ins->result_id, 0, 0))
+				return false;
+			continue;
+		}
+		if (!type || type->opcode != SPV_TYPE_VECTOR)
+			continue;
+		const uint32_t comp = xsdk_xsc_operand(type, 0);
+		const uint32_t lanes = xsdk_xsc_operand(type, 1);
+		const uint32_t lane_opcode = zero_opcode(xsdk_xsc_by_result(m, comp));
+		if (!lane_opcode || lanes < 2 || lanes > 4)
+			continue;
+		if (!lane_zero[comp]) {
+			lane_zero[comp] = m->id_limit + (uint32_t)minted_count;
+			if (!make_constant(x, &minted[minted_count++], lane_opcode, comp, lane_zero[comp], 0, 0))
+				return false;
+			at = at < i ? at : i;
+		}
+		if (!make_constant(x, ins, SPV_CONSTANT_COMPOSITE, ins->result_type, ins->result_id, lane_zero[comp], lanes))
+			return false;
+	}
+	if (!minted_count)
+		return true;
+	XscInstr *const instrs = xsdk_xsc_alloc(x, (m->instr_count + minted_count) * sizeof *instrs);
+	if (!instrs)
+		return false;
+	memcpy(instrs, m->instrs, at * sizeof *instrs);
+	memcpy(instrs + at, minted, minted_count * sizeof *instrs);
+	memcpy(instrs + at + minted_count, m->instrs + at, (m->instr_count - at) * sizeof *instrs);
+	m->instrs = instrs;
+	m->instr_count += minted_count;
+	m->bound = m->id_limit + (uint32_t)minted_count;
+	return xsdk_xsc_spirv_index(x, m);
+}
+
 const XscInstr *xsdk_xsc_by_result(const XscModule *m, uint32_t id)
 {
 	if (id >= m->id_limit || m->by_result[id] < 0)
 		return NULL;
 	return &m->instrs[m->by_result[id]];
+}
+
+// HLSL's static globals are Private variables, which each invocation holds its own of as it does a Function variable
+// (SPIR-V 1.0, section 3.7, Storage Class).
+bool xsdk_xsc_declares_local(const XscModule *m, size_t i, size_t first, size_t end)
+{
+	const XscInstr *const ins = &m->instrs[i];
+	if (ins->opcode != SPV_VARIABLE)
+		return false;
+	const uint32_t storage = xsdk_xsc_operand(ins, 0);
+	return storage == SPV_STORAGE_PRIVATE || (storage == SPV_STORAGE_FUNCTION && i >= first && i < end);
 }
 
 const char *xsdk_xsc_name(const XscModule *m, uint32_t id, const char *fallback)
