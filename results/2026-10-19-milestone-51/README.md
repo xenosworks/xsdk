@@ -1,47 +1,27 @@
 # Milestone 51: saves, profiles and XAM's asynchronous calls (2026-10-19)
 
-docs/scope/51-saves-and-profiles.md. Step 1's probe ran on the console; steps 2 to 4 are built and wait for their
-console runs.
+docs/scope/51-saves-and-profiles.md. Step 1's probe ran on the console unattended, and steps 2 to 4's unattended
+checks pass there; save_check and the probe's person cases wait for the user.
 
 - `probe_xam.log`: `tests/probe_xam.c`'s unattended cases, no profile signed in, auto sign-in off, a USB stick in,
   title ID 0x5853444B.
 - `probe_xam_t2.log`: the same ELF under title ID 0x5853444C, run after it in the same folder.
 
-## Proposed for docs/HARDWARE.md
+## On the console
 
-### XAM's saves, profiles and asynchronous calls, milestone 51's probe (2026-10-19)
+docs/HARDWARE.md, "XAM's saves, profiles and asynchronous calls, milestone 51", says what the probe found. Steps 2
+to 4, built at `ba49e3d` with the console's facts alone, ran on 2026-10-19 with nobody signed in:
+- **xsdk_test** (`xsdk_test.log`): 476 passed, 2 failed, the controller's checks with no pad connected; all eight of
+  its `xam:` checks passed.
+- **Its breaks** (`xsdk_test_noflush.log`, `xsdk_test_nowait.log`): each failed only the check it names, below,
+  and the controller's two.
+- **cmake_check** (`cmake_check.log`), built through `xsdk_add_xex(cmake_check TITLE_ID 0x5853444F NAME "xsdk cmake
+  check")`: 5 of 5, `cmake: the .xex holds the title name xsdk_add_xex gave it` among them. Packed again with no name
+  (`cmake_check_noname.log`), that check failed.
+- **The name and saves:** `probe_xam.elf` packed under title ID 0x58534450 with a name (`probe_xam_name.log`) made
+  its saves under its own folder, their headers' title name empty, then deleted them (`probe_xam_name_delete.log`).
 
-`tests/probe_xam.c` ran its unattended cases with nobody signed in, presenting the bar from a thread of its own
-throughout (logs: `results/2026-10-19-milestone-51/`, `probe_xam.log` and, under a second title ID,
-`probe_xam_t2.log`).
-
-- **An overlapped call** returns 0x3E5, `ERROR_IO_PENDING`, with the overlapped's result already 0x3E5 and its context
-  0x000106A0. When done, XAM writes the result, length and extended error, sets the event if there is one, and puts
-  the context back to 0. Without an event the call completes just the same.
-- **`XamGetOverlappedResult` (XAM 0x1FB)** with its third argument 0, straight after the call: 0x3E4,
-  `ERROR_IO_INCOMPLETE`, in under a microsecond, the length left alone. Once the call is done, 0 and 1 both give its
-  result and length, with an event or without one; 1 straight after the call, on a thread of its own, returned once
-  the call was done.
-- **Errors come in the overlapped:** `XamContentClose` of a root not mounted completed with 0x65B and extended error
-  0x80070002, `XamContentGetDeviceState` of device 0x7F with 0x65B and 0x8007048F. With no overlapped,
-  `XamContentGetDeviceState` returned 0 at once.
-- **With nobody signed in,** `XamUserGetSigninState` gives 0 for users 0 to 3; `XamUserGetXUID` for user 0 gives
-  0x80070525 with type masks 1, 2, 4 and 7, the XUID set to 0; `XamUserGetName` gives 0x525, writing only a zero
-  first byte; `XamUserGetSigninInfo` gives 0x80070525 with flags 0 to 2, the 40 bytes zero but byte 0x17, 0xFE.
-- **The device enumerator** for saved games, 8 devices, asked for 0x280 bytes and gave the hard disk, device 1, type
-  1, "Hard Drive", 154,888,372,224 bytes, and the USB stick, device 3, type 0x10, "USB Storage Device", in one pass;
-  the next pass gave 0x103. `XamContentGetDeviceData`, `XamContentGetDeviceName` and `XamContentGetDeviceState` agreed.
-- **Saves need no profile for users 0xFE and 0xFF.** `XamContentCreateEx` on device 1, open always, made each package
-  (disposition 1) in 32 to 98 ms; `fopen("save:\probe.dat")` wrote 26 bytes, `XamContentFlush` took 49 to 93 ms,
-  `XamContentClose` 0 to 2; open existing found it again (disposition 2) at once, and it read back as written. For
-  user 0 with nobody signed in it completed with 0x65B, extended error 0x80070525, and its content enumerator
-  returned 0x525. The enumerators for 0xFE and 0xFF each list both packages, with the display names given.
-- **Each title ID has its own saves:** the packages are files of 61,440 bytes at
-  `\Device\Harddisk0\Partition1\Content\0000000000000000\<title ID>\00000001\<file name>`. Under 0x5853444C the same
-  names made new packages beside 0x5853444B's, and its enumerators listed only its own.
-- **A package closed with a file open in it:** the close took 82 ms, 49 under the second title ID, and succeeded;
-  the file's handle then failed writes and reads with 0xC000026E and closed fine, and the 7 bytes written before the
-  close, with no flush, were there when the package opened again.
+save_check, the keyboard, the message box and everything with a profile signed in wait for the person run.
 
 ## What xsdk_test checks
 

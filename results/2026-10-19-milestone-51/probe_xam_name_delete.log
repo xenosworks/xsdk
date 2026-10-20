@@ -1,0 +1,50 @@
+log: game:\probe_xam_name.log
+log: named after \Device\Harddisk0\Partition1\m51name\probe_xam_name.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 17292 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 25885 us
+probe_xam: 1 cases; listener 0xF8000008, XamIsUIActive 0
+probe_xam: case delete: the probe's packages deleted; at 2433 ms, frame 2
+listing before: 23 entries under \Device\Harddisk0\Partition1\Content, in 89 ms
+devices: XamContentCreateDeviceEnumerator(saved games, 8 items) = 0x00000000, 0x00000280 bytes, handle 0xF800000C
+devices: XamEnumerate pass 0 = 0x00000000, 0x00000002 items
+devices: enumerated: device 0x00000001, type 0x00000001, 154888372224 bytes, 139747180544 free, name 'Hard Drive'
+devices: enumerated: device 0x00000003, type 0x00000010, 61513662464 bytes, 61463724032 free, name 'USB Storage Device'
+devices: XamEnumerate pass 1 = 0x00000103, 0x00000000 items
+devices: NtClose(enumerator) = 0x00000000
+delete: XamContentDelete(user 0xFE, xsdkprobe_fe) returned 0x000003E5
+delete: XamContentDelete(user 0xFE, xsdkprobe_fe): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+notify: 0x00000009, parameter 0x00000000, at 2735 ms, frame 20
+notify: 0x0000000A, parameter 0x00000000, at 2741 ms, frame 21
+notify: 0x00060019, parameter 0x00000000, at 2748 ms, frame 21
+notify: 0x02000009, parameter 0x00000000, at 2754 ms, frame 21
+notify: 0x0A000001, parameter 0x00000000, at 2760 ms, frame 22
+notify: 0x0A000003, parameter 0x00000001, at 2765 ms, frame 22
+delete: XamContentDelete(user 0xFE, xsdkprobe_fe): completed after 39 ms (wait 0x00000000), 3 frames presented meanwhile
+delete: XamContentDelete(user 0xFE, xsdkprobe_fe): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+delete: XamContentDelete(user 0xFF, xsdkprobe_ff) returned 0x000003E5
+delete: XamContentDelete(user 0xFF, xsdkprobe_ff): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+delete: XamContentDelete(user 0xFF, xsdkprobe_ff): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+delete: XamContentDelete(user 0xFF, xsdkprobe_ff): overlapped complete: result 0x00000000, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+delete: XamContentDelete(user 0x00, xsdkprobe_00) returned 0x000003E5
+delete: XamContentDelete(user 0x00, xsdkprobe_00): overlapped on return: result 0x000003E5, length 0x00000000, context 0x000106A0, event 0xF800000C (not set), routine 0x00000000, routine context 0x00000000, extended error 0x00000000
+delete: XamContentDelete(user 0x00, xsdkprobe_00): completed after 0 ms (wait 0x00000000), 0 frames presented meanwhile
+delete: XamContentDelete(user 0x00, xsdkprobe_00): overlapped complete: result 0x0000065B, length 0x00000000, context 0x00000000, event 0xF800000C (set), routine 0x00000000, routine context 0x00000000, extended error 0x80070525
+content: XamContentCreateEnumerator(user 0xFE, device 0x00000001, saved games, 16 items) = 0x00000000, 0x00001340 bytes, handle 0xF800000C
+content: XamEnumerate pass 0 = 0x00000012, 0x00000000 items
+content: NtClose(enumerator) = 0x00000000
+content: XamContentCreateEnumerator(user 0xFF, device 0x00000001, saved games, 16 items) = 0x00000000, 0x00001340 bytes, handle 0xF800000C
+content: XamEnumerate pass 0 = 0x00000012, 0x00000000 items
+content: NtClose(enumerator) = 0x00000000
+content: XamContentCreateEnumerator(user 0x00, device 0x00000001, saved games, 16 items) = 0x00000525, 0xA5A5A5A5 bytes, handle 0x00000000
+listing after: 19 entries under \Device\Harddisk0\Partition1\Content, in 15 ms
+listing: gone \Device\Harddisk0\Partition1\Content\0000000000000000\58534450
+listing: gone \Device\Harddisk0\Partition1\Content\0000000000000000\58534450\00000001
+listing: gone \Device\Harddisk0\Partition1\Content\0000000000000000\58534450\00000001\xsdkprobe_fe
+listing: gone \Device\Harddisk0\Partition1\Content\0000000000000000\58534450\00000001\xsdkprobe_ff
+listing: 4 changes
+probe_xam: case delete done at 3132 ms, frame 44
+probe_xam: done after 45 frames; xsdk_gpu_close 0x00000000
+exit: status 0

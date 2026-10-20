@@ -1,0 +1,14 @@
+log: game:\cmake_check.log
+log: named after \Device\Harddisk0\Partition1\cmakecheck\cmake_check.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+cmake check title
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 30289 us
+PASS: splash: the vulkan4xenon logo shown
+PASS: cmake: a static constructor ran before main
+PASS: cmake: an exception was thrown and caught
+PASS: cmake: a std::thread ran and joined
+cmake: XexGetModuleHandle 0x00000000, XexGetModuleSection(5853444F) 0x00000000, 118 bytes
+PASS: cmake: the .xex holds the title name xsdk_add_xex gave it
+tests: 5 passed, 0 failed
+exit: status 0

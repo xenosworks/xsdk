@@ -23,7 +23,7 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Toolchain: GCC 15, binutils, newlib for `powerpc-xsdk-elf` | Yes | `tools/toolchain/build.sh`, in WSL | every build | A prebuilt toolchain |
-| A `.xex` the retail loader takes, imports by ordinal | Yes | `tools/elf2xex.py`, `src/xsdk.ld`; a title ID and name of its own through `--title-id` and `--title-name`, or `xsdk_add_xex(target TITLE_ID id NAME "...")` | `tests/xex_checks.py` | Compression; an icon; signing, so it runs on RGH and JTAG consoles only. Whether the dashboard shows the name, an XDBF resource as Xenia reads it, is untested |
+| A `.xex` the retail loader takes, imports by ordinal | Yes | `tools/elf2xex.py`, `src/xsdk.ld`; a title ID and name of its own through `--title-id` and `--title-name`, or `xsdk_add_xex(target TITLE_ID id NAME "...")` | `tests/xex_checks.py`; the name, `make cmake_check` | Compression; an icon; signing, so it runs on RGH and JTAG consoles only. The loader finds the name; whether the dashboard shows it is untested, and XAM leaves it out of a save's header |
 | Make and CMake builds | Yes | `Makefile`; `cmake/xsdk.cmake` and its `xsdk_add_xex()` | `make cmake_check` (`tests/cmake/`) | Shared libraries: static only |
 | The boot logo before the title's first frame | Yes | `xsdk_splash_show` (`splash.h`) | xsdk_test | |
 
@@ -76,10 +76,10 @@ which implements what the games it runs need:
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
-| XAM's asynchronous calls, which the rows below take | Partial | `xsdk_xam_prepare`, `xsdk_xam_returned` and `xsdk_xam_wait` (`xam.h`): poll once a frame, or wait on the call's event | `tests/test_xam.c`, its console run pending; how the calls complete, `tests/probe_xam.c` (results/2026-10-19-milestone-51/) | Completion routines, which arrive as APCs and need alertable waits |
-| Save games in content packages, on the HDD or a memory unit | Partial | `xsdk_save_mount`, `xsdk_save_unmount` and `xsdk_save_wait` (`xam.h`), on the hard disk, a package a drive such as `save:`; `XamContentDelete` and `XamContentCreateEnumerator` raw | `tests/test_xam.c` with no profile, `tests/save_check.c` by hand with one; both runs pending | Memory units and USB drives; where a profile's saves land |
-| Choosing a storage device; its state and free space | Partial | `xsdk_save_device`, the hard disk; `XamContentCreateDeviceEnumerator`, `XamContentGetDeviceState` and `XamContentGetDeviceData` raw | `tests/test_xam.c`, its run pending | `XamShowDeviceSelectorUI` (xam_ui.cc), not imported |
-| Sign-in state, profile ID, gamertag | Partial | `xsdk_xam_signed_in_user`, the first user signed in and their gamertag; `XamUserGetXUID` and `XamUserGetSigninInfo` raw | `tests/test_xam.c` with nobody signed in, `tests/save_check.c` by hand; both pending | What `XamUserGetXUID`'s type mask does, and everything with a profile signed in, until the person run |
+| XAM's asynchronous calls, which the rows below take | Partial | `xsdk_xam_prepare`, `xsdk_xam_returned` and `xsdk_xam_wait` (`xam.h`): poll once a frame, or wait on the call's event | `tests/test_xam.c`; how the calls complete, `tests/probe_xam.c` (results/2026-10-19-milestone-51/) | Completion routines, which arrive as APCs and need alertable waits |
+| Save games in content packages, on the HDD or a memory unit | Partial | `xsdk_save_mount`, `xsdk_save_unmount` and `xsdk_save_wait` (`xam.h`), on the hard disk, a package a drive such as `save:`; `XamContentDelete` and `XamContentCreateEnumerator` raw | `tests/test_xam.c` with no profile; `tests/save_check.c` by hand with one, pending | Memory units and USB drives; where a profile's saves land |
+| Choosing a storage device; its state and free space | Partial | `xsdk_save_device`, the hard disk; `XamContentCreateDeviceEnumerator`, `XamContentGetDeviceState` and `XamContentGetDeviceData` raw | `tests/test_xam.c` | `XamShowDeviceSelectorUI` (xam_ui.cc), not imported |
+| Sign-in state, profile ID, gamertag | Partial | `xsdk_xam_signed_in_user`, the first user signed in and their gamertag; `XamUserGetXUID` and `XamUserGetSigninInfo` raw | `tests/test_xam.c` with nobody signed in; `tests/save_check.c` by hand, pending | What `XamUserGetXUID`'s type mask does, and everything with a profile signed in, until the person run |
 | Profile settings: invert Y, difficulty, a title's own data | Partial | `XamUserReadProfileSettings` (`kernel.h`), raw | untested: `tests/probe_xam.c`'s `settings` case is pending | Writing them, `XamUserWriteProfileSettings` (xam_user.cc) |
 | Achievements | No | | | Through `XMsgStartIORequest` (xam_msg.cc); low priority |
 

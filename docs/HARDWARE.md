@@ -4410,3 +4410,45 @@ Logs: `results/2026-10-19-milestone-52/`.
   69.5, acq_rel 84.7, seq_cst 124.5; `sync` alone 53 ns, `lwsync` and `isync` 12. C++'s `operator++` on an atomic and
   `__sync_*` are seq_cst, so a counter that needs no ordering costs less than half as much asked for as relaxed. Two
   threads on one core contending: 146 to 173 ns relaxed, 285 seq_cst.
+
+## XAM's saves, profiles and asynchronous calls, milestone 51 (2026-10-19)
+
+`tests/probe_xam.c` ran its unattended cases with nobody signed in, presenting the bar from a thread of its own
+throughout (logs: `results/2026-10-19-milestone-51/`, `probe_xam.log` and, under a second title ID,
+`probe_xam_t2.log`).
+
+- **An overlapped call** returns 0x3E5, `ERROR_IO_PENDING`, with the overlapped's result already 0x3E5 and its context
+  0x000106A0. When done, XAM writes the result, length and extended error, sets the event if there is one, and puts
+  the context back to 0. Without an event the call completes just the same.
+- **`XamGetOverlappedResult` (XAM 0x1FB)** with its third argument 0, straight after the call: 0x3E4,
+  `ERROR_IO_INCOMPLETE`, in under a microsecond, the length left alone. Once the call is done, 0 and 1 both give its
+  result and length, with an event or without one; 1 straight after the call, on a thread of its own, returned once
+  the call was done.
+- **Errors come in the overlapped:** `XamContentClose` of a root not mounted completed with 0x65B and extended error
+  0x80070002, `XamContentGetDeviceState` of device 0x7F with 0x65B and 0x8007048F. With no overlapped,
+  `XamContentGetDeviceState` returned 0 at once.
+- **With nobody signed in,** `XamUserGetSigninState` gives 0 for users 0 to 3; `XamUserGetXUID` for user 0 gives
+  0x80070525 with type masks 1, 2, 4 and 7, the XUID set to 0; `XamUserGetName` gives 0x525, writing only a zero
+  first byte; `XamUserGetSigninInfo` gives 0x80070525 with flags 0 to 2, the 40 bytes zero but byte 0x17, 0xFE.
+- **The device enumerator** for saved games, 8 devices, asked for 0x280 bytes and gave the hard disk, device 1, type
+  1, "Hard Drive", 154,888,372,224 bytes, and the USB stick, device 3, type 0x10, "USB Storage Device", in one pass;
+  the next pass gave 0x103. `XamContentGetDeviceData`, `XamContentGetDeviceName` and `XamContentGetDeviceState` agreed.
+- **Saves need no profile for users 0xFE and 0xFF.** `XamContentCreateEx` on device 1, open always, made each package
+  (disposition 1) in 32 to 98 ms; `fopen("save:\probe.dat")` wrote 26 bytes, `XamContentFlush` took 49 to 93 ms,
+  `XamContentClose` 0 to 2; open existing found it again (disposition 2) at once, and it read back as written. For
+  user 0 with nobody signed in it completed with 0x65B, extended error 0x80070525, and its content enumerator
+  returned 0x525. The enumerators for 0xFE and 0xFF each list both packages, with the display names given.
+- **Each title ID has its own saves:** the packages are files of 61,440 bytes at
+  `\Device\Harddisk0\Partition1\Content\0000000000000000\<title ID>\00000001\<file name>`. Under 0x5853444C the same
+  names made new packages beside 0x5853444B's, and its enumerators listed only its own.
+- **A package closed with a file open in it:** the close took 82 ms, 49 under the second title ID, and succeeded;
+  the file's handle then failed writes and reads with 0xC000026E and closed fine, and the 7 bytes written before the
+  close, with no flush, were there when the package opened again.
+- **xsdk's helpers on the console** (`xsdk_test.log`): `xsdk_save_device` found the hard disk in 12 ms; a save for
+  user 0xFE mounted in 187 ms, made new, flushed and closed in 75; mounted again in 15 ms it opened the package
+  (disposition 2) and read back what was written; `XamContentDelete` took it away in 9 ms.
+- **A title's name in its `.xex`:** `tools/elf2xex.py --title-name` puts an XDBF database holding it in the first
+  page, after the PE headers, as the resource named after the title ID (xenia:src/xenia/kernel/kernel_state.cc:111-125).
+  The loader took it: `XexGetModuleSection` found the 118 bytes under that name (`cmake_check.log`), and 0xC0000225
+  with no name (`cmake_check_noname.log`). XAM didn't copy it into a save: the title name in each package's header
+  (offset 0x1691) stayed empty, as for a title with no name (`probe_xam_name.log`, title ID 0x58534450).
