@@ -688,3 +688,18 @@ At fb667bf, built clean with vulkan4xenon against it (local/m50/build.sh), throu
 - The binding break (samplers packed from 0) failed the binding draw, the table check and the shader's compile check,
   besides the controller's two.
 - vulkan4xenon_test 515 of 515 twice, vkbench 17 of 17.
+
+## Step 7 on the console
+
+At 5254c03, built clean with vulkan4xenon against it (local/m50/build.sh), through the console agent on 2026-10-20
+(`step7_*.log`):
+- xsdk_test 525 of 527, the controller's two failing with the pad idle. The binding cell drew right in both halves,
+  0 of 28800 pixels wrong, Bright at b2 through `cexec b130` and `cexec !b130`, the first boolean constant past 128
+  xsdk has run, and Count at i1 through loop constant 17; the table named Bright at boolean constant 130 and Count at
+  loop constant 17, as their b2 and i1.
+- The registers break (the lowest constant left for every bool and int) failed the table check, Bright at 128 and
+  Count at 16, and the shader's compile check; its cell, set by name, drew right.
+- The binding break failed the binding draw, the table check (Low and High at 0 and 1) and the compile check; the
+  depth, loop, skin, VFACE and VPOS breaks each failed their check and their shader's compile check; the link break
+  the two link checks and the DEPTH cell's, whose stages it links. Every break failed the controller's two besides.
+- vulkan4xenon_test 517 of 517 twice; vkbench 17 of 17, xsdk's draw+submit within 1% of step 6's.
