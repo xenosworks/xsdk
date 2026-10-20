@@ -1,10 +1,12 @@
 #!/bin/sh
 # Milestone 50 step 4's breaks: xsdk_test built with each patch here applied, as
-# build/breaks/xsdk_test_hlsl_<break>.xex. Each breaks xost in the title, which compiles the HLSL grid's shaders on the
-# console (tests/test_hlsl.c), so test_xsc's check of that shader against the PC's container fails too. Run in WSL from
-# anywhere: sh tests/breaks/hlsl/build.sh. Each patch is taken back out after its build, even a failed one.
-# - link: a vertex shader's outputs at their locations; fails "hlsl: a vertex shader's TEXCOORD0 and COLOR0 meet ...",
-#   "hlsl: DEPTH from TEXCOORD0's x ..." and "xsc: hlsl/grid_vs.hlsl compiles into the PC's container ...".
+# build/breaks/xsdk_test_hlsl_<break>.xex. Each but link breaks xost in the title, which compiles the HLSL grid's
+# shaders on the console (tests/test_hlsl.c), so test_xsc's check of that shader against the PC's container fails too.
+# Run in WSL from anywhere: sh tests/breaks/hlsl/build.sh. Each patch is taken back out after its build, even a failed
+# one.
+# - link: xsdk_shader_link leaving each pair as loaded, each stage's interpolators as xost packed them; fails "hlsl: a
+#   vertex shader's TEXCOORD0 and COLOR0 meet ..." and "hlsl: a vertex shader's TEXCOORD3, COLOR1, TEXCOORD0 and FOG
+#   meet ...".
 # - vpos: VPOS as gl_FragCoord; fails "hlsl: VPOS is each pixel's whole column and row ..." and
 #   "xsc: hlsl/grid_vpos_ps.hlsl compiles into the PC's container ...".
 # - vface: a front face's VFACE -1; fails "hlsl: VFACE is -1 on a front face, clockwise, and +1 on a back one ..." and

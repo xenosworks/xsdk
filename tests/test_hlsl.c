@@ -16,10 +16,11 @@
 
 // D3D9's semantics through glslang's HLSL (docs/scope/50-hlsl.md, step 4): xost's grid_*.hlsl, compiled on the console
 // with the optimiser on, each pixel shader drawn behind a vertex shader loaded for it and linked to it by semantic
-// (xsdk_shader_link), as four cells where the raster test's frame has nothing, each checked by pixel. One vertex
+// (xsdk_shader_link), as five cells where the raster test's frame has nothing, each checked by pixel. One vertex
 // shader's TEXCOORD0 and COLOR0 meet a pixel shader's by semantic, with a TEXCOORD1 declared first; VPOS is each
 // pixel's whole column and row; VFACE's sign on a clockwise and a counter-clockwise quad, front faces clockwise as on
-// D3D9, is reported; DEPTH from TEXCOORD0's x leaves a nearer quad in front of half a cell.
+// D3D9, is reported; DEPTH from TEXCOORD0's x leaves a nearer quad in front of half a cell; and another vertex shader's
+// TEXCOORD3, COLOR1, TEXCOORD0 and FOG meet a pixel shader reading COLOR1 and TEXCOORD3 alone, in 2 interpolators.
 
 enum {
 	WIDTH = 1280,
@@ -41,31 +42,39 @@ enum {
 	VPOS_Y = 465,
 	VFACE_Y = 510,
 	DEPTH_Y = 555,
+	GAPS_Y = 600,
 	// A position, a colour and a coordinate a vertex: POSITION, COLOR0 and TEXCOORD0.
 	VERTEX_FLOATS = 10,
 	STRIDE_BYTES = VERTEX_FLOATS * 4,
 	QUAD_VERTICES = 6,
-	// The link's quad, VPOS's, VFACE's two, DEPTH's and the nearer one over it.
-	QUADS = 6,
+	// The link's quad, VPOS's, VFACE's two, DEPTH's, the nearer one over it and the link with gaps'.
+	QUADS = 7,
 	VERTEX_WORDS = QUADS * QUAD_VERTICES * VERTEX_FLOATS,
 	// VPOS's red and green: the column and row mod 64, times 4.
 	VPOS_PERIOD = 64,
 	VPOS_STEP = 4,
 	// DEPTH's columns this far either side of the middle aren't checked, where its depth meets the nearer quad's.
 	DEPTH_MARGIN = 4,
+	// The link with gaps' pixel shader's interpolators, COLOR1's and TEXCOORD3's; a map of each semantic to one
+	// interpolator in both stages, step 4's first, took 14.
+	GAPS_INTERPOLATORS = 2,
 };
 
+// The vertex shaders, then the pixel shaders.
 enum {
 	SHADER_VERTEX,
+	SHADER_GAPS_VERTEX,
 	SHADER_LINK,
 	SHADER_VPOS,
 	SHADER_VFACE,
 	SHADER_DEPTH,
+	SHADER_GAPS,
 	SHADERS,
 };
 
-static const char *const shader_names[SHADERS] = { "hlsl/grid_vs.hlsl", "hlsl/grid_link_ps.hlsl",
-	"hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl", "hlsl/grid_depth_ps.hlsl" };
+static const char *const shader_names[SHADERS] = { "hlsl/grid_vs.hlsl", "hlsl/grid_gaps_vs.hlsl",
+	"hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl", "hlsl/grid_depth_ps.hlsl",
+	"hlsl/grid_gaps_ps.hlsl" };
 
 static const XsdkVertexElement layout[] = {
 	{ .usage = XSDK_USAGE_POSITION, .format = XSDK_VERTEX_FLOAT4 },
@@ -94,6 +103,7 @@ static const Quad quads[QUADS] = {
 	{ VFACE_Y, true, CELL_X + CELL_WIDTH / 2, CELL_WIDTH / 2, 0.5f, link_colour },
 	{ DEPTH_Y, false, CELL_X, CELL_WIDTH, 0.75f, link_colour },
 	{ DEPTH_Y, false, CELL_X, CELL_WIDTH, 0.5f, near_colour },
+	{ GAPS_Y, false, CELL_X, CELL_WIDTH, 0.5f, link_colour },
 };
 
 // A quad's two triangles, in units of a quad: top left, top right, bottom left, then the other half.
@@ -115,6 +125,7 @@ typedef struct {
 	uint32_t link;
 	uint32_t vpos;
 	uint32_t depth;
+	uint32_t gaps;
 	// VFACE's front and back quads: pixels reading +1, -1 and neither.
 	uint32_t faces[2][3];
 } Wrong;
@@ -167,9 +178,15 @@ static NTSTATUS load(XsdkShader *shader, const XsdkXscShader *compiled)
 	return xsdk_shader_load(shader, (const uint32_t *)compiled->container, compiled->container_bytes);
 }
 
-// The pixel shader, and the vertex shader loaded for it and linked to it.
-static bool load_pair(Grid *g, uint32_t pixel, uint32_t vertex)
+static uint32_t vertex_of(uint32_t pixel)
 {
+	return pixel == SHADER_GAPS ? SHADER_GAPS_VERTEX : SHADER_VERTEX;
+}
+
+// The pixel shader, and the vertex shader loaded for it and linked to it.
+static bool load_pair(Grid *g, uint32_t pixel)
+{
+	const uint32_t vertex = vertex_of(pixel);
 	return NT_SUCCESS(load(&g->shaders[pixel], &g->compiled[pixel])) &&
 		NT_SUCCESS(load(&g->linked[pixel], &g->compiled[vertex])) &&
 		NT_SUCCESS(xsdk_shader_set_vertex_layout(&g->linked[pixel], layout, 3, (const uint32_t[]){ STRIDE_BYTES })) &&
@@ -183,8 +200,8 @@ static bool make_grid(Grid *g)
 		if (!compile_shader(g, i))
 			return false;
 	}
-	for (uint32_t i = SHADER_LINK; i <= SHADER_DEPTH; i++) {
-		if (!load_pair(g, i, SHADER_VERTEX))
+	for (uint32_t i = SHADER_LINK; i < SHADERS; i++) {
+		if (!load_pair(g, i))
 			return false;
 	}
 	xsdk_gpu_raster_state(&g->raster, &(XsdkRaster){ .cull = XSDK_CULL_NONE, .front_clockwise = true });
@@ -217,6 +234,7 @@ static void set_literals(const XsdkXscShader *compiled, bool pixel)
 static void draw_quads(const Grid *g, uint32_t pixel, uint32_t first, uint32_t count)
 {
 	xsdk_gpu_set_shaders(&g->linked[pixel], &g->shaders[pixel]);
+	set_literals(&g->compiled[vertex_of(pixel)], false);
 	set_literals(&g->compiled[pixel], true);
 	xsdk_gpu_set_vertices(
 		0, xsdk_gpu_address(g->vertices) + first * QUAD_VERTICES * STRIDE_BYTES, count * QUAD_VERTICES * STRIDE_BYTES);
@@ -228,10 +246,10 @@ static bool draw(const Grid *g, volatile uint32_t *buffer)
 {
 	xsdk_gpu_set_target(WIDTH, HEIGHT);
 	xsdk_gpu_set_raster(&g->raster);
-	set_literals(&g->compiled[SHADER_VERTEX], false);
 	draw_quads(g, SHADER_LINK, 0, 1);
 	draw_quads(g, SHADER_VPOS, 1, 1);
 	draw_quads(g, SHADER_VFACE, 2, 2);
+	draw_quads(g, SHADER_GAPS, 6, 1);
 	xsdk_gpu_set_depth_stencil(&g->depth);
 	draw_quads(g, SHADER_DEPTH, 4, 1);
 	draw_quads(g, SHADER_LINK, 5, 1);
@@ -307,6 +325,9 @@ static void check_frame(volatile const uint32_t *buffer, uint32_t frame, Wrong *
 			const uint32_t depth = x < middle ? stored(0, 255, 0) : stored(255, 0, ramp(x));
 			wrong->depth +=
 				!pixel_right("DEPTH", x, y, buffer[tiled_index(x, y, WIDTH)], depth, RAMP_TOLERANCE, frame, logged);
+			y = GAPS_Y + dy;
+			wrong->gaps +=
+				!pixel_right("gaps", x, y, buffer[tiled_index(x, y, WIDTH)], link, RAMP_TOLERANCE, frame, logged);
 		}
 	}
 }
@@ -343,6 +364,11 @@ static void report(const Wrong *w, bool landed, uint32_t frames)
 		"and its right behind: %u of %u pixels wrong",
 		(unsigned)w->depth, (unsigned)depth_pixels);
 	check(name, landed && frames && w->depth == 0);
+	(void)snprintf(name, sizeof name,
+		"hlsl: a vertex shader's TEXCOORD3, COLOR1, TEXCOORD0 and FOG meet a pixel shader's COLOR1 and TEXCOORD3 by "
+		"semantic, the other two unread: %u of %u pixels wrong",
+		(unsigned)w->gaps, (unsigned)pixels);
+	check(name, landed && frames && w->gaps == 0);
 }
 
 static void free_grid(Grid *g)
@@ -399,8 +425,15 @@ void test_hlsl(void)
 			height == HEIGHT };
 	const bool made = make_grid(&g);
 	check("hlsl: xost compiles the grid's HLSL shaders on the console, and the grid is made", made);
-	if (made)
+	if (made) {
+		char name[160];
+		const uint32_t count = g.shaders[SHADER_GAPS].interpolator_count;
+		(void)snprintf(name, sizeof name,
+			"hlsl: the pixel shader reading COLOR1 and TEXCOORD3 declares %u interpolators in its container, not 14",
+			(unsigned)count);
+		check(name, count == GAPS_INTERPOLATORS);
 		run(&g);
+	}
 	xsdk_display_close();
 	free_grid(&g);
 	check("hlsl: GPU close", NT_SUCCESS(xsdk_gpu_close()));

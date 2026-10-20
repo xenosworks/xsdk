@@ -55,7 +55,8 @@ SHADERS = ("vk_block_literals.vert", "vk_texel_offsets.frag", "vk_vertex_if.vert
            "vk_loop_derivative.frag", "vk_loop_parallax.frag", "vk_vertex_loop_sample.vert", "vk_loop_sample_grid.frag",
            "vk_scalar_input_loop.frag", "vk_scalar_input.frag", "vk_vertex_scalar_input.vert",
            "vk_instance_cells.vert", "vk_instance_step.vert", "vk_indexed_reads.vert", "hlsl/grid_vs.hlsl",
-           "hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl", "hlsl/grid_depth_ps.hlsl")
+           "hlsl/grid_link_ps.hlsl", "hlsl/grid_vpos_ps.hlsl", "hlsl/grid_vface_ps.hlsl", "hlsl/grid_depth_ps.hlsl",
+           "hlsl/grid_gaps_vs.hlsl", "hlsl/grid_gaps_ps.hlsl")
 # xsdk's split (xsdk:src/gpu_setup.c).
 REGISTERS = 64
 RESOURCE_KINDS = {"push": "XSDK_XSC_PUSH_CONSTANTS", "uniform": "XSDK_XSC_UNIFORM_BUFFER",
