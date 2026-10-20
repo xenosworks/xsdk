@@ -3667,7 +3667,8 @@ plain pixel shader, one of 120 ALU instructions before its export, and that with
   `src/xsc_program.c`), and a read at the same index with an alloc since emits that instruction again first, in the
   read's alloc region, right before it. Every alloc kind xost emits counts, position, interpolators and colours, in
   vertex and pixel shaders. It goes in before register allocation, so the allocator keeps the load's source live to it,
-  and the optimiser moves nothing past an a0 load. Over milestone 45's corpus only those two Dusklight shaders take one,
+  and the optimiser moves no read at a0 past an a0 load, nor, since milestone 48 step 6, past an alloc (`same_values`,
+  `src/xsc_optimize.c`). Over milestone 45's corpus only those two Dusklight shaders take one,
   an ALU instruction more each and no register more, besides the test shader below.
 - **The throwaway was wrong** (`b6b9004`, withdrawn): the first run read the row after one, and it took that as the
   first read after an alloc writing nothing. Across 2304 quads a draw, a0 itself is gone, and xsdk_test's check of it,
@@ -3675,8 +3676,9 @@ plain pixel shader, one of 120 ALU instructions before its export, and that with
 - **Xenia doesn't show it:** its a0 changes only at `maxa`, `maxas` and `maxasf`
   (xenia:src/xenia/gpu/shader_interpreter.cc:600-602, 808-823), a constant at a0 is read from it whatever came between
   (260-266), and an alloc only opens an export there (242-249) and matters to its SPIR-V translator only for memory
-  export (xenia:src/xenia/gpu/spirv_shader_translator.cc:1125-1131). xost's simulator (`xdis/equivalence.py`) models
-  a0 the same way, so no check on the PC could see it.
+  export (xenia:src/xenia/gpu/spirv_shader_translator.cc:1125-1131). xost's simulator (`xdis/equivalence.py`) modelled
+  a0 the same way, so no check on the PC could see it; since milestone 48 step 6 it and `xdis/simulate.py` lose a0 at
+  an alloc.
 - **Not tried:** reads at the loop index, aL, after an alloc. xost reads at aL only in `xsdk_xsc_lower_real_loop`'s
   loop (`src/xsc_lower_loop.c`), before the colours' alloc, so nothing it compiles does.
 
@@ -3699,7 +3701,8 @@ A compiler bug in xost, found while the reload above was built, now a rule xost 
   went up past i's load, which landed after the sample, and read at j, every index wrong on xost's simulator. No
   program of milestone 45's corpus or Dusklight's pack had that shape.
 - **The rule:** a read at a0 stays after every a0 load before it, and a load after every read and load before it, in
-  any shader the grouping lays out, as the optimiser moves nothing past an a0 load (`fixed`, `src/xsc_optimize.c`).
+  any shader the grouping lays out, as the optimiser moves no read at a0 past an a0 load (`fixed` and `same_values`,
+  `src/xsc_optimize.c`).
 - **Checks:** `tests/test_dynamic_index.py` runs `vk_dynamic_texcoord.frag` on `xdis/simulate.py` for each of 16
   indices, optimiser off and on. xsdk_test's raster test compiles it on the console and draws it as one grid of 280
   quads 10 pixels square, each its own i and a j never i, sampling a 32 by 32 texture in 4 by 4 blocks, a block an
