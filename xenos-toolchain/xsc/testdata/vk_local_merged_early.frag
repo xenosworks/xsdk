@@ -1,5 +1,6 @@
 #version 450
-// The if/else's variable read before the if/else: refused, as the lowering would read the merged value there.
+// The if/else's variable read before the if/else: the fragment lowering, which would read the merged value there,
+// refuses it, and the unroller takes it.
 layout(location = 0) in vec2 v_uv;
 layout(location = 0) out vec4 o_color;
 layout(push_constant) uniform Push { vec4 a; vec4 b; } pc;

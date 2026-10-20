@@ -1,5 +1,6 @@
 #version 450
-// A second colour output assigned in an if/else, which the lowering can't take beside another output.
+// A second colour output assigned in an if/else, which the fragment lowering can't take beside another output and
+// the unroller takes.
 layout(location = 0) in vec2 v_uv;
 layout(location = 0) out vec4 o_color0;
 layout(location = 1) out vec4 o_color1;

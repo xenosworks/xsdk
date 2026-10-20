@@ -88,7 +88,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | fragment `gl_FragDepth` stored in both arms of an `if/else`, or before one and again in an arm | merged by a select as a vertex shader's outputs are, exported once; stored on one path alone, refused (see Control flow) |
 | a store into one component of a local or an output, `v.x = …` | an insert into the vector it held (`tests/test_local_stores.py`) |
 | vertex `gl_InstanceIndex`, firstInstance included | t.y, the instance an instanced shader's prologue works out from the instance group, held in every component of a register (see Interface conventions); `float()` of it, integer arithmetic on it and a block array's index at it lower as integers do (`tests/test_instancing.py`). `gl_VertexIndex` is refused |
-| fragment outputs at locations 0 to 3, each stored once outside any `if/else` when there are several | `oC0` to `oC3`, the four colour targets, a float in every component; the record's outputs mask names them (`tests/test_color_outputs.py`) |
+| fragment outputs at locations 0 to 3, each stored once outside any `if/else` when there are several, or in one through the unroller (Control flow) | `oC0` to `oC3`, the four colour targets, a float in every component; the record's outputs mask names them (`tests/test_color_outputs.py`) |
 | vertex `gl_ClipDistance[n] = dot(gl_Position, plane)`, n 0 to 5, the plane a whole vec4 of a uniform or push constant block | no instruction: user clip plane n, the manifest's `("clip", n, register)`; any other form, and `gl_CullDistance`, refused (`tests/test_clip_distance.py`) |
 | float / vec literals in FS/VS | constant pool; 0/1 folds (see below) |
 | ternary `cond ? a : b` (OpSelect) | `f + (t−f)·cond` (sub + mad) |
@@ -372,16 +372,16 @@ compile (xsdk:results/2026-10-20-milestone-50/). Shader model 4 and later, D3D9'
   `mod` (glslang-xenon's `decomposeIntrinsic`, glslang/HLSL/hlslParseHelper.cpp, and its constant fold,
   glslang/MachineIndependent/Constant.cpp; `tests/test_hlsl_fmod.py`). HLSL's `%` is as it was.
 
+An `if` that changes a value, `if (c) x *= 0.5;` among them, leaves its arms' values in a Phi where they meet, which the
+pixel shader's if/else lowering, written for GLSL's stores, refuses; the unroller then takes the shader (Control flow;
+`tests/test_hlsl_if.py`).
+
 Refused, each by name, with xost's message where it's short:
-- **An if in a pixel shader without a loop,** where spirv-opt keeps it a branch, as it does an `if` that changes a
-  local or returns, `if (c) x *= 0.5;` among them: its values meet in Phis, which the pixel shader's if/else lowering
-  doesn't read (`if/else arm does not assign o_color`). A `?:`, `clip` and an `if` around `discard` compile, and with a
-  loop anywhere in the shader the unroller takes such an if (Control flow).
+- **An early `return`,** a helper's or the entry point's, which spirv-opt makes a switch of (`a switch`).
 - **Loops** (Loops): a do/while's header Phi read after the loop; a value a loop's test works out, kept past the loop or
   read in its pass where xost can't work it out again; a value a do/while's pass works out read after the loop that no
   header Phi carries; a merge Phi of a header Phi that can't share its variable; a Phi on the edge from a test into the
-  pass; a switch, which spirv-opt's inliner makes of a helper's early return; and a loop an int counts from other than
-  0 by 1, as a title setting the int couldn't count its passes.
+  pass; and a loop an int counts from other than 0 by 1, as a title setting the int couldn't count its passes.
 - **Semantics:** a vertex input's or interpolator's semantic other than D3D9's usages at an index to 15 (`not one of
   D3D9's declaration usages`); a matrix varying whose columns run past index 15; two varyings of one semantic (`share
   semantic`); a varying without a semantic beside one with; more than 16 interpolators.
@@ -732,14 +732,23 @@ or `continue` in an arm is gated (Loops). The lowering
   the predicate is selects too, as there's one predicate.
 
 A pixel shader's other if/else keeps the fragment lowering's selects, and every
-shader without such a branch lowers byte for byte as before.
+shader without such a branch lowers byte for byte as before. Where the fragment
+lowering refuses one, as it does an if/else that changes a value in one arm
+alone, HLSL's Phi of such a value, a local stored again or read before the
+if/else ends, or one of several colours stored in an arm, the unroller takes
+the shader as it takes a vertex shader's, and the fragment lowering lowers what
+it leaves; refused both ways, the shader gets both reasons. A shader the
+fragment lowering took lowers as it did (`xsdk:src/xsc_compile.c`,
+`lower_pixel`; `tests/test_hlsl_if.py`, `tests/test_local_stores.py`,
+`tests/test_color_outputs.py`).
 
 - **No jumps:** Xenia documents how an exec on the predicate treats a group of
   64 but not how a predicated jump does, and the execs a jump would skip cost
   their control flow alone.
-- **No boolean constants:** `cexec b#` would need the runtime to work each
-  condition out on the CPU at every draw; the `setp` works it out in the shader,
-  and every vertex or pixel agrees all the same.
+- **No boolean constants but HLSL's:** `cexec b#` on another condition would
+  need the runtime to work it out on the CPU at every draw; the `setp` works it
+  out in the shader, and every vertex or pixel agrees all the same. An HLSL bool
+  a pixel shader's if reads is the boolean constant D3D9 sets (HLSL).
 - **Exports stay out of control flow:** each is written once, unconditionally,
   after the arms meet, so every path writes it, which a pixel shader's depth
   needs: nothing else gives the pixel a depth

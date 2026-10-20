@@ -13,8 +13,9 @@ output at its location (xenia:src/xenia/gpu/ucode.h:1836-1839).
 - vk_frag_depth.frag, with one output, keeps its mask of oC0 alone, and its ps_export_mode 3; the others count their
   colours from oC0 to the highest from the mode's bit 1, 8 for four, as R600's SQ_PGM_EXPORTS_PS does
   (radeonhd:src/r600_exa.c:164).
-- vk_outputs_branch.frag assigns its second output in an if/else, and vk_output_location_4.frag has an output past
-  oC3: each is refused.
+- vk_outputs_branch.frag assigns its second output in an if/else, which the fragment lowering refuses and the unroller
+  takes since milestone 50 step 8 (xsdk:src/xsc_compile.c, lower_pixel): each arm's value lands in oC1.
+- vk_output_location_4.frag has an output past oC3: refused.
 """
 import struct
 import sys
@@ -37,11 +38,11 @@ B = [0.5, -1.0, 8.0, 0.25]
 OUTPUTS_WORD = 7
 
 
-def lowered(name, values):
+def lowered(name, values, uv=UV):
     blob, manifest = lower_ex(module(name), XSDK_REGISTERS)
     constants = push_constants(name, values)
     constants.update({r: list(v) for r, v in manifest})
-    return blob, simulate.run(blob, registers={0: UV + [0.0, 0.0]}, constants=constants).exports
+    return blob, simulate.run(blob, registers={0: uv + [0.0, 0.0]}, constants=constants).exports
 
 
 def outputs_mask(blob):
@@ -90,16 +91,20 @@ def main():
     check_word("vk_frag_depth.frag, its outputs mask", outputs_mask(blob), 0x1)
     check_word("vk_frag_depth.frag, its ps_export_mode", export_mode(blob), 3)
 
-    for name, why in (("vk_outputs_branch.frag", "location 1 stored 2 times"),
-                      ("vk_output_location_4.frag", "past oC3")):
-        try:
-            lower_ex(module(name), XSDK_REGISTERS)
-        except LowerError as error:
-            if why not in str(error):
-                raise SystemExit(f"  FAIL {name} refused, but as: {error}")
-            print(f"  PASS {name} refused: {error}")
-        else:
-            raise SystemExit(f"  FAIL {name} lowered")
+    for uv in (UV, UV[::-1]):
+        blob, exports = lowered("vk_outputs_branch.frag", [A, B], uv)
+        check_exports(f"vk_outputs_branch.frag, v_uv.x {uv[0]}", exports, {0: A, 1: A if uv[0] > 0.5 else B})
+    check_word("vk_outputs_branch.frag, its outputs mask", outputs_mask(blob), 0x3)
+
+    name = "vk_output_location_4.frag"
+    try:
+        lower_ex(module(name), XSDK_REGISTERS)
+    except LowerError as error:
+        if "past oC3" not in str(error):
+            raise SystemExit(f"  FAIL {name} refused, but as: {error}")
+        print(f"  PASS {name} refused: {error}")
+    else:
+        raise SystemExit(f"  FAIL {name} lowered")
     print("OK")
 
 

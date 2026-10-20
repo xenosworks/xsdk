@@ -2077,8 +2077,8 @@ static bool depth_in_branch(Xsc *x, const XscModule *m, bool *inside)
 }
 
 // The unroller runs for a loop, a vertex shader's if/else, a pixel shader's gl_FragDepth under one, and locals
-// stored again; a pixel shader's other if/else is the fragment lowering's.
-static bool wanted(Xsc *x, const XscModule *m, bool *run)
+// stored again; a pixel shader's other if/else is the fragment lowering's unless every_branch.
+static bool wanted(Xsc *x, const XscModule *m, bool every_branch, bool *run)
 {
 	bool loop = false, branches = false, again = false, depth = false;
 	for (size_t i = 0; i < m->instr_count; i++) {
@@ -2090,17 +2090,17 @@ static bool wanted(Xsc *x, const XscModule *m, bool *run)
 		return false;
 	if (branches && !vertex && !depth_in_branch(x, m, &depth))
 		return false;
-	*run = loop || again || (branches && (vertex || depth));
+	*run = loop || again || (branches && (vertex || depth || every_branch));
 	return true;
 }
 
-bool xsdk_xsc_unroll(Xsc *x, XscModule *m, bool *refused)
+bool xsdk_xsc_unroll(Xsc *x, XscModule *m, bool every_branch, bool *refused, bool *ran)
 {
 	*refused = false;
-	bool run;
-	if (!wanted(x, m, &run))
+	*ran = false;
+	if (!wanted(x, m, every_branch, ran))
 		return false;
-	if (!run)
+	if (!*ran)
 		return true;
 	for (size_t i = 0; i < m->instr_count; i++) {
 		if (m->instrs[i].opcode == SPV_SWITCH) {

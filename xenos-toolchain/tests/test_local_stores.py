@@ -10,7 +10,8 @@ such a shader into single assignments when it has no branches (xsc/unroll.py), a
   says for each; so does vk_local_partial.frag, which stores into one component of a local, an insert into the vector
   the local held (xsdk:src/xsc_unroll.c).
 - vk_local_branch_reassign.frag stores a local twice beside an if/else; vk_local_merged_early.frag reads the if/else's
-  variable before the if/else. Each is refused.
+  variable before the if/else. The fragment lowering refuses each, and the unroller takes it since milestone 50 step 8
+  (xsdk:src/xsc_compile.c, lower_pixel): each arm gives what the GLSL says.
 """
 import sys
 from pathlib import Path
@@ -23,7 +24,7 @@ import xdis.simulate as simulate  # noqa: E402
 import xdis.xenos_ucode as xu  # noqa: E402
 import xsc.spirv as spirv  # noqa: E402
 from xasm.program import XSDK_REGISTERS  # noqa: E402
-from xsc.lower import LowerError, lower_ex  # noqa: E402
+from xsc.lower import lower_ex  # noqa: E402
 from xsc.resolve import resolve_interface  # noqa: E402
 from test_xsc_lower import TD  # noqa: E402
 
@@ -45,11 +46,11 @@ def push_constants(name, values):
     return {block.reg + i: v for i, v in enumerate(values)}
 
 
-def run_fragment(name, values):
+def run_fragment(name, values, uv=UV):
     blob, manifest = lower_ex(module(name), XSDK_REGISTERS)
     constants = push_constants(name, values)
     constants.update({r: list(v) for r, v in manifest})
-    return simulate.run(blob, registers={0: UV + [0.0, 0.0]}, constants=constants).exports[0]
+    return simulate.run(blob, registers={0: uv + [0.0, 0.0]}, constants=constants).exports[0]
 
 
 def close(got, want):
@@ -83,14 +84,12 @@ def main():
 
     check("vk_local_partial.frag, t.x = v_uv.x", run_fragment("vk_local_partial.frag", [A]), [UV[0]] + A[1:])
 
-    for name in ("vk_local_branch_reassign.frag", "vk_local_merged_early.frag"):
-        try:
-            lower_ex(module(name), XSDK_REGISTERS)
-        except LowerError as error:
-            print(f"  PASS {name}: refused ({error})")
-            continue
-        print(f"  FAIL {name}: lowered, where it must be refused")
-        raise SystemExit("FAILED")
+    for uv in (UV, UV[::-1]):
+        upper = uv[1] > 0.5
+        got = run_fragment("vk_local_branch_reassign.frag", [A, B], uv)
+        check(f"vk_local_branch_reassign.frag, v_uv.y {uv[1]}", got, [a * uv[0] for a in A] if upper else B)
+        check(f"vk_local_merged_early.frag, v_uv.y {uv[1]}", run_fragment("vk_local_merged_early.frag", [A, B], uv),
+              [(b if upper else a * uv[1]) + a * uv[0] for a, b in zip(A, B)])
     print("OK")
 
 

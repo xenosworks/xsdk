@@ -1,5 +1,5 @@
 #version 450
-// A local stored twice beside an if/else, which the unroller can't rewrite: refused.
+// A local stored twice beside an if/else: the fragment lowering refuses it, and the unroller rewrites it.
 layout(location = 0) in vec2 v_uv;
 layout(location = 0) out vec4 o_color;
 layout(push_constant) uniform Push { vec4 a; vec4 b; } pc;

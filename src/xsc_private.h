@@ -440,8 +440,9 @@ bool xsdk_xsc_ssa_loops(Xsc *x, XscModule *m);
 
 // ---- loops unrolled (xsc/unroll.py) ----
 
-// False with x's error set for a loop it can't unroll; refused says it was that and not memory.
-bool xsdk_xsc_unroll(Xsc *x, XscModule *m, bool *refused);
+// False with x's error set for a loop it can't unroll; refused says it was that and not memory. Returning true, ran
+// says whether it rewrote m. every_branch runs it for a pixel shader's if/else too, otherwise the fragment lowering's.
+bool xsdk_xsc_unroll(Xsc *x, XscModule *m, bool every_branch, bool *refused, bool *ran);
 // Whether operand i of an instruction is an id rather than a literal: an ExtInst's instruction number, a shuffle's
 // components, an extract's or insert's indices and a sample's image operands are literals.
 bool xsdk_xsc_id_operand(uint32_t opcode, uint32_t i);

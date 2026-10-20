@@ -35,12 +35,21 @@ void xsdk_xsc_default_options(XsdkXscOptions *options)
 		.instanced = false };
 }
 
-static bool has_loop(const XscModule *m)
+static bool has_opcode(const XscModule *m, uint32_t opcode)
 {
 	for (size_t i = 0; i < m->instr_count; i++) {
-		if (m->instrs[i].opcode == SPV_LOOP_MERGE)
+		if (m->instrs[i].opcode == opcode)
 			return true;
 	}
+	return false;
+}
+
+// Refused both ways: the first way's reason, then the second's.
+static bool refused_both(Xsc *x, const char *first)
+{
+	char second[XSDK_XSC_MESSAGE_BYTES];
+	memcpy(second, x->message, sizeof second);
+	(void)snprintf(x->message, sizeof x->message, "%.250s; %.250s", first, second);
 	return false;
 }
 
@@ -59,6 +68,29 @@ static bool refuse_initializers(Xsc *x, const XscModule *m)
 	return true;
 }
 
+// A pixel shader. An if/else the fragment lowering refuses where the unroller didn't run, one that changes a value in
+// one arm alone among them, as spirv-opt leaves HLSL's in a Phi, goes through the unroller, which merges what the arms
+// leave apart by selects, then the fragment lowering again; what compiled before compiles as it did. Refused both
+// ways, it gives both reasons.
+static bool lower_pixel(
+	Xsc *x, XscModule *m, const XsdkXscOptions *options, bool unrolled, XscInterface *si, XscLowered *out)
+{
+	if (xsdk_xsc_lower_fragment(x, m, options, si, out))
+		return true;
+	if (x->status != XSDK_XSC_REFUSED || unrolled || !has_opcode(m, SPV_BRANCH_CONDITIONAL))
+		return false;
+	char fragment[XSDK_XSC_MESSAGE_BYTES];
+	memcpy(fragment, x->message, sizeof fragment);
+	x->status = XSDK_XSC_OK;
+	x->message[0] = '\0';
+	// The interface is resolved again; nothing the refused lowering wrote is kept.
+	*out = (XscLowered){ .instance = XSC_NONE };
+	bool refused, ran;
+	if (xsdk_xsc_unroll(x, m, true, &refused, &ran) && xsdk_xsc_lower_fragment(x, m, options, si, out))
+		return true;
+	return x->status == XSDK_XSC_REFUSED ? refused_both(x, fragment) : false;
+}
+
 // Loops unrolled, or kept for hardware loops where a block counts them; a pixel shader's loop that won't unroll as the
 // one shape of hardware loop a bare uniform counts (xsc_lower_loop.c). Refused both ways, it gives both reasons.
 static bool lower(Xsc *x, XscModule *m, const XsdkXscOptions *options, XscInterface *si, XscLowered *out)
@@ -68,9 +100,9 @@ static bool lower(Xsc *x, XscModule *m, const XsdkXscOptions *options, XscInterf
 	if (!refuse_initializers(x, m))
 		return false;
 	const bool pixel = m->entry_points[0].model != MODEL_VERTEX;
-	bool refused;
-	if (!xsdk_xsc_unroll(x, m, &refused)) {
-		if (!refused || !pixel || !has_loop(m))
+	bool refused, ran;
+	if (!xsdk_xsc_unroll(x, m, false, &refused, &ran)) {
+		if (!refused || !pixel || !has_opcode(m, SPV_LOOP_MERGE))
 			return false;
 		char unrolling[XSDK_XSC_MESSAGE_BYTES];
 		memcpy(unrolling, x->message, sizeof unrolling);
@@ -78,13 +110,10 @@ static bool lower(Xsc *x, XscModule *m, const XsdkXscOptions *options, XscInterf
 		x->message[0] = '\0';
 		if (xsdk_xsc_lower_real_loop(x, m, options->pixel_registers, si, out) || x->status != XSDK_XSC_REFUSED)
 			return x->status == XSDK_XSC_OK;
-		char real_loop[XSDK_XSC_MESSAGE_BYTES];
-		memcpy(real_loop, x->message, sizeof real_loop);
-		(void)snprintf(x->message, sizeof x->message, "%.250s; %.250s", unrolling, real_loop);
-		return false;
+		return refused_both(x, unrolling);
 	}
 	if (pixel)
-		return xsdk_xsc_lower_fragment(x, m, options, si, out);
+		return lower_pixel(x, m, options, ran, si, out);
 	return xsdk_xsc_lower_vertex(x, m, options, si, out);
 }
 
