@@ -339,8 +339,9 @@ At start-up xsdk sets newlib's time zone, `TZ`, from XAM's `GetTimeZoneInformati
 `strftime`'s `%Z` give the console's local time, daylight saving included; a title's own `setenv("TZ", ...)` and
 `tzset()` replace it. `xsdk_system_language()` is the console's language, `XGetLanguage`'s number, which
 `XsdkLanguage` names, and `xsdk_system_country()` its country, XAM's number for it in its list of locales, 36 for the
-US. The console's time zone isn't where Xenia looks for it, `ExGetXConfigSetting`, whose time zone settings read 0
-(docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54").
+US. On the console so far, `GetTimeZoneInformation` and `ExGetXConfigSetting` both gave a zone of all zeros, UTC;
+whether the console had a zone set then isn't confirmed (docs/HARDWARE.md, "Drives, time zones and Xbox Home,
+milestone 54").
 
 ## Porting: the C and POSIX calls
 

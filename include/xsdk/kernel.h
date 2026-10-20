@@ -295,8 +295,8 @@ enum {
 };
 
 // ExGetXConfigSetting's user category, its language and its country, one byte
-// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc:66-96). Its time zone settings, 1-7, read 0 on a console set to
-// US Eastern (results/2026-10-20-milestone-54/step1_xsdk_test.log), so the time zone comes from GetTimeZoneInformation.
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc:66-96). xsdk takes the time zone from GetTimeZoneInformation
+// instead; on the console both gave all zeros (results/2026-10-20-milestone-54/).
 enum {
 	XCONFIG_USER_CATEGORY = 3,
 	XCONFIG_USER_LANGUAGE = 9,

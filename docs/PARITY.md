@@ -63,7 +63,7 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Wall clock, monotonic clocks, sleeps | Yes | `clock_gettime`, `gettimeofday`, `nanosleep` (`src/time.c`), `std::chrono` | `tests/test_clocks.c`, `test_cpp_chrono.cpp` | Short sleeps: a 1 ms sleep took about 2 ms (docs/HARDWARE.md, "Sleeps, write speeds, and a set-up that wouldn't run from a cached stream") |
-| Local time in the console's time zone | Partial | `localtime`, `mktime`, `strftime`, newlib's `TZ` set at start-up from XAM's `GetTimeZoneInformation` (`src/system.c`) | `tests/test_system.c`, not yet on the console | The console run: `ExGetXConfigSetting`, read first, held no time zone (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") |
+| Local time in the console's time zone | Partial | `localtime`, `mktime`, `strftime`, newlib's `TZ` set at start-up from XAM's `GetTimeZoneInformation` (`src/system.c`) | `tests/test_system.c`; on the console XAM gave a zone of all zeros, as `ExGetXConfigSetting` did | A run with a time zone known to be set (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") |
 
 ## Files, drives and storage
 

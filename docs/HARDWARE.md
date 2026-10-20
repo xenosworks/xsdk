@@ -4635,9 +4635,11 @@ memory unit (results/2026-10-20-milestone-54/):
   cut to 9 bytes and set to 16 again read back its old bytes 9 to 15, `line 2\n`, not zeros, its sizes right
   (`step2_xsdk_test.log`). The hard disk's file system moves the end without clearing what's past it, so `truncate`
   and `ftruncate` now write the zeros themselves.
-- **The console's time zone isn't in `ExGetXConfigSetting`'s user category:** with the dashboard set to US Eastern,
-  its settings 1-7, the time zone's biases, names and dates, all read 0, while its language, 1, and country, 103, the
-  US, were right. `XGetLanguage` gave 1 and `XamGetLocaleEx(111, 43)` 36, the US in XAM's locales.
+- **The time zone read as all zeros both ways.** `ExGetXConfigSetting`'s user category settings 1-7, the time zone's
+  biases, names and dates, all read 0, while its language, 1, and country, 103, the US, were right
+  (`step1_xsdk_test.log`). XAM's `GetTimeZoneInformation` (0x43F) resolved, answered 0, `TIME_ZONE_ID_UNKNOWN`, and
+  wrote 172 bytes, Win32's size, all zeros (`step2_xsdk_test.log`). Whether the console had a time zone set when these
+  ran isn't confirmed. `XGetLanguage` gave 1 and `XamGetLocaleEx(111, 43)` 36, the US in XAM's locales.
 - **The title-terminate notification's routine runs on a thread of the console's,** hardware thread 3, not one the
   title made, when the title is ended from outside (`probe_terminate_registered_late.txt`):
   - every thread of the title is frozen: none counted in 1 ms, and a mutex a frozen thread held stayed held through
