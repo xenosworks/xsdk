@@ -1,0 +1,14 @@
+log: game:\checker.log
+log: named after \Device\Harddisk0\Partition1\samples\checker\checker.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+checker: scroll the checks with the left stick, press A to beep, press Back to end
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 23925 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 30698 us
+checker: the display is 1280x720
+checker: the middle of the first frame held FFFFFFFF, its corner FF183060
+PASS: checker: the first frame shows a check in the middle
+PASS: checker: the first frame's corner holds the clear colour
+checker: 198 audio frames submitted, 0 failed
+PASS: checker: the kernel takes the audio frames

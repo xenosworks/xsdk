@@ -1,0 +1,11 @@
+log: game:\cube.log
+log: named after \Device\Harddisk0\Partition1\samples\cube\cube.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+cube: turn the cube with the left stick; press Back to end
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 29127 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 31273 us
+cube: the middle of the first frame held FFBF0000, its corner FF202020
+PASS: cube: the first frame shows the red front face in the middle, in front of the blue back face
+PASS: cube: the first frame's corner holds the clear colour

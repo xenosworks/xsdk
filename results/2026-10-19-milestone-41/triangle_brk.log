@@ -1,0 +1,13 @@
+log: game:\triangle_brk.log
+log: named after \Device\Harddisk0\Partition1\samples\triangle_brk\triangle_brk.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+triangle: a triangle whose colours move round once a second; press Back to end
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 17101 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 31267 us
+PASS: triangle: the first frame shows red, green and blue corners
+triangle: turn 1: corner 0 held FFE60D0D
+triangle: turn 1: corner 1 held FF0DE50D
+triangle: turn 1: corner 2 held FF0D0DE5
+FAIL: triangle: the first frame after the colours moved shows them moved

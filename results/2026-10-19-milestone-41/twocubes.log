@@ -1,0 +1,13 @@
+log: game:\twocubes.log
+log: named after \Device\Harddisk0\Partition1\samples\twocubes\twocubes.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+twocubes: turn the left cube with the left stick, the right with the right; press Back to end
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 23253 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 25997 us
+twocubes: the display is 1280x720
+twocubes: the first frame held FFFF0000 at the left cube, FFFF0000 at the right, FF183060 between
+PASS: twocubes: the first frame shows the left cube's red front face
+PASS: twocubes: the first frame shows the right cube's red front face
+PASS: twocubes: the first frame holds the clear colour between the cubes

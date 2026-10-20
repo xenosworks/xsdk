@@ -1,0 +1,13 @@
+log: game:\hello_brk.log
+log: named after \Device\Harddisk0\Partition1\samples\hello_brk\hello_brk.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+hello: move the sticks and triggers to change the colour, hold A to rumble, press Back to end
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 32101 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 26916 us
+hello: the display is 1280x720
+hello: XamInputGetState returned 0x0000048F
+hello: pixel (0, 0) held FF7F7FFF, not FF808000
+hello: the first frame cleared to FF808000
+FAIL: hello: the first resolved frame holds the colour it was cleared to

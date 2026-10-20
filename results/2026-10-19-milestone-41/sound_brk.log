@@ -1,0 +1,9 @@
+log: game:\sound_brk.log
+log: named after \Device\Harddisk0\Partition1\samples\sound_brk\sound_brk.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+sound: a tone; the right trigger raises it, the left lowers it; press Back to end
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 23815 us
+sound: XamInputGetState returned 0x0000048F
+sound: 0 frames submitted in about 1000 ms, 187 expected
+FAIL: sound: the kernel took frames at 48 kHz
