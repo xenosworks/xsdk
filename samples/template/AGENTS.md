@@ -51,7 +51,7 @@ evidence):
   held before.
 - **A resolve undoes the target, the depth test, the shaders and texture slot 0:** set them again after it, each
   frame, and a shader's literals after each `xsdk_gpu_set_shaders`.
-- **Shaders are GLSL or HLSL in xost's subset:** no bitwise operations, no `switch` and, in HLSL, no early `return`;
+- **Shaders are GLSL or HLSL in xost's subset:** no bitwise operations, no `switch` case falling through to the next;
   `sin` and `cos` near -pi to pi only (<xsdk>/xenos-toolchain/docs/xsc.md, "HLSL"). The build says what it refuses.
 - **Each `xsdk_gpu_alloc` takes at least 64 KiB;** allocate once and split the memory, not per object, starting each
   vertex stream and index list on 4 bytes and each texture on 4 KB.

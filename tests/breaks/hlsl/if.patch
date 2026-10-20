@@ -1,15 +1,15 @@
 --- a/src/xsc_unroll.c
 +++ b/src/xsc_unroll.c
-@@ -205,6 +205,8 @@ typedef struct {
+@@ -207,6 +207,8 @@ typedef struct {
  	size_t carried_capacity;
  	uint32_t true_id;
  	bool refused;
 +	// Broken on purpose: run for an if/else the fragment lowering refused, the merges' selects take their arms swapped.
 +	bool swap_arms;
- } Unroller;
- 
- static bool refuse(Unroller *u, const char *message)
-@@ -904,7 +906,7 @@ static bool merged(Unroller *u, uint32_t type, const uint32_t values[2], uint32_
+ 	// A return on data outside any loop: 1.0 while the pixel or vertex runs, 0 while every one does; what each output
+ 	// held where its pixel or vertex returned; and whether the arm walked last ended so.
+ 	uint32_t running;
+@@ -911,7 +913,7 @@ static bool merged(Unroller *u, uint32_t
  		return true;
  	}
  	const XscBranch *const b = &u->branches[u->branch_count - 1];
@@ -18,7 +18,7 @@
  	if (!emit_value(u, SPV_SELECT, type, operands, 3, out))
  		return false;
  	if (!xsdk_xsc_room(u->x, &u->merges, u->merge_count, &u->merge_capacity, sizeof *u->merges))
-@@ -1325,7 +1327,7 @@ static bool interpret_phi(Unroller *u, const Block *b, const XscInstr *ins, Loca
+@@ -1373,7 +1375,7 @@ static bool interpret_phi(Unroller *u, c
  		return map_set(u, lm, ins->result_id, values[0]);
  	if (!values[0] || !values[1])
  		return refuse(u, "a Phi without a value from each arm");
@@ -27,7 +27,7 @@
  	uint32_t id;
  	if (!emit_value(u, SPV_SELECT, ins->result_type, operands, 3, &id) ||
  		!xsdk_xsc_room(u->x, &u->merges, u->merge_count, &u->merge_capacity, sizeof *u->merges))
-@@ -2108,7 +2110,7 @@ bool xsdk_xsc_unroll(Xsc *x, XscModule *m, bool every_branch, bool *refused, boo
+@@ -2161,7 +2163,7 @@ bool xsdk_xsc_unroll(Xsc *x, XscModule *
  			return xsdk_xsc_fail(x, XSDK_XSC_REFUSED, "a switch (v1)");
  		}
  	}

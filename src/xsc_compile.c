@@ -196,7 +196,8 @@ static XsdkXscStatus compile_once(
 	XscInterface si;
 	XscLowered lowered = { .instance = XSC_NONE };
 	const bool ok = xsdk_xsc_spirv_parse(&x, spirv, spirv_words, &m) && xsdk_xsc_spirv_zero_nulls(&x, &m) &&
-		xsdk_xsc_ssa_loops(&x, &m) && lower(&x, &m, options, &si, &lowered) && copy_out(&x, &si, &lowered, shader);
+		xsdk_xsc_switches(&x, &m) && xsdk_xsc_ssa_loops(&x, &m) && lower(&x, &m, options, &si, &lowered) &&
+		copy_out(&x, &si, &lowered, shader);
 	if (!ok && x.status == XSDK_XSC_OK)
 		xsdk_xsc_fail(&x, XSDK_XSC_MALFORMED, "failed without an error");
 	if (x.status != XSDK_XSC_OK)

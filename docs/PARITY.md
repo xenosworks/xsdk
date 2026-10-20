@@ -146,9 +146,9 @@ which implements what the games it runs need:
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
-| GLSL to Xenos microcode, offline | Partial | glslang to SPIR-V, then xost (`xenos-toolchain/`) | xost's tests | A subset of GLSL (`xenos-toolchain/docs/xsc.md`): no bitwise operations; `if` on data as selects of both arms, a vertex shader's and one inside a loop too, and on a uniform in execs on the predicate; loops unrolled, or hardware loops where an int in a block counts them, with a break ending a pass on a uniform; no `switch` or `continue`; `gl_ClipDistance` only as `dot(gl_Position, a plane from a block)`, no `gl_CullDistance` |
+| GLSL to Xenos microcode, offline | Partial | glslang to SPIR-V, then xost (`xenos-toolchain/`) | xost's tests | A subset of GLSL (`xenos-toolchain/docs/xsc.md`): no bitwise operations; `if` on data as selects of both arms, a vertex shader's and one inside a loop too, and on a uniform in execs on the predicate; loops unrolled, or hardware loops where an int in a block counts them, with a break ending a pass on a uniform; `switch` as an if/else chain, no fall-through; no `continue`; `gl_ClipDistance` only as `dot(gl_Position, a plane from a block)`, no `gl_CullDistance` |
 | SPIR-V to microcode on the console | Yes | `xsdk_xsc_compile` (`xsc.h`) | `tests/test_xsc.c` | Compiling GLSL on the console (docs/scope/shader-compiling.md) |
-| Shader model 3 HLSL to Xenos microcode, offline | Partial | glslang-xenon to SPIR-V, then xost, `xsdk_add_shaders` (`xenos-toolchain/docs/xsc.md`, "HLSL"); D3D9's semantics, `s#`, `c#`, `b#` and `i#`, the constant table (`xsdk_shader_constant`) | xost's `tests/test_hlsl_*.py`; xsdk_test's HLSL grid (`tests/test_hlsl.c`); `tests/cmake/cmake_check.cpp` | GLSL's gaps, and an early `return`; shader model 4 and later, assembly shaders and Effects files |
+| Shader model 3 HLSL to Xenos microcode, offline | Partial | glslang-xenon to SPIR-V, then xost, `xsdk_add_shaders` (`xenos-toolchain/docs/xsc.md`, "HLSL"); D3D9's semantics, `s#`, `c#`, `b#` and `i#`, the constant table (`xsdk_shader_constant`) | xost's `tests/test_hlsl_*.py`; xsdk_test's HLSL grid (`tests/test_hlsl.c`); `tests/cmake/cmake_check.cpp` | GLSL's gaps; shader model 4 and later, assembly shaders and Effects files |
 
 ## Networking
 

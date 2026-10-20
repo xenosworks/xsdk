@@ -376,8 +376,17 @@ An `if` that changes a value, `if (c) x *= 0.5;` among them, leaves its arms' va
 pixel shader's if/else lowering, written for GLSL's stores, refuses; the unroller then takes the shader (Control flow;
 `tests/test_hlsl_if.py`).
 
+An early `return`, a helper's or the entry point's, and a `switch` compile (Switches; `tests/test_hlsl_return.py`):
+spirv-opt's merge-return wraps a shader that returns early in a switch on a constant with no cases, each return a
+branch to its merge, and xost puts each return back where it was, as GLSL's is; a return in a loop arrives as a flag
+and a break, which the loop's handling takes; a `switch` becomes an if/else chain.
+
 Refused, each by name, with xost's message where it's short:
-- **An early `return`,** a helper's or the entry point's, which spirv-opt makes a switch of (`a switch`).
+- **Switches and returns** (Switches): a case falling through to the next (`falling through`); a case left other than
+  by one `break` at its end, a `break` in an if inside it or a `continue` among them (`other than by a break at its
+  end`); a switch on other than a 32-bit int; more than 32 cases; merge-return's merge holding more than values and
+  output stores before its return; and a `discard` after a return on data where the unroller takes the shader (`a
+  discard after a return on data`).
 - **Loops** (Loops): a do/while's header Phi read after the loop; a value a loop's test works out, kept past the loop or
   read in its pass where xost can't work it out again; a value a do/while's pass works out read after the loop that no
   header Phi carries; a merge Phi of a header Phi that can't share its variable; a Phi on the edge from a test into the
@@ -396,10 +405,12 @@ Refused, each by name, with xost's message where it's short:
 - **Registers:** a `b#` on other than a bool, an `i#` on other than an int; two members in one register (`share
   register`); a bool an if reads past b127 or an int a loop counts past i15 (`past the stage's`); and an arm of a
   bool's if, in execs on its boolean constant, that uses a0 (`an arm on a boolean constant that uses a0`).
-- **What GLSL can't do either** (Supported; Not yet / out of scope): a `discard` or `return` in a loop, a fifth nested
-  hardware loop, more than 255 passes of one, more than 64 registers.
+- **What GLSL can't do either** (Supported; Not yet / out of scope): a `discard` in a loop, a fifth nested hardware
+  loop, more than 255 passes of one, more than 64 registers.
 
-Wrong without a refusal, for GLSL too: `pow` of an exponent whose components differ takes its x in every lane.
+Wrong without a refusal, for GLSL too: `pow` of an exponent whose components differ takes its x in every lane; and a
+discard in a pixel shader's first if/else kills on that if alone, whatever else branches, a return in an if inside its
+other arm among it (xsdk:TODO.md).
 
 ## Literal constant pool (the host-upload contract)
 
@@ -543,9 +554,12 @@ branch alone, as glslang writes GLSL's, it leaves as it is:
 
 Refused: a do/while's header Phi read after the loop, a value the test block
 works out kept past the loop, one a do/while's pass works out read after it
-that no header Phi carries, a merge Phi of a header Phi that can't share its
-variable, and a switch, which spirv-opt's inliner makes of an early return
-(`tests/test_hlsl_loops.py`, each shape beside its GLSL twin).
+that no header Phi carries, and a merge Phi of a header Phi that can't share
+its variable (`tests/test_hlsl_loops.py`, each shape beside its GLSL twin).
+A switch, which spirv-opt's merge-return makes of an early return, is gone
+before this pass runs (Switches); a return in a loop arrives as a flag set
+and a break, the flag a merge Phi like any other, and a return after the loop
+where it's set.
 
 In an unrolled loop:
 
@@ -577,7 +591,8 @@ In an unrolled loop:
   loops, milestone 46 step 2").
 - **Refused:** a `discard` or `return` in a loop, and a `continue` on data
   where the counter isn't what it is at the pass's end, as in a `while` that
-  steps it after the `continue`.
+  steps it after the `continue`. HLSL's `return` in a loop reaches the
+  unroller as a break (Switches).
 
 A loop a bare uniform counts, `for(i=0;i<u_count;i++)`, which doesn't unroll,
 goes to a tiny register-machine lowerer (`xsdk:src/xsc_lower_loop.c`): it
@@ -698,7 +713,12 @@ both arms, each from the locals and outputs as they were before the branch, and
 where the arms meet it gives each local and output they leave apart a select of
 the condition and the two values, and each Phi there (glslang's `&&` and `||`)
 the same. Outputs are kept as locals are and stored once at the end. A `break`
-or `continue` in an arm is gated (Loops). The lowering
+or `continue` in an arm is gated (Loops), and so is a `return` in an arm
+outside any loop, as a break leaving the function: where the pixel or vertex
+returns, each output keeps a returned copy, `cnd(running && c, value now,
+returned)`, and `running` becomes `running && !c`; at the end each output is
+`cnd(running, value, returned)` (`return_on_data`). The unroller emits no
+kill, so a `discard` after such a return is refused. The lowering
 (`xsdk:src/xsc_lower_flow.c`) then picks, for each if/else:
 
 - **Execs on the predicate,** in a pixel shader where every pixel takes the same
@@ -755,8 +775,9 @@ fragment lowering took lowers as it did (`xsdk:src/xsc_compile.c`,
   (xenia:src/xenia/gpu/draw_util.cc:498-502). `gl_FragDepth` stored on one path
   alone is refused for that; an interpolator or colour stored on one path takes
   that value on the other, which GLSL leaves undefined.
-- **Refused:** a `discard` or `return` in an arm of an if/else the unroller
-  merges, a `switch`, and a matrix, array or struct an if/else chooses.
+- **Refused:** a `discard` in an arm of an if/else the unroller merges, a
+  `return` in one inside a loop, a `discard` after a return on data, and a
+  matrix, array or struct an if/else chooses.
 - **The optimiser** leaves a program with predicated instructions alone, as it
   did before (`can_optimize`).
 
@@ -765,6 +786,46 @@ layouts and every arm on `xdis/simulate.py`, which follows a program's control
 flow as Xenia's interpreter does for one vertex or pixel
 (xenia:src/xenia/gpu/shader_interpreter.cc:26-258); `tests/test_dynamic_index.py`
 checks arms using a0 in plain execs and arms without it on the predicate.
+
+### Switches
+
+A pass before the loops' (`xsdk:src/xsc_switch.c`) leaves no switch for the
+unroller or the lowerings, which take none:
+
+- **merge-return's wrapper.** glslang runs spirv-opt's merge-return on HLSL
+  (glslang SPIRV/SpvTools.cpp:202), which wraps a function that returns early
+  in a switch on a constant with no cases (SPIRV-Tools 2ec8457a,
+  source/opt/merge_return_pass.cpp:932-977), each return a branch to its merge
+  (merge_return_pass.cpp:238-290); the returned values meet there in a Phi,
+  stored to the outputs once the function is inlined, then the return. The
+  switch becomes a branch to its default, and each branch to the merge a copy
+  of it, each Phi the value from the block that branched, each value it makes
+  a new id; an if/else's arm to the merge gets a block of its own holding the
+  copy. So each return returns where it is, as glslang writes GLSL's. A return
+  in a loop is a flag set and a break to the loop's merge, then, after the
+  loop, a branch to the wrapper's merge where the flag is set
+  (merge_return_pass.cpp:488-598), so the copy goes there. Refused: a merge
+  holding more than its Phis, values and stores to outputs before its return,
+  or more than 64 instructions, and one reached other than by a branch or an
+  if/else's arm.
+- **Any other switch,** HLSL's or GLSL's, on a 32-bit int, becomes an if/else
+  chain: the first case's test, the selector equal to any of its literals,
+  where the switch was, each next case's test in the block the one before goes
+  to where it fails, the default last; each if/else meets the one before it,
+  and the switch's merge's Phis are split along the meetings. A case that is
+  the default's block is left to the default. Refused: a case falling through
+  to another; one left other than by one `break` at its end, by a `break` in
+  an if inside it, a `continue`, or a return merge-return made a branch from
+  inside an if; a selector other than a 32-bit int; more than 32 cases or 64
+  literals. GLSL's switch was refused before, or, in a pixel shader the
+  fragment lowering took, compiled silently wrong, one case's stores whatever
+  the selector.
+
+A return then reaches the unroller or the fragment lowering in an arm, as GLSL's
+does; the unroller gates one on data (above). `tests/test_hlsl_return.py` runs
+early returns under an if, in the else, nested, after a sample, two of them, in
+a vertex shader, in an unrolled and a hardware loop and in a switch's case, and
+switches in both stages, each against what HLSL defines, beside GLSL twins.
 
 ## Not yet / out of scope
 - **Bitwise (`& | ^ ~`) and dynamic shifts** — the Xenos ALU has no bit
@@ -779,9 +840,10 @@ checks arms using a0 in plain execs and arms without it on the predicate.
   divisors: on the console `mod(x, 3.0)` at 3 and `mod(x, 5.0)` at 5, 10 and 15
   gave the divisor, not 0, which GLSL's precision for a division allows
   (xsdk:docs/HARDWARE.md, "Samples in a loop's pass, milestone 46 step 6").
-- **Loops:** a `discard` or `return` in a loop, a store into part of an output
-  in a hardware loop, a fifth nested hardware loop, and more than 255 passes of
-  one hardware loop, which Shader Model 3 hasn't either (Loops a block counts).
+- **Loops:** a `discard` in a loop, GLSL's `return` in one, which HLSL's
+  reaches xost as a break (Switches), a store into part of an output in a
+  hardware loop, a fifth nested hardware loop, and more than 255 passes of one
+  hardware loop, which Shader Model 3 hasn't either (Loops a block counts).
 
 `dFdx`/`dFdy`/`fwidth` are **hardware-verified** (the `getTextureGradients`
 fetch is benign to the pipeline -- confirmed by the DSOLID isolation slot

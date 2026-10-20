@@ -34,6 +34,14 @@ bool or int keeps its `b#` or `i#`: `idioms/i05` and `i10`, `binding/`'s `intege
 - **`if/`**: `tests/test_hlsl_if.py`'s, an if/else changing a value in a pixel shader without a loop, step 8: an if
   with no else (`if_only_ps.hlsl`, beside its GLSL twin `if_only.frag`), an else alone, nested if/else, an if on a
   sample and one on a bool at `register(b2)`.
+- **`return/`**: `tests/test_hlsl_return.py`'s, early returns, which spirv-opt's merge-return wraps in a switch, step 8:
+  under an if (`if_ps.hlsl`, beside its GLSL twin `if.frag`), in the else, in an if inside another, after a sample,
+  two of them, in a vertex shader, in an unrolled loop and in a hardware loop, and a refusal, a discard after a return
+  on data (`refused_discard_ps.hlsl`, beside its GLSL twin `refused_discard.frag`).
+- **`switch/`**: `tests/test_hlsl_return.py`'s, switches, step 8: cases that break, two literals sharing one, and a
+  default (`switch_ps.hlsl`, beside its GLSL twin `switch.frag`), a vertex shader's without a default, an early return
+  in a case, and a refusal, a case falling through to the next.
 - **`grid_*`**: xsdk_test's HLSL grid (xsdk:tests/test_hlsl.c), compiled on the console from this SPIR-V;
   `tests/test_hlsl_link.py` links `grid_gaps_*` on the PC, `tests/test_hlsl_rest.py` runs `grid_skin_vs`,
-  `tests/test_hlsl_binding.py` `grid_binding_ps` and `tests/test_hlsl_if.py` `grid_if_ps`.
+  `tests/test_hlsl_binding.py` `grid_binding_ps`, `tests/test_hlsl_if.py` `grid_if_ps` and `tests/test_hlsl_return.py`
+  `grid_return_ps` and `grid_switch_ps`.

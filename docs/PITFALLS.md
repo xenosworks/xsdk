@@ -91,9 +91,9 @@ where the evidence is; docs/HARDWARE.md is cited by section.
 - **Looks like:** the build stops with `xost didn't compile it (refused): ...`, or worse, a shader that builds gives
   wrong values: `sin` and `cos` far from -pi to pi, `atan` past -1 to 1, integer division of negative numbers, and
   `mod` at some exact multiples, such as `mod(3.0, 3.0)` giving 3.
-- **Do:** keep to what xost lowers: no bitwise operations or `switch`; angles reduced to -pi to pi first; loops with
-  at most 255 passes; at most 64 registers a shader. docs/GUIDE.md, "Shaders and their constants", says what else the
-  build takes.
+- **Do:** keep to what xost lowers: no bitwise operations or `switch` cases falling through; angles reduced to -pi to
+  pi first; loops with at most 255 passes; at most 64 registers a shader. docs/GUIDE.md, "Shaders and their constants",
+  says what else the build takes.
 - **Evidence:** xenos-toolchain/docs/xsc.md, "Approximate builtins", "Register budget" and "Not yet / out of scope".
 
 ## Floats at unaligned addresses

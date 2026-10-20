@@ -7,7 +7,9 @@
 // Loops unrolled and locals turned into SSA values, as xenos-toolchain/xsc/unroll.py does it. An if/else on data runs
 // both arms, and each local, output and Phi they leave apart is merged by a select where they meet. A loop a block's
 // int counts, or whose count is data, is walked once, for a hardware loop, what it carries a value at the top of each
-// pass; a break or continue on data in its pass is gated as in an unrolled loop, alive a value it carries from 1.
+// pass; a break or continue on data in its pass is gated as in an unrolled loop, alive a value it carries from 1. A
+// return on data outside any loop is gated as a break is, each output ending with what it held where its pixel or
+// vertex returned.
 
 enum {
 	MAX_TRIP = 4096,
@@ -205,6 +207,11 @@ typedef struct {
 	size_t carried_capacity;
 	uint32_t true_id;
 	bool refused;
+	// A return on data outside any loop: 1.0 while the pixel or vertex runs, 0 while every one does; what each output
+	// held where its pixel or vertex returned; and whether the arm walked last ended so.
+	uint32_t running;
+	uint32_t returned[MAX_SLOTS];
+	bool returning;
 } Unroller;
 
 static bool refuse(Unroller *u, const char *message)
@@ -1086,6 +1093,45 @@ static bool stop_pass(Unroller *u, Unrolled *ul, bool is_break)
 	return true;
 }
 
+// A return on data outside any loop, as a break leaves an unrolled loop: where the pixel or vertex returns, each output
+// keeps a returned copy, returned = cnd(running && c, value now, returned), c the arms' conditions; then
+// running = running && !c.
+static bool return_on_data(Unroller *u)
+{
+	if (!u->bool_tid)
+		return refuse(u, "a return on data without a bool type");
+	uint32_t active = u->running;
+	for (size_t k = 0; k < u->arms; k++) {
+		uint32_t c = u->path[k].condition;
+		if ((!u->path[k].when && !logical(u, OP_LOGICAL_NOT, c, 0, &c)) || !both(u, active, c, &active))
+			return false;
+	}
+	for (size_t i = 0; i < u->slot_count; i++) {
+		if (!u->slots[i].ignored &&
+			!gate(u, active, u->slots[i].type, u->slot_value[i], u->returned[i], &u->returned[i]))
+			return false;
+	}
+	uint32_t still;
+	u->returning = true;
+	return logical(u, OP_LOGICAL_NOT, active, 0, &still) && both(u, u->running, still, &u->running);
+}
+
+// Each output where the function ends: what it holds where the pixel or vertex still runs, else what it held where it
+// returned.
+static bool gate_returned(Unroller *u)
+{
+	for (size_t i = 0; u->running && i < u->slot_count; i++) {
+		const uint32_t values[2] = { u->slot_value[i], u->returned[i] };
+		if (u->slots[i].ignored)
+			continue;
+		if (u->slots[i].depth && values[0] != values[1] && (!values[0] || !values[1]))
+			return refuse(u, "gl_FragDepth written on one path of an if/else only: the depth export needs every path");
+		if (!gate(u, u->running, u->slots[i].type, values[0], values[1], &u->slot_value[i]))
+			return false;
+	}
+	return true;
+}
+
 // The walk reaching the loop's merge or continue block. A break or continue every running pixel takes ends the loop
 // or the pass, as the unroller folds it, the pass's end keeping a pixel that stopped before as it was; one on data, or
 // a break a pixel still in the loop doesn't reach, is gated, and so is any break from a hardware loop, whose passes
@@ -1146,11 +1192,13 @@ static bool data_branch(Unroller *u, const Block *b, LocalMap *lm, uint32_t merg
 		u->path[u->arms++] = (Arm){ condition, arm == 0 };
 		const bool walked = label == merge || walk(u, label, merge, true, &exits[arm], &left[arm]);
 		u->arms--;
+		const bool returned = u->returning;
+		u->returning = false;
 		if (!walked)
 			return false;
-		if (left[arm] && !(u->unrolled && u->unrolled->left))
+		if (left[arm] && !returned && !(u->unrolled && u->unrolled->left))
 			return refuse(u, "a discard or return inside an if/else on data");
-		if (left[arm])
+		if (left[arm] && !returned)
 			u->unrolled->left = 0;
 		work = work || works(u, first);
 		if (!save(u, &after[arm]))
@@ -1169,10 +1217,10 @@ static bool data_branch(Unroller *u, const Block *b, LocalMap *lm, uint32_t merg
 		u->meeting.exit[0] = u->meeting.exit[1] = exits[live];
 		u->meeting.known = true;
 	}
-	if (left[0] && left[1]) {
+	if (left[0] && left[1] && u->unrolled)
 		u->unrolled->left = u->unrolled->cont;
-		*ended = true;
-	}
+	u->returning = left[0] && left[1] && !u->unrolled;
+	*ended = left[0] && left[1];
 	return merge_states(u, after);
 }
 
@@ -1855,6 +1903,11 @@ static bool walk(Unroller *u, uint32_t start, uint32_t stop, bool has_stop, uint
 		*exit = b->label;
 		if (!b->term || is_return(b->term->opcode)) {
 			*ended = true;
+			// The unroller emits no kill, and one here must spare a pixel that returned before it.
+			if (b->term && b->term->opcode == SPV_KILL && u->running)
+				return refuse(u, "a discard after a return on data (v1)");
+			if (b->term && b->term->opcode == SPV_RETURN && u->arms && !u->unrolled && !return_on_data(u))
+				return false;
 		} else if (b->term->opcode == SPV_BRANCH) {
 			cur = xsdk_xsc_operand(b->term, 0);
 		} else if (!branch(u, b, &lm, &cur, ended)) {
@@ -1974,7 +2027,7 @@ static bool rewrite_function(Unroller *u)
 	u->counter = m->bound;
 	uint32_t exit;
 	bool ended;
-	if (!walk(u, m->instrs[entry_idx].result_id, 0, false, &exit, &ended) || !store_outputs(u))
+	if (!walk(u, m->instrs[entry_idx].result_id, 0, false, &exit, &ended) || !gate_returned(u) || !store_outputs(u))
 		return false;
 	// head | minted constants | the function's start and entry label | locals | body | the function's end
 	XscInstr *list = NULL;
