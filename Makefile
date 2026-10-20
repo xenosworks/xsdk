@@ -2,6 +2,8 @@
 
 # The toolchain tools/toolchain/build.sh builds.
 TOOLCHAIN ?= $(HOME)/xsdk-gcc/bin/powerpc-xsdk-elf-
+# Its PREFIX, for the CMake builds below.
+XSDK_TOOLCHAIN := $(abspath $(TOOLCHAIN:%/bin/powerpc-xsdk-elf-=%))
 CC := $(TOOLCHAIN)gcc
 CXX := $(TOOLCHAIN)g++
 AR := $(TOOLCHAIN)ar
@@ -82,9 +84,15 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
 	$(BUILD)/guide_check.xex $(PROBES:%=$(BUILD)/%.xex)
 
+# Configures CMake project $(1) in $(2) with this toolchain, afresh when $(2) was configured with another, whose
+# compiler a configure would keep.
+cmake_configure = cmake \
+	$$(grep -qsF '_COMPILER "$(XSDK_TOOLCHAIN)/bin/' $(2)/CMakeFiles/*/CMake*Compiler.cmake || echo --fresh) \
+	-S $(1) -B $(2) -G Ninja -DCMAKE_TOOLCHAIN_FILE=$(CURDIR)/cmake/xsdk.cmake -DXSDK_TOOLCHAIN=$(XSDK_TOOLCHAIN)
+
 # A title built through cmake/xsdk.cmake, as CMake projects such as Dusklight build; needs CMake and Ninja.
 cmake_check: $(BUILD)/libxsdk.a
-	cmake -S tests/cmake -B $(BUILD)/cmake_check -G Ninja -DCMAKE_TOOLCHAIN_FILE=$(CURDIR)/cmake/xsdk.cmake
+	$(call cmake_configure,tests/cmake,$(BUILD)/cmake_check)
 	cmake --build $(BUILD)/cmake_check
 
 # The samples, each a CMake project built as a title's is, into build/samples/<sample>/<sample>.xex; sdl3 is built when
@@ -93,9 +101,8 @@ SAMPLES := hello triangle cube sound sdl3 template
 SAMPLE_BREAKS := hello triangle cube sound sdl3
 SDL3_DIR ?=
 # Only sdl3 reads SDL3_DIR, so the others aren't to warn that they don't.
-sample_build = cmake -S samples/$(1) -B $(BUILD)/samples/$(2) -G Ninja -DCMAKE_TOOLCHAIN_FILE=$(CURDIR)/cmake/xsdk.cmake \
-	-DCMAKE_BUILD_TYPE=RelWithDebInfo --no-warn-unused-cli $(if $(SDL3_DIR),-DSDL3_DIR=$(SDL3_DIR)) $(3) && \
-	cmake --build $(BUILD)/samples/$(2)
+sample_build = $(call cmake_configure,samples/$(1),$(BUILD)/samples/$(2)) -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+	--no-warn-unused-cli $(if $(SDL3_DIR),-DSDL3_DIR=$(SDL3_DIR)) $(3) && cmake --build $(BUILD)/samples/$(2)
 
 samples: $(BUILD)/libxsdk.a $(BUILD)/host/libxsc.so
 	for sample in $(SAMPLES); do $(call sample_build,$$sample,$$sample) || exit 1; done
