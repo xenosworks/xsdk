@@ -1,0 +1,291 @@
+log: game:\probe_msaa.log
+log: named after \Device\Harddisk0\Partition1\msaaprobe\probe_msaa.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+msaa probe: from case formats_1, group default (game:\msaa_case.txt names a case or group)
+msaa probe: case formats_1: each target format at 1 sample, the control: drawn, edges resolved, blended, tiles
+msaa: formats at 1: 8_8_8_8: the scene, at tile 0, depth at tile 2016
+PASS: msaa: formats at 1: 8_8_8_8: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 1: 8_8_8_8: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+msaa: formats at 1: 8_8_8_8: the quad blended onto itself at (192, 64) is 0.878431 0.12549 0.501961 1
+PASS: msaa: formats at 1: 8_8_8_8: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 1: 8_8_8_8: a neighbouring target at tile 32, then at 16
+PASS: msaa: formats at 1: 8_8_8_8: takes 32 eDRAM tiles: a target at tile 32 kept its pixels, 0 changed; one at tile 16 lost 16384 of 32768
+msaa: formats at 1: 2_10_10_10: the scene, at tile 0, depth at tile 2016
+PASS: msaa: formats at 1: 2_10_10_10: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 1: 2_10_10_10: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+msaa: formats at 1: 2_10_10_10: the quad blended onto itself at (192, 64) is 0.875855 0.125122 0.500489 0.666667
+PASS: msaa: formats at 1: 2_10_10_10: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 1: 2_10_10_10: a neighbouring target at tile 32, then at 16
+PASS: msaa: formats at 1: 2_10_10_10: takes 32 eDRAM tiles: a target at tile 32 kept its pixels, 0 changed; one at tile 16 lost 16384 of 32768
+msaa: formats at 1: 2_10_10_10_FLOAT: the scene, at tile 0, depth at tile 2016
+PASS: msaa: formats at 1: 2_10_10_10_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 1: 2_10_10_10_FLOAT: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+msaa: formats at 1: 2_10_10_10_FLOAT: the quad blended onto itself at (192, 64) is 2.5 5 6 0.666504
+PASS: msaa: formats at 1: 2_10_10_10_FLOAT: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 1: 2_10_10_10_FLOAT: a neighbouring target at tile 32, then at 16
+PASS: msaa: formats at 1: 2_10_10_10_FLOAT: takes 32 eDRAM tiles: a target at tile 32 kept its pixels, 0 changed; one at tile 16 lost 16384 of 32768
+msaa: formats at 1: 16_16_16_16: the scene, at tile 0, depth at tile 2016
+PASS: msaa: formats at 1: 16_16_16_16: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 1: 16_16_16_16: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+msaa: formats at 1: 16_16_16_16: the quad blended onto itself at (192, 64) is 3 4.5 6 -1
+PASS: msaa: formats at 1: 16_16_16_16: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 1: 16_16_16_16: a neighbouring target at tile 64, then at 32
+PASS: msaa: formats at 1: 16_16_16_16: takes 64 eDRAM tiles: a target at tile 64 kept its pixels, 0 changed; one at tile 32 lost 27648 of 32768
+msaa: formats at 1: 16_16_FLOAT: the scene, at tile 0, depth at tile 2016
+PASS: msaa: formats at 1: 16_16_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 1: 16_16_FLOAT: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+msaa: formats at 1: 16_16_FLOAT: the quad blended onto itself at (192, 64) is 65536 131008 0 0
+PASS: msaa: formats at 1: 16_16_FLOAT: blended, 0 of 4096 texels doubled, not doubled; at 1 sample milestone 25 found them not doubled
+msaa: formats at 1: 16_16_FLOAT: a neighbouring target at tile 32, then at 16
+PASS: msaa: formats at 1: 16_16_FLOAT: takes 32 eDRAM tiles: a target at tile 32 kept its pixels, 0 changed; one at tile 16 lost 16384 of 32768
+msaa: formats at 1: 16_16_16_16_FLOAT: the scene, at tile 0, depth at tile 2016
+PASS: msaa: formats at 1: 16_16_16_16_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 1: 16_16_16_16_FLOAT: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+msaa: formats at 1: 16_16_16_16_FLOAT: the quad blended onto itself at (192, 64) is 65536 131008 131008 -0
+PASS: msaa: formats at 1: 16_16_16_16_FLOAT: blended, 0 of 4096 texels doubled, not doubled; at 1 sample milestone 25 found them not doubled
+msaa: formats at 1: 16_16_16_16_FLOAT: a neighbouring target at tile 64, then at 32
+PASS: msaa: formats at 1: 16_16_16_16_FLOAT: takes 64 eDRAM tiles: a target at tile 64 kept its pixels, 0 changed; one at tile 32 lost 27648 of 32768
+msaa: formats at 1: 32_FLOAT: the scene, at tile 0, depth at tile 2016
+PASS: msaa: formats at 1: 32_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 1: 32_FLOAT: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+msaa: formats at 1: 32_FLOAT: the quad blended onto itself at (192, 64) is nan 0 0 0
+PASS: msaa: formats at 1: 32_FLOAT: blended, 0 of 4096 texels doubled, not doubled; at 1 sample milestone 25 found them not doubled
+msaa: formats at 1: 32_FLOAT: a neighbouring target at tile 32, then at 16
+PASS: msaa: formats at 1: 32_FLOAT: takes 32 eDRAM tiles: a target at tile 32 kept its pixels, 0 changed; one at tile 16 lost 16384 of 32768
+msaa probe: case formats_2: each target format at 2 samples
+msaa: formats at 2: 8_8_8_8: the scene, at tile 0, depth at tile 1984
+PASS: msaa: formats at 2: 8_8_8_8: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 2: 8_8_8_8: resolved, edge pixels by samples covered, 0 to 2: 543, 164, 342; 0 between steps
+msaa: formats at 2: 8_8_8_8: the quad blended onto itself at (192, 64) is 0.878431 0.12549 0.501961 1
+PASS: msaa: formats at 2: 8_8_8_8: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 2: 8_8_8_8: a neighbouring target at tile 64, then at 32
+PASS: msaa: formats at 2: 8_8_8_8: takes 64 eDRAM tiles: a target at tile 64 kept its pixels, 0 changed; one at tile 32 lost 16384 of 32768
+msaa: formats at 2: 2_10_10_10: the scene, at tile 0, depth at tile 1984
+PASS: msaa: formats at 2: 2_10_10_10: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 2: 2_10_10_10: resolved, edge pixels by samples covered, 0 to 2: 543, 164, 342; 0 between steps
+msaa: formats at 2: 2_10_10_10: the quad blended onto itself at (192, 64) is 0.875855 0.125122 0.500489 0.666667
+PASS: msaa: formats at 2: 2_10_10_10: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 2: 2_10_10_10: a neighbouring target at tile 64, then at 32
+PASS: msaa: formats at 2: 2_10_10_10: takes 64 eDRAM tiles: a target at tile 64 kept its pixels, 0 changed; one at tile 32 lost 16384 of 32768
+msaa: formats at 2: 2_10_10_10_FLOAT: the scene, at tile 0, depth at tile 1984
+PASS: msaa: formats at 2: 2_10_10_10_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 2: 2_10_10_10_FLOAT: resolved, edge pixels by samples covered, 0 to 2: 543, 164, 342; 0 between steps
+msaa: formats at 2: 2_10_10_10_FLOAT: the quad blended onto itself at (192, 64) is 2.5 5 6 0.666504
+PASS: msaa: formats at 2: 2_10_10_10_FLOAT: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 2: 2_10_10_10_FLOAT: a neighbouring target at tile 64, then at 32
+PASS: msaa: formats at 2: 2_10_10_10_FLOAT: takes 64 eDRAM tiles: a target at tile 64 kept its pixels, 0 changed; one at tile 32 lost 16384 of 32768
+msaa: formats at 2: 16_16_16_16: the scene, at tile 0, depth at tile 1984
+PASS: msaa: formats at 2: 16_16_16_16: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 2: 16_16_16_16: resolved, edge pixels by samples covered, 0 to 2: 543, 164, 342; 0 between steps
+msaa: formats at 2: 16_16_16_16: the quad blended onto itself at (192, 64) is 3 4.5 6 -1
+PASS: msaa: formats at 2: 16_16_16_16: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 2: 16_16_16_16: a neighbouring target at tile 128, then at 64
+PASS: msaa: formats at 2: 16_16_16_16: takes 128 eDRAM tiles: a target at tile 128 kept its pixels, 0 changed; one at tile 64 lost 27648 of 32768
+msaa: formats at 2: 16_16_FLOAT: the scene, at tile 0, depth at tile 1984
+msaa: formats at 2: 16_16_FLOAT: an edge pixel between steps at (12, 11) is 0.625 23.625 0 0
+msaa: formats at 2: 16_16_FLOAT: an edge pixel between steps at (17, 11) is 0.625 23.625 0 0
+msaa: formats at 2: 16_16_FLOAT: an edge pixel between steps at (18, 11) is 0.625 23.625 0 0
+msaa: formats at 2: 16_16_FLOAT: an edge pixel between steps at (19, 11) is 0.625 23.625 0 0
+PASS: msaa: formats at 2: 16_16_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: formats at 2: 16_16_FLOAT: resolved, edge pixels by samples covered, 0 to 2: 543, 0, 342; 164 between steps
+msaa: formats at 2: 16_16_FLOAT: the quad blended onto itself at (192, 64) is 65536 131008 0 0
+PASS: msaa: formats at 2: 16_16_FLOAT: blended, 0 of 4096 texels doubled, not doubled; at 1 sample milestone 25 found them not doubled
+msaa: formats at 2: 16_16_FLOAT: a neighbouring target at tile 64, then at 32
+PASS: msaa: formats at 2: 16_16_FLOAT: takes 64 eDRAM tiles: a target at tile 64 kept its pixels, 0 changed; one at tile 32 lost 16384 of 32768
+msaa: formats at 2: 16_16_16_16_FLOAT: the scene, at tile 0, depth at tile 1984
+msaa: formats at 2: 16_16_16_16_FLOAT: an edge pixel between steps at (12, 11) is 0.625 1.0625 27.625 -98304
+msaa: formats at 2: 16_16_16_16_FLOAT: an edge pixel between steps at (17, 11) is 0.625 1.0625 27.625 -98304
+msaa: formats at 2: 16_16_16_16_FLOAT: an edge pixel between steps at (18, 11) is 0.625 1.0625 27.625 -98304
+msaa: formats at 2: 16_16_16_16_FLOAT: an edge pixel between steps at (19, 11) is 0.625 1.0625 27.625 -98304
+PASS: msaa: formats at 2: 16_16_16_16_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: formats at 2: 16_16_16_16_FLOAT: resolved, edge pixels by samples covered, 0 to 2: 543, 0, 342; 164 between steps
+msaa: formats at 2: 16_16_16_16_FLOAT: the quad blended onto itself at (192, 64) is 65536 131008 131008 -0
+PASS: msaa: formats at 2: 16_16_16_16_FLOAT: blended, 0 of 4096 texels doubled, not doubled; at 1 sample milestone 25 found them not doubled
+msaa: formats at 2: 16_16_16_16_FLOAT: a neighbouring target at tile 128, then at 64
+PASS: msaa: formats at 2: 16_16_16_16_FLOAT: takes 128 eDRAM tiles: a target at tile 128 kept its pixels, 0 changed; one at tile 64 lost 27648 of 32768
+msaa: formats at 2: 32_FLOAT: the scene, at tile 0, depth at tile 1984
+msaa: formats at 2: 32_FLOAT: an edge pixel between steps at (12, 11) is 17.6445 0 0 0
+msaa: formats at 2: 32_FLOAT: an edge pixel between steps at (17, 11) is 17.6445 0 0 0
+msaa: formats at 2: 32_FLOAT: an edge pixel between steps at (18, 11) is 17.6445 0 0 0
+msaa: formats at 2: 32_FLOAT: an edge pixel between steps at (19, 11) is 17.6445 0 0 0
+PASS: msaa: formats at 2: 32_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: formats at 2: 32_FLOAT: resolved, edge pixels by samples covered, 0 to 2: 543, 0, 342; 164 between steps
+msaa: formats at 2: 32_FLOAT: the quad blended onto itself at (192, 64) is nan 0 0 0
+PASS: msaa: formats at 2: 32_FLOAT: blended, 0 of 4096 texels doubled, not doubled; at 1 sample milestone 25 found them not doubled
+msaa: formats at 2: 32_FLOAT: a neighbouring target at tile 64, then at 32
+PASS: msaa: formats at 2: 32_FLOAT: takes 64 eDRAM tiles: a target at tile 64 kept its pixels, 0 changed; one at tile 32 lost 16384 of 32768
+msaa probe: case formats_4: each target format at 4 samples
+msaa: formats at 4: 8_8_8_8: the scene, at tile 0, depth at tile 1920
+PASS: msaa: formats at 4: 8_8_8_8: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 4: 8_8_8_8: resolved, edge pixels by samples covered, 0 to 4: 492, 85, 97, 89, 286; 0 between steps
+msaa: formats at 4: 8_8_8_8: the quad blended onto itself at (192, 64) is 0.878431 0.12549 0.501961 1
+PASS: msaa: formats at 4: 8_8_8_8: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 4: 8_8_8_8: a neighbouring target at tile 128, then at 64
+PASS: msaa: formats at 4: 8_8_8_8: takes 128 eDRAM tiles: a target at tile 128 kept its pixels, 0 changed; one at tile 64 lost 16384 of 32768
+msaa: formats at 4: 2_10_10_10: the scene, at tile 0, depth at tile 1920
+PASS: msaa: formats at 4: 2_10_10_10: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 4: 2_10_10_10: resolved, edge pixels by samples covered, 0 to 4: 492, 85, 97, 89, 286; 0 between steps
+msaa: formats at 4: 2_10_10_10: the quad blended onto itself at (192, 64) is 0.875855 0.125122 0.500489 0.666667
+PASS: msaa: formats at 4: 2_10_10_10: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 4: 2_10_10_10: a neighbouring target at tile 128, then at 64
+PASS: msaa: formats at 4: 2_10_10_10: takes 128 eDRAM tiles: a target at tile 128 kept its pixels, 0 changed; one at tile 64 lost 16384 of 32768
+msaa: formats at 4: 2_10_10_10_FLOAT: the scene, at tile 0, depth at tile 1920
+PASS: msaa: formats at 4: 2_10_10_10_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 4: 2_10_10_10_FLOAT: resolved, edge pixels by samples covered, 0 to 4: 492, 85, 97, 89, 286; 0 between steps
+msaa: formats at 4: 2_10_10_10_FLOAT: the quad blended onto itself at (192, 64) is 2.5 5 6 0.666504
+PASS: msaa: formats at 4: 2_10_10_10_FLOAT: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 4: 2_10_10_10_FLOAT: a neighbouring target at tile 128, then at 64
+PASS: msaa: formats at 4: 2_10_10_10_FLOAT: takes 128 eDRAM tiles: a target at tile 128 kept its pixels, 0 changed; one at tile 64 lost 16384 of 32768
+msaa: formats at 4: 16_16_16_16: the scene, at tile 0, depth at tile 1920
+PASS: msaa: formats at 4: 16_16_16_16: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: formats at 4: 16_16_16_16: resolved, edge pixels by samples covered, 0 to 4: 492, 85, 97, 89, 286; 0 between steps
+msaa: formats at 4: 16_16_16_16: the quad blended onto itself at (192, 64) is 3 4.5 6 -1
+PASS: msaa: formats at 4: 16_16_16_16: blended, 4096 of 4096 texels doubled, doubled; at 1 sample milestone 25 found them doubled
+msaa: formats at 4: 16_16_16_16: a neighbouring target at tile 256, then at 128
+PASS: msaa: formats at 4: 16_16_16_16: takes 256 eDRAM tiles: a target at tile 256 kept its pixels, 0 changed; one at tile 128 lost 28672 of 32768
+msaa: formats at 4: 16_16_FLOAT: the scene, at tile 0, depth at tile 1920
+msaa: formats at 4: 16_16_FLOAT: an edge pixel between steps at (13, 10) is 0.40625 3.47656 0 0
+msaa: formats at 4: 16_16_FLOAT: an edge pixel between steps at (12, 11) is 0.625 23.625 0 0
+msaa: formats at 4: 16_16_FLOAT: an edge pixel between steps at (15, 11) is 0.9375 155.5 0 0
+msaa: formats at 4: 16_16_FLOAT: an edge pixel between steps at (16, 11) is 0.9375 155.5 0 0
+PASS: msaa: formats at 4: 16_16_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: formats at 4: 16_16_FLOAT: resolved, edge pixels by samples covered, 0 to 4: 492, 0, 0, 0, 286; 271 between steps
+msaa: formats at 4: 16_16_FLOAT: the quad blended onto itself at (192, 64) is 65536 131008 0 0
+PASS: msaa: formats at 4: 16_16_FLOAT: blended, 0 of 4096 texels doubled, not doubled; at 1 sample milestone 25 found them not doubled
+msaa: formats at 4: 16_16_FLOAT: a neighbouring target at tile 128, then at 64
+PASS: msaa: formats at 4: 16_16_FLOAT: takes 128 eDRAM tiles: a target at tile 128 kept its pixels, 0 changed; one at tile 64 lost 16384 of 32768
+msaa: formats at 4: 16_16_16_16_FLOAT: the scene, at tile 0, depth at tile 1920
+msaa: formats at 4: 16_16_16_16_FLOAT: an edge pixel between steps at (13, 10) is 0.40625 0.765625 4.45312 0.00488281
+msaa: formats at 4: 16_16_16_16_FLOAT: an edge pixel between steps at (12, 11) is 0.625 1.0625 27.625 -98304
+msaa: formats at 4: 16_16_16_16_FLOAT: an edge pixel between steps at (15, 11) is 0.9375 1.59375 171.5 -448
+msaa: formats at 4: 16_16_16_16_FLOAT: an edge pixel between steps at (16, 11) is 0.9375 1.59375 171.5 -448
+PASS: msaa: formats at 4: 16_16_16_16_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: formats at 4: 16_16_16_16_FLOAT: resolved, edge pixels by samples covered, 0 to 4: 492, 0, 0, 0, 286; 271 between steps
+msaa: formats at 4: 16_16_16_16_FLOAT: the quad blended onto itself at (192, 64) is 65536 131008 131008 -0
+PASS: msaa: formats at 4: 16_16_16_16_FLOAT: blended, 0 of 4096 texels doubled, not doubled; at 1 sample milestone 25 found them not doubled
+msaa: formats at 4: 16_16_16_16_FLOAT: a neighbouring target at tile 256, then at 128
+PASS: msaa: formats at 4: 16_16_16_16_FLOAT: takes 256 eDRAM tiles: a target at tile 256 kept its pixels, 0 changed; one at tile 128 lost 28672 of 32768
+msaa: formats at 4: 32_FLOAT: the scene, at tile 0, depth at tile 1920
+msaa: formats at 4: 32_FLOAT: an edge pixel between steps at (13, 10) is 2.1106 0 0 0
+msaa: formats at 4: 32_FLOAT: an edge pixel between steps at (12, 11) is 17.6445 0 0 0
+msaa: formats at 4: 32_FLOAT: an edge pixel between steps at (15, 11) is 148.234 0 0 0
+msaa: formats at 4: 32_FLOAT: an edge pixel between steps at (16, 11) is 148.234 0 0 0
+PASS: msaa: formats at 4: 32_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: formats at 4: 32_FLOAT: resolved, edge pixels by samples covered, 0 to 4: 492, 0, 0, 0, 286; 271 between steps
+msaa: formats at 4: 32_FLOAT: the quad blended onto itself at (192, 64) is nan 0 0 0
+PASS: msaa: formats at 4: 32_FLOAT: blended, 0 of 4096 texels doubled, not doubled; at 1 sample milestone 25 found them not doubled
+msaa: formats at 4: 32_FLOAT: a neighbouring target at tile 128, then at 64
+PASS: msaa: formats at 4: 32_FLOAT: takes 128 eDRAM tiles: a target at tile 128 kept its pixels, 0 changed; one at tile 64 lost 16384 of 32768
+msaa probe: case four_1: four targets at once at 1 sample, the control, each read back by value
+msaa: four at 1: targets at tiles 0, 32, 64 and 128, depth at 2016; the scene
+PASS: msaa: four at 1: target 0, 8_8_8_8: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: four at 1: target 0, 8_8_8_8: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+PASS: msaa: four at 1: target 1, 2_10_10_10: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: four at 1: target 1, 2_10_10_10: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+PASS: msaa: four at 1: target 2, 16_16_16_16_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: four at 1: target 2, 16_16_16_16_FLOAT: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+PASS: msaa: four at 1: target 3, 32_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: four at 1: target 3, 32_FLOAT: resolved, edge pixels by samples covered, 0 to 1: 625, 424; 0 between steps
+msaa probe: case four_2: four targets at once at 2 samples
+msaa: four at 2: targets at tiles 0, 64, 128 and 256, depth at 1984; the scene
+PASS: msaa: four at 2: target 0, 8_8_8_8: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: four at 2: target 0, 8_8_8_8: resolved, edge pixels by samples covered, 0 to 2: 543, 164, 342; 0 between steps
+PASS: msaa: four at 2: target 1, 2_10_10_10: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: four at 2: target 1, 2_10_10_10: resolved, edge pixels by samples covered, 0 to 2: 543, 164, 342; 0 between steps
+msaa: four at 2: target 2, 16_16_16_16_FLOAT: an edge pixel between steps at (12, 11) is 0.625 1.0625 27.625 -98304
+msaa: four at 2: target 2, 16_16_16_16_FLOAT: an edge pixel between steps at (17, 11) is 0.625 1.0625 27.625 -98304
+msaa: four at 2: target 2, 16_16_16_16_FLOAT: an edge pixel between steps at (18, 11) is 0.625 1.0625 27.625 -98304
+msaa: four at 2: target 2, 16_16_16_16_FLOAT: an edge pixel between steps at (19, 11) is 0.625 1.0625 27.625 -98304
+PASS: msaa: four at 2: target 2, 16_16_16_16_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: four at 2: target 2, 16_16_16_16_FLOAT: resolved, edge pixels by samples covered, 0 to 2: 543, 0, 342; 164 between steps
+msaa: four at 2: target 3, 32_FLOAT: an edge pixel between steps at (12, 11) is 17.6445 0 0 0
+msaa: four at 2: target 3, 32_FLOAT: an edge pixel between steps at (17, 11) is 17.6445 0 0 0
+msaa: four at 2: target 3, 32_FLOAT: an edge pixel between steps at (18, 11) is 17.6445 0 0 0
+msaa: four at 2: target 3, 32_FLOAT: an edge pixel between steps at (19, 11) is 17.6445 0 0 0
+PASS: msaa: four at 2: target 3, 32_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: four at 2: target 3, 32_FLOAT: resolved, edge pixels by samples covered, 0 to 2: 543, 0, 342; 164 between steps
+msaa probe: case four_4: four targets at once at 4 samples
+msaa: four at 4: targets at tiles 0, 128, 256 and 512, depth at 1920; the scene
+PASS: msaa: four at 4: target 0, 8_8_8_8: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: four at 4: target 0, 8_8_8_8: resolved, edge pixels by samples covered, 0 to 4: 492, 85, 97, 89, 286; 0 between steps
+PASS: msaa: four at 4: target 1, 2_10_10_10: drawn, every pixel off the edges as drawn: 0 wrong
+PASS: msaa: four at 4: target 1, 2_10_10_10: resolved, edge pixels by samples covered, 0 to 4: 492, 85, 97, 89, 286; 0 between steps
+msaa: four at 4: target 2, 16_16_16_16_FLOAT: an edge pixel between steps at (13, 10) is 0.40625 0.765625 4.45312 0.00488281
+msaa: four at 4: target 2, 16_16_16_16_FLOAT: an edge pixel between steps at (12, 11) is 0.625 1.0625 27.625 -98304
+msaa: four at 4: target 2, 16_16_16_16_FLOAT: an edge pixel between steps at (15, 11) is 0.9375 1.59375 171.5 -448
+msaa: four at 4: target 2, 16_16_16_16_FLOAT: an edge pixel between steps at (16, 11) is 0.9375 1.59375 171.5 -448
+PASS: msaa: four at 4: target 2, 16_16_16_16_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: four at 4: target 2, 16_16_16_16_FLOAT: resolved, edge pixels by samples covered, 0 to 4: 492, 0, 0, 0, 286; 271 between steps
+msaa: four at 4: target 3, 32_FLOAT: an edge pixel between steps at (13, 10) is 2.1106 0 0 0
+msaa: four at 4: target 3, 32_FLOAT: an edge pixel between steps at (12, 11) is 17.6445 0 0 0
+msaa: four at 4: target 3, 32_FLOAT: an edge pixel between steps at (15, 11) is 148.234 0 0 0
+msaa: four at 4: target 3, 32_FLOAT: an edge pixel between steps at (16, 11) is 148.234 0 0 0
+PASS: msaa: four at 4: target 3, 32_FLOAT: drawn, every pixel off the edges as drawn: 0 wrong
+DIFFERS: msaa: four at 4: target 3, 32_FLOAT: resolved, edge pixels by samples covered, 0 to 4: 492, 0, 0, 0, 286; 271 between steps
+msaa probe: case rates: fill and blend rates and a 720p resolve at 1, 2 and 4 samples, by the GPU's clock
+msaa: rates at 1: opaque fill: sending
+PASS: msaa: rates at 1: opaque fill: 64 1280x256 quads in 3037192 clocks, 6089 us: 3444 Mpixels/s, 6.90 pixels and 6.90 samples a clock; read back as filled
+msaa: rates at 1: blended fill: sending
+PASS: msaa: rates at 1: blended fill: 64 1280x256 quads in 3037014 clocks, 6089 us: 3444 Mpixels/s, 6.90 pixels and 6.90 samples a clock; read back as filled
+msaa: rates at 1: 720p resolved in 3 bands: sending
+PASS: msaa: rates at 1: 720p resolved in 3 bands, colour cleared: 8 frames in 1103286 clocks, 276.51 us a frame; read back as the clear
+msaa: rates at 1: 720p resolved whole: sending
+PASS: msaa: rates at 1: 720p resolved whole, colour cleared: 8 frames in 1077127 clocks, 269.95 us a frame; read back as the clear
+msaa: rates at 2: opaque fill: sending
+PASS: msaa: rates at 2: opaque fill: 64 1280x256 quads in 3044420 clocks, 6104 us: 3435 Mpixels/s, 6.88 pixels and 13.76 samples a clock; read back as filled
+msaa: rates at 2: blended fill: sending
+PASS: msaa: rates at 2: blended fill: 64 1280x256 quads in 3044518 clocks, 6104 us: 3435 Mpixels/s, 6.88 pixels and 13.76 samples a clock; read back as filled
+msaa: rates at 2: 720p resolved in 3 bands: sending
+PASS: msaa: rates at 2: 720p resolved in 3 bands, colour cleared: 8 frames in 1104020 clocks, 276.69 us a frame; read back as the clear
+msaa: rates at 2: 720p resolved whole: sending
+PASS: msaa: rates at 2: 720p resolved whole, colour cleared: 8 frames in 1077810 clocks, 270.12 us a frame; read back as the clear
+msaa: rates at 4: opaque fill: sending
+PASS: msaa: rates at 4: opaque fill: 64 1280x256 quads in 3105020 clocks, 6225 us: 3368 Mpixels/s, 6.75 pixels and 27.00 samples a clock; read back as filled
+msaa: rates at 4: blended fill: sending
+PASS: msaa: rates at 4: blended fill: 64 1280x256 quads in 3105106 clocks, 6225 us: 3368 Mpixels/s, 6.75 pixels and 27.00 samples a clock; read back as filled
+msaa: rates at 4: 720p resolved in 3 bands: sending
+PASS: msaa: rates at 4: 720p resolved in 3 bands, colour cleared: 8 frames in 1105822 clocks, 277.14 us a frame; read back as the clear
+msaa probe: case hiz_1: hidden pixels and draws after clears at 1280x256, 1 sample, the control
+msaa: hiz at 1: less-than over a clear to 1, the buffer on: sending
+msaa: hiz at 1: less-than over a clear to 1, the buffer off: sending
+PASS: msaa: hiz at 1: less-than over a clear to 1: 16 hidden quads took 84992 clocks with the buffer on and 7134242 off, 83.9 times as fast; pixels not the near quad's colour: 0 on, 0 off
+msaa: hiz at 1: greater-than over a clear to 0, the buffer on: sending
+msaa: hiz at 1: greater-than over a clear to 0, the buffer off: sending
+PASS: msaa: hiz at 1: greater-than over a clear to 0: 16 hidden quads took 84992 clocks with the buffer on and 7134194 off, 83.9 times as fast; pixels not the near quad's colour: 0 on, 0 off
+msaa: hiz at 1: milestone 49's draws after clears
+PASS: msaa: hiz at 1: cleared to 0.25 from far, a full-screen draw at 0.4 hidden: 0 of 327680 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 1: cleared far from 0.25, a full-screen draw at 0.9 shown: 0 of 327680 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 1: cleared to 0.25 from far, a 200x200 draw at 0.4 hidden: 0 of 40000 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 1: cleared far from 0.25, a 200x200 draw at 0.9 shown: 0 of 40000 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 1: 64 rectangles scattered after clears: 0 with wrong pixels, 0 pixels in all
+PASS: msaa: hiz at 1: 16 rectangles starting in the top rows after clears: 0 with wrong pixels
+msaa probe: case hiz_2: the same with hierarchical depth on at 2 samples
+msaa: hiz at 2: less-than over a clear to 1, the buffer on: sending
+msaa: hiz at 2: less-than over a clear to 1, the buffer off: sending
+PASS: msaa: hiz at 2: less-than over a clear to 1: 16 hidden quads took 84988 clocks with the buffer on and 7145088 off, 84.0 times as fast; pixels not the near quad's colour: 0 on, 0 off
+msaa: hiz at 2: greater-than over a clear to 0, the buffer on: sending
+msaa: hiz at 2: greater-than over a clear to 0, the buffer off: sending
+PASS: msaa: hiz at 2: greater-than over a clear to 0: 16 hidden quads took 84988 clocks with the buffer on and 7145592 off, 84.0 times as fast; pixels not the near quad's colour: 0 on, 0 off
+msaa: hiz at 2: milestone 49's draws after clears
+PASS: msaa: hiz at 2: cleared to 0.25 from far, a full-screen draw at 0.4 hidden: 0 of 327680 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 2: cleared far from 0.25, a full-screen draw at 0.9 shown: 0 of 327680 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 2: cleared to 0.25 from far, a 200x200 draw at 0.4 hidden: 0 of 40000 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 2: cleared far from 0.25, a 200x200 draw at 0.9 shown: 0 of 40000 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 2: 64 rectangles scattered after clears: 0 with wrong pixels, 0 pixels in all
+PASS: msaa: hiz at 2: 16 rectangles starting in the top rows after clears: 0 with wrong pixels
+msaa probe: case hiz_4: the same at 4 samples
+msaa: hiz at 4: less-than over a clear to 1, the buffer on: sending
+msaa: hiz at 4: less-than over a clear to 1, the buffer off: sending
+PASS: msaa: hiz at 4: less-than over a clear to 1: 16 hidden quads took 84988 clocks with the buffer on and 7156276 off, 84.2 times as fast; pixels not the near quad's colour: 0 on, 0 off
+msaa: hiz at 4: greater-than over a clear to 0, the buffer on: sending
+msaa: hiz at 4: greater-than over a clear to 0, the buffer off: sending
+PASS: msaa: hiz at 4: greater-than over a clear to 0: 16 hidden quads took 84988 clocks with the buffer on and 7156104 off, 84.2 times as fast; pixels not the near quad's colour: 0 on, 0 off
+msaa: hiz at 4: milestone 49's draws after clears
+PASS: msaa: hiz at 4: cleared to 0.25 from far, a full-screen draw at 0.4 hidden: 0 of 327680 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 4: cleared far from 0.25, a full-screen draw at 0.9 shown: 0 of 327680 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 4: cleared to 0.25 from far, a 200x200 draw at 0.4 hidden: 0 of 40000 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 4: cleared far from 0.25, a 200x200 draw at 0.9 shown: 0 of 40000 pixels wrong, in (1280, 256) to (0, 0)
+PASS: msaa: hiz at 4: 64 rectangles scattered after clears: 0 with wrong pixels, 0 pixels in all
+PASS: msaa: hiz at 4: 16 rectangles starting in the top rows after clears: 0 with wrong pixels
+msaa probe: done, 133 PASS, 10 DIFFERS; xsdk_gpu_close 0x00000000
+exit: status 0

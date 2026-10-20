@@ -1,0 +1,49 @@
+log: game:\probe_msaa.log
+log: named after \Device\Harddisk0\Partition1\msaaprobe\probe_msaa.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+msaa probe: from case depth_4, group depth_4 (game:\msaa_case.txt names a case or group)
+msaa probe: case depth_4: which sample a depth resolve copies at 4 samples
+msaa: depth at 4: copy sample select 0: sending
+msaa: depth at 4: copy sample select 0: row 64 sweep: n@0 f@96
+msaa: depth at 4: copy sample select 0: sending
+msaa: depth at 4: copy sample select 0: column 128 sweep: n@0 f@48
+msaa: depth at 4: copy sample select 1: sending
+msaa: depth at 4: copy sample select 1: row 64 sweep: n@0 f@160
+msaa: depth at 4: copy sample select 1: sending
+msaa: depth at 4: copy sample select 1: column 128 sweep: n@0 f@80
+msaa: depth at 4: copy sample select 2: sending
+msaa: depth at 4: copy sample select 2: row 64 sweep: n@0 f@224
+msaa: depth at 4: copy sample select 2: sending
+msaa: depth at 4: copy sample select 2: column 128 sweep: n@0 f@16
+msaa: depth at 4: copy sample select 3: sending
+msaa: depth at 4: copy sample select 3: row 64 sweep: n@0 f@32
+msaa: depth at 4: copy sample select 3: sending
+msaa: depth at 4: copy sample select 3: column 128 sweep: n@0 f@112
+msaa: depth at 4: copy sample select 4: sending
+msaa: depth at 4: copy sample select 4: row 64 sweep: n@0 A07F7F@96 f@160
+msaa: depth at 4: copy sample select 4: sending
+msaa: depth at 4: copy sample select 4: column 128 sweep: n@0 A07F7F@48 f@80
+msaa: depth at 4: copy sample select 5: sending
+msaa: depth at 4: copy sample select 5: row 64 sweep: n@0 A07F7F@32 f@224
+msaa: depth at 4: copy sample select 5: sending
+msaa: depth at 4: copy sample select 5: column 128 sweep: n@0 A07F7F@16 f@112
+msaa: depth at 4: copy sample select 6: sending
+msaa: depth at 4: copy sample select 6: row 64 sweep: n@0 703F3F@32 A07F7F@96 CFBFBF@160 f@224
+msaa: depth at 4: copy sample select 6: sending
+msaa: depth at 4: copy sample select 6: column 128 sweep: n@0 703F3F@16 A07F7F@48 CFBFBF@80 f@112
+msaa: depth at 4: copy sample select 0 copies the sample -2/16 across and -2/16 down
+PASS: msaa: depth at 4: copy sample select 0 copies one sample
+msaa: depth at 4: copy sample select 1 copies the sample 2/16 across and 2/16 down
+PASS: msaa: depth at 4: copy sample select 1 copies one sample
+msaa: depth at 4: copy sample select 2 copies the sample -6/16 across and 6/16 down
+PASS: msaa: depth at 4: copy sample select 2 copies one sample
+msaa: depth at 4: copy sample select 3 copies the sample 6/16 across and -6/16 down
+PASS: msaa: depth at 4: copy sample select 3 copies one sample
+msaa: depth at 4: copy sample select 4 copies no one sample; its sweeps above hold what it copied
+DIFFERS: msaa: depth at 4: copy sample select 4 copies what select 0 does, as Xenia has it
+msaa: depth at 4: copy sample select 5 copies no one sample; its sweeps above hold what it copied
+DIFFERS: msaa: depth at 4: copy sample select 5 copies what select 2 does, as Xenia has it
+msaa: depth at 4: copy sample select 6 copies no one sample; its sweeps above hold what it copied
+DIFFERS: msaa: depth at 4: copy sample select 6 copies what select 0 does, as Xenia has it
+msaa probe: done, 4 PASS, 3 DIFFERS; xsdk_gpu_close 0x00000000
+exit: status 0

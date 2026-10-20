@@ -1,0 +1,117 @@
+log: game:\probe_msaa.log
+log: named after \Device\Harddisk0\Partition1\msaaprobe\probe_msaa.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+msaa probe: from case pattern_4, group pattern_4 (game:\msaa_case.txt names a case or group)
+msaa probe: case pattern_4: each sample's place at 4 samples
+msaa: pattern at 4: AA mask FFFF, copy sample select 0, the rising edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 0, the rising edge: row 64 sweep: 1@0 0@96
+msaa: pattern at 4: AA mask FFFF, copy sample select 0, the moving edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 0, the moving edge: column 128 sweep: 1@0 0@48
+msaa: pattern at 4: AA mask FFFF, copy sample select 1, the rising edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 1, the rising edge: row 64 sweep: 1@0 0@160
+msaa: pattern at 4: AA mask FFFF, copy sample select 1, the moving edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 1, the moving edge: column 128 sweep: 1@0 0@80
+msaa: pattern at 4: AA mask FFFF, copy sample select 2, the rising edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 2, the rising edge: row 64 sweep: 1@0 0@224
+msaa: pattern at 4: AA mask FFFF, copy sample select 2, the moving edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 2, the moving edge: column 128 sweep: 1@0 0@16
+msaa: pattern at 4: AA mask FFFF, copy sample select 3, the rising edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 3, the rising edge: row 64 sweep: 1@0 0@32
+msaa: pattern at 4: AA mask FFFF, copy sample select 3, the moving edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 3, the moving edge: column 128 sweep: 1@0 0@112
+msaa: pattern at 4: AA mask FFFF, copy sample select 6, the rising edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 6, the rising edge: row 64 sweep: 4@0 3@32 2@96 1@160 0@224
+msaa: pattern at 4: AA mask FFFF, copy sample select 6, the moving edge: sending
+msaa: pattern at 4: AA mask FFFF, copy sample select 6, the moving edge: column 128 sweep: 4@0 3@16 2@48 1@80 0@112
+msaa: pattern at 4: AA mask 1111, copy sample select 0, the rising edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 0, the rising edge: row 64 sweep: 1@0 0@96
+msaa: pattern at 4: AA mask 1111, copy sample select 0, the moving edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 0, the moving edge: column 128 sweep: 1@0 0@48
+msaa: pattern at 4: AA mask 1111, copy sample select 1, the rising edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 1, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 1111, copy sample select 1, the moving edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 1, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 1111, copy sample select 2, the rising edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 2, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 1111, copy sample select 2, the moving edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 2, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 1111, copy sample select 3, the rising edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 3, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 1111, copy sample select 3, the moving edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 3, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 1111, copy sample select 6, the rising edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 6, the rising edge: row 64 sweep: 1@0 0@96
+msaa: pattern at 4: AA mask 1111, copy sample select 6, the moving edge: sending
+msaa: pattern at 4: AA mask 1111, copy sample select 6, the moving edge: column 128 sweep: 1@0 0@48
+msaa: pattern at 4: AA mask 2222, copy sample select 0, the rising edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 0, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 2222, copy sample select 0, the moving edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 0, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 2222, copy sample select 1, the rising edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 1, the rising edge: row 64 sweep: 1@0 0@160
+msaa: pattern at 4: AA mask 2222, copy sample select 1, the moving edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 1, the moving edge: column 128 sweep: 1@0 0@80
+msaa: pattern at 4: AA mask 2222, copy sample select 2, the rising edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 2, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 2222, copy sample select 2, the moving edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 2, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 2222, copy sample select 3, the rising edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 3, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 2222, copy sample select 3, the moving edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 3, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 2222, copy sample select 6, the rising edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 6, the rising edge: row 64 sweep: 1@0 0@160
+msaa: pattern at 4: AA mask 2222, copy sample select 6, the moving edge: sending
+msaa: pattern at 4: AA mask 2222, copy sample select 6, the moving edge: column 128 sweep: 1@0 0@80
+msaa: pattern at 4: AA mask 4444, copy sample select 0, the rising edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 0, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 4444, copy sample select 0, the moving edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 0, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 4444, copy sample select 1, the rising edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 1, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 4444, copy sample select 1, the moving edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 1, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 4444, copy sample select 2, the rising edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 2, the rising edge: row 64 sweep: 1@0 0@224
+msaa: pattern at 4: AA mask 4444, copy sample select 2, the moving edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 2, the moving edge: column 128 sweep: 1@0 0@16
+msaa: pattern at 4: AA mask 4444, copy sample select 3, the rising edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 3, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 4444, copy sample select 3, the moving edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 3, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 4444, copy sample select 6, the rising edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 6, the rising edge: row 64 sweep: 1@0 0@224
+msaa: pattern at 4: AA mask 4444, copy sample select 6, the moving edge: sending
+msaa: pattern at 4: AA mask 4444, copy sample select 6, the moving edge: column 128 sweep: 1@0 0@16
+msaa: pattern at 4: AA mask 8888, copy sample select 0, the rising edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 0, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 8888, copy sample select 0, the moving edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 0, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 8888, copy sample select 1, the rising edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 1, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 8888, copy sample select 1, the moving edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 1, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 8888, copy sample select 2, the rising edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 2, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 4: AA mask 8888, copy sample select 2, the moving edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 2, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 4: AA mask 8888, copy sample select 3, the rising edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 3, the rising edge: row 64 sweep: 1@0 0@32
+msaa: pattern at 4: AA mask 8888, copy sample select 3, the moving edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 3, the moving edge: column 128 sweep: 1@0 0@112
+msaa: pattern at 4: AA mask 8888, copy sample select 6, the rising edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 6, the rising edge: row 64 sweep: 1@0 0@32
+msaa: pattern at 4: AA mask 8888, copy sample select 6, the moving edge: sending
+msaa: pattern at 4: AA mask 8888, copy sample select 6, the moving edge: column 128 sweep: 1@0 0@112
+msaa: pattern at 4: copy sample select 0 sits -2/16 of a pixel across and -2/16 down from its centre
+msaa: pattern at 4: copy sample select 1 sits 2/16 of a pixel across and 2/16 down from its centre
+msaa: pattern at 4: copy sample select 2 sits -6/16 of a pixel across and 6/16 down from its centre
+msaa: pattern at 4: copy sample select 3 sits 6/16 of a pixel across and -6/16 down from its centre
+PASS: msaa: pattern at 4: each select alone copies one sample, together milestone 32's places down and across
+msaa: pattern at 4: AA mask 1111 reached 1 of the selects alone, select 0
+msaa: pattern at 4: AA mask 2222 reached 1 of the selects alone, select 1
+msaa: pattern at 4: AA mask 4444 reached 1 of the selects alone, select 2
+msaa: pattern at 4: AA mask 8888 reached 1 of the selects alone, select 3
+PASS: msaa: pattern at 4: each AA mask bit lets one sample through, each a select of its own
+msaa probe: done, 2 PASS, 0 DIFFERS; xsdk_gpu_close 0x00000000
+exit: status 0

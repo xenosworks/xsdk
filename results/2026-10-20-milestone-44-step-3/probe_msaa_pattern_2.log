@@ -1,0 +1,49 @@
+log: game:\probe_msaa.log
+log: named after \Device\Harddisk0\Partition1\msaaprobe\probe_msaa.xex
+sbrk: the heap may grow to 474 MB from 0x00070000, the title's free memory
+msaa probe: from case pattern_2, group pattern_2 (game:\msaa_case.txt names a case or group)
+msaa probe: case pattern_2: each sample's place at 2 samples, by AA mask and single-sample resolves
+msaa: pattern at 2: AA mask FFFF, copy sample select 0, the rising edge: sending
+msaa: pattern at 2: AA mask FFFF, copy sample select 0, the rising edge: row 64 sweep: 1@0 0@192
+msaa: pattern at 2: AA mask FFFF, copy sample select 0, the moving edge: sending
+msaa: pattern at 2: AA mask FFFF, copy sample select 0, the moving edge: column 128 sweep: 1@0 0@32
+msaa: pattern at 2: AA mask FFFF, copy sample select 1, the rising edge: sending
+msaa: pattern at 2: AA mask FFFF, copy sample select 1, the rising edge: row 64 sweep: 1@0 0@64
+msaa: pattern at 2: AA mask FFFF, copy sample select 1, the moving edge: sending
+msaa: pattern at 2: AA mask FFFF, copy sample select 1, the moving edge: column 128 sweep: 1@0 0@96
+msaa: pattern at 2: AA mask FFFF, copy sample select 4, the rising edge: sending
+msaa: pattern at 2: AA mask FFFF, copy sample select 4, the rising edge: row 64 sweep: 2@0 1@64 0@192
+msaa: pattern at 2: AA mask FFFF, copy sample select 4, the moving edge: sending
+msaa: pattern at 2: AA mask FFFF, copy sample select 4, the moving edge: column 128 sweep: 2@0 1@32 0@96
+msaa: pattern at 2: AA mask 1111, copy sample select 0, the rising edge: sending
+msaa: pattern at 2: AA mask 1111, copy sample select 0, the rising edge: row 64 sweep: 1@0 0@192
+msaa: pattern at 2: AA mask 1111, copy sample select 0, the moving edge: sending
+msaa: pattern at 2: AA mask 1111, copy sample select 0, the moving edge: column 128 sweep: 1@0 0@32
+msaa: pattern at 2: AA mask 1111, copy sample select 1, the rising edge: sending
+msaa: pattern at 2: AA mask 1111, copy sample select 1, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 2: AA mask 1111, copy sample select 1, the moving edge: sending
+msaa: pattern at 2: AA mask 1111, copy sample select 1, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 2: AA mask 1111, copy sample select 4, the rising edge: sending
+msaa: pattern at 2: AA mask 1111, copy sample select 4, the rising edge: row 64 sweep: 1@0 0@192
+msaa: pattern at 2: AA mask 1111, copy sample select 4, the moving edge: sending
+msaa: pattern at 2: AA mask 1111, copy sample select 4, the moving edge: column 128 sweep: 1@0 0@32
+msaa: pattern at 2: AA mask 2222, copy sample select 0, the rising edge: sending
+msaa: pattern at 2: AA mask 2222, copy sample select 0, the rising edge: row 64 sweep: 0@0
+msaa: pattern at 2: AA mask 2222, copy sample select 0, the moving edge: sending
+msaa: pattern at 2: AA mask 2222, copy sample select 0, the moving edge: column 128 sweep: 0@0
+msaa: pattern at 2: AA mask 2222, copy sample select 1, the rising edge: sending
+msaa: pattern at 2: AA mask 2222, copy sample select 1, the rising edge: row 64 sweep: 1@0 0@64
+msaa: pattern at 2: AA mask 2222, copy sample select 1, the moving edge: sending
+msaa: pattern at 2: AA mask 2222, copy sample select 1, the moving edge: column 128 sweep: 1@0 0@96
+msaa: pattern at 2: AA mask 2222, copy sample select 4, the rising edge: sending
+msaa: pattern at 2: AA mask 2222, copy sample select 4, the rising edge: row 64 sweep: 1@0 0@64
+msaa: pattern at 2: AA mask 2222, copy sample select 4, the moving edge: sending
+msaa: pattern at 2: AA mask 2222, copy sample select 4, the moving edge: column 128 sweep: 1@0 0@96
+msaa: pattern at 2: copy sample select 0 sits -4/16 of a pixel across and 4/16 down from its centre
+msaa: pattern at 2: copy sample select 1 sits 4/16 of a pixel across and -4/16 down from its centre
+PASS: msaa: pattern at 2: each select alone copies one sample, together milestone 32's places down and across
+msaa: pattern at 2: AA mask 1111 reached 1 of the selects alone, select 0
+msaa: pattern at 2: AA mask 2222 reached 1 of the selects alone, select 1
+PASS: msaa: pattern at 2: each AA mask bit lets one sample through, each a select of its own
+msaa probe: done, 2 PASS, 0 DIFFERS; xsdk_gpu_close 0x00000000
+exit: status 0
