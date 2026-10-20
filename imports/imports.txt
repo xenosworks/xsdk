@@ -111,4 +111,5 @@ xam.xex       0x2C1  XamShowKeyboardUI
 xam.xex       0x2CA  XamShowMessageBoxUI
 xam.xex       0x2EC  XamIsUIActive
 xam.xex       0x3CD  XGetLanguage
+xam.xex       0x43F  GetTimeZoneInformation
 xam.xex       0x5D7  XamGetLocaleEx

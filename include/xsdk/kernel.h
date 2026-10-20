@@ -291,32 +291,51 @@ enum {
 	FILE_FS_SIZE_INFORMATION_CLASS = 3,
 };
 
-// ExGetXConfigSetting's user category and its settings (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc:66-96). The
-// time zone's are laid out as in freestyledash's ExConfig.h, which Xenia names (xboxkrnl_xconfig.cc:51-52): the biases
-// 4 bytes, minutes west of UTC as Windows counts them; the names 4 bytes, ending in a zero only if shorter.
+// ExGetXConfigSetting's user category, its language and its country, one byte
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc:66-96). Its time zone settings, 1-7, read 0 on a console set to
+// US Eastern (results/2026-10-20-milestone-54/step1_xsdk_test.log), so the time zone comes from GetTimeZoneInformation.
 enum {
 	XCONFIG_USER_CATEGORY = 3,
-	XCONFIG_USER_TIME_ZONE_BIAS = 1,
-	XCONFIG_USER_TIME_ZONE_STD_NAME = 2,
-	XCONFIG_USER_TIME_ZONE_DLT_NAME = 3,
-	XCONFIG_USER_TIME_ZONE_STD_DATE = 4,
-	XCONFIG_USER_TIME_ZONE_DLT_DATE = 5,
-	XCONFIG_USER_TIME_ZONE_STD_BIAS = 6,
-	XCONFIG_USER_TIME_ZONE_DLT_BIAS = 7,
 	XCONFIG_USER_LANGUAGE = 9,
-	// One byte.
 	XCONFIG_USER_COUNTRY = 14,
-	XCONFIG_TIME_ZONE_NAME_BYTES = 4,
 };
 
-// When standard or daylight time starts, at hour local time: day is the week in the month, 5 the last, and day_of_week
-// 0 Sunday, as Windows' time zones count; unverified until the console shows its dates. Month 0 means no change.
+// Win32's, which XAM's GetTimeZoneInformation fills in; Xenia has no code for it, so the layout is Wine's
+// (wine:include/minwinbase.h:58-67, wine:include/timezoneapi.h:39-53, at 840a939). A date with year 0 recurs: day is
+// the week in the month, 5 the last, and day_of_week 0 Sunday (wine:dlls/kernelbase/locale.c:4300-4328).
 typedef struct {
-	uint8_t month;
-	uint8_t day;
-	uint8_t day_of_week;
-	uint8_t hour;
-} XCONFIG_TIMEZONE_DATE;
+	uint16_t year;
+	uint16_t month;
+	uint16_t day_of_week;
+	uint16_t day;
+	uint16_t hour;
+	uint16_t minute;
+	uint16_t second;
+	uint16_t milliseconds;
+} SYSTEMTIME;
+
+enum { TIME_ZONE_NAME_CHARS = 32 };
+
+// Biases in minutes west of UTC, a name UTF-16; standard_date is when standard time starts, in daylight time, and
+// daylight_date when daylight time starts, in standard time; month 0 for no daylight saving.
+typedef struct {
+	int32_t bias;
+	uint16_t standard_name[TIME_ZONE_NAME_CHARS];
+	SYSTEMTIME standard_date;
+	int32_t standard_bias;
+	uint16_t daylight_name[TIME_ZONE_NAME_CHARS];
+	SYSTEMTIME daylight_date;
+	int32_t daylight_bias;
+} TIME_ZONE_INFORMATION;
+
+// GetTimeZoneInformation's answers (wine:include/timezoneapi.h:50-53).
+enum {
+	TIME_ZONE_ID_UNKNOWN = 0,
+	TIME_ZONE_ID_STANDARD = 1,
+	TIME_ZONE_ID_DAYLIGHT = 2,
+};
+
+static const uint32_t TIME_ZONE_ID_INVALID = 0xFFFFFFFF;
 
 // Event types (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:470) and processor modes; the values are NT's.
 enum {
@@ -542,6 +561,9 @@ int32_t NetDll_XNetDnsLookup(uint32_t caller, const char *name, HANDLE event, XN
 int32_t NetDll_XNetDnsRelease(uint32_t caller, XNDNS *result);
 // params is XNetStartupParams, 13 bytes, its first its size (xam_net.cc:154-168).
 int32_t NetDll_XNetStartup(uint32_t caller, const uint8_t *params);
+// The console's time zone into info, and TIME_ZONE_ID_DAYLIGHT, _STANDARD or _UNKNOWN for which time it is now
+// (wine:include/timezoneapi.h:39-58); XAM exports it (xenia:src/xenia/kernel/xam/xam_table.inc:883).
+uint32_t GetTimeZoneInformation(TIME_ZONE_INFORMATION *info);
 // The content calls (xenia:src/xenia/kernel/xam/xam_content.cc, xam_content_device.cc). A package mounts under root,
 // "save" as save:, until closed.
 uint32_t XamContentClose(const char *root, XAM_OVERLAPPED *overlapped);

@@ -7,8 +7,9 @@
 extern "C" {
 #endif
 
-// The console's settings. Its time zone is newlib's from start-up, as TZ, so localtime, mktime and strftime's %Z give
-// the console's local time, daylight saving included; a title's own setenv("TZ", ...) and tzset() replace it.
+// The console's settings. Its time zone, from XAM's GetTimeZoneInformation, is newlib's from start-up, as TZ, so
+// localtime, mktime and strftime's %Z give the console's local time, daylight saving included; a title's own
+// setenv("TZ", ...) and tzset() replace it.
 
 // XGetLanguage's numbers (xenia:src/xenia/xbox.h:330-346).
 typedef enum {
