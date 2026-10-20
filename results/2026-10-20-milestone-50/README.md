@@ -577,3 +577,15 @@ On the console, at cc9f057 rebased on main 17c6e91 (`step5_*.log`):
   wrong. The console agrees with the simulator.
 - vulkan4xenon_test 515 of 515 twice, vkbench 17 of 17.
 - The loop, link, VPOS, VFACE and DEPTH breaks at cdcbb2f (`step5_xsdk_test_hlsl_*.log`) each failed what they name.
+
+## Step 6 on the console
+
+At fb667bf, built clean with vulkan4xenon against it (local/m50/build.sh), through the console agent on 2026-10-20
+(`step6_*.log`):
+- xsdk_test 525 of 527, the controller's two failing with the pad idle. The binding cell drew right in both halves,
+  Bright on (`cexec b128`) and off (`cexec !b128`, its first run on the console), Count 2 and 5 through loop constant
+  16, the textures at slots 3 and 7; the table named Low at fetch constant 3, High at 7, Step at float constant 2,
+  Bright at boolean constant 128 and Count at loop constant 16.
+- The binding break (samplers packed from 0) failed the binding draw, the table check and the shader's compile check,
+  besides the controller's two.
+- vulkan4xenon_test 515 of 515 twice, vkbench 17 of 17.

@@ -4566,6 +4566,9 @@ xsdk_test's HLSL grid (`tests/test_hlsl.c`), its shaders compiled by xost from H
   2041-2059).
 - **A hardware loop an int in `$Global` counts,** from HLSL's loop in SSA form put back in the shape GLSL's takes, ran
   as its GLSL twin with each pixel leaving at its own pass.
+- **D3D9's binding** (`step6_xsdk_test.log`): samplers at register(s3) and (s7) read the textures set at fetch
+  constants 3 and 7; a bool an `if` reads, at boolean constant 128, took its arms through `cexec b128` and
+  `cexec !b128`, the negated form's first run on the console; an int counting a loop ran through loop constant 16.
 - **Skinning from int4 BLENDINDICES** fetched as UBYTE4, a0 loaded from each index lane in turn times a bone's 3
   registers, picked each corner's four float4x3 bones: the quad landed and shaded as the CPU skins it, and a palette
   with two bones swapped, or the indices unscaled, drew elsewhere (`step5_probe_skin.log`).
