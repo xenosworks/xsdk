@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """check_hlsl.py [folder]...: the HLSL path of xsdk milestone 50 (xsdk:docs/scope/50-hlsl.md). Each .hlsl in the
 folders, xsc/testdata/hlsl's corpus and idioms by default, goes through glslang as a port's shader model 3 code would,
--D -V --hlsl-dx9-compatible -S <stage> -e <entry>, the stage from the name's _vs or _ps and the entry vs_main or
+-D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stage> -e <entry>, the last flag keeping each varying's semantic
+as a string xost reads (SPV_GOOGLE_hlsl_functionality1), the stage from the name's _vs or _ps and the entry vs_main or
 ps_main where the source has one, else main, then through xost at xsdk's register split with the optimiser on. What
 xost refuses is sorted by cause, and a shader that compiles with VPOS or VFACE, which glslang takes for interpolators,
 is counted apart.
@@ -40,7 +41,7 @@ import xsc.spirv as spirv  # noqa: E402
 from check_optimize import GLSLANG, host_path  # noqa: E402
 
 TESTDATA = ROOT / "xsc" / "testdata" / "hlsl"
-FLAGS = ["-D", "-V", "--hlsl-dx9-compatible"]
+FLAGS = ["-D", "-V", "--hlsl-dx9-compatible", "-fhlsl_functionality1"]
 # xsdk's split (xsdk:src/xsc_compile.c).
 REGISTERS = 64
 ENTRY = re.compile(r"\b(vs_main|ps_main)\s*\(")

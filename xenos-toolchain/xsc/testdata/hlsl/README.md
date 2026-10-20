@@ -1,8 +1,8 @@
 # HLSL testdata
 
 Shader model 3 HLSL for xsdk milestone 50 (xsdk:docs/scope/50-hlsl.md), each `.hlsl` with the SPIR-V glslang 16.3.0
-makes of it, `glslang -D -V --hlsl-dx9-compatible -S <stage> -e <entry>`, as `tools/check_hlsl.py --refresh` writes
-it.
+makes of it, `glslang -D -V --hlsl-dx9-compatible -fhlsl_functionality1 -S <stage> -e <entry>`, as
+`tools/check_hlsl.py --refresh` writes it; the last flag keeps each varying's semantic for xost.
 
 - **`corpus/`**: 157 shaders SPIRV-Cross (Debian's 2021.01.15 package) wrote at shader model 30 from Dusklight's 150 GX
   shaders and vkbench's 7, with D3D9's half-pixel lines dropped, each cbuffer flattened into uniforms at registers of
