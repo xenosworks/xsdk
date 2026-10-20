@@ -207,3 +207,88 @@ for 64, 191 and the ramp, failing both link checks.
 
 **GLSL unchanged:** the 900 programs of step 2, compiled by 11a3e72 and by this step: the same containers, manifests
 and resources byte for byte, and the 30 refused refused alike.
+
+## Step 3: loops in SSA form
+
+`step3.txt`, `step3.json` (docs/scope/50-hlsl.md, step 3). glslang runs spirv-opt's legalisation on HLSL, so each loop
+arrives in SSA form: Phis and its test in its header, its counter's step in the block branching back, values read
+across blocks. The unroller takes GLSL's memory form (src/xsc_unroll.c, `expand_loop`). A pass before lowering,
+`xsdk_xsc_ssa_loops` (src/xsc_ssa.c, called in src/xsc_compile.c after the nulls are zeroed), puts such a module in that
+form, and runs only where a loop's header holds more than a label, a merge and a branch, which glslang never writes
+for GLSL (xenos-toolchain/docs/xsc.md, "Loops"):
+- **Phis** become Function variables, each stored at the end of the block each edge leaves and loaded where it was; a
+  Phi's value read in another block is loaded there again.
+- **The header** keeps its merge and a branch; what it held goes to a test block after it. A value the test block
+  works out is worked out again where it's read, as the unroller doesn't walk that block where it unrolls or counts
+  the loop: one of no store or call, loading only what the shader can't write.
+- **A continue block** of its own takes the branch back, with a counter's step `i + k` or `i - k` that only its
+  header's Phi reads, as GLSL's `for` has it, so a block's int counts the loop as a hardware loop; a do/while's test
+  moves there.
+- **What a loop leaves with:** a merge's Phi of a header's Phi from the test shares that Phi's variable, stored at each
+  break, as GLSL's one local; a value made before the loop is stored on each edge into the header; a value a
+  do/while's pass works out, read after it, comes from the variable of the header's Phi taking it on the branch back.
+- **Refused, named:** a do/while's header Phi read after the loop, whose variable holds the next pass's value; a value
+  the test block works out kept past the loop; a value a do/while's pass works out read after it that no header Phi
+  carries; a merge Phi of a header Phi that can't share its variable; a Phi on the edge from a test into the pass; and
+  a switch, which spirv-opt's inliner makes of a helper's early return.
+
+| | Corpus, 157 | Idioms, 21 |
+|---|---|---|
+| Compiled | 157 | 14 |
+| A matrix not loaded from uniforms (step 5) | 0 | 2 |
+| A constant array indexed by a loop's counter (step 5) | 0 | 2 |
+| An int or bool constant (step 5) | 0 | 2 |
+| An int vector (step 5) | 0 | 1 |
+
+Of the five loop idioms, `i16` (a loop to an int in `$Global`) compiles, a hardware loop the block's int counts, its
+need `("block_loop", 16, "uniform", 0, 0, 128, 0, 1)`; the other four reach step 5's causes: `i07` and `i15` their
+static const arrays indexed by the counter, `i10` its bool constant, `i11` its varying `float3x3`. check_hlsl.py names
+those two new causes and this step's refusals. The corpus has no loops: every one of its 157 results is step 4b's, 151
+exact and the same 6 inexact.
+
+**On the simulator:** `tests/test_hlsl_loops.py`, new, runs `xsc/testdata/hlsl/loops`, each shape beside its GLSL twin,
+every lane alone and all in one group, the optimiser off and on, on inputs no operation rounds: every colour is the
+twin's bit for bit and the loop's exactly, its loops take the twin's way, and each program is no longer than the twin.
+ALU and control flow instructions, optimiser off, then on, HLSL and GLSL alike unless given:
+
+| Shape | Loop | Off | On |
+|---|---|---|---|
+| `counted`: a constant count, an accumulator | unrolled | 19, 6 | 9, 4 |
+| `while`: its counter stepped before a break on data | unrolled | 65, 12 | 48, 10 |
+| `break`: a constant count left on data | unrolled | 90, 16 | 63, 12 |
+| `exits`: a value set before it, a header Phi read twice, counts 0, 2 and 8 | block's int | 30, 10 | 30, 10 |
+| `nested`: the inner loop left on data | unrolled | 175, 32 | 94, 18 |
+| `continue`: a continue on data | unrolled | 42, 8 | 23, 6 |
+| `dowhile`: what the pass works out read after it | 255 passes | 23, 8 | 23, 8 |
+| `uniform`: an int in `$Global`, left on data, counts 0, 1, 3 and 8 | block's int | 18, 8 | 18, 8 |
+| `data`: a value the test works out read in the pass and after | 255 passes | 27, 8 (GLSL 27, 10) | 27, 8 (27, 10) |
+
+It runs xsdk_test's `hlsl/grid_loop_ps.hlsl` too, the cell's 80 columns in one group, 12 passes, against the test's
+CPU reference, and three refusals, `refused_last_ps`, `refused_exit_ps` and `refused_kept_ps`. A break on a value
+every pixel shares at a hardware loop's pass end still costs more than GLSL's: a probe of `uniform` with `if (i *
+Step.w > Limit.y) break;` took 18 ALU instructions against the twin's 10, as its break block and the block branching
+back hold stores the unroller's predicated LOOP_END shape (src/xsc_unroll.c, `ends_pass`) doesn't take, so it's gated.
+
+Each piece broken on purpose failed it: Phis not stored at a break `while_ps.hlsl ... [2.03125, 4.0, 0.375, 1.0], the
+GLSL [3.296875, 5.0, ...]`; the header not split `unexpected loop header terminator`; the counter's step left in the
+pass `a loop counted by a block, stepping i other than by a constant past 0 in its continue block alone`; a value made
+before the loop not stored before it `local %130 read before write`; a Phi's value not loaded again where it's read
+`loop trip count exceeds the unroll cap`; the test block's values not worked out again and a do/while's not read from
+its header's variable `a hardware loop's value read outside its pass`; merge Phis not sharing `a loop's header's Phi
+left with apart from its own variable`; each refusal taken out, its shader compiled or refused for another cause.
+
+**xost's tests:** every `tests/test_*.py` but `test_xcomb_parity.py` passes, `test_scalar_unit.py` with its corpus at
+`/mnt/z/vulkan4xenon`.
+
+**xsdk_test:** `tests/test_hlsl.c` draws `grid_loop_ps.hlsl` in a sixth cell, at row 645: a hardware loop an int in
+`$Global` counts, 12 passes from its block loop need, each pixel adding a sixteenth of red and a thirty-second of green
+a pass and leaving once its red passes TEXCOORD0's x, blue the pass it left at, so the columns leave at every pass and
+the last 20 never. Each pixel is checked against the same loop on the CPU: `hlsl: a hardware loop an int in $Global
+counts, each pixel leaving it once its red passes TEXCOORD0's x, draws what it carries and the pass it left at: %u of
+%u pixels wrong`. `tests/breaks/hlsl/loop.patch` leaves a merge Phi sharing its header's variable unstored at a break:
+on the simulator 60 of the 80 columns go wrong, each pixel that broke a step short, failing that check and
+`xsc: hlsl/grid_loop_ps.hlsl compiles into the PC's container, literals and resources`.
+
+**GLSL unchanged:** the 900 programs of step 2, compiled by f69e026 and by this step: the same containers, manifests
+and resources byte for byte, and the 30 refused refused alike. `tests/xsc_shaders.h` regenerates as it is, plus the
+grid's loop.
