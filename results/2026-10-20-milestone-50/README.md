@@ -368,9 +368,10 @@ c23 that its int4 BLENDINDICES pick, UBYTE4s, weighted a half, a quarter and the
 changes cancel at their weights, so the quad lands on the cell with red from 0.25 to 0.75 and a bone read at a wrong
 index moves or reshades it: `hlsl: a quad skinned by float4x3 bones in vertex constants that its corners' int4
 BLENDINDICES, UBYTE4s, pick lands and shades as the CPU's skinning of its corners: %u of %u pixels wrong`.
-`tests/breaks/hlsl/skin.patch` loads a0 from an int vector's x for each component: on the simulator every corner takes
+`tests/breaks/hlsl/skin.patch` loaded a0 from an int vector's x for each component: on the simulator every corner takes
 its first bone four times and the quad collapses to no width at column 1019.5, failing that check and `xsc:
-hlsl/grid_skin_vs.hlsl compiles into the PC's container, literals and resources`. The link break leaves this pair as
+hlsl/grid_skin_vs.hlsl compiles into the PC's container, literals and resources`. The console drew it right, so the
+break is now another ("Step 5's skin break drew right on the console", below). The link break leaves this pair as
 it is: its stages pack TEXCOORD0 and COLOR0 alike.
 
 **GLSL unchanged:** the 900 programs of step 2, compiled by 4e37768 and by this step: the same containers, manifests
@@ -390,3 +391,83 @@ M50 with vulkan4xenon against it (local/m50/build.sh), through the console agent
 - **Step 3** (`step3_*.log`, at 245091a): xsdk_test 514 of 516, the loop's cell passing. The loop break failed the loop
   check and its compile check; the link break the three link checks and the loop's, whose cell links its stages too.
   vulkan4xenon_test 492 of 492 twice, vkbench 17 of 17.
+
+## Step 5's skin break drew right on the console
+
+At cdcbb2f, xsdk_test's skinning check passed, 0 of 28800 pixels wrong (`step5_xsdk_test.log`), and so did the skin
+break's build, skin.patch then loading a0 from an int vector's x for each component, which failed only `xsc:
+hlsl/grid_skin_vs.hlsl compiles into the PC's container, literals and resources` (`step5_xsdk_test_hlsl_skin.log`). On
+`xdis/simulate.py` that break's container collapses the quad to no width at column 1019.5.
+
+**The containers**, grid_skin_vs.hlsl at xsdk's split with the optimiser on: the PC's, 916 bytes, as
+`tests/xsc_shaders.h` holds it, and the break's, 892. r2 is BLENDINDICES' fetch and c24 the literal 3.0, a bone's
+registers. Their four a0 loads, by instruction slot:
+- **Index x,** both: 9 `mul r4.x___, r2, c24`, 10 `maxas r0._, r4.xx`.
+- **Index y:** the PC's 14 `mul r4.___w, r2.xzwy, c24.xzwy`, 15 `maxas r0._, r4.ww`; the break's 13 `maxs r2.___w,
+  r4.xx` beside `dp4 r2.__z_, r0, c[2+a0]`, 14 `maxas r0._, r2.ww`.
+- **Index z:** the PC's 19 `mulsc r4.___w, c24.x, r2.z` beside a `mul`, 21 `maxas r0._, r4.ww`; the break's 18
+  `maxs r2.___w, r4.xx` beside a `mul`, 20 `maxas r0._, r2.ww`.
+- **Index w:** the PC's 26 `mul r4.___w, r2, c24`, 27 `maxas r0._, r4.ww`; the break's 23 `maxs r2.___w, r4.xx`
+  beside `dp4 r2.__z_, r0, c[2+a0]`, 25 `maxas r0._, r2.ww`.
+
+Each load is followed by the same three `dp4`s at `c[0+a0]` to `c[2+a0]`; the rest is the weighted sum, reordered.
+
+**How they're read.** A scalar op takes src3's a from the swizzle's bits 6-7 plus 3 and b from bits 0-1
+(xenia:src/xenia/gpu/ucode.h:952-953, shader_translator.cc:1242-1248; XenosRecomp:shader_recompiler.cpp:538-546),
+and `maxas` sets a0 to a rounded (ucode.h:1138-1143, shader_interpreter.cc:808-815), as `xdis/simulate.py` does
+(simulate.py:144, 199-201). Every load in both containers is a broadcast, `.xx` (0x6C) or `.ww` (0x1B), whose four
+fields all name one lane, so a, b and any field the console might take read the same component. The lane question of
+docs/HARDWARE.md, "The scalar unit's constant forms, milestone 48 step 5", concerns `mulsc`, `addsc` and `subsc` with
+both components one; the PC's one such form, `mulsc c24.x, r2.z`, has two, which that probe found right. Broadcast
+loads of other lanes already draw right on the console: `vk_indexed_reads.vert`'s `maxas r1.yy`, `maxasf r0.ww` and
+`.zz`, `vk_dynamic_interpolator.vert`'s `maxasf r0.zz`, `vk_dynamic_texcoord.frag`'s `.yy`.
+
+**Why the lane can't explain the pass.** The break's container works out 3 times index x alone: r2's y, z and w are
+overwritten by bone rows and a copy of r4.x at 11 to 13, before any later load, and the copies at 13, 18 and 23 put
+r4.x in r2.w. A later load can find 3 times index x, index w unscaled, bone rows, partial sums or r4's lanes from
+before the shader, so no choice of lane, no late write and no co-issue rule gives a corner its other bones; the top
+right corner, bones 4 to 7, needs a0 15, 18 and 21. A bone read four times moves its corner by that bone's change, so
+the quad can't land right. On the PC the
+break compiles to those 892 bytes on x86-64, as a 32-bit big-endian powerpc-linux build under qemu-ppc, with
+`-ftrivial-auto-var-init=pattern`, with `MALLOC_PERTURB_` and under ASan and UBSan; and the break build's console
+object of xsc_lower_block.c has the call reading the lane gone. So either the console didn't draw this container in the
+cell, or the skinning check can't see on the console which bone is read. These runs can't tell which.
+
+**The PC's container** reads lane k times 3 for bone k on the simulator, through vector ops moving the lane to w and
+broadcast loads, every form the console has drawn right before. Its pass on the console shows the quad lands; with the
+break's pass beside it, it doesn't show the bones were told apart.
+
+**The probe**, `tests/probe_skin.c` (`make skin_probe`, `build/probe_skin.xex`, its log `probe_skin.log`), draws the
+cell as tests/test_hlsl.c does, 3 frames a case, the last 2 checked against the CPU's skinning, and logs the box of
+every pixel not the clear colour. Its xost is the old break's: `tests/probe_skin.patch` on a copy of xsc_lower_block.c,
+linked ahead of libxsdk.a, and built into the PC's compiler for the lanex container. Every case runs, or the one
+`game:\skin_start.txt` names. What the simulator draws, from the CPU's quad over columns 859.5 to 939.5, rows 644.5 to
+684.5:
+- `pc`, the PC's container: right, 0 of 6400 wrong, over columns 860 to 939, rows 645 to 684.
+- `lanex`, the old break's PC container: nothing drawn, 6400 wrong.
+- `title`, the title's own compile by the old break: its bytes logged against lanex's, then drawn; as lanex.
+- `swapped`, the PC's container with bones 0 and 1 swapped in the constants: the left corners at column 739.5, so over
+  columns 740 to 939, most of the cell wrong.
+
+What it settles: lanex and title drawing nothing and swapped wrong means the console reads these loads as the simulator
+does, and the break run's pass came from something else, so that build runs again; lanex right and swapped wrong
+means the console reads one of these loads otherwise, to be split up instruction by instruction next, as
+probe_relative_constants.c's cases are; swapped right as well means bones 0 and 1 aren't told apart on the console and
+the skinning check is blind to the index, which the test, not xost, must fix. A title compile that differs from lanex
+logs its first differing dword.
+
+**The skin break now** (tests/breaks/hlsl/skin.patch) loads a0 from an int vector's lane as a float index, floored and
+not times the bone's 3 registers: `maxasf r0._, r2.xx` to `r2.ww` straight from the fetch. Only index 0, 3 and 6 are
+whole bones, and every load misreads some corner whichever lane it reads (any lane but z gives the top right corner 4, 5
+or 7, z gives the top left 2), so the quad goes wrong even if every bone held the same rows. On the simulator the
+corners land at columns 711, 501, 661 and 529, rows 522, 173, 518 and 225, leaving the cell empty;
+`tests/test_hlsl_rest.py` fails `skin_vs, optimiser off: [-0.2109375, 0.4609375, 0.171875, 1.0], not [0.921875,
+0.6015625, 0.40625, 1.0]`; of xsdk_test's 56 checked shaders only `grid_skin_vs.hlsl` compiles otherwise. It must
+fail `hlsl: a quad skinned by float4x3 bones ...` and `xsc: hlsl/grid_skin_vs.hlsl compiles into the PC's container
+...` on the console.
+
+**Proposed for docs/HARDWARE.md** once the probe has run, under "HLSL on the console, milestone 50":
+- **The skin break that drew right.** xsdk_test built with a0 loaded from each int4 index's x passed its skinning
+  check, 0 of 28800 pixels, with a container that on Xenia's model (xenia:src/xenia/gpu/ucode.h:1138-1143) reads the
+  first index's bone four times and collapses the quad; it works out no other index, so no reading of its loads' lanes
+  explains it. `tests/probe_skin.c`'s result goes here.
