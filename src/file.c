@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <unistd.h>
 
 #include "path_private.h"
@@ -106,6 +107,15 @@ static FileSlot *find_slot(int fd)
 static bool is_console(int fd)
 {
 	return fd >= 0 && fd < FIRST_FILE_FD;
+}
+
+// A file's slot; the console's descriptors and sockets have none, which is EINVAL, as POSIX allows.
+static FileSlot *find_file(int fd)
+{
+	FileSlot *file = find_slot(fd);
+	if (!file)
+		errno = is_console(fd) || xsdk_socket_fd(fd) ? EINVAL : EBADF;
+	return file;
 }
 
 static uint32_t access_from_flags(int flags)
@@ -278,6 +288,17 @@ ssize_t pread(int fd, void *buffer, size_t length_bytes, off_t offset)
 	return read_at("pread", fd, file, buffer, length_bytes, (uint64_t)offset);
 }
 
+static ssize_t write_at(
+	const char *call, int fd, const FileSlot *file, const void *buffer, size_t length_bytes, uint64_t position)
+{
+	IO_STATUS_BLOCK io_status;
+	const NTSTATUS status =
+		NtWriteFile(file->handle, 0, NULL, NULL, &io_status, buffer, (uint32_t)length_bytes, &position);
+	if (!NT_SUCCESS(status))
+		return fail_with_status(call, fd, status);
+	return (ssize_t)io_status.information;
+}
+
 ssize_t write(int fd, const void *buffer, size_t length_bytes)
 {
 	if (fd == STDOUT_FILENO || fd == STDERR_FILENO) {
@@ -296,13 +317,57 @@ ssize_t write(int fd, const void *buffer, size_t length_bytes)
 		if (!NT_SUCCESS(status))
 			return fail_with_status("write", fd, status);
 	}
+	const ssize_t written_bytes = write_at("write", fd, file, buffer, length_bytes, file->position);
+	if (written_bytes > 0)
+		file->position += (uint64_t)written_bytes;
+	return written_bytes;
+}
+
+// At the offset given, even with O_APPEND, as POSIX has it.
+ssize_t pwrite(int fd, const void *buffer, size_t length_bytes, off_t offset)
+{
+	const FileSlot *file = find_slot(fd);
+	if (!file) {
+		errno = is_console(fd) ? ESPIPE : EBADF;
+		return -1;
+	}
+	if (offset < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+	return write_at("pwrite", fd, file, buffer, length_bytes, (uint64_t)offset);
+}
+
+int ftruncate(int fd, off_t length_bytes)
+{
+	const FileSlot *file = find_file(fd);
+	if (!file)
+		return -1;
+	if (length_bytes < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+	const FILE_END_OF_FILE_INFORMATION end = { .end_of_file = (uint64_t)length_bytes };
 	IO_STATUS_BLOCK io_status;
 	const NTSTATUS status =
-		NtWriteFile(file->handle, 0, NULL, NULL, &io_status, buffer, (uint32_t)length_bytes, &file->position);
-	if (!NT_SUCCESS(status))
-		return fail_with_status("write", fd, status);
-	file->position += io_status.information;
-	return (ssize_t)io_status.information;
+		NtSetInformationFile(file->handle, &io_status, &end, sizeof(end), FILE_END_OF_FILE_INFORMATION_CLASS);
+	return NT_SUCCESS(status) ? 0 : fail_with_status("ftruncate", fd, status);
+}
+
+int fsync(int fd)
+{
+	const FileSlot *file = find_file(fd);
+	if (!file)
+		return -1;
+	IO_STATUS_BLOCK io_status;
+	const NTSTATUS status = NtFlushBuffersFile(file->handle, &io_status);
+	return NT_SUCCESS(status) ? 0 : fail_with_status("fsync", fd, status);
+}
+
+// The kernel has one flush, for data and attributes both.
+int fdatasync(int fd)
+{
+	return fsync(fd);
 }
 
 off_t lseek(int fd, off_t offset, int whence)
@@ -330,6 +395,33 @@ off_t lseek(int fd, off_t offset, int whence)
 	}
 	file->position = (uint64_t)position;
 	return (off_t)position;
+}
+
+NTSTATUS xsdk_file_statvfs(HANDLE handle, struct statvfs *info)
+{
+	FILE_FS_SIZE_INFORMATION size;
+	IO_STATUS_BLOCK io_status;
+	const NTSTATUS status =
+		NtQueryVolumeInformationFile(handle, &io_status, &size, sizeof(size), FILE_FS_SIZE_INFORMATION_CLASS);
+	if (!NT_SUCCESS(status))
+		return status;
+	// The size class has no counts of files or length of names, so those stay 0.
+	memset(info, 0, sizeof(*info));
+	info->f_bsize = size.sectors_per_allocation_unit * size.bytes_per_sector;
+	info->f_frsize = info->f_bsize;
+	info->f_blocks = size.total_allocation_units;
+	info->f_bfree = size.available_allocation_units;
+	info->f_bavail = size.available_allocation_units;
+	return STATUS_SUCCESS;
+}
+
+int fstatvfs(int fd, struct statvfs *info)
+{
+	const FileSlot *file = find_file(fd);
+	if (!file)
+		return -1;
+	const NTSTATUS status = xsdk_file_statvfs(file->handle, info);
+	return NT_SUCCESS(status) ? 0 : fail_with_status("fstatvfs", fd, status);
 }
 
 int fstat(int fd, struct stat *info)

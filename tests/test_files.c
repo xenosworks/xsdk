@@ -1,7 +1,11 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -17,11 +21,24 @@ enum {
 	// over the network, milestone 53"); DbgPrint's 3 to 7 ms, which every line paid before, fails it.
 	LOG_COST_BAR_US = 1500,
 	CHECK_NAME_BYTES = 64,
+	// A file of 4 allocation units and a byte takes 5, as a file takes whole units; its folder may take 1 more for the
+	// new name.
+	STATVFS_FILE_UNITS = 4,
+	STATVFS_UNITS_TAKEN = STATVFS_FILE_UNITS + 1,
+	STATVFS_FOLDER_UNITS = 1,
+	WRITE_CHUNK_BYTES = 16384,
 };
 
 // game: is the launch folder on the console; Xenia mounts it read-only but lets titles write to cache:.
 static const char *const directories[] = { "game:\\", "cache:\\" };
 static const char FILE_NAME[] = "xsdk_file_test.txt";
+
+// The path of another file in path's folder, or of the folder itself for an empty name.
+static void sibling_path(char other[PATH_BYTES], const char *path, const char *name)
+{
+	strcpy(other, path);
+	strcpy(strrchr(other, '\\') + 1, name);
+}
 
 // No printf here: Xenia mangles formatted text, and this test is about file IO.
 static FILE *create_test_file(char *path)
@@ -148,12 +165,93 @@ static void check_open_twice(const char *path)
 	check("open: a file opens twice, to write and to read", both);
 }
 
+// pwrite of "LINE 2" over "line 2", with the position moved to 4 first: pread reads it back, and the position and the
+// file's size are as they were.
+static void check_pwrite(const char *path)
+{
+	const int fd = open(path, O_RDWR);
+	char bytes[8] = "";
+	const bool written = fd >= 0 && lseek(fd, 4, SEEK_SET) == 4 && pwrite(fd, "LINE 2", 6, 9) == 6;
+	const bool read_back = written && pread(fd, bytes, 6, 9) == 6 && memcmp(bytes, "LINE 2", 6) == 0;
+	const bool position_kept = fd >= 0 && lseek(fd, 0, SEEK_CUR) == 4;
+	if (fd >= 0)
+		close(fd);
+	check("pwrite: writes at an offset, read back by pread, the position and size unchanged",
+		read_back && position_kept && file_size(path) == 27);
+}
+
+// ftruncate takes "line one\nline 2\n" to its first line, then to 16 bytes again, the 7 new ones zero.
+static void check_ftruncate(const char *path)
+{
+	const int fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	char bytes[16] = "";
+	struct stat info;
+	const bool shortened = fd >= 0 && write(fd, "line one\nline 2\n", 16) == 16 && ftruncate(fd, 9) == 0 &&
+		fstat(fd, &info) == 0 && info.st_size == 9;
+	const bool lengthened = shortened && ftruncate(fd, 16) == 0 && fstat(fd, &info) == 0 && info.st_size == 16 &&
+		pread(fd, bytes, 16, 0) == 16 && memcmp(bytes, "line one\n\0\0\0\0\0\0\0", 16) == 0;
+	if (fd >= 0)
+		close(fd);
+	(void)unlink(path);
+	check("ftruncate: shortens a file, then lengthens it with zeros", lengthened);
+}
+
+// fsync and fdatasync flush a file; a socket has nothing to flush, which POSIX lets fail with EINVAL.
+static void check_fsync(const char *path)
+{
+	const int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	const bool file_synced = fd >= 0 && write(fd, "x", 1) == 1 && fsync(fd) == 0 && fdatasync(fd) == 0;
+	if (fd >= 0)
+		close(fd);
+	(void)unlink(path);
+	const int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
+	const bool socket_refused = socket_fd >= 0 && fsync(socket_fd) != 0 && (errno == EINVAL || errno == EBADF);
+	if (socket_fd >= 0)
+		close(socket_fd);
+	check("fsync: flushes a file and fails on a socket", file_synced && socket_refused);
+}
+
+static bool write_zeros(int fd, unsigned long length_bytes)
+{
+	static const char zeros[WRITE_CHUNK_BYTES];
+	while (length_bytes > 0) {
+		const size_t chunk_bytes = length_bytes < sizeof(zeros) ? length_bytes : sizeof(zeros);
+		if (write(fd, zeros, chunk_bytes) != (ssize_t)chunk_bytes)
+			return false;
+		length_bytes -= chunk_bytes;
+	}
+	return true;
+}
+
+// statvfs of the test file's folder, game: on the console, before and after a file is written and synced, and
+// fstatvfs of the file.
+static void check_statvfs(const char *folder, const char *path)
+{
+	struct statvfs before = { 0 };
+	struct statvfs by_fd;
+	struct statvfs after;
+	const bool read_before = statvfs(folder, &before) == 0 && before.f_bsize > 0 && before.f_blocks >= before.f_bfree;
+	const unsigned long file_bytes = STATVFS_FILE_UNITS * before.f_bsize + 1;
+	const int fd = read_before ? open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644) : -1;
+	const bool synced = fd >= 0 && write_zeros(fd, file_bytes) && fsync(fd) == 0 && fstatvfs(fd, &by_fd) == 0 &&
+		by_fd.f_bsize == before.f_bsize;
+	if (fd >= 0)
+		close(fd);
+	const bool read_after = synced && statvfs(folder, &after) == 0;
+	(void)unlink(path);
+	const fsblkcnt_t taken = read_after ? before.f_bfree - after.f_bfree : 0;
+	xsdk_log_write("files: statvfs(%s): %lu-byte units, %llu of %llu free; a file of %lu bytes took %llu", folder,
+		before.f_bsize, (unsigned long long)before.f_bfree, (unsigned long long)before.f_blocks, file_bytes,
+		(unsigned long long)taken);
+	check("statvfs: a written file takes its allocation units from the free ones, fstatvfs agreeing on the unit",
+		read_after && taken >= STATVFS_UNITS_TAKEN && taken <= STATVFS_UNITS_TAKEN + STATVFS_FOLDER_UNITS);
+}
+
 // The test file, renamed over another, takes its place, and its own name is gone.
 static void check_rename(const char *path)
 {
 	char other[PATH_BYTES];
-	strcpy(other, path);
-	strcpy(strrchr(other, '\\') + 1, "xsdk_rename_test.txt");
+	sibling_path(other, path, "xsdk_rename_test.txt");
 	FILE *file = fopen(other, "w");
 	const bool made = file && fputs("old\n", file) >= 0 && fclose(file) == 0;
 	const bool renamed = made && rename(path, other) == 0;
@@ -222,6 +320,15 @@ void test_files(void)
 	check("file append", appended && file_size(path) == 27);
 	check_pread(path);
 	check_open_twice(path);
+	check_pwrite(path);
 	check_flockfile();
 	check_rename(path);
+
+	char folder[PATH_BYTES];
+	char other[PATH_BYTES];
+	sibling_path(folder, path, "");
+	sibling_path(other, path, "xsdk_sync_test.bin");
+	check_ftruncate(other);
+	check_fsync(other);
+	check_statvfs(folder, other);
 }

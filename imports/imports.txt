@@ -19,9 +19,11 @@ xboxkrnl.exe  0x0CF  NtClose
 xboxkrnl.exe  0x0D1  NtCreateEvent
 xboxkrnl.exe  0x0D2  NtCreateFile
 xboxkrnl.exe  0x0D5  NtCreateSemaphore
+xboxkrnl.exe  0x0DB  NtFlushBuffersFile
 xboxkrnl.exe  0x0E4  NtQueryDirectoryFile
 xboxkrnl.exe  0x0E7  NtQueryFullAttributesFile
 xboxkrnl.exe  0x0E8  NtQueryInformationFile
+xboxkrnl.exe  0x0EF  NtQueryVolumeInformationFile
 xboxkrnl.exe  0x0F0  NtReadFile
 xboxkrnl.exe  0x0F3  NtReleaseSemaphore
 xboxkrnl.exe  0x0F6  NtSetEvent

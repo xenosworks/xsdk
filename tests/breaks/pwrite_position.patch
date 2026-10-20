@@ -1,0 +1,12 @@
+--- a/src/file.c
++++ b/src/file.c
+@@ -335,7 +335,8 @@
+ 		errno = EINVAL;
+ 		return -1;
+ 	}
+-	return write_at("pwrite", fd, file, buffer, length_bytes, (uint64_t)offset);
++	// Broken on purpose: written at the descriptor's position, not at the offset.
++	return write_at("pwrite", fd, file, buffer, length_bytes, file->position);
+ }
+ 
+ int ftruncate(int fd, off_t length_bytes)

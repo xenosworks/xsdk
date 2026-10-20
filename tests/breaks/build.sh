@@ -15,9 +15,13 @@
 # - atoc_noenable: alpha to mask's enable bit left off; every alpha below 1 covers every sample, and the alpha to
 #   coverage checks at 1, 2 and 4 samples fail.
 # - atoc_offsets0: the offsets left at 0; each threshold moves up half a step, and the same three fail.
+# Milestone 54's:
+# - pwrite_position: pwrite writes at the descriptor's position, not the offset; fails "pwrite: writes at an offset,
+#   read back by pread, the position and size unchanged" alone.
 set -eu
 cd "$(dirname "$0")/../.."
-for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0; do
+for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0 \
+	pwrite_position; do
 	patch -p1 --forward --quiet < "tests/breaks/$name.patch"
 	trap 'patch -p1 -R --quiet < "tests/breaks/$name.patch"' EXIT INT TERM
 	make -j32 BUILD="build/breaks/$name" "build/breaks/$name/xsdk_test.xex"

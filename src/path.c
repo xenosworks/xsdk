@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <unistd.h>
 
 #include "file_private.h"
@@ -314,6 +315,30 @@ int truncate(const char *path, off_t length_bytes)
 		return fail_with_status("truncate: NtSetInformationFile", resolved, status);
 	if (!NT_SUCCESS(close_status))
 		return fail_with_status("truncate: NtClose", resolved, close_status);
+	return 0;
+}
+
+// A file or folder of the volume, opened shared, as a folder may be open elsewhere.
+int statvfs(const char *path, struct statvfs *info)
+{
+	char resolved[XSDK_PATH_BYTES];
+	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0)
+		return -1;
+	ANSI_STRING name;
+	OBJECT_ATTRIBUTES attributes;
+	xsdk_path_attributes(resolved, &name, &attributes);
+	IO_STATUS_BLOCK io_status;
+	HANDLE handle;
+	NTSTATUS status = NtCreateFile(&handle, GENERIC_READ | SYNCHRONIZE, &attributes, &io_status, NULL,
+		FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT);
+	if (!NT_SUCCESS(status))
+		return fail_with_status("statvfs: NtCreateFile", resolved, status);
+	status = xsdk_file_statvfs(handle, info);
+	const NTSTATUS close_status = NtClose(handle);
+	if (!NT_SUCCESS(status))
+		return fail_with_status("statvfs: NtQueryVolumeInformationFile", resolved, status);
+	if (!NT_SUCCESS(close_status))
+		return fail_with_status("statvfs: NtClose", resolved, close_status);
 	return 0;
 }
 

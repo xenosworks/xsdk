@@ -71,6 +71,14 @@ typedef struct {
 	uint64_t end_of_file;
 } FILE_END_OF_FILE_INFORMATION;
 
+// NtQueryVolumeInformationFile's size class (xenia:src/xenia/kernel/info/volume.h:39-45).
+typedef struct {
+	uint64_t total_allocation_units;
+	uint64_t available_allocation_units;
+	uint32_t sectors_per_allocation_unit;
+	uint32_t bytes_per_sector;
+} FILE_FS_SIZE_INFORMATION;
+
 // 16 bytes (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:170-172), laid out as the original Xbox kernel's.
 typedef struct {
 	uint8_t replace_if_exists;
@@ -269,6 +277,11 @@ enum {
 	FILE_NETWORK_OPEN_INFORMATION_CLASS = 34,
 };
 
+// Volume information classes (xenia:src/xenia/kernel/info/volume.h:17-22).
+enum {
+	FILE_FS_SIZE_INFORMATION_CLASS = 3,
+};
+
 // Event types (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:470) and processor modes; the values are NT's.
 enum {
 	NOTIFICATION_EVENT = 0,
@@ -319,12 +332,17 @@ NTSTATUS NtCreateFile(HANDLE *handle, uint32_t desired_access, const OBJECT_ATTR
 	IO_STATUS_BLOCK *io_status, const uint64_t *allocation_size, uint32_t file_attributes, uint32_t share_access,
 	uint32_t creation_disposition, uint32_t create_options);
 NTSTATUS NtCreateSemaphore(HANDLE *semaphore, const OBJECT_ATTRIBUTES *attributes, int32_t count, int32_t limit);
+// Xenia does nothing with it (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io.cc:591-600).
+NTSTATUS NtFlushBuffersFile(HANDLE file, IO_STATUS_BLOCK *io_status);
 // file_name, a pattern, is read only when a scan starts (xenia:src/xenia/kernel/xfile.cc:50-71).
 NTSTATUS NtQueryDirectoryFile(HANDLE file, HANDLE event, void *apc_routine, void *apc_context,
 	IO_STATUS_BLOCK *io_status, FILE_DIRECTORY_INFORMATION *information, uint32_t length_bytes,
 	const ANSI_STRING *file_name, uint32_t restart_scan);
 NTSTATUS NtQueryFullAttributesFile(const OBJECT_ATTRIBUTES *attributes, FILE_NETWORK_OPEN_INFORMATION *information);
 NTSTATUS NtQueryInformationFile(
+	HANDLE file, IO_STATUS_BLOCK *io_status, void *information, uint32_t length_bytes, uint32_t information_class);
+// xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:280-345
+NTSTATUS NtQueryVolumeInformationFile(
 	HANDLE file, IO_STATUS_BLOCK *io_status, void *information, uint32_t length_bytes, uint32_t information_class);
 NTSTATUS NtReadFile(HANDLE file, HANDLE event, void *apc_routine, void *apc_context, IO_STATUS_BLOCK *io_status,
 	void *buffer, uint32_t length_bytes, const uint64_t *byte_offset);
