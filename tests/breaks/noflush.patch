@@ -1,0 +1,11 @@
+--- a/src/save.c	2026-10-19 23:40:31.488806300 -0400
++++ b/src/save.c	2026-10-19 23:40:31.574029200 -0400
+@@ -89,6 +89,8 @@
+ uint32_t xsdk_save_unmount(XsdkSave *save)
+ {
+ 	save->flush_result = ERROR_IO_PENDING;
++	// Broken on purpose: closed with no flush.
++	return start_close(save);
+ 	xsdk_xam_prepare(&save->overlapped);
+ 	const uint32_t returned = xsdk_xam_returned(&save->overlapped, XamContentFlush(save->drive, &save->overlapped));
+ 	save->flushing = returned == ERROR_IO_PENDING;

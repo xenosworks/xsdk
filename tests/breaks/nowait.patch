@@ -1,0 +1,12 @@
+--- a/src/xam.c	2026-10-19 23:40:31.490806200 -0400
++++ b/src/xam.c	2026-10-19 23:40:31.574528500 -0400
+@@ -39,7 +39,8 @@
+ // with 0 (results/2026-10-19-milestone-51/probe_xam.log).
+ uint32_t xsdk_xam_wait(XAM_OVERLAPPED *overlapped, uint32_t timeout_ms, uint32_t *length)
+ {
+-	if (overlapped->event) {
++	// Broken on purpose: the event ignored, the call only looked at.
++	if (false) {
+ 		const int64_t timeout = -(int64_t)timeout_ms * TIMEOUT_UNITS_PER_MS;
+ 		if (NtWaitForSingleObjectEx(overlapped->event, USER_MODE, 0, &timeout) == STATUS_TIMEOUT)
+ 			return ERROR_IO_INCOMPLETE;
