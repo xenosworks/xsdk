@@ -75,6 +75,7 @@ static volatile bool in_stdio;
 static volatile uint32_t lines_written;
 static volatile uint32_t last_line_time;
 static EX_TITLE_TERMINATE_REGISTRATION registration;
+static bool unregister_at_end;
 
 static uint32_t time_base(void)
 {
@@ -294,6 +295,11 @@ static void on_terminate(uint32_t argument_0, uint32_t argument_1)
 	try_mutex();
 	try_flush(thread);
 	heartbeat(start);
+	// The registration is in the title's memory, which the kernel frees once the routines return.
+	if (unregister_at_end) {
+		ExRegisterTitleTerminateNotification(&registration, 0);
+		note("notify: unregistered itself");
+	}
 }
 
 static uint32_t hold_mutex(void *context)
@@ -442,6 +448,12 @@ static int read_case(void)
 	return 0;
 }
 
+static int run_unregister_case(void)
+{
+	unregister_at_end = true;
+	return run_case();
+}
+
 typedef struct {
 	const char *name;
 	const char *what;
@@ -451,6 +463,7 @@ typedef struct {
 static const ProbeCase cases[] = {
 	{ "read", "logs what the last run's routine wrote, and how much of terminate_out.txt survived", read_case },
 	{ "run", "writes through stdio until ended from outside, the notification's routine recording", run_case },
+	{ "run_unreg", "as run, the routine taking its registration out before it returns", run_unregister_case },
 };
 
 enum { CASES = sizeof cases / sizeof cases[0] };
