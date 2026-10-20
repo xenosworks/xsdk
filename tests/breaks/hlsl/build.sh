@@ -1,5 +1,5 @@
 #!/bin/sh
-# Milestone 50 steps 3 to 6's breaks: xsdk_test built with each patch here applied, as
+# Milestone 50 steps 3 to 7's breaks: xsdk_test built with each patch here applied, as
 # build/breaks/xsdk_test_hlsl_<break>.xex. Each but link breaks xost in the title, which compiles the HLSL grid's
 # shaders on the console (tests/test_hlsl.c), so test_xsc's check of that shader against the PC's container fails too.
 # Run in WSL from anywhere: sh tests/breaks/hlsl/build.sh. Each patch is taken back out after its build, even a failed
@@ -27,9 +27,13 @@
 #   the cell takes their red 8 and green 8; fails "hlsl: samplers at s3 and s7 sample the textures bound at slots 3
 #   and 7, ...", "hlsl: grid_binding_ps.hlsl's table names Low at fetch constant 0 and High at 1, ..." and
 #   "xsc: hlsl/grid_binding_ps.hlsl compiles into the PC's container ...".
+# - registers: D3D9's b# and i# not kept, each bool and int taking the lowest constant left, so grid_binding_ps.hlsl's
+#   Bright at b2 is boolean constant 128 and Count at i1 loop constant 16, not 130 and 17; the cell, set by name, still
+#   draws right; fails "hlsl: grid_binding_ps.hlsl's table names ... Bright at boolean constant 128 and Count at loop
+#   constant 16, as their b2 and i1" and "xsc: hlsl/grid_binding_ps.hlsl compiles into the PC's container ...".
 set -eu
 cd "$(dirname "$0")/../../.."
-for name in link vpos vface depth loop skin binding; do
+for name in link vpos vface depth loop skin binding registers; do
 	patch -p1 --forward --quiet < "tests/breaks/hlsl/$name.patch"
 	trap 'patch -p1 -R --quiet < "tests/breaks/hlsl/$name.patch"' EXIT INT TERM
 	make -j32 BUILD="build/breaks/hlsl_$name" "build/breaks/hlsl_$name/xsdk_test.xex"

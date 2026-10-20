@@ -62,6 +62,9 @@ enum {
 	BINDING_TEXELS = 4,
 	LOW_SLOT = 3,
 	HIGH_SLOT = 7,
+	// Bright's b2 and Count's i1 in a pixel shader's halves (xenos-toolchain/docs/xsc.md, "Interface conventions").
+	BRIGHT_BOOLEAN = 128 + 2,
+	COUNT_LOOP = 16 + 1,
 	DECOY_SLOTS = 2,
 	// The link's quad, VPOS's, VFACE's two, DEPTH's, the nearer one over it, the link with gaps', the loop's and the
 	// binding's two.
@@ -790,11 +793,11 @@ void test_hlsl(void)
 		const int32_t *const b = g.bound;
 		(void)snprintf(name, sizeof name,
 			"hlsl: grid_binding_ps.hlsl's table names Low at fetch constant %d and High at %d, as their s3 and s7, "
-			"Step at float constant %d, Bright at boolean constant %d and Count at loop constant %d",
+			"Step at float constant %d, Bright at boolean constant %d and Count at loop constant %d, as their b2 and i1",
 			(int)b[BOUND_LOW], (int)b[BOUND_HIGH], (int)b[BOUND_STEP], (int)b[BOUND_BRIGHT], (int)b[BOUND_COUNT]);
 		check(name,
-			b[BOUND_LOW] == LOW_SLOT && b[BOUND_HIGH] == HIGH_SLOT && b[BOUND_STEP] >= 0 && b[BOUND_BRIGHT] >= 0 &&
-				b[BOUND_COUNT] >= 0);
+			b[BOUND_LOW] == LOW_SLOT && b[BOUND_HIGH] == HIGH_SLOT && b[BOUND_STEP] >= 0 &&
+				b[BOUND_BRIGHT] == BRIGHT_BOOLEAN && b[BOUND_COUNT] == COUNT_LOOP);
 		run(&g);
 	}
 	xsdk_display_close();

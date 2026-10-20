@@ -1,0 +1,12 @@
+--- a/src/xsc_lower_flow.c
++++ b/src/xsc_lower_flow.c
+@@ -401,7 +401,8 @@ static bool taken(const XscLower *l, char letter, uint32_t first, uint32_t index
+ static int64_t d3d9_constant(XscLower *l, int64_t slot, char letter, uint32_t first, uint32_t count)
+ {
+ 	const XscConstantSlot *const c = slot >= 0 ? &l->si->constants[slot] : NULL;
+-	if (c && c->d3d9_register == letter) {
++	// Broken on purpose: D3D9's b# and i# not kept, each bool and int taking the lowest constant left, as in step 6.
++	if (false && c && c->d3d9_register == letter) {
+ 		if (c->d3d9_index < count)
+ 			return first + c->d3d9_index;
+ 		xsdk_xsc_lower_refuse(
