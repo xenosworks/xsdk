@@ -132,7 +132,8 @@ NTSTATUS xsdk_gpu_begin_tiles(const XsdkTiling *t, XsdkCommandBuffer *buffer)
 	band_rows = rows_of(t);
 	narrowed = false;
 	place_targets();
-	xsdk_gpu_set_band_targets(pass.width, pass.height, band_rows, placed, pass.count, depth_tile_of(0), false);
+	xsdk_gpu_set_band_targets(
+		pass.width, pass.height, band_rows, pass.samples, placed, pass.count, depth_tile_of(0), false);
 	xsdk_gpu_record_begin(buffer);
 	pass_buffer = buffer;
 	tiling = true;
@@ -215,7 +216,8 @@ static void put_band(uint32_t band)
 {
 	const uint32_t top = band * band_rows;
 	// The surface the band's rows tall, so in the last band a whole depth at eDRAM's top ends at its last tile.
-	xsdk_gpu_set_band_targets(pass.width, pass.height, rows_in(band), placed, pass.count, depth_tile_of(band), true);
+	xsdk_gpu_set_band_targets(
+		pass.width, pass.height, rows_in(band), pass.samples, placed, pass.count, depth_tile_of(band), true);
 	const uint32_t window = ((uint32_t)-(int32_t)top & OFFSET_MASK) << Y_SHIFT;
 	const uint32_t screen[] = { 0, SCREEN_WHOLE | rows_in(band) << Y_SHIFT };
 	GpuPackets packets = gpu_reserve_packets(WINDOW_DWORDS + (narrowed ? BIN_DWORDS : 0));

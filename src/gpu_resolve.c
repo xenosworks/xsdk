@@ -330,9 +330,9 @@ static void resolve(uint32_t source, uint32_t target, uint32_t address, const Ar
 	const uint32_t viewport[] = { 0x44000000, 0x44000000, 0xC3B40000, 0x43B40000, 0x3F800000, 0 };
 	// A depth resolve can't clear colour (xenia:src/xenia/gpu/xenos.h:925-931).
 	const uint32_t copy_clears = source == COPY_SOURCE_DEPTH ? clears & COPY_CONTROL_DEPTH_CLEAR : clears;
-	const uint32_t copy[] = { COPY_CONTROL_CONVERT | xsdk_gpu_copy_sample_select() << COPY_SAMPLE_SELECT_SHIFT |
-			copy_clears | source,
-		address, pitch | height << 16, dest_info };
+	const uint32_t select = xsdk_gpu_copy_sample_select(source == COPY_SOURCE_DEPTH);
+	const uint32_t copy[] = { COPY_CONTROL_CONVERT | select << COPY_SAMPLE_SELECT_SHIFT | copy_clears | source, address,
+		pitch | height << 16, dest_info };
 	const uint32_t program[] = { PROGRAM_CNTL_RESOLVE, 0 };
 	const uint32_t indices[] = { 0xFFFF, 0, 0 };
 	const uint32_t clip[] = { CLIP_DISABLE, VTX_WINDOW_OFFSET_ENABLE, VTE_XY_Z_ALREADY_TRANSFORMED };

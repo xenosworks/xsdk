@@ -164,8 +164,9 @@ until a resolve copies it out, and the resolve then clears eDRAM for the next fr
 - **What a frame shows is the clear before it:** a resolve copies eDRAM, then clears it, so the next frame's draws land
   on that clear. The first frame after `xsdk_gpu_open` lands on whatever eDRAM held.
 - **A resolve's width is a multiple of 32.** Targets past eDRAM's 10 MiB, such as 1920x1080 with depth, go in tiled
-  passes (`xsdk_gpu_begin_tiles`); 2 and 4 samples, several targets and float formats are `xsdk_gpu_set_target_samples`
-  and `xsdk_gpu_set_targets`.
+  passes (`xsdk_gpu_begin_tiles`); 2 and 4 samples, several targets and float formats are `xsdk_gpu_set_target_samples`,
+  `xsdk_gpu_set_targets` and `xsdk_gpu_set_targets_samples`, which takes 16_16_FLOAT, 16_16_16_16_FLOAT and 32_FLOAT at
+  1 sample only.
 - **Depth runs from 0, near, to 1, far,** and a resolve clears it to far unless `xsdk_gpu_set_depth_clear` says
   otherwise; `xsdk_gpu_set_resolve_clears` turns either clear off. Clip space is y up, as D3D's.
 - **Texture coordinates** run as D3D's: v = 0 is the texture's first row, the one an upload writes first, so a quad

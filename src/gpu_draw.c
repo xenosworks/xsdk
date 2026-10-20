@@ -289,9 +289,24 @@ static bool is_64_bit(uint32_t format)
 	return format == XSDK_TARGET_16_16_16_16 || format == XSDK_TARGET_16_16_16_16_FLOAT;
 }
 
+// At 2 and 4 samples too (results/2026-10-20-milestone-44-step-3/probe_msaa_default.log, "takes N eDRAM tiles").
+uint32_t xsdk_gpu_color_target_sample_tiles(uint32_t width, uint32_t height, uint32_t format, uint32_t samples)
+{
+	return xsdk_gpu_target_sample_tiles(width, height, samples) << is_64_bit(format);
+}
+
 uint32_t xsdk_gpu_color_target_tiles(uint32_t width, uint32_t height, uint32_t format)
 {
-	return xsdk_gpu_target_tiles(width, height) << is_64_bit(format);
+	return xsdk_gpu_color_target_sample_tiles(width, height, format, 1);
+}
+
+// The float formats but 7e3 resolve between the samples' steps at 2 and 4 samples
+// (results/2026-10-20-milestone-44-step-3/probe_msaa_default.log, "between steps").
+bool xsdk_gpu_target_takes_samples(uint32_t format, uint32_t samples)
+{
+	return samples == 1 ||
+		(format != XSDK_TARGET_16_16_FLOAT && format != XSDK_TARGET_16_16_16_16_FLOAT &&
+			format != XSDK_TARGET_32_FLOAT);
 }
 
 uint32_t xsdk_gpu_color_target_format(uint32_t target)
@@ -300,13 +315,15 @@ uint32_t xsdk_gpu_color_target_format(uint32_t target)
 	return color_targets[target].format;
 }
 
-uint32_t xsdk_gpu_copy_sample_select(void)
+// Depth averages under the averaging selects too, so its resolves copy sample 0, one sample's depth
+// (results/2026-10-20-milestone-44-step-3/probe_msaa_depth_4.log).
+uint32_t xsdk_gpu_copy_sample_select(bool depth)
 {
 #ifdef XSDK_MSAA_PROBE
 	if (probe_sample_select != UINT32_MAX)
 		return probe_sample_select;
 #endif
-	return copy_sample_selects[samples_log2(target_samples)];
+	return depth ? 0 : copy_sample_selects[samples_log2(target_samples)];
 }
 
 // As libxenon sets it (xe.c:1411-1412): without msaa_enable the console's edges don't blend (docs/HARDWARE.md).
@@ -431,10 +448,10 @@ void xsdk_gpu_set_target_at(uint32_t width, uint32_t height, uint32_t color_tile
 }
 
 // No colour targets keeps colour target 0, unwritten, on the depth's tiles.
-static void hold_targets(const XsdkColorTarget *targets, uint32_t count, uint32_t depth_tile)
+static void hold_targets(const XsdkColorTarget *targets, uint32_t count, uint32_t depth_tile, uint32_t samples)
 {
-	assert(count <= XSDK_COLOR_TARGETS);
-	target_samples = 1;
+	assert(count <= XSDK_COLOR_TARGETS && (samples == 1 || samples == 2 || samples == 4));
+	target_samples = samples;
 	target_placed = true;
 	depth_only = !count;
 	color_targets[0] = (XsdkColorTarget){ .format = XSDK_TARGET_8_8_8_8, .tile = depth_tile };
@@ -443,22 +460,29 @@ static void hold_targets(const XsdkColorTarget *targets, uint32_t count, uint32_
 	placed_depth_tile = depth_tile;
 }
 
-void xsdk_gpu_set_targets(
-	uint32_t width, uint32_t height, const XsdkColorTarget *targets, uint32_t count, uint32_t depth_tile)
+void xsdk_gpu_set_targets_samples(uint32_t width, uint32_t height, uint32_t samples, const XsdkColorTarget *targets,
+	uint32_t count, uint32_t depth_tile)
 {
 	assert(count >= 1);
-	hold_targets(targets, count, depth_tile);
+	for (uint32_t i = 0; i < count; i++)
+		assert(xsdk_gpu_target_takes_samples(targets[i].format, samples));
+	hold_targets(targets, count, depth_tile, samples);
 	put_target(width, height, height);
 }
 
+void xsdk_gpu_set_targets(
+	uint32_t width, uint32_t height, const XsdkColorTarget *targets, uint32_t count, uint32_t depth_tile)
+{
+	xsdk_gpu_set_targets_samples(width, height, 1, targets, count, depth_tile);
+}
+
 #ifdef XSDK_MSAA_PROBE
-// xsdk_gpu_set_targets at 2 or 4 samples, which xsdk refuses until the console says which formats take them.
+// xsdk_gpu_set_targets_samples with the formats it refuses at 2 and 4 samples too.
 void xsdk_probe_msaa_targets(uint32_t width, uint32_t height, const XsdkColorTarget *targets, uint32_t count,
 	uint32_t depth_tile, uint32_t samples)
 {
-	assert(count >= 1 && (samples == 1 || samples == 2 || samples == 4));
-	hold_targets(targets, count, depth_tile);
-	target_samples = samples;
+	assert(count >= 1);
+	hold_targets(targets, count, depth_tile, samples);
 	put_target(width, height, height);
 }
 
@@ -468,10 +492,10 @@ void xsdk_probe_msaa_select(uint32_t select)
 }
 #endif
 
-void xsdk_gpu_set_band_targets(uint32_t width, uint32_t height, uint32_t rows, const XsdkColorTarget *targets,
-	uint32_t count, uint32_t depth_tile, bool queued)
+void xsdk_gpu_set_band_targets(uint32_t width, uint32_t height, uint32_t rows, uint32_t samples,
+	const XsdkColorTarget *targets, uint32_t count, uint32_t depth_tile, bool queued)
 {
-	hold_targets(targets, count, depth_tile);
+	hold_targets(targets, count, depth_tile, samples);
 	if (queued)
 		put_target(width, height, rows);
 }

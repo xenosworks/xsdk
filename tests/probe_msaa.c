@@ -311,16 +311,11 @@ static bool near_argb(uint32_t a, uint32_t b, uint32_t tolerance)
 	return true;
 }
 
-static bool is_64_bit(uint32_t format)
-{
-	return format == XSDK_TARGET_16_16_16_16 || format == XSDK_TARGET_16_16_16_16_FLOAT;
-}
-
 // The tiles xsdk counts for a 256x128 target of the format, a 64-bit one twice a 32-bit one's at any count
 // (xenia:src/xenia/gpu/xenos.h:426-437).
 static uint32_t format_tiles(const Format *f, uint32_t samples)
 {
-	return xsdk_gpu_target_sample_tiles(WIDTH, HEIGHT, samples) << is_64_bit(f->target);
+	return xsdk_gpu_color_target_sample_tiles(WIDTH, HEIGHT, f->target, samples);
 }
 
 // Depth at eDRAM's top, clear of the colour targets from tile 0.

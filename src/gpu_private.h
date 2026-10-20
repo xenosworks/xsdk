@@ -254,8 +254,11 @@ void xsdk_gpu_put_coherency(GpuPackets *packets, uint32_t actions, uint32_t base
 void xsdk_gpu_put_surface(GpuPackets *packets, uint32_t width, uint32_t height, uint32_t target);
 // The XSDK_TARGET_* of the last set's colour target `target`.
 uint32_t xsdk_gpu_color_target_format(uint32_t target);
-// RB_COPY_CONTROL's sample select that averages the last target's samples.
-uint32_t xsdk_gpu_copy_sample_select(void);
+// Whether a colour target of the format can be drawn at the samples, its resolves averaging them.
+bool xsdk_gpu_target_takes_samples(uint32_t format, uint32_t samples);
+// RB_COPY_CONTROL's sample select for a resolve of the last target: its colour's samples averaged, or one sample's
+// depth.
+uint32_t xsdk_gpu_copy_sample_select(bool depth);
 // For a resolve: draws need the target set again.
 void xsdk_gpu_undo_target(void);
 // Whether calls go into a command buffer, not the ring.
@@ -270,10 +273,10 @@ void xsdk_gpu_hiz_drop(void);
 uint32_t xsdk_gpu_depth_clear(void);
 
 // A tiled pass's targets, laid out for a band of rows rows, with the viewport and window scissor over width by height
-// as xsdk_gpu_set_targets sets them; no colour targets draws depth alone. Queued, or only held for the draws a pass
-// records.
-void xsdk_gpu_set_band_targets(uint32_t width, uint32_t height, uint32_t rows, const XsdkColorTarget *targets,
-	uint32_t count, uint32_t depth_tile, bool queued);
+// as xsdk_gpu_set_targets_samples sets them; no colour targets draws depth alone. Queued, or only held for the draws a
+// pass records.
+void xsdk_gpu_set_band_targets(uint32_t width, uint32_t height, uint32_t rows, uint32_t samples,
+	const XsdkColorTarget *targets, uint32_t count, uint32_t depth_tile, bool queued);
 // Whether a tiled pass is being recorded (src/gpu_tiles.c).
 bool xsdk_gpu_tiling(void);
 // Something changed eDRAM, so the next tiled pass clears its band 0 first.

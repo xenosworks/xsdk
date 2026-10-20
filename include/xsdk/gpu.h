@@ -133,8 +133,8 @@ void xsdk_gpu_resolve(uint32_t address, uint32_t width, uint32_t height, uint32_
 uint32_t xsdk_gpu_resolve_bytes(uint32_t width, uint32_t height);
 // Queues the same into a tiled 32-bit RGBA texture drawn at its size, its whole pitch, leaving its upload's layout.
 void xsdk_gpu_resolve_texture(const XsdkTexture *texture, uint32_t clear_argb);
-// The same for eDRAM's depth and stencil, into a tiled XSDK_FORMAT_D24S8 texture; it clears depth and stencil as the
-// resolves above do, and colour never.
+// The same for eDRAM's depth and stencil, into a tiled XSDK_FORMAT_D24S8 texture, of sample 0 at 2 and 4 samples; it
+// clears depth and stencil as the resolves above do, and colour never.
 void xsdk_gpu_resolve_depth_texture(const XsdkTexture *texture);
 
 enum {
@@ -163,14 +163,18 @@ void xsdk_gpu_set_target(uint32_t width, uint32_t height);
 void xsdk_gpu_set_target_at(uint32_t width, uint32_t height, uint32_t color_tile, uint32_t depth_tile);
 // The eDRAM tiles a target this size takes for its colour, and as many again for its depth.
 uint32_t xsdk_gpu_target_tiles(uint32_t width, uint32_t height);
-// The three above with 1, 2 or 4 samples a pixel, where they take 1; resolves average a pixel's samples.
+// The three above with 1, 2 or 4 samples a pixel, where they take 1; resolves average a pixel's samples. Sample i sits
+// in 16ths of a pixel across and down from the pixel's centre, as results/2026-10-20-milestone-44-step-3 has it:
+// at 2 samples, 0 at (-4, 4) and 1 at (4, -4) (probe_msaa_pattern_2.log);
+// at 4 samples, 0 at (-2, -2), 1 at (2, 2), 2 at (-6, 6) and 3 at (6, -6) (probe_msaa_pattern_4.log).
 void xsdk_gpu_set_target_samples(uint32_t width, uint32_t height, uint32_t samples);
 void xsdk_gpu_set_target_samples_at(
 	uint32_t width, uint32_t height, uint32_t samples, uint32_t color_tile, uint32_t depth_tile);
 uint32_t xsdk_gpu_target_sample_tiles(uint32_t width, uint32_t height, uint32_t samples);
 
 // Colour target formats (xenia:src/xenia/gpu/xenos.h:299-313); a 64-bit one takes twice the tiles (xenos.h:321-326,
-// 427-437). The set above draws 8_8_8_8.
+// 427-437). The set above draws 8_8_8_8. The first four take 1, 2 or 4 samples; the other three only 1, as at 2 and 4
+// their resolves give values between the samples' (results/2026-10-20-milestone-44-step-3/probe_msaa_default.log).
 enum {
 	XSDK_TARGET_8_8_8_8 = 0,
 	XSDK_TARGET_2_10_10_10 = 2,
@@ -194,16 +198,21 @@ typedef struct {
 	uint32_t tile;
 } XsdkColorTarget;
 
-// The eDRAM tiles a colour target this size and format takes.
+// The eDRAM tiles a colour target this size and format takes, at 1 sample, then at 1, 2 or 4.
 uint32_t xsdk_gpu_color_target_tiles(uint32_t width, uint32_t height, uint32_t format);
+uint32_t xsdk_gpu_color_target_sample_tiles(uint32_t width, uint32_t height, uint32_t format, uint32_t samples);
 // As xsdk_gpu_set_target_at, with 1 to XSDK_COLOR_TARGETS colour targets, each of its own format and tile, apart in
 // eDRAM; each writes every channel, unblended, till xsdk_gpu_set_blends.
 void xsdk_gpu_set_targets(
 	uint32_t width, uint32_t height, const XsdkColorTarget *targets, uint32_t count, uint32_t depth_tile);
-// Queues copying colour target `target` of the last xsdk_gpu_set_targets into a tiled texture drawn at its size, its
-// whole pitch, converted to the texture's format, then clearing the target to clear_rgba as xsdk_gpu_set_resolve_clears
-// says. 8_8_8_8 goes into A8R8G8B8, R8G8B8A8 or B8G8R8A8; 2_10_10_10 into A2B10G10R10; 16_16_FLOAT into R16G16F;
-// 32_FLOAT into R32F; the 7e3 one and the 16-bit fixed and float ones of four channels into R16G16B16A16F.
+// The same at 1, 2 or 4 samples a pixel; a format that takes only 1 stops at an assert at 2 and 4.
+void xsdk_gpu_set_targets_samples(uint32_t width, uint32_t height, uint32_t samples, const XsdkColorTarget *targets,
+	uint32_t count, uint32_t depth_tile);
+// Queues copying colour target `target` of the last targets set into a tiled texture drawn at its size, its
+// whole pitch, its samples averaged, converted to the texture's format, then clearing the target to clear_rgba as
+// xsdk_gpu_set_resolve_clears says. 8_8_8_8 goes into A8R8G8B8, R8G8B8A8 or B8G8R8A8; 2_10_10_10 into A2B10G10R10;
+// 16_16_FLOAT into R16G16F; 32_FLOAT into R32F; the 7e3 one and the 16-bit fixed and float ones of four channels into
+// R16G16B16A16F.
 void xsdk_gpu_resolve_target(uint32_t target, const XsdkTexture *texture, const float clear_rgba[4]);
 
 // Tiled passes, for targets past eDRAM's tiles: the pass's draws are recorded once and run once a band, each band a run
