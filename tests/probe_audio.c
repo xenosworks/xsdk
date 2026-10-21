@@ -584,9 +584,11 @@ static uint32_t read_start(const ProbeCase *chosen[MAX_RUN])
 	}
 	if (file)
 		(void)fclose(file);
-	for (uint32_t i = 0; count == 0 && i < CASE_COUNT; i++) {
-		if (!cases[i].risk)
-			chosen[count++] = &cases[i];
+	if (count == 0) {
+		for (uint32_t i = 0; i < CASE_COUNT; i++) {
+			if (!cases[i].risk)
+				chosen[count++] = &cases[i];
+		}
 	}
 	return count;
 }
