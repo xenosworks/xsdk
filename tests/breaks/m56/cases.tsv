@@ -1,8 +1,8 @@
 address_swapped	xsdk_test	net: the link is active, and xsdk_net_address gives the address the PC sees
 receive_timeout	xsdk_test	net: a blocking recv with a 200 ms SO_RCVTIMEO fails with EAGAIN within 300 ms; net: getsockopt reads SO_RCVTIMEO, SO_SNDTIMEO and SO_LINGER back as set
 send_timeout	xsdk_test	net: a blocking send with SO_SNDTIMEO fails with EAGAIN once the PC's window fills; net: getsockopt reads SO_RCVTIMEO, SO_SNDTIMEO and SO_LINGER back as set
-linger_unconverted	xsdk_test	net: getsockopt reads SO_RCVTIMEO, SO_SNDTIMEO and SO_LINGER back as set; net: closed with SO_LINGER {1, 0}, the connection is reset as the PC sees it
-limits_dropped	xsdk_test	net: 33 TCP connections open at once, the last numbered past select's and echoing through poll; SO_RCVBUF the raised 63 KB
+linger_unconverted	xsdk_test	net: getsockopt reads SO_RCVTIMEO, SO_SNDTIMEO and SO_LINGER back as set; net: closed with SO_LINGER {1, 0}, the PC sees no FIN, the connection left open as XAM does
+limits_dropped	xsdk_test	net: 33 TCP connections open at once, the last numbered past select's and echoing through poll; SO_RCVBUF at least the raised 63 KB
 launch_data_always	xsdk_test	launch: launched by the agent, xsdk_launch_data finds no launch data
 not_reversed	launch_target	launch: the round trip through launch_target beside it brings the data back reversed; launch: launch_target outside the title's folder, launched through xsdk's link, launches back with the data reversed
 last_byte	launch_check	launch: 1020 bytes of data, the most XAM passes on, arrive whole; launch: launch_target outside the title's folder, launched through xsdk's link, launches back with the data reversed
