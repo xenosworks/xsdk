@@ -76,6 +76,14 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
+## In titles that draw text, needing no notice
+
+`assets/fonts/10x20.bdf`, and `src/text_font.h` that tools/gen_font.py generates from it, which `libxsdk.a` links into
+a title that calls `text.h`: X11's misc-fixed 10x20, Markus Kuhn's ISO 10646 font, as X.Org's font-misc-misc 1.1.3
+release ships it (https://www.x.org/releases/individual/font/font-misc-misc-1.1.3.tar.xz). It's in the public domain:
+its COPYRIGHT property and the release's COPYING read "Public domain font.  Share and enjoy." A title ships nothing for
+it.
+
 ## In the repository only
 
 Not linked into titles, so nothing for a game to ship:
