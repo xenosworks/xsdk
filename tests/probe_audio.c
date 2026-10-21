@@ -158,16 +158,14 @@ static bool resolve(uint32_t ordinal, void **slot)
 	return true;
 }
 
-// The callback's half of callback_wake: KeSetEvent where the DPC flag is set, NtSetEvent where it isn't.
+// The callback's half of callback_wake: KeSetEvent on the event's object. The callback runs in a kernel thread of its
+// own, outside the title's handles: NtSetEvent on the title's handle there returned 0xC0000008 on the console, while
+// the object is the same one in any thread.
 static void wake_feeder(Client *client, uint32_t dpc)
 {
-	if (dpc) {
-		client->ke_result = ke_set_event(client->event_object, 0, 0);
-		client->ke_sets++;
-	} else {
-		client->nt_status = NtSetEvent(client->event, NULL);
-		client->nt_sets++;
-	}
+	(void)dpc;
+	client->ke_result = ke_set_event(client->event_object, 0, 0);
+	client->ke_sets++;
 }
 
 // Runs on the kernel's audio thread for each frame the driver wants; integers only (docs/GUIDE.md, "Input and audio
