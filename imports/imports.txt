@@ -90,6 +90,9 @@ xboxkrnl.exe  0x103  ObCreateSymbolicLink
 xboxkrnl.exe  0x104  ObDeleteSymbolicLink
 xboxkrnl.exe  0x105  ObDereferenceObject
 xboxkrnl.exe  0x110  ObReferenceObjectByHandle
+# Milestone 58: audio.
+xboxkrnl.exe  0x09D  KeSetEvent
+xboxkrnl.exe  0x1FF  XAudioGetSpeakerConfig
 xam.xex       0x001  NetDll_WSAStartup
 xam.xex       0x002  NetDll_WSACleanup
 xam.xex       0x003  NetDll_socket

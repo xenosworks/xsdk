@@ -381,6 +381,10 @@ void KeQuerySystemTime(uint64_t *time);
 // Places a thread, given by its thread object, on the hardware threads the mask names, one bit each; the mask it had
 // comes back through previous (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:240-256).
 NTSTATUS KeSetAffinityThread(void *thread, uint32_t affinity, uint32_t *previous);
+// Sets an event by its object, as ObReferenceObjectByHandle gives it, and returns its previous state
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:406-420). The audio callback's thread can't use the title's
+// handles, so it sets events this way (docs/HARDWARE.md, "Audio's feeding, milestone 58").
+int32_t KeSetEvent(void *event, int32_t increment, uint32_t wait);
 // Returns TLS_OUT_OF_INDEXES when no slot is free.
 uint32_t KeTlsAlloc(void);
 uint32_t KeTlsFree(uint32_t slot);
@@ -430,6 +434,9 @@ void RtlInitializeCriticalSection(RTL_CRITICAL_SECTION *section);
 void RtlLeaveCriticalSection(RTL_CRITICAL_SECTION *section);
 // Returns nonzero when it took the section.
 uint32_t RtlTryEnterCriticalSection(RTL_CRITICAL_SECTION *section);
+// The dashboard's audio output as a word; the console gave 0x00010001 (docs/HARDWARE.md, "Audio's feeding, milestone
+// 58"), as Xenia always does (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_audio.cc:22-26).
+uint32_t XAudioGetSpeakerConfig(uint32_t *config);
 uint32_t XAudioRegisterRenderDriverClient(const XAUDIO_RENDER_DRIVER_CLIENT *client, uint32_t *driver);
 uint32_t XAudioSubmitRenderDriverFrame(uint32_t driver, const float *samples);
 uint32_t XAudioUnregisterRenderDriverClient(uint32_t driver);
