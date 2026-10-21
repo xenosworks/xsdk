@@ -117,8 +117,9 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Playing PCM: 6 channels of float at 48 kHz | Yes | `xsdk_audio_*` (`audio.h`): the title's feeder thread waits until the kernel's render driver takes a frame, 8 frames ahead, and the frames it misses are counted; SDL3's audio on it | `tests/test_audio.c`; SDL-xenon's `test/xsdk/sdl_check.c`; `tests/audio_check.c`, by ear | A mixer; recording |
+| Mixing voices: resampling, submixes, effects, 3D | Yes | FAudio, XAudio2's API, through FAudio-xenon on SDL3 (below) | `tests/xsdk/faudio_check.c` there: 32 voices into 5.1 in 1.4 ms a 10 ms tick | XAudio2's XMA voices |
 | XMA decoding in hardware | No | | | `XMACreateContext` and the rest of xboxkrnl_audio_xma.cc, a milestone of its own that starts with making XMA data without Microsoft's tools (docs/scope/58-audio.md, Decided 4) |
-| Speaker configuration | Partial | `xsdk_audio_speakers` (`audio.h`), from `XAudioGetSpeakerConfig` | `tests/test_audio.c` | Which of the word's bits mean 5.1: a read with the dashboard set the other way |
+| Speaker configuration | Yes | `xsdk_audio_speakers` (`audio.h`), from `XAudioGetSpeakerConfig`: bit 16 is Dolby Digital 5.1 | `tests/test_audio.c` | |
 | The dashboard's volumes | No | | | `XAudioGetVoiceCategoryVolume`, whose first argument Xenia doesn't name (xboxkrnl_audio.cc:28-50) |
 
 ## Video output
@@ -187,6 +188,8 @@ Each in its own repository under xenosworks.
 | Vulkan 1.0, a subset (vulkan4xenon) | Partial | a Vulkan layer on xsdk's GPU layer | its test title and vkbench | What its docs/SUPPORT.md leaves out |
 | Mbed TLS 3.6 (mbedtls-xenon) | Yes | TLS 1.2 and its cryptography | its self-tests and HTTPS check | TLS 1.3 |
 | Dear ImGui (imgui-xenon) | Yes | windows and widgets on the GPU layer, driven by controller 1, text fields through XAM's keyboard | `examples/example_xsdk/imgui_check.cpp` there | Physical keyboards; ImGui through vulkan4xenon |
+| libcurl 8.23 (curl-xenon) | Yes | HTTP and HTTPS over mbedtls-xenon, for downloads | `tests/xsdk/curl_check.c` there | Other protocols, HTTP/2 and 3, IPv6 |
+| FAudio 26.10 (FAudio-xenon) | Yes | XAudio2, X3DAudio and XAPO effects, on SDL3's audio | `tests/xsdk/faudio_check.c` there | XMA; FACT's wave banks are fixed for big-endian but unchecked |
 
 ## System information and control
 

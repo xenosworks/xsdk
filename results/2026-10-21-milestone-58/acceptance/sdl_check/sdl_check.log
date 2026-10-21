@@ -1,0 +1,32 @@
+log: game:\sdl_check.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m58s\sdl_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+SDL check title
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 32008 us
+PASS: splash: the vulkan4xenon logo shown
+PASS: sdl: SDL_Init with audio, gamepads and events
+sdl: platform Xbox 360, SDL 3.4.10
+PASS: sdl: the platform is the Xbox 360
+sdl: base path game:\
+PASS: sdl: the base path is game:\
+sdl: pref path game:\xsdk\sdl_check\
+PASS: sdl: the pref path game:\xsdk\sdl_check\ is made, and a file written there reads back
+sdl: SDL_Delay(100) took 100999 us; SDL_DelayPrecise(16 ms) took 16000 us
+PASS: sdl: SDL_Delay(100) takes 100 to 150 ms by SDL_GetTicksNS
+sdl: SDL_GetTicksNS steps 200 ns; the performance counter runs at 1000000000 Hz
+PASS: sdl: SDL's clock steps finer than 0.1 ms
+PASS: sdl: a thread runs and returns its value
+FAIL: sdl: a gamepad is connected
+    SDL_GetError: 
+sdl: audio driver xsdk
+PASS: sdl: the audio driver is xsdk's
+PASS: sdl: an audio stream opens on the default device
+sdl: the device runs 6 channels of format 0x9120 at 48000 Hz, 256 frames a buffer
+sdl: playing a 750 Hz tone for 2000 ms
+sdl: xsdk handed the kernel 376 frames and 0 silent ones, 8 queued at the fewest, a freed slot filled 121 us after at most
+PASS: sdl: the kernel got no silent frame from the device's opening to the tone's end
+sdl: the stream asked for 96000 frames of the tone, 96000 expected
+PASS: sdl: SDL pulled the tone at 48 kHz, within a tenth
+tests: 12 passed, 1 failed
+exit: status 1

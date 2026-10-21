@@ -320,3 +320,12 @@ docs/HARDWARE.md, "Audio's feeding, milestone 58", has the numbers. What they se
   timer, and no polling.
 - **Decided, 6's ring:** 8 frames ahead, 43 ms, by default, five times Dusklight's longest mutex wait; step 5's run says
   whether that holds with the feeder at +1.
+
+## Done (2026-10-21)
+
+[The console's runs](../../results/2026-10-21-milestone-58/acceptance/README.md) passed: xsdk_test 635 of 635,
+sdl_check but for its gamepad check, faudio_check 7 of 7, each of their 14 breaks failing its own checks, and
+Dusklight's title scene with no silent frame in 60,065 at its earlier frame rate. The speaker word read `00010001` at
+Dolby Digital 5.1 and `00000001` at stereo. xsdk_test's audio checks poll their threads' handles rather than wait on
+them, after a 5 s wait on one returned `STATUS_TIMEOUT` within milliseconds, which TODO.md keeps as a question
+(docs/HARDWARE.md, "Milestone 58 on the console").

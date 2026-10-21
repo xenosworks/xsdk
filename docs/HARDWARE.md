@@ -4962,3 +4962,19 @@ timeout of 5 s:
 
 Why the wait timed out early isn't known. The audio checks now poll a thread's handle with a zero timeout and sleep
 1 ms between.
+
+## Milestone 58 on the console (2026-10-21)
+
+xsdk's audio API, SDL-xenon on it and FAudio-xenon passed their checks, each break failing its own
+([results](../results/2026-10-21-milestone-58/acceptance/README.md)). What they showed:
+- **Dusklight no longer crackles:** its title scene, which handed the kernel 634 silent frames on SDL's polling driver,
+  played 60,065 frames through `xsdk_audio_*` with none silent. The ring of 8 never fell below 5 queued, the longest a
+  freed slot waited was 18.9 ms, and the scene ran 1,150.0 frames a second summed over its 32 windows, as before
+  (1,150.1 to 1,151.0).
+- **The API's own checks:** 95 frames in 500 ms with none silent; a feeder stopped 95 ms gave 9 silent frames of the 10
+  due; beside a busy thread on its hardware thread, no frame silent, each freed slot refilled within 8 us, and the busy
+  thread lost nothing; a close woke the waiting feeder within 4 us.
+- **SDL3** opens the device as 6 channels of float at 48 kHz and mixes there without converting; its tone played 376
+  frames, none silent.
+- **FAudio** mixed 32 voices from 44.1 kHz into 5.1 in 1.37 ms of each 10 ms tick on average, 1.37 ms at most, its
+  levels and its resampling exact (0.5000, 375.00 Hz), 413 frames with none silent.

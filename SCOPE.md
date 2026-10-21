@@ -1033,12 +1033,13 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
     controller, its text fields through XAM's keyboard. An overlay of xsdk's own, physical keyboards and ImGui through
     vulkan4xenon left out (results/2026-10-21-milestone-57/; HARDWARE.md, "Milestone 57 on the console").
 
-58. **Audio.** Agreed on 2026-10-21: docs/scope/58-audio.md, the agreed "a mixer on the render driver (port FAudio),
-    then XMA decoding in hardware". First, Dusklight's crackling measured on the console with nobody listening, and
-    fixed where the numbers point. Then an xsdk audio API that feeds the render driver from a title's thread that
+58. **Audio.** Agreed and done on 2026-10-21: docs/scope/58-audio.md, the agreed "a mixer on the render driver (port
+    FAudio), then XMA decoding in hardware". First, Dusklight's crackling measured on the console with nobody listening,
+    and fixed where the numbers point. Then an xsdk audio API that feeds the render driver from a title's thread that
     blocks rather than polls, at least 8 frames queued ahead, and counts the frames it misses; SDL-xenon on it; FAudio
     ported in xenosworks/FAudio-xenon, on its own SDL3 layer over SDL-xenon; and the speaker configuration. XMA is a
-    milestone of its own, later, as no public encoder makes the data to test it without Microsoft's tools.
+    milestone of its own, later, as no public encoder makes the data to test it without Microsoft's tools
+    (results/2026-10-21-milestone-58/acceptance/; HARDWARE.md, "Milestone 58 on the console").
 
 **Networking**, a scope of its own rather than a numbered milestone: sockets, and TLS 1.2 in the title's own code.
 Agreed and done on 2026-10-14: docs/scope/networking.md.

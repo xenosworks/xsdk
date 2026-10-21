@@ -1,0 +1,24 @@
+log: game:\faudio_check.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m58f\faudio_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 16017 us
+FAudio check title, FAudio 261000
+faudio: front left 0.5000, front right 0.5000, the other channels 0.000000 at most
+PASS: faudio_voice: a 375 Hz float voice at 48 kHz and volume 0.5 reaches front left and right at 0.5, within 1%, and no other channel
+faudio: 44.1 kHz in, 375.00 Hz out, and 750.00 Hz at a frequency ratio of 2
+PASS: faudio_resample: a 375 Hz 16-bit voice at 44.1 kHz comes out at 375 Hz, and at a frequency ratio of 2 at 750 Hz, within 1%
+faudio: 375 Hz at 16 bits 0.5000 big-endian, 0.1992 little-endian; at 24 bits 0.5000 and 0.0114
+faudio: MS-ADPCM held at 0.5000
+PASS: faudio_byte_order: 16- and 24-bit samples play at 0.5, within 1%, big-endian, and under half that little-endian
+PASS: faudio_adpcm: MS-ADPCM blocks with little-endian headers, as WAV files hold them, play at their level, 0.5 within 1%
+faudio: a 53 ms burst through a submix's reverb: 0.2582 in its first 100 ms, 0.0000 200 to 400 ms on, every sample finite
+FAIL: faudio_submix_reverb: a 53 ms burst through a submix with FAudio's reverb stays finite, and is still over -60 dB 200 to 400 ms on
+faudio: F3DAudio's matrix for an emitter on the left: 0.500 0.000 0.000 0.000 0.500 0.000
+faudio: front left 0.1768, front right 0.0000
+PASS: faudio_3d: an F3DAudio emitter on the listener's left puts more in front left than front right
+faudio: 32 voices at 44.1 kHz mixed into 5.1 in 1363 us a 10 ms tick on average, 1368 us at most
+faudio: the render driver played 418 frames through xsdk's audio, 0 of them silent
+PASS: faudio_cost: 32 voices resampled into 5.1 take under 2.5 ms of each 10 ms, and the run hands the kernel no silent frame
+tests: 6 passed, 1 failed
+exit: status 1
