@@ -191,10 +191,10 @@ it removes.
 
 ## Questions the console hasn't answered
 
-- **Waiting on a thread's handle stops the audio callbacks.** While xsdk_test's main thread waited on a thread's handle
-  with `NtWaitForSingleObjectEx`, the kernel's render driver called back no more, and the time base on hardware thread
-  0 advanced under 13 ms over each 5 s wait (docs/HARDWARE.md, "Audio's feeding, milestone 58"). Why isn't known, nor
-  whether any wait on a thread object does it, or only the main thread's, or only one on its own core.
+- **A 5 s wait on a thread's handle that timed out within milliseconds.** In xsdk_test's audio checks at `aac0931`,
+  `NtWaitForSingleObjectEx` on a feeder's or busy thread's handle, `USER_MODE`, relative 5 s, returned `STATUS_TIMEOUT`
+  after 0.5 to 12.6 ms by the time base, once on a thread that had ended 76 ms before (docs/HARDWARE.md, "Audio's
+  feeding, milestone 58"). Milestone 55's checks wait on threads the same way and pass. Why isn't known.
 - **The console's state after a long session.** On 2026-10-21, after some hours of titles and launches, three of
   milestone 55's mutant checks failed in a build that had passed them; and after about an hour of launch round trips,
   the console agent's launch returned 1 and no title started. Each passed again after a reboot

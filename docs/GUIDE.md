@@ -546,11 +546,6 @@ has taken a frame and then fills the next. xsdk starts no thread for it, and not
 - **Frames ahead:** 8, 43 ms, by default, as stability comes before latency. The queue must hold the longest the
   feeder can be held up: Dusklight's renders took up to 27.7 ms and its waits for its own audio lock up to 7.8 ms
   (docs/HARDWARE.md, "Audio's feeding, milestone 58"). Ask for fewer to cut latency.
-- **Don't wait on a thread's handle while audio plays.** On the console, while xsdk_test's main thread waited on a
-  feeder's handle with `NtWaitForSingleObjectEx`, as `pthread_join` and `std::thread::join` do, the kernel made no
-  audio callback, so nothing played; sleeping, or waiting on events, kept them coming (docs/HARDWARE.md, "Audio's
-  feeding, milestone 58"). Join threads before opening or after closing, or poll the handle with a zero timeout and
-  sleep between.
 - **Closing** wakes a feeder waiting in `xsdk_audio_next_frame`, which returns `STATUS_INVALID_HANDLE`. The frames
   and the event stay allocated to the end, as a callback can still run after unregistering returns, and the next
   `xsdk_audio_open` reuses them. One client a title: close before opening again.
