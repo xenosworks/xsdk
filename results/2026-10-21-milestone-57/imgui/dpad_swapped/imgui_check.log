@@ -1,0 +1,17 @@
+log: game:\imgui_check.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m57i\imgui_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+imgui_check: Dear ImGui 1.93.0 through imgui_impl_xsdk
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 26773 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 31286 us
+PASS: imgui_window: a square, unbordered window at (100, 80), 300x200: its edge pixels and inside its colour, the pixels beside it the clear colour, and a rectangle in it a quarter pixel off whole ones on the pixels whose centres it holds
+PASS: imgui_clip: a rectangle past a child scrolled 50 pixels, clipped to (150, 130)-(250, 230): drawn inside the clip alone
+PASS: imgui_image: ImGui::Image of a 4x4 xsdk texture at 64x64: each block's centre its texel
+PASS: imgui_font: text at ImGui's default size, then at 29 pixels, which came as an update of the atlas: every pixel of each glyph's box its texel, white where solid
+PASS: imgui_large_mesh: one list of 17000 rectangles, 68000 vertices, past a VtxOffset: the first and last where placed
+FAIL: imgui_nav: from the first of three buttons, the D-pad down twice and A press the third alone
+PASS: imgui_text_entry: a focused field opens the keyboard; accepted, its text replaces the field's; cancelled, the field stays as it was
+tests: 6 passed, 1 failed
+exit: status 1

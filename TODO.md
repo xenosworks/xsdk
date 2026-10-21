@@ -198,7 +198,9 @@ it removes.
 - **The depth-bias slope.** `XsdkRaster` takes it, but milestone 14 tested only the constant term.
 - **Point mip filtering exactly halfway between two levels:** the nearer level, or the one below. Milestone 15
   avoided it.
-- **Linear filtering's precision.** Milestone 15 bounds it only by its tolerance of 3 per channel.
+- **Linear filtering's precision.** Milestone 15 bounded it by its tolerance of 3 per channel; milestone 57 found it
+  off by up to 8 of 255 exactly at texel centres, pulled toward the texel above or to the left (docs/HARDWARE.md,
+  "Milestone 57 on the console"). The filter's weights, and why it leans that way, aren't known.
 - **Execs on the predicate in vertex shaders.** An if/else on a push constant, its arms in a `setp`'s `(p0)` and
   `(!p0)` execs, hung the GPU in a vertex shader and drew right in a pixel shader (docs/HARDWARE.md, "Branches,
   vulkan4xenon milestone 21"), so xost keeps a vertex shader's as selects. Why is unknown: a probe of a vertex

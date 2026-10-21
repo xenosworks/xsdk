@@ -321,3 +321,12 @@ On 2026-10-21:
   choice.
 - **Pixel-exact text** rests on D3D9's centres and point sampling; text_glyphs and imgui_window settle it on the
   console, their half-pixel breaks failing.
+
+## Done (2026-10-21)
+
+[The console's runs](../../results/2026-10-21-milestone-57/README.md) passed: xsdk_test with only its controller
+checks failing, every text check pixel-exact, imgui-xenon's imgui_check 7 of 7, and each of their 18 breaks failing
+its own checks. Two things changed on the way. Text first queued a full screen in 1,308 us, over its 1 ms; 16-byte VMX
+stores and atlas coordinates worked out once brought it to 613. And Xenos's linear filter proved not exact at a
+texel's centre, so ImGui's font check samples point while titles keep linear filtering (docs/HARDWARE.md, "Milestone
+57 on the console").

@@ -4902,3 +4902,21 @@ The checks of docs/scope/56-store-networking.md passed, each break failing its o
   Plain HTTP into memory runs at the link. Raised buffers speed up what waits on the disk or a far host. HTTPS with
   AES-256-GCM stays at 1.9 MB/s whatever the buffers, where ChaCha20-Poly1305 reaches 5 to 8: the cipher, on the
   console's CPU, is what holds it back.
+
+## Milestone 57 on the console (2026-10-21)
+
+xsdk's text and imgui-xenon's checks passed, each break failing its own
+([results](../results/2026-10-21-milestone-57/README.md)). What they showed:
+- **Text, point sampled from an R8 atlas, is pixel-exact:** all 1,188 glyphs at scale 1, and scales 2 and 3, came out
+  with 0 pixels wrong, as did blending over grey, the scissor and the vertex ring under a GPU held at each frame's
+  start.
+- **What text costs:** a 1280x720 screen of 4,608 glyphs, 36 strings, queued in 613 us of CPU and drew in 369 us of
+  GPU. It first took 1,308 us: writing each glyph's 64 bytes as four 16-byte `vec_st` stores instead of sixteen 32-bit
+  ones, and working out its atlas coordinates once rather than turning integers into floats each time, which goes
+  through memory on this CPU, halved it.
+- **Xenos's linear filter isn't exact at a texel's centre.** ImGui's font check drew its glyphs on whole pixels at one
+  texel a pixel, which the check confirmed, so every pixel centre is a texel centre; sampled linearly, eight pixels
+  still came out off by up to 8 of 255: 0xFF read 0xF7 and 0xFB beside 0, 0 read 0x03, 0xD8 read 0xD2, each pulled
+  1/64 to 1/32 of the way toward the texel above or to the left, the same in two runs
+  ([log](../results/2026-10-21-milestone-57/imgui/imgui_check_linear.log)). Point sampling gives the texels exactly, so
+  the font check now samples point; ImGui titles keep linear filtering, as D3D9 titles on this GPU do.
