@@ -1,0 +1,11 @@
+--- a/src/jit_flush.S
++++ b/src/jit_flush.S
+@@ -6,7 +6,7 @@
+ xsdk_jit_flush_lines:
+ 	mr r5, r3
+ 1:
+-	dcbst 0, r5
++	nop
+ 	cmpw r5, r4
+ 	beq 2f
+ 	addi r5, r5, 128

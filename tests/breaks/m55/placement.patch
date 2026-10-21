@@ -1,0 +1,11 @@
+--- a/src/thread.c
++++ b/src/thread.c
+@@ -75,7 +75,7 @@
+ 		return status;
+ 	}
+ 	uint32_t previous;
+-	status = KeSetAffinityThread((void *)(uintptr_t)object, 1u << hardware_thread, &previous);
++	status = KeSetAffinityThread((void *)(uintptr_t)object, 1u << 1, &previous);
+ 	(void)ObDereferenceObject(object);
+ 	if (!NT_SUCCESS(status))
+ 		xsdk_log_write("xsdk_thread_place: KeSetAffinityThread failed: 0x%08X", (unsigned)status);

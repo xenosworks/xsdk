@@ -53,6 +53,13 @@ layer that drives Xenos directly. Scope, sources and milestones are in SCOPE.md.
   (gcc-xsdk.patch), and assembly mustn't hold data in LR either (docs/HARDWARE.md, "The console keeps only LR's low
   word across an interrupt").
 
+- Milestone 55's Xenia run cannot establish priority share, hardware-thread placement, or physical pages returned:
+  it schedules host threads and estimates memory statistics. Use the console checks in `m55_check.xex`/`xsdk_test`.
+  `NtQueryVirtualMemory` returned C000000D on the console; do not treat its Xenia implementation as hardware proof.
+  A no-flush JIT rewrite was visible in the probe, so missing a flush does not deterministically fail on hardware.
+  The compiled sequence check detects that break. GCC's builtin/libgcc clear-cache changes and rebuild are reserved
+  for the user (confirmed 2026-10-20); use `xsdk_code_flush` until then.
+
 ## Build
 
 - The toolchain runs in WSL Debian: GCC 15, binutils and newlib for `powerpc-xsdk-elf`, installed at `~/xsdk-gcc`.

@@ -1,0 +1,11 @@
+--- a/src/thread.c
++++ b/src/thread.c
+@@ -67,7 +67,7 @@
+ NTSTATUS xsdk_thread_place(HANDLE thread, uint32_t hardware_thread)
+ {
+ 	if (hardware_thread >= XSDK_HARDWARE_THREADS)
+-		return STATUS_INVALID_PARAMETER;
++		return STATUS_NOT_IMPLEMENTED;
+ 	uint32_t object;
+ 	NTSTATUS status = ObReferenceObjectByHandle(thread, (uint32_t)(uintptr_t)ExThreadObjectType, &object);
+ 	if (!NT_SUCCESS(status)) {

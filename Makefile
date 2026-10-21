@@ -26,7 +26,7 @@ SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/thread.c src/file.c src/path
 	src/pthread.c src/lock.c src/reent.c src/time.c src/sysconf.c src/entropy.c src/exit.c src/gpu.c \
 	src/gpu_setup.c src/gpu_resolve.c src/gpu_draw.c src/gpu_constants.c src/gpu_tiles.c src/display.c src/shader.c \
 	src/microcode.c src/texture.c src/texture_layout.c src/tiled.c src/present.c src/splash.c src/copy.c src/socket.c \
-	src/netdb.c src/xam.c src/save.c src/system_ui.c src/system.c src/terminate.c
+	src/netdb.c src/xam.c src/save.c src/system_ui.c src/semaphore.c src/mman.c src/jit.c src/jit_flush.S src/system.c src/terminate.c
 # xost's compiler, in the SDK for titles and built for the PC as libxsc.so for the shader tools.
 XSC_SOURCES := src/xsc_memory.c src/xsc_spirv.c src/xsc_resolve.c src/xsc_unroll.c src/xsc_encode.c src/xsc_container.c \
 	src/xsc_program.c src/xsc_optimize.c src/xsc_lower.c src/xsc_lower_block.c src/xsc_lower_matrix.c \
@@ -53,7 +53,8 @@ TEST_SOURCES := tests/main.c tests/test_image.c tests/test_memory.c tests/test_t
 	tests/test_copy.c tests/test_microcode.c tests/test_multisample.c tests/test_hiz.c tests/test_net.c \
 	tests/test_interrupts.c tests/test_xsc.c tests/test_cube_volume.c tests/test_targets.c tests/test_resolve_rect.c \
 	tests/test_visibility.c tests/test_tiles.c tests/test_instancing.c tests/test_indexed_reads.c tests/test_xam.c \
-	tests/test_hlsl.c tests/test_system.c
+	tests/test_hlsl.c tests/test_system.c tests/test_objects.c tests/test_semaphore.c tests/test_thread_control.c tests/test_pages.c \
+	tests/jit_pool.S
 TEST_OBJECTS := $(patsubst tests/%,$(BUILD)/tests/%.o,$(basename $(TEST_SOURCES)))
 # A title for listening to the audio frame layout on the console.
 AUDIO_CHECK_SOURCES := tests/audio_check.c tests/audio_frame.c
@@ -86,9 +87,8 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 	instancing_probes cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe drive_probes system_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
-all: $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
-	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(BUILD)/terminate_check.xex \
-	$(PROBES:%=$(BUILD)/%.xex)
+all: $(BUILD)/m55_check.xex $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
+	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(BUILD)/terminate_check.xex $(PROBES:%=$(BUILD)/%.xex)
 
 # Configures CMake project $(1) in $(2) with this toolchain, afresh when $(2) was configured with another, whose
 # compiler a configure would keep.
@@ -138,10 +138,6 @@ $(BUILD)/pacing_test.elf: $(PACING_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 
 $(BUILD)/guide_check.elf: $(GUIDE_CHECK_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(GUIDE_CHECK_OBJECTS) $(LIBS)
-
-# Milestone 54's check of xsdk_on_terminate, ended from outside by hand or by the console agent.
-$(BUILD)/terminate_check.elf: $(BUILD)/tests/terminate_check.o $(BUILD)/libxsdk.a src/xsdk.ld
-	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/terminate_check.o $(LIBS)
 
 $(BUILD)/save_check.elf: $(SAVE_CHECK_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(SAVE_CHECK_OBJECTS) $(LIBS)
@@ -308,10 +304,6 @@ instancing_probes: $(BUILD)/probe_instancing.xex $(INSTANCING_BREAKS:%=$(BUILD)/
 # Milestone 52 step 1's probes of how bdnz counts CTR and of what atomics cost; outside all.
 cpu_probes: $(BUILD)/probe_ctr.xex $(BUILD)/probe_atomics.xex
 
-# Milestone 54 steps 4 and 5's probes of the title-terminate notification and of what places the scaled picture;
-# outside all.
-system_probes: $(BUILD)/probe_terminate.xex $(BUILD)/probe_letterbox.xex
-
 # Milestone 51 step 1's probe of XAM, presenting the bar scene while XAM's calls and dialogs run, and the same title
 # under a second title ID, to see whether XAM keeps content apart by title; outside all.
 PROBE_XAM_OBJECTS := $(BUILD)/tests/probe_xam.o $(BUILD)/tests/bar_scene.o
@@ -323,9 +315,6 @@ $(BUILD)/probe_xam_t2.xex: $(BUILD)/probe_xam.elf tools/elf2xex.py
 	$(PYTHON) tools/elf2xex.py --title-id 0x5853444C $< $@
 
 xam_probes: $(BUILD)/probe_xam.xex $(BUILD)/probe_xam_t2.xex
-
-# Milestone 54 step 2's probe of the device paths for the hard disk, USB drives, memory units and the DVD; outside all.
-drive_probes: $(BUILD)/probe_drives.xex
 
 # Milestone 49 step 1's probe of what puts the hierarchical buffer right after a depth clear, with xsdk_test's
 # hierarchical depth checks; outside all. xsdk_test_nohizpass leaves the pass out, so must fail "hiz: near and far drawn
@@ -421,3 +410,32 @@ clean:
 	rm -rf $(BUILD)
 
 -include $(shell find $(BUILD) -name '*.d' 2>/dev/null)
+
+# M55's bookkeeping on the host with kernel mocks; these do not replace the console checks.
+.PHONY: m55_host_check
+m55_host_check: $(BUILD)/host/m55_check
+	$(BUILD)/host/m55_check
+
+$(BUILD)/host/m55_check: tests/host_m55.c src/mman.c src/semaphore.c src/sbrk.c include/semaphore.h include/sys/mman.h include/xsdk/kernel.h
+	@mkdir -p $(@D)
+	$(HOST_CC) -std=gnu17 -O2 -g $(WARNINGS) -Iinclude -pthread \
+		-Dmmap=xsdk_test_mmap -Dmunmap=xsdk_test_munmap -Dmprotect=xsdk_test_mprotect -Dsbrk=xsdk_test_sbrk \
+		tests/host_m55.c src/mman.c src/semaphore.c src/sbrk.c -o $@
+
+# The same M55 checks without the GPU suite, for quick console and deliberate-break runs.
+M55_OBJECTS := $(addprefix $(BUILD)/tests/,m55_check.o test_pthread.o test_objects.o test_thread_control.o \
+	test_semaphore.o test_pages.o test_cpp_threads.o jit_pool.o)
+$(BUILD)/m55_check.elf: $(M55_OBJECTS) $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(M55_OBJECTS) $(LIBS)
+
+.PHONY: m55_flush_check
+m55_flush_check: $(BUILD)/sdk/jit_flush.o
+	$(PYTHON) tests/check_jit_flush.py $(OBJDUMP) $<
+
+# Milestone 54's terminate check and bring-up probes.
+$(BUILD)/terminate_check.elf: $(BUILD)/tests/terminate_check.o $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/terminate_check.o $(LIBS)
+
+system_probes: $(BUILD)/probe_terminate.xex $(BUILD)/probe_letterbox.xex
+
+drive_probes: $(BUILD)/probe_drives.xex

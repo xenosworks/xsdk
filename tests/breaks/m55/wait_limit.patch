@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -50,7 +50,7 @@
+ 			NtWaitForMultipleObjectsEx(3, handles, WAIT_ALL, USER_MODE, 0, &poll) == STATUS_SUCCESS);
+ 	check("objects: 64 waits succeed and 65 are refused",
+ 		NtWaitForMultipleObjectsEx(MAXIMUM_WAIT_OBJECTS, handles, WAIT_ALL, USER_MODE, 0, &poll) == STATUS_SUCCESS &&
+-			NtWaitForMultipleObjectsEx(MAXIMUM_WAIT_OBJECTS + 1, handles, WAIT_ALL, USER_MODE, 0, &poll) ==
++			NtWaitForMultipleObjectsEx(MAXIMUM_WAIT_OBJECTS, handles, WAIT_ALL, USER_MODE, 0, &poll) ==
+ 				STATUS_INVALID_PARAMETER);
+ 	const NTSTATUS cleared = NtClearEvent(handles[0]);
+ 	check(

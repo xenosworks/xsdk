@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -136,7 +136,7 @@
+ 		check("objects: create mutant", false);
+ 		return;
+ 	}
+-	const NTSTATUS acquired = wait_for(worker.mutant, 0);
++	const NTSTATUS acquired = STATUS_SUCCESS;
+ 	HANDLE thread;
+ 	if (!NT_SUCCESS(xsdk_thread_create(&thread, WORKER_STACK, take_mutant, &worker)))
+ 		return;

@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -43,7 +43,7 @@
+ 	check("objects: wait-any returns the signalled index",
+ 		NtWaitForMultipleObjectsEx(3, handles, WAIT_ANY, USER_MODE, 0, &poll) == STATUS_WAIT_0 + 2);
+ 	const bool set0 = NT_SUCCESS(NtSetEvent(handles[0], NULL));
+-	const NTSTATUS missing = NtWaitForMultipleObjectsEx(3, handles, WAIT_ALL, USER_MODE, 0, &poll);
++	const NTSTATUS missing = NtWaitForMultipleObjectsEx(3, handles, WAIT_ANY, USER_MODE, 0, &poll);
+ 	const bool set1 = NT_SUCCESS(NtSetEvent(handles[1], NULL));
+ 	check("objects: wait-all needs all three objects",
+ 		set0 && set1 && missing == STATUS_TIMEOUT &&

@@ -1,0 +1,13 @@
+--- a/src/semaphore.c
++++ b/src/semaphore.c
+@@ -69,10 +69,6 @@
+ 		errno = EINVAL;
+ 		return -1;
+ 	}
+-	if (sem_trywait(semaphore) == 0)
+-		return 0;
+-	if (errno != EAGAIN)
+-		return -1;
+ 	for (;;) {
+ 		struct timespec now;
+ 		if (clock_gettime(clock, &now) != 0)

@@ -255,3 +255,23 @@ guesses; CLAUDE.md will say so.
 5. **Priorities on by default,** with Dusklight's title scene and SDL-xenon's sdl_check run once; if Dusklight is
    slower, Aurora's requests change, not xsdk.
 6. **The heap:** `sbrk` gives back the heap's top, and `mmap` serves big buffers freed in the middle; no new `malloc`.
+
+## Implementation follow-up (2026-10-20)
+
+Steps 1 and 2 are recorded in `results/2026-10-20-milestone-55/`. Steps 3–8 now have SDK code, console checks and
+usage documentation; console acceptance remains pending. The user explicitly retained GCC's patch and rebuild.
+Two changes follow the actual probe evidence:
+
+- `NtQueryVirtualMemory` failed with C000000D. `mmap` tracks its reservations and committed-page bits; `munmap`
+  decommits live subranges and releases after the last page. Protection checks use `MmQueryAddressProtect`.
+  The raw query stays declared with its console limitation documented; its signature is not guessed or silently
+  treated as successful. The resolved query and broader raw query coverage remain an open hardware investigation.
+- An unflushed rewrite was visible on this console. A no-flush build remains diagnostic, with a compiled-instruction
+  check that must reject it. Wrong-code variants deterministically exercise the hardware return-value checks.
+
+`NtDuplicateObject` (Xenia xboxkrnl_ob.cc) is also imported: pthread_self on the main thread or a foreign thread
+needs a real owned handle, so its pthread identity can safely be used by another thread. A pseudo handle would
+refer to the new caller instead. Created pthreads retain ExCreateThread's handle until join or detached completion.
+
+See the results README for builds, expected negative checks and the remaining hardware acceptance runs. Nothing
+here marks the milestone done before those runs.

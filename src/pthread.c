@@ -30,7 +30,7 @@ enum {
 static const int64_t POLL_INTERVAL = -10000;
 
 typedef struct Thread {
-	// Set only for a joinable thread pthread_create started.
+	// Owned until join or detached completion, including records made by pthread_self.
 	HANDLE handle;
 	void *(*start)(void *);
 	void *argument;
@@ -59,6 +59,7 @@ typedef struct {
 static uint32_t self_slot = TLS_OUT_OF_INDEXES;
 static void (*key_destructors[KEY_SLOTS])(void *);
 static RTL_CRITICAL_SECTION once_lock;
+static RTL_CRITICAL_SECTION creation_lock;
 static uint32_t yield_count;
 static uint32_t blocking_wait_count;
 
@@ -72,6 +73,7 @@ void xsdk_thread_wait_counts(uint32_t *yields, uint32_t *blocking_waits)
 void xsdk_pthread_init(void)
 {
 	RtlInitializeCriticalSection(&once_lock);
+	RtlInitializeCriticalSection(&creation_lock);
 	self_slot = KeTlsAlloc();
 	if (self_slot == TLS_OUT_OF_INDEXES)
 		xsdk_log_write("pthread: KeTlsAlloc failed");
@@ -83,8 +85,19 @@ static Thread *current_thread(void)
 	if (self)
 		return self;
 	self = calloc(1, sizeof(*self));
-	if (self)
-		(void)KeTlsSetValue(self_slot, self);
+	if (!self)
+		return NULL;
+	const NTSTATUS status = NtDuplicateObject(XSDK_CURRENT_THREAD, &self->handle, 0);
+	if (!NT_SUCCESS(status)) {
+		xsdk_log_write("pthread_self: NtDuplicateObject failed: 0x%08X", (unsigned)status);
+		free(self);
+		return NULL;
+	}
+	if (!KeTlsSetValue(self_slot, self)) {
+		(void)NtClose(self->handle);
+		free(self);
+		return NULL;
+	}
 	return self;
 }
 
@@ -141,6 +154,9 @@ void xsdk_pthread_thread_end(void)
 static uint32_t thread_main(void *context)
 {
 	Thread *self = context;
+	// The creator publishes the handle before even a detached thread can finish.
+	RtlEnterCriticalSection(&creation_lock);
+	RtlLeaveCriticalSection(&creation_lock);
 	(void)KeTlsSetValue(self_slot, self);
 	self->result = self->start(self->argument);
 	run_key_destructors();
@@ -165,17 +181,14 @@ int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)
 	}
 	created->state = detached ? THREAD_DETACHED : 0;
 
-	HANDLE handle;
-	if (!NT_SUCCESS(xsdk_thread_create(&handle, stack_bytes, thread_main, created))) {
+	RtlEnterCriticalSection(&creation_lock);
+	if (!NT_SUCCESS(xsdk_thread_create(&created->handle, stack_bytes, thread_main, created))) {
+		RtlLeaveCriticalSection(&creation_lock);
 		free(created);
 		return EAGAIN;
 	}
-	// A detached thread may already have ended and freed its record, so leave the record alone.
-	if (detached)
-		(void)NtClose(handle);
-	else
-		created->handle = handle;
 	*thread = (pthread_t)(uintptr_t)created;
+	RtlLeaveCriticalSection(&creation_lock);
 	return 0;
 }
 
@@ -207,39 +220,53 @@ int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stack_bytes)
 	return 0;
 }
 
-// Threads keep the kernel's priority: what its levels do on the console is untested, so POSIX sees one level.
+HANDLE xsdk_pthread_handle(pthread_t thread)
+{
+	const Thread *target = (const Thread *)(uintptr_t)thread;
+	return target ? target->handle : 0;
+}
+
 int sched_get_priority_min(int policy)
 {
 	(void)policy;
-	return 0;
+	return XSDK_PRIORITY_MIN;
 }
 
 int sched_get_priority_max(int policy)
 {
 	(void)policy;
-	return 0;
+	return XSDK_PRIORITY_MAX;
 }
 
 int pthread_getschedparam(pthread_t thread, int *policy, struct sched_param *param)
 {
-	(void)thread;
+	if (!policy || !param)
+		return EINVAL;
+	uint32_t object;
+	const NTSTATUS status =
+		ObReferenceObjectByHandle(xsdk_pthread_handle(thread), (uint32_t)(uintptr_t)ExThreadObjectType, &object);
+	if (!NT_SUCCESS(status)) {
+		xsdk_log_write("pthread_getschedparam: ObReferenceObjectByHandle failed: 0x%08X", (unsigned)status);
+		return ESRCH;
+	}
 	*policy = SCHED_OTHER;
-	*param = (struct sched_param){ .sched_priority = 0 };
+	*param = (struct sched_param){ .sched_priority = KeQueryBasePriorityThread((void *)(uintptr_t)object) };
+	(void)ObDereferenceObject(object);
 	return 0;
 }
 
 int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param *param)
 {
-	(void)thread;
 	(void)policy;
-	(void)param;
-	return ENOTSUP;
+	if (!param || param->sched_priority < XSDK_PRIORITY_MIN || param->sched_priority > XSDK_PRIORITY_MAX)
+		return EINVAL;
+	return NT_SUCCESS(xsdk_thread_set_priority(xsdk_pthread_handle(thread), param->sched_priority, NULL)) ? 0 : ESRCH;
 }
 
 int pthread_join(pthread_t thread, void **result)
 {
 	Thread *target = (Thread *)(uintptr_t)thread;
-	if (!target || !target->handle)
+	if (!target || !target->start || (__atomic_load_n(&target->state, __ATOMIC_ACQUIRE) & THREAD_DETACHED))
 		return EINVAL;
 	if (target == KeTlsGetValue(self_slot))
 		return EDEADLK;

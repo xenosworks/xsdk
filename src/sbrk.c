@@ -74,7 +74,7 @@ void *sbrk(ptrdiff_t increment)
 		errno = ENOMEM;
 		return (void *)-1;
 	}
-	if (increment < 0 && (uintptr_t)-increment > heap_break - heap_base) {
+	if (increment < 0 && 0 - (uintptr_t)increment > heap_break - heap_base) {
 		errno = EINVAL;
 		return (void *)-1;
 	}
@@ -86,6 +86,18 @@ void *sbrk(ptrdiff_t increment)
 	if (new_break > heap_committed && !NT_SUCCESS(commit_heap(new_break))) {
 		errno = ENOMEM;
 		return (void *)-1;
+	}
+	const uintptr_t kept_end = (new_break + HEAP_COMMIT_BYTES - 1) & ~(uintptr_t)(HEAP_COMMIT_BYTES - 1);
+	if (kept_end < heap_committed) {
+		void *base = (void *)kept_end;
+		uint32_t bytes = heap_committed - kept_end;
+		const NTSTATUS status = NtFreeVirtualMemory(&base, &bytes, MEM_DECOMMIT, 0);
+		if (!NT_SUCCESS(status)) {
+			xsdk_log_write("sbrk: NtFreeVirtualMemory(decommit) failed: 0x%08X", (unsigned)status);
+			errno = ENOMEM;
+			return (void *)-1;
+		}
+		heap_committed = kept_end;
 	}
 	void *old_break = (void *)heap_break;
 	heap_break = new_break;

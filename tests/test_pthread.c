@@ -8,6 +8,7 @@
 #include <time.h>
 
 #include "xsdk/log.h"
+#include "xsdk/thread.h"
 
 enum {
 	// Away from the kernel's default, so a thread given it can't pass with the default stack.
@@ -40,7 +41,12 @@ static void *report_stack(void *argument)
 static void *mark_detached(void *argument)
 {
 	(void)argument;
-	__atomic_store_n(&detached_ran, 1, __ATOMIC_RELEASE);
+	const HANDLE handle = xsdk_pthread_handle(pthread_self());
+	uint32_t object;
+	const NTSTATUS status = ObReferenceObjectByHandle(handle, (uint32_t)(uintptr_t)ExThreadObjectType, &object);
+	if (NT_SUCCESS(status))
+		(void)ObDereferenceObject(object);
+	__atomic_store_n(&detached_ran, NT_SUCCESS(status) ? 1 : 2, __ATOMIC_RELEASE);
 	return NULL;
 }
 
@@ -69,7 +75,7 @@ static bool detached_thread_runs(void)
 	const struct timespec millisecond = { .tv_nsec = 1000000 };
 	for (int waited_ms = 0; waited_ms < DETACHED_WAIT_MS; waited_ms++) {
 		if (__atomic_load_n(&detached_ran, __ATOMIC_ACQUIRE))
-			return true;
+			return __atomic_load_n(&detached_ran, __ATOMIC_RELAXED) == 1;
 		(void)nanosleep(&millisecond, NULL);
 	}
 	return false;
@@ -85,17 +91,6 @@ static bool bad_attributes_refused(void)
 	return refused;
 }
 
-static bool one_priority_level(void)
-{
-	int policy = -1;
-	struct sched_param param = { .sched_priority = -1 };
-	const bool got = pthread_getschedparam(pthread_self(), &policy, &param) == 0;
-	const struct sched_param higher = { .sched_priority = 1 };
-	return got && policy == SCHED_OTHER && param.sched_priority == 0 && sched_get_priority_min(SCHED_OTHER) == 0 &&
-		sched_get_priority_max(SCHED_OTHER) == 0 &&
-		pthread_setschedparam(pthread_self(), SCHED_OTHER, &higher) == ENOTSUP;
-}
-
 void test_pthread(void)
 {
 	const uint32_t default_bytes = started_stack_bytes(NULL);
@@ -108,7 +103,6 @@ void test_pthread(void)
 		(unsigned)default_bytes, (unsigned)asked_bytes, (unsigned)ASKED_STACK_BYTES);
 	check("pthread: a thread gets the stack size its attributes ask for",
 		asked_bytes >= ASKED_STACK_BYTES && asked_bytes < ASKED_STACK_BYTES + STACK_SLACK_BYTES);
-	check("pthread: a thread made detached runs", detached_thread_runs());
+	check("pthread: a thread made detached retains its kernel handle", detached_thread_runs());
 	check("pthread: a bad detach state and a one-byte stack are refused", bad_attributes_refused());
-	check("pthread: priorities report one level and refuse a change", one_priority_level());
 }

@@ -1,0 +1,13 @@
+--- a/src/pthread.c
++++ b/src/pthread.c
+@@ -186,6 +186,10 @@
+ 		RtlLeaveCriticalSection(&creation_lock);
+ 		free(created);
+ 		return EAGAIN;
++	}
++	if (detached) {
++		(void)NtClose(created->handle);
++		created->handle = 0;
+ 	}
+ 	*thread = (pthread_t)(uintptr_t)created;
+ 	RtlLeaveCriticalSection(&creation_lock);

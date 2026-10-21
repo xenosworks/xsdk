@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -187,7 +187,7 @@
+ 		NT_SUCCESS(set) && fired == STATUS_SUCCESS && elapsed >= 3000000 && elapsed <= 7000000 &&
+ 			wait_for(timer, 0) == STATUS_TIMEOUT);
+ 	const int64_t period_start = now_ns();
+-	const NTSTATUS periodic = NtSetTimerEx(timer, &due, NULL, 1, NULL, 0, 5, 0);
++	const NTSTATUS periodic = NtSetTimerEx(timer, &due, NULL, 1, NULL, 0, 20, 0);
+ 	uint32_t fires = 0;
+ 	while (now_ns() - period_start < 100000000 && wait_for(timer, 20) == STATUS_SUCCESS)
+ 		fires++;

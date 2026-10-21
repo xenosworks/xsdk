@@ -1,0 +1,11 @@
+--- a/tests/test_pages.c
++++ b/tests/test_pages.c
+@@ -133,7 +133,7 @@
+ 	code[1] = 0x4E800020; // blr
+ 	xsdk_code_flush(code, 8);
+ 	check("jit: written code returns 42", function() == 42);
+-	code[0] = 0x38600063; // li r3,99
++	code[0] = 0x38600062; // li r3,99
+ 	xsdk_code_flush(code, 8);
+ 	check("jit: rewritten code returns 99", function() == 99);
+ 	xsdk_code_flush(NULL, 0);

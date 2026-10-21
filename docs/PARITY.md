@@ -11,6 +11,7 @@ milestones and TODO.md the open items; where they and this page disagree, they w
 - **Partial:** some of it works, or only through raw kernel calls.
 - **No:** not there yet.
 - **Out:** won't be in xsdk (end of the page).
+- **Pending:** implemented and built, with console verification still required.
 
 **What retail titles call** is judged from Xenia (xenia-project/xenia `95a5c3e`, in `xenos-toolchain/reference/xenia`),
 which implements what the games it runs need:
@@ -43,20 +44,23 @@ which implements what the games it runs need:
 |---|---|---|---|---|
 | A heap of all the title's free memory | Yes | `sbrk` (`src/sbrk.c`) | `tests/test_memory.c` | |
 | GPU memory, write-combined and physical | Yes | `xsdk_gpu_alloc` (`gpu.h`) | xsdk_test | Small allocations: each takes a 64 KiB page, and only shaders share (TODO.md) |
-| Freeing and protecting pages: `munmap`, `mprotect`, queries | No | | | `NtFreeVirtualMemory`, `NtProtectVirtualMemory`, `NtQueryVirtualMemory`, `MmSetAddressProtect` (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc) |
-| Memory statistics | Partial | `MmQueryStatistics` (`kernel.h`), raw | `tests/test_memory.c` | An xsdk call |
+| Returning the heap top; anonymous mappings and page protection | Pending | `sbrk` decommits 64 KB chunks; `mmap`, partial `munmap`, `mprotect` | M55 raw allocation/protection probe; `test_pages.c` console pending; host bookkeeping checks pass | File/shared/fixed mappings, runtime execute protection; raw `NtQueryVirtualMemory` failed on console |
+| Executable image pool and explicit cache flush | Pending | `.jit`, `xsdk_jit_pool`, `xsdk_code_flush` | `probe_exec` returned 42 then 99; SDK API `test_pages.c` console pending | Builtin/libgcc clear-cache fix remains the user's toolchain work |
+| Physical page protection | Yes | `MmSetAddressProtect`, `MmQueryAddressProtect` | M55 probe | |
+| Memory statistics | Partial | `MmQueryStatistics` (`kernel.h`), raw | `tests/test_memory.c` | Xenia's statistics are estimates |
 
 ## Threads and synchronisation
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Threads, joins, detached threads, stack sizes | Yes | pthreads (`src/pthread.c`), `std::thread` | `tests/test_pthread.c`, `test_threads.c` | |
-| Placing threads on the 6 hardware threads | Yes | `xsdk_thread_create_on`, `xsdk_thread_move` (`thread.h`) | `tests/test_placement.c` | An unplaced thread runs on its creator's hardware thread |
+| Placing threads on the 6 hardware threads | Partial | `xsdk_thread_create_on`, `xsdk_thread_move`; new `xsdk_thread_place` and `xsdk_pthread_handle` | `test_placement.c`; raw remote placement M55 probe; new wrappers and C++ handles pending | An unplaced thread runs on its creator's hardware thread |
 | Mutexes, condition variables, read-write locks, once, keys | Yes | pthreads | `tests/test_pthread.c` | A mutex holds a pointer to a critical section `malloc`ed on first lock: locking one after its memory is freed corrupts the heap (TODO.md) |
-| Priorities | No | `pthread_setschedparam` returns `ENOTSUP` | `tests/test_pthread.c` checks that | `KeSetBasePriorityThread` (xboxkrnl_threading.cc) |
-| Semaphores | Partial | `NtCreateSemaphore`, `NtReleaseSemaphore` (`kernel.h`), raw | | POSIX `sem_*` |
-| Waiting on several objects; resetting and pulsing events | No | | | `NtWaitForMultipleObjectsEx`, `NtClearEvent`, `NtPulseEvent` (xboxkrnl_threading.cc) |
-| Owned mutexes, waitable timers, APCs, lock-free lists, I/O completion ports | No | | | What Windows-style code expects: xboxkrnl_threading.cc, xboxkrnl_io.cc |
+| Priorities | Pending | `xsdk_thread_set_priority`, pthread scheduling calls; -16..16, default 0 | Raw kernel samples and +2 share: M55 probe; wrappers/all levels: `test_thread_control.c`, console pending | POSIX scheduling policies are not separate kernel policies |
+| Semaphores | Pending | Raw kernel calls and unnamed process-local POSIX `sem_*` | `test_semaphore.c`, console pending; concurrent host mocks pass | Named/shared semaphores |
+| Waiting on several objects; clearing and pulsing events | Yes | Raw waits on up to 64 objects, signal-and-wait, `NtClearEvent`, `NtPulseEvent` | M55 probe; expanded `test_objects.c` pending | |
+| Owned mutexes, waitable timers, lock-free lists | Yes | Raw mutant, timer and SLIST exports in `kernel.h` | M55 probe; expanded and concurrent `test_objects.c` pending | Timer APC routines |
+| APCs, alertable waits, I/O completion ports | No | | | Left out of M55 |
 
 ## Time
 

@@ -1,0 +1,11 @@
+--- a/src/semaphore.c
++++ b/src/semaphore.c
+@@ -78,7 +78,7 @@
+ 		if (clock_gettime(clock, &now) != 0)
+ 			return -1;
+ 		if (deadline->tv_sec < now.tv_sec || (deadline->tv_sec == now.tv_sec && deadline->tv_nsec <= now.tv_nsec)) {
+-			errno = ETIMEDOUT;
++			errno = EAGAIN;
+ 			return -1;
+ 		}
+ 		const uint64_t seconds = (uint64_t)deadline->tv_sec - (uint64_t)now.tv_sec;

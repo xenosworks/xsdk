@@ -64,6 +64,41 @@ NTSTATUS xsdk_thread_move(uint32_t hardware_thread)
 	return KeSetAffinityThread(self, 1u << hardware_thread, &previous);
 }
 
+NTSTATUS xsdk_thread_place(HANDLE thread, uint32_t hardware_thread)
+{
+	if (hardware_thread >= XSDK_HARDWARE_THREADS)
+		return STATUS_INVALID_PARAMETER;
+	uint32_t object;
+	NTSTATUS status = ObReferenceObjectByHandle(thread, (uint32_t)(uintptr_t)ExThreadObjectType, &object);
+	if (!NT_SUCCESS(status)) {
+		xsdk_log_write("xsdk_thread_place: ObReferenceObjectByHandle failed: 0x%08X", (unsigned)status);
+		return status;
+	}
+	uint32_t previous;
+	status = KeSetAffinityThread((void *)(uintptr_t)object, 1u << hardware_thread, &previous);
+	(void)ObDereferenceObject(object);
+	if (!NT_SUCCESS(status))
+		xsdk_log_write("xsdk_thread_place: KeSetAffinityThread failed: 0x%08X", (unsigned)status);
+	return status;
+}
+
+NTSTATUS xsdk_thread_set_priority(HANDLE thread, int32_t priority, int32_t *previous)
+{
+	if (priority < XSDK_PRIORITY_MIN || priority > XSDK_PRIORITY_MAX)
+		return STATUS_INVALID_PARAMETER;
+	uint32_t object;
+	const NTSTATUS status = ObReferenceObjectByHandle(thread, (uint32_t)(uintptr_t)ExThreadObjectType, &object);
+	if (!NT_SUCCESS(status)) {
+		xsdk_log_write("xsdk_thread_set_priority: ObReferenceObjectByHandle failed: 0x%08X", (unsigned)status);
+		return status;
+	}
+	const int32_t old = KeSetBasePriorityThread((void *)(uintptr_t)object, priority);
+	(void)ObDereferenceObject(object);
+	if (previous)
+		*previous = old;
+	return STATUS_SUCCESS;
+}
+
 uint32_t xsdk_thread_hardware_thread(void)
 {
 	return processor_control_region()[PCR_CURRENT_PROCESSOR];

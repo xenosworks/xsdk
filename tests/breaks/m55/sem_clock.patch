@@ -1,0 +1,11 @@
+--- a/src/semaphore.c
++++ b/src/semaphore.c
+@@ -66,7 +66,7 @@
+ {
+ 	if ((clock != CLOCK_REALTIME && clock != CLOCK_MONOTONIC) || deadline->tv_nsec < 0 ||
+ 		deadline->tv_nsec >= 1000000000) {
+-		errno = EINVAL;
++		errno = ERANGE;
+ 		return -1;
+ 	}
+ 	if (sem_trywait(semaphore) == 0)

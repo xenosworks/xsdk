@@ -1,0 +1,11 @@
+--- a/src/semaphore.c
++++ b/src/semaphore.c
+@@ -104,7 +104,7 @@
+ 	int32_t value = __atomic_load_n(&semaphore->value, __ATOMIC_RELAXED);
+ 	do {
+ 		if (value == SEM_VALUE_MAX) {
+-			errno = EOVERFLOW;
++			errno = EINVAL;
+ 			return -1;
+ 		}
+ 	} while (

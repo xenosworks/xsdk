@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -216,7 +216,7 @@
+ static uint32_t push_entries(void *context)
+ {
+ 	ListWorker *worker = context;
+-	for (uint32_t i = 0; i < ENTRIES; i++) {
++	for (uint32_t i = 0; i < ENTRIES - 1; i++) {
+ 		Entry *entry = &worker->entries[i];
+ 		entry->index = worker->first + i;
+ 		(void)InterlockedPushEntrySList(worker->list, &entry->link);

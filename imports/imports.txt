@@ -76,6 +76,7 @@ xboxkrnl.exe  0x0CD  NtCancelTimer
 xboxkrnl.exe  0x0CE  NtClearEvent
 xboxkrnl.exe  0x0D4  NtCreateMutant
 xboxkrnl.exe  0x0D7  NtCreateTimer
+xboxkrnl.exe  0x0DA  NtDuplicateObject
 xboxkrnl.exe  0x0DC  NtFreeVirtualMemory
 xboxkrnl.exe  0x0E1  NtProtectVirtualMemory
 xboxkrnl.exe  0x0E2  NtPulseEvent

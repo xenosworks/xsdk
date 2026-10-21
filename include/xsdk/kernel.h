@@ -392,6 +392,8 @@ NTSTATUS MmQueryStatistics(MM_QUERY_STATISTICS_RESULT *statistics);
 NTSTATUS NtAllocateVirtualMemory(
 	void **base, uint32_t *size_bytes, uint32_t allocation_type, uint32_t protect, uint32_t debug_memory);
 NTSTATUS NtClose(HANDLE handle);
+// A real handle for the caller too (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:180-203); options 0 keeps source.
+NTSTATUS NtDuplicateObject(HANDLE source, HANDLE *destination, uint32_t options);
 NTSTATUS NtCreateEvent(HANDLE *event, const OBJECT_ATTRIBUTES *attributes, uint32_t event_type, uint32_t initial_state);
 NTSTATUS NtCreateFile(HANDLE *handle, uint32_t desired_access, const OBJECT_ATTRIBUTES *attributes,
 	IO_STATUS_BLOCK *io_status, const uint64_t *allocation_size, uint32_t file_attributes, uint32_t share_access,
@@ -473,6 +475,7 @@ NTSTATUS XexGetProcedureAddress(HANDLE module, uint32_t ordinal, void **address)
 
 // Wait types and timer types (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:829, 698-708); the values are NT's.
 enum {
+	MAXIMUM_WAIT_OBJECTS = 64, // results/2026-10-20-milestone-55/probe_objects.log
 	WAIT_ALL = 0,
 	WAIT_ANY = 1,
 	NOTIFICATION_TIMER = 0,
@@ -519,7 +522,7 @@ typedef struct {
 	uint16_t sequence;
 } __attribute__((aligned(8))) SLIST_HEADER;
 
-// The thread object type, which ObReferenceObjectByHandle checks; its address is passed as object_type.
+// The loader puts the thread object type address in this import slot; pass its value as object_type.
 extern void *const ExThreadObjectType;
 // Waits on several objects at once: wait_type WAIT_ALL or WAIT_ANY, which returns STATUS_WAIT_0 plus the signalled
 // object's index (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:878-887).
@@ -546,6 +549,7 @@ int32_t KeSetBasePriorityThread(void *thread, int32_t increment);
 NTSTATUS NtFreeVirtualMemory(void **base, uint32_t *size_bytes, uint32_t free_type, uint32_t debug_memory);
 NTSTATUS NtProtectVirtualMemory(
 	void **base, uint32_t *size_bytes, uint32_t protect, uint32_t *old_protect, uint32_t debug_memory);
+// Xenia's two-argument ABI; returned C000000D on console (results/2026-10-20-milestone-55). Unverified there.
 NTSTATUS NtQueryVirtualMemory(uint32_t base_address, MEMORY_BASIC_INFORMATION *information);
 // Returns the pages' protection, 0 if none (xboxkrnl_memory.cc:413-423).
 uint32_t MmQueryAddressProtect(uint32_t base_address);
@@ -555,7 +559,7 @@ void MmSetAddressProtect(void *base_address, uint32_t region_size, uint32_t prot
 uint32_t InterlockedPushEntrySList(SLIST_HEADER *list, SINGLE_LIST_ENTRY *entry);
 uint32_t InterlockedPopEntrySList(SLIST_HEADER *list);
 uint32_t InterlockedFlushSList(SLIST_HEADER *list);
-// The native object pointer for a handle, into out_object; object_type is ExThreadObjectType's address, or 0 to skip
+// The native object pointer for a handle, into out_object; object_type is ExThreadObjectType, or 0 to skip
 // the check (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:84-116). ObDereferenceObject releases it.
 NTSTATUS ObReferenceObjectByHandle(HANDLE handle, uint32_t object_type, uint32_t *out_object);
 NTSTATUS ObDereferenceObject(uint32_t object);

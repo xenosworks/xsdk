@@ -1,0 +1,11 @@
+--- a/src/semaphore.c
++++ b/src/semaphore.c
+@@ -43,7 +43,7 @@
+ 		return 0;
+ 	}
+ 	if (status == STATUS_TIMEOUT) {
+-		errno = EAGAIN;
++		errno = EINVAL;
+ 		return -1;
+ 	}
+ 	xsdk_log_write("sem_wait: NtWaitForSingleObjectEx failed: 0x%08X", (unsigned)status);

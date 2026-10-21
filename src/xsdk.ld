@@ -60,7 +60,9 @@ SECTIONS
 	   one this is empty and costs nothing. */
 	. = ALIGN(0x10000);
 	.jit : {
+		xsdk_jit_start = .;
 		KEEP(*(.jit .jit.*))
+		xsdk_jit_end = .;
 	}
 
 	.xsdk.imports 0 : {

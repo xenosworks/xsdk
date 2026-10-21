@@ -1,0 +1,11 @@
+--- a/src/mman.c
++++ b/src/mman.c
+@@ -46,7 +46,7 @@
+ static bool rounded_length(size_t length, uint32_t *bytes)
+ {
+ 	if (!length || length > INT32_MAX - (PAGE_BYTES - 1)) {
+-		errno = EINVAL;
++		errno = ENOMEM;
+ 		return false;
+ 	}
+ 	*bytes = (length + PAGE_BYTES - 1) & ~(uint32_t)(PAGE_BYTES - 1);

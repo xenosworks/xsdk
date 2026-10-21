@@ -1,0 +1,11 @@
+--- a/src/thread.c
++++ b/src/thread.c
+@@ -95,7 +95,7 @@
+ 	const int32_t old = KeSetBasePriorityThread((void *)(uintptr_t)object, priority);
+ 	(void)ObDereferenceObject(object);
+ 	if (previous)
+-		*previous = old;
++		*previous = old + 1;
+ 	return STATUS_SUCCESS;
+ }
+ 

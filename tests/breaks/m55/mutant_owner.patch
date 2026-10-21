@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -113,7 +113,7 @@
+ static uint32_t take_mutant(void *context)
+ {
+ 	MutantWorker *worker = context;
+-	worker->not_owner = NtReleaseMutant(worker->mutant, 0);
++	worker->not_owner = wait_for(worker->mutant, 0);
+ 	if (!NT_SUCCESS(NtSetEvent(worker->attempted, NULL)))
+ 		return 1;
+ 	worker->acquired = wait_for(worker->mutant, 1000);

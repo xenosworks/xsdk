@@ -1,0 +1,11 @@
+--- a/tests/test_pages.c
++++ b/tests/test_pages.c
+@@ -91,7 +91,7 @@
+ 	}
+ 	const uint32_t address = (uint32_t)(uintptr_t)physical;
+ 	const uint32_t original = MmQueryAddressProtect(address);
+-	MmSetAddressProtect((void *)physical, 65536, PAGE_READONLY);
++	MmSetAddressProtect((void *)physical, 65536, PAGE_READWRITE);
+ 	const uint32_t ro = MmQueryAddressProtect(address);
+ 	MmSetAddressProtect((void *)physical, 65536, original);
+ 	const uint32_t restored = MmQueryAddressProtect(address);

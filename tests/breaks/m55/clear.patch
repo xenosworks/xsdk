@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -52,7 +52,7 @@
+ 		NtWaitForMultipleObjectsEx(MAXIMUM_WAIT_OBJECTS, handles, WAIT_ALL, USER_MODE, 0, &poll) == STATUS_SUCCESS &&
+ 			NtWaitForMultipleObjectsEx(MAXIMUM_WAIT_OBJECTS + 1, handles, WAIT_ALL, USER_MODE, 0, &poll) ==
+ 				STATUS_INVALID_PARAMETER);
+-	const NTSTATUS cleared = NtClearEvent(handles[0]);
++	const NTSTATUS cleared = NtSetEvent(handles[0], NULL);
+ 	check(
+ 		"objects: clear leaves an event unsignalled", NT_SUCCESS(cleared) && wait_for(handles[0], 0) == STATUS_TIMEOUT);
+ 	for (uint32_t i = 0; i < MAXIMUM_WAIT_OBJECTS + 1; i++)

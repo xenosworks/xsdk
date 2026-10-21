@@ -1,0 +1,11 @@
+--- a/src/mman.c
++++ b/src/mman.c
+@@ -27,7 +27,7 @@
+ static int protection_bits(int protection)
+ {
+ 	if (protection & PROT_EXEC) {
+-		errno = ENOTSUP;
++		errno = EINVAL;
+ 		return -1;
+ 	}
+ 	switch (protection) {

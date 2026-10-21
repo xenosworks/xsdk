@@ -1,0 +1,11 @@
+--- a/src/semaphore.c
++++ b/src/semaphore.c
+@@ -25,7 +25,7 @@
+ 
+ int sem_destroy(sem_t *semaphore)
+ {
+-	const NTSTATUS status = NtClose(semaphore->handle);
++	const NTSTATUS status = STATUS_SUCCESS;
+ 	if (!NT_SUCCESS(status)) {
+ 		xsdk_log_write("sem_destroy: NtClose failed: 0x%08X", (unsigned)status);
+ 		errno = EINVAL;

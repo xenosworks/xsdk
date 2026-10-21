@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -252,7 +252,7 @@
+ 	check("objects: concurrent list pushes pop 2000 unique entries", unique && count == 2 * ENTRIES && !address);
+ 	(void)InterlockedPushEntrySList(&list, &entries[0].link);
+ 	(void)InterlockedPushEntrySList(&list, &entries[1].link);
+-	const uint32_t flushed = InterlockedFlushSList(&list);
++	const uint32_t flushed = InterlockedPopEntrySList(&list);
+ 	check("objects: list flush returns the chain and empties the list",
+ 		flushed == (uint32_t)(uintptr_t)&entries[1] && entries[1].link.next == (uint32_t)(uintptr_t)&entries[0] &&
+ 			InterlockedPopEntrySList(&list) == 0);

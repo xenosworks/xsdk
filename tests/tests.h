@@ -28,6 +28,10 @@ void test_threads(void);
 // Threads placed on the six hardware threads (milestone 26).
 void test_placement(void);
 void test_pthread(void);
+void test_objects(void);
+void test_thread_control(void);
+void test_semaphore(void);
+void test_pages(void);
 void test_clocks(void);
 void test_kernel_entry(void);
 // 64-bit values held across the clock interrupt.

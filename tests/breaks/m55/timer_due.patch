@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -177,7 +177,7 @@
+ 		check("objects: create timer", false);
+ 		return;
+ 	}
+-	const int64_t due = -50000;
++	const int64_t due = -150000;
+ 	const int64_t start = now_ns();
+ 	const NTSTATUS set = NtSetTimerEx(timer, &due, NULL, 1, NULL, 0, 0, 0);
+ 	const NTSTATUS fired = wait_for(timer, 1000);

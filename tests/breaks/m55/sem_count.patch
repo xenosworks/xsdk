@@ -1,0 +1,11 @@
+--- a/src/semaphore.c
++++ b/src/semaphore.c
+@@ -39,7 +39,7 @@
+ {
+ 	const NTSTATUS status = NtWaitForSingleObjectEx(semaphore->handle, USER_MODE, 0, timeout);
+ 	if (status == STATUS_SUCCESS) {
+-		__atomic_fetch_sub(&semaphore->value, 1, __ATOMIC_ACQUIRE);
++		(void)semaphore;
+ 		return 0;
+ 	}
+ 	if (status == STATUS_TIMEOUT) {

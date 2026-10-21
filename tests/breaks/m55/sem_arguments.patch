@@ -1,0 +1,11 @@
+--- a/src/semaphore.c
++++ b/src/semaphore.c
+@@ -9,7 +9,7 @@
+ int sem_init(sem_t *semaphore, int shared, unsigned value)
+ {
+ 	if (shared || value > SEM_VALUE_MAX) {
+-		errno = shared ? ENOTSUP : EINVAL;
++		errno = ERANGE;
+ 		return -1;
+ 	}
+ 	HANDLE handle;

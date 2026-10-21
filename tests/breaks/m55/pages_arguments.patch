@@ -1,0 +1,11 @@
+--- a/src/mman.c
++++ b/src/mman.c
+@@ -64,7 +64,7 @@
+ {
+ 	(void)address;
+ 	if (flags != (MAP_PRIVATE | MAP_ANONYMOUS) || descriptor != -1 || offset != 0) {
+-		errno = ENOTSUP;
++		errno = EINVAL;
+ 		return MAP_FAILED;
+ 	}
+ 	const int protect = protection_bits(protection);

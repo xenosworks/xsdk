@@ -1,0 +1,10 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -126,6 +126,7 @@
+ {
+ 	MutantWorker *worker = context;
+ 	worker->acquired = wait_for(worker->mutant, 1000);
++	(void)NtReleaseMutant(worker->mutant, 0);
+ 	return 0;
+ }
+ 

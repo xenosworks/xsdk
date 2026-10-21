@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -69,7 +69,7 @@
+ {
+ 	EventWorker *worker = context;
+ 	const int64_t timeout = -10000000;
+-	worker->result = NtSignalAndWaitForSingleObjectEx(worker->ready, worker->wake, 0, 0, &timeout);
++	worker->result = NtSignalAndWaitForSingleObjectEx(worker->ready, worker->ready, 0, 0, &timeout);
+ 	return 0;
+ }
+ 

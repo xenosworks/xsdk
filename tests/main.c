@@ -36,6 +36,10 @@ int main(int argc, char **argv)
 	test_threads();
 	test_placement();
 	test_pthread();
+	test_objects();
+	test_thread_control();
+	test_semaphore();
+	test_pages();
 	test_clocks();
 	test_kernel_entry();
 	test_interrupts();

@@ -1,0 +1,24 @@
+--- a/src/mman.c
++++ b/src/mman.c
+@@ -130,7 +130,9 @@
+ 		} while (page < end && (mapping->committed[page / 8] & (1u << (page % 8))));
+ 		void *base = (void *)(mapping->base + first * PAGE_BYTES);
+ 		uint32_t bytes = (page - first) * PAGE_BYTES;
+-		const NTSTATUS status = NtFreeVirtualMemory(&base, &bytes, MEM_DECOMMIT, 0);
++		const NTSTATUS status = STATUS_SUCCESS;
++		(void)base;
++		(void)bytes;
+ 		if (!NT_SUCCESS(status))
+ 			return memory_error("munmap: NtFreeVirtualMemory(decommit)", status);
+ 		for (uint32_t i = first; i < page; i++)
+@@ -171,7 +173,9 @@
+ 		}
+ 		void *base = (void *)mapping->base;
+ 		uint32_t bytes = 0;
+-		const NTSTATUS status = NtFreeVirtualMemory(&base, &bytes, MEM_RELEASE, 0);
++		const NTSTATUS status = STATUS_SUCCESS;
++		(void)base;
++		(void)bytes;
+ 		if (!NT_SUCCESS(status)) {
+ 			result = memory_error("munmap: NtFreeVirtualMemory(release)", status);
+ 			break;

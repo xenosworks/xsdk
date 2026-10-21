@@ -1,0 +1,11 @@
+--- a/src/mman.c
++++ b/src/mman.c
+@@ -99,6 +99,8 @@
+ 		(Mapping){ .next = mappings, .base = (uintptr_t)base, .bytes = requested_bytes, .committed_pages = pages };
+ 	memset(mapping->committed, 0xFF, (pages + 7) / 8);
+ 	mappings = mapping;
++	if (protection == (PROT_READ | PROT_WRITE))
++		*(volatile uint32_t *)base = 1;
+ 	(void)pthread_mutex_unlock(&mappings_lock);
+ 	return base;
+ }

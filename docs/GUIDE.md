@@ -235,10 +235,27 @@ start a thread on its creator's hardware thread, so every thread a title starts 
 |---|---|---|---|
 | `xsdk_thread_create_on(&handle, stack_bytes, entry, context, hardware_thread)` | a thread on that hardware thread, 1 MB of stack for 0 | its entry returning; `NtWaitForSingleObjectEx` on the handle waits for it, `NtClose` lets the handle go | any |
 | `xsdk_thread_move(hardware_thread)` | the calling thread moved | another move | any |
+| `xsdk_thread_place(handle, hardware_thread)` | the thread behind the handle moved; `XSDK_CURRENT_THREAD` selects the caller | another placement | any |
+| `xsdk_thread_set_priority(handle, priority, &previous)` | relative base priority -16..16; previous may be NULL | set its old priority | any |
 | `xsdk_thread_sleep(ms)`, `nanosleep` | the thread asleep, about a millisecond longer than asked | | any |
 
 - **Two busy threads on one core's two hardware threads** each get about half of it; on two cores, nearly all.
-- **Priorities** are refused, `pthread_setschedparam` returning `ENOTSUP`.
+- **Priorities** range from -16 to 16, with 0 the default. `pthread_setschedparam` accepts any policy; the kernel
+  supplies relative base priorities rather than POSIX scheduling policies, so `pthread_getschedparam` reports
+  `SCHED_OTHER`. A raised busy thread can starve the others on its hardware thread: the probe's +2 worker did 99%
+  of the work. Keep audio and render workers bounded and let them block when idle.
+- **Borrowed handles:** `xsdk_pthread_handle(thread)` also takes a `std::thread::native_handle()`. Do not close the
+  returned handle. It lasts until join or, for a detached thread, until that thread ends; coordinate with its owner.
+  Threads not created by pthreads get an owned duplicate on their first `pthread_self()`.
+- **POSIX semaphores:** `<semaphore.h>` supplies `sem_init/destroy`, `sem_wait/trywait/timedwait/clockwait`, `sem_post`
+  and `sem_getvalue`. Only unnamed, process-local semaphores are supported. `sem_timedwait` uses an absolute realtime
+  deadline; `sem_clockwait` accepts `CLOCK_REALTIME` or `CLOCK_MONOTONIC`. A concurrent `sem_getvalue` is a snapshot,
+  not a reservation. Stop all users before destroying the semaphore.
+- **Windows-style objects:** `kernel.h` declares waits on up to `MAXIMUM_WAIT_OBJECTS` (64), signal-and-wait, clear
+  and pulse events, recursive mutants, waitable timers without APCs, and interlocked singly linked lists. Wait-any
+  returns `STATUS_WAIT_0 + index`; abandoned mutants return `STATUS_ABANDONED_WAIT_0`. `NT_SUCCESS` alone does not
+  distinguish a successful wait from `STATUS_TIMEOUT`. Zero-initialize an 8-byte-aligned `SLIST_HEADER`.
+- M55's new wrappers and expanded tests still need their console verification; see the milestone's results README.
 - **Mutexes, condition variables, read-write locks, `once` and keys** are pthreads', and `std::mutex` and the rest on
   them. Free a mutex only once no thread can lock it again (docs/PITFALLS.md).
 - **Atomics** cost by their order: a relaxed `__atomic_fetch_add` 55 ns, acquire or release 70, seq_cst 125, against
@@ -248,6 +265,38 @@ start a thread on its creator's hardware thread, so every thread a title starts 
 - **Callbacks the kernel makes** run on its threads: the audio render driver's on its audio thread, the vblank one,
   xsdk's own, in its interrupt handling. Keep them short.
 - **`xsdk_thread_wait_counts`** counts yields and blocking waits, to tell sleeping from spinning.
+
+## Anonymous pages and generated code
+
+`<sys/mman.h>` provides `mmap(NULL, bytes, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0)`.
+The result is zeroed private memory, rounded to 4 KB. Address hints are ignored. `munmap` accepts page-aligned
+subranges, decommits their pages and releases the reservation after the last mapped page goes away. Holes can be
+unmapped again. It manages only reservations made by `mmap`; free `malloc` buffers with `free` and GPU allocations
+with `xsdk_gpu_free`. `mprotect` accepts `PROT_NONE`, `PROT_READ`, or `PROT_READ | PROT_WRITE` on committed virtual
+pages. Its address must be page-aligned. GPU memory uses the raw `MmSetAddressProtect` API instead.
+
+File-backed, shared and fixed mappings are refused with `ENOTSUP`, as is `PROT_EXEC` in either allocation or
+protection. Do not mix raw decommit/recommit calls with a mapping's tracked lifetime. `MmQueryAddressProtect`
+returns protection flags; the raw `NtQueryVirtualMemory` declaration still failed in the console probe. The top
+of newlib's heap now decommits in 64 KB chunks when `free` trims it; live allocations above a freed block still
+prevent its return. Use a mapping for a large buffer that must be independently releasable.
+
+Generated code uses the title's executable `.jit` image section. Give it the desired size in an assembly file:
+
+```asm
+.section .jit,"awx",@nobits
+.balign 0x10000
+.skip 0x400000
+```
+
+`xsdk_jit_pool(&base, &bytes)` from `<xsdk/jit.h>` returns that pool; with no `.jit` input it returns zero bytes.
+The title owns allocation within it. After writing a block, call `xsdk_code_flush(start, bytes)` before running
+it or publishing it to another thread. This handles every intersecting 128-byte cache line, including an unaligned
+start; zero bytes does nothing. Use cached image memory, not GPU write-combined memory. The linker and packer give
+`.jit` its own executable image pages. No runtime executable protection or hypervisor call is involved.
+
+GCC's `__builtin___clear_cache` and libgcc's `__clear_cache` remain ineffective in the installed toolchain until the
+user's separate toolchain change. Use `xsdk_code_flush` explicitly in the meantime.
 
 ## Files and paths
 
@@ -359,17 +408,18 @@ against `libxsdk.a`, newlib and libstdc++ on 2026-10-19:
   `pwrite`, `lseek`, `fstat`, `fsync`, `fdatasync`, `ftruncate`, `fstatvfs`, `isatty`, `stat`, `statvfs`, `chdir`,
   `getcwd`, `mkdir`, `unlink`, `unlinkat`, `rename`, `truncate`, `readlink`, `pathconf`, `opendir`, `fdopendir`,
   `readdir`, `rewinddir`, `closedir`; `pthread_create`, `join`, `detach`, attributes and stack sizes, mutexes, condition
-  variables, read-write locks, `once` and keys, `sched_yield`; `clock_gettime`, `gettimeofday`, `nanosleep`; `sysconf`,
+  variables, read-write locks, `once` and keys, scheduling priorities, `sched_yield`;
+  unnamed `sem_*`; anonymous `mmap`, `munmap`, `mprotect`; `clock_gettime`, `gettimeofday`, `nanosleep`; `sysconf`,
   `getentropy`, `getpid`, `kill`, `raise`, `signal`, `abort`, `exit`, `atexit`; the sockets above, `getaddrinfo`,
   `inet_pton` and `inet_ntop`; C++23's threads, atomics, exceptions, `chrono`, `filesystem` and `format`
   (docs/PARITY.md).
-- **Refuses at run time:** `pthread_setschedparam`, `ENOTSUP`; `pthread_cancel`, `link` and `symlink`, `ENOSYS`;
+- **Refuses at run time:** file-backed/shared/fixed mappings and `PROT_EXEC`, `ENOTSUP`; `pthread_cancel`, `link` and `symlink`, `ENOSYS`;
   `fchmod` and `fchmodat` changing a file's permissions, `ENOTSUP`; `fcntl` on a file, `ENOSYS`.
-- **Doesn't link:** processes, `fork`, `vfork`, `execve`, `wait`, `waitpid`; memory maps, `mmap`, `munmap`, `mprotect`;
+- **Doesn't link:** processes, `fork`, `vfork`, `execve`, `wait`, `waitpid`;
   `dlopen`; `dup`, `dup2`, `pipe`, `socketpair`; `rmdir` (`remove` and `unlink` remove an empty folder), `readv`,
   `writev`, `lstat`, `fstatat`, `access`, `faccessat`, `realpath`, `chmod`, `chown`, `fchown`, `umask`, `utime`,
   `utimes`, `utimensat`, `futimens`, `mkdirat`, `renameat`, `fpathconf`; `sleep` and `usleep` (`nanosleep` is there);
-  `clock_getres`, `clock_nanosleep`, `times`, `alarm`; `sigaction`; `sem_init`, `sem_wait`, `sem_post`; `pthread_exit`,
+  `clock_getres`, `clock_nanosleep`, `times`, `alarm`; `sigaction`; named semaphores (`sem_open`); `pthread_exit`,
   `pthread_kill`, `pthread_sigmask`, `pthread_atfork`, barriers and spin locks; C11's `thrd_create`; `sched_setaffinity`
   (`xsdk_thread_move` is there); `getuid`, `geteuid`, `getppid`, `getpagesize`; `gethostbyname` and `getnameinfo`
   (`getaddrinfo` is there); `getrandom` (`getentropy` is there); `posix_memalign` (`aligned_alloc` is there); `ioctl`.

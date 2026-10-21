@@ -1,0 +1,11 @@
+--- a/tests/test_pages.c
++++ b/tests/test_pages.c
+@@ -129,7 +129,7 @@
+ 	}
+ 	uint32_t *code = pool;
+ 	uint32_t (*function)(void) = (uint32_t (*)(void))pool;
+-	code[0] = 0x3860002A; // li r3,42
++	code[0] = 0x38600029; // li r3,42
+ 	code[1] = 0x4E800020; // blr
+ 	xsdk_code_flush(code, 8);
+ 	check("jit: written code returns 42", function() == 42);

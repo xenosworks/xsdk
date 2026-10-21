@@ -4699,3 +4699,39 @@ stick in and no disc or memory unit (results/2026-10-20-milestone-54/):
 - **On a 4:3 screen the frame keeps its shape.** The probe's fill case, presenting through `xsdk_present` on a 4:3
   480p output, showed 1280x720 in OBS's 800x600 capture as an 800x450 picture between bars of about 82 and 68 lines,
   128 and 112 rows of the 960, the circle round and the squares square (`letterbox_4x3_480p.png`).
+
+## Windows-style objects and executable image memory, milestone 55 (2026-10-20)
+
+The user's console ran `probe_objects` (18 passed, 0 failed) and `probe_exec` in `spike` and `query` modes.
+The unchanged logs are in [results/2026-10-20-milestone-55](../results/2026-10-20-milestone-55/).
+
+- Wait-any returned index 2; wait-all succeeded with three set events and timed out with one clear. Up to 64
+  objects were accepted; 65 returned `C000000D`.
+- Clearing a set event left it unsignalled. A pulse woke a waiter, reported previous state 0 and left the event
+  clear. Signal-and-wait woke its worker.
+- Recursive mutant acquisition and two releases succeeded. An unowned release returned `C0000046`; an abandoned
+  mutant returned `00000080`. The probe did not separately record the other thread's release result.
+- A one-shot timer signalled after 202422 time-base ticks. A periodic timer fired 100 times during the probe's
+  window; after cancellation a wait timed out. This log does not establish every requested period's accuracy.
+- Base priorities -16, -2, -1, 0, 1, 2 and 16 read back as requested. On one hardware thread, +2 performed 99% of
+  the work and +0 less than 1%. Raised busy threads can starve other threads on that hardware thread.
+- `ObReferenceObjectByHandle` with the imported `ExThreadObjectType` value returned a native thread object. Changing
+  its affinity moved the worker from hardware thread 0 to 3. The pseudo handle and moving a sleeping thread were
+  not separately established in this log; the new M55 checks cover them.
+- A virtual allocation changed from read-write to read-only and back; the read-only query returned `00001002`.
+  Decommit and release succeeded. Physical memory's protection changed from `00000404` to read-only `00000002`
+  and read-write `00000004`.
+- **`NtQueryVirtualMemory` returned `C000000D`** for both the allocation and `.jit`, leaving the result zeroed.
+  Its Xenia-derived declaration remains unverified on hardware. `mmap` therefore tracks its own reservations and
+  committed pages; `munmap` releases a reservation after its last tracked page is decommitted. Protection checks use
+  the working `MmQueryAddressProtect`, not a fabricated query result.
+- The singly linked list pushed and popped 1000 entries, then flushed a remaining entry and was empty. Concurrent
+  pushes are covered by the new checks, not this probe.
+- The 64 KB `.jit` pool at `82080000` reported protection `00000020`. Written code returned 42 after a flush;
+  rewritten code returned 99 after a flush. Rewriting to 42 **without** a flush also returned 42 on this run.
+  Omitting a flush is consequently not a deterministic hardware failure test. The assembly sequence has a build
+  check and a no-flush negative variant; deterministic wrong-code variants test the console's return-value checks.
+
+Steps 3–8 add SDK APIs and console checks on top of these results. Their new console checks, deliberate failures,
+SDL, Dusklight and Vulkan regressions have not yet been run here. No new hardware result is claimed by a successful
+cross-build or host mock test. GCC's builtin/libgcc cache flush and toolchain rebuild remain the user's work.

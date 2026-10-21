@@ -1,0 +1,11 @@
+--- a/src/thread.c
++++ b/src/thread.c
+@@ -92,7 +92,7 @@
+ 		xsdk_log_write("xsdk_thread_set_priority: ObReferenceObjectByHandle failed: 0x%08X", (unsigned)status);
+ 		return status;
+ 	}
+-	const int32_t old = KeSetBasePriorityThread((void *)(uintptr_t)object, priority);
++	const int32_t old = KeSetBasePriorityThread((void *)(uintptr_t)object, 0);
+ 	(void)ObDereferenceObject(object);
+ 	if (previous)
+ 		*previous = old;

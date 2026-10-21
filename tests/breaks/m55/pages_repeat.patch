@@ -1,0 +1,11 @@
+--- a/src/mman.c
++++ b/src/mman.c
+@@ -151,7 +151,7 @@
+ 		return -1;
+ 	}
+ 	const uintptr_t start = (uintptr_t)address;
+-	int result = 0;
++	int result = -1;
+ 	Mapping **slot = &mappings;
+ 	while (*slot) {
+ 		Mapping *mapping = *slot;

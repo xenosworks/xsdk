@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -90,7 +90,7 @@
+ 	int32_t previous = -1;
+ 	(void)xsdk_thread_sleep(20);
+ 	const bool waiting = wait_for(threads[0], 0) == STATUS_TIMEOUT && wait_for(threads[1], 0) == STATUS_TIMEOUT;
+-	const NTSTATUS pulsed = NtPulseEvent(pulse, &previous);
++	const NTSTATUS pulsed = NtSetEvent(pulse, &previous);
+ 	for (uint32_t i = 0; i < 2; i++)
+ 		finish(threads[i]);
+ 	check("objects: signal-and-wait signals ready and wakes on the pulse",
