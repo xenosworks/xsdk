@@ -1,6 +1,6 @@
 # Milestone 58: audio
 
-Proposed on 2026-10-21, not yet agreed.
+Agreed on 2026-10-21, with every recommendation taken (Decided, below).
 
 The entry agreed with the user: a mixer on the render driver (port FAudio), then XMA decoding in hardware.
 docs/PARITY.md has playing PCM as Partial, and XMA, the speaker configuration and the dashboard's volumes as No.
@@ -122,7 +122,7 @@ Steps 1 and 2 measure on the console before anything is built for audio; the res
      Then the probe measures the same wake-ups. If the kernel won't take a signal from there, the console may stop; you
      restart it, and the log is on the PC already. **This case runs only with your go-ahead.** If it fails, the feeder
      waits on the periodic timer instead.
-   - **the speaker configuration:** `XAudioGetSpeakerConfig`'s word, logged (decision 5).
+   - **the speaker configuration:** `XAudioGetSpeakerConfig`'s word, logged (Decided, 5).
 
 3. **An xsdk audio API,** include/xsdk/audio.h and src/audio.c, over the render driver, one client a title:
    - `xsdk_audio_open(frames_ahead)` registers the client. It allocates its frames once, in physical memory: the ring,
@@ -137,7 +137,7 @@ Steps 1 and 2 measure on the console before anything is built for audio; the res
      queued at a callback, and the longest a freed slot waited. A title's log shows underruns without anyone listening.
    - `xsdk_audio_close()` unregisters, and a feeder waiting in `xsdk_audio_next_frame` returns.
    - The feeder is the title's own thread, and xsdk starts none. Its priority and hardware thread are the title's, with
-     the defaults decision 6 sets.
+     the defaults (Decided, 6).
    - tests/test_audio.c and samples/sound move onto it. tests/audio_check.c, the frame layout checked by ear, stays raw.
 
 4. **SDL-xenon on the API:** `WaitDevice` blocks in `xsdk_audio_next_frame`, and `PlayDevice` lays SDL's mix out in
@@ -148,15 +148,15 @@ Steps 1 and 2 measure on the console before anything is built for audio; the res
 
 5. **The fix for Dusklight,** where step 1 points:
    - late wake-ups: steps 3 and 4, nothing in Dusklight;
-   - a ring shorter than a burst: the default `frames_ahead` (decision 6);
+   - a ring shorter than a burst: the default `frames_ahead` (Decided, 6);
    - a slow render or a held mutex: Dusklight renders ahead on a thread of its own and puts its audio into the stream
      there, under a target `#if` with the original kept (CODE_GUIDELINES.md, section 14).
 
    The scene must then hand the kernel no silent frame in its 32 windows, at a frame rate no lower than milestone 55's
    (144.9 and 145.5 over its heaviest five windows, results/2026-10-21-milestone-55-acceptance/README.md).
 
-6. **FAudio,** in a new FAudio-xenon fork (decision 2): its latest release on a `xenon` branch, built through
-   cmake/xsdk.cmake on SDL-xenon, on FAudio's own SDL3 platform layer (decision 3). It mixes on SDL's device thread, so
+6. **FAudio,** in a new FAudio-xenon fork (Decided, 2): its latest release on a `xenon` branch, built through
+   cmake/xsdk.cmake on SDL-xenon, on FAudio's own SDL3 platform layer (Decided, 3). It mixes on SDL's device thread, so
    it takes step 4's feeding as it is.
    - The fork changes only what the toolchain and a big-endian host need, each change marked, as SDL-xenon's are.
    - `faudio_check`, a check title in the fork, reads the mix through `FAudio_SetEngineProcedureEXT` and judges it by
@@ -165,7 +165,7 @@ Steps 1 and 2 measure on the console before anything is built for audio; the res
      (Left out).
 
 7. **Speaker configuration:** `XAudioGetSpeakerConfig` imported, and `xsdk_audio_speakers()` saying stereo or 5.1 from
-   the bits step 2 read (decision 5). The driver still takes 6 channels, and on a stereo set the centre and back
+   the bits step 2 read (Decided, 5). The driver still takes 6 channels, and on a stereo set the centre and back
    channels sound as a downmix allows (docs/HARDWARE.md, "Runtime, milestone 2"). A title that offers a stereo or a
    surround mix picks its default from it, as Dusklight's settings could (DuskAudioSystem.cpp:48-59).
 
@@ -185,9 +185,9 @@ Steps 1 and 2 measure on the console before anything is built for audio; the res
 
 ## Left out
 
-- **XMA decoding** (decision 4).
+- **XMA decoding** (Decided, 4).
 - **The dashboard's voice-category volumes and the ducker:** Xenia stubs them with an argument it can't name
-  (xboxkrnl_audio.cc:28-53), and a guessed argument could fault in the kernel (decision 5).
+  (xboxkrnl_audio.cc:28-53), and a guessed argument could fault in the kernel (Decided, 5).
 - **Recording,** the microphone and headset: Xenia has stubs only (docs/PARITY.md, "Input").
 - **Several clients at once,** whatever step 2 finds: one feeder a title, which SDL and FAudio share through SDL.
 - **XACT banks checked:** making a bank takes Microsoft's XACT tool, so none is checked until a port brings its own.
@@ -243,43 +243,27 @@ Xenia is a smoke check only.
 - docs/HARDWARE.md records what caused the crackling and what the probe found; docs/GUIDE.md and docs/PARITY.md say
   what's there.
 
-## For you to decide
+## Decided
 
-1. **How the render driver is fed.**
-   - (a) An xsdk API whose feeder is the title's own thread, blocking until the kernel takes a frame and counting the
-     silent ones (step 3), with SDL-xenon and samples/sound on it.
-   - (b) xsdk starts a thread of its own and calls the title back for each frame, as SDL does. That's a hidden thread
-     whose priority and place xsdk would have to choose for every title.
-   - (c) No xsdk API: SDL-xenon's driver fixed alone, and titles without SDL keep writing their own client.
-
-   Recommended: (a). Every user of the driver gets the same wake-up and the same counts, and the title keeps control
-   of its threads, as milestone 26 decided for placement.
-
-2. **The mixer.**
-   - (a) Port FAudio, in a FAudio-xenon repository under xenosworks, as SDL-xenon and mbedtls-xenon are. Creating it
-     is yours. It brings XAudio2's API, which retail titles used, so XAudio2 code and FNA-based ports build against
-     it, with its effects, 3D and XACT. The cost is a fork to carry, mixing in scalar code.
-   - (b) A mixer of xsdk's own: voices, linear resampling, volume and pan into stereo or 5.1, a few hundred lines. It
-     has no XAudio2 API, so each port rewrites its audio onto it.
-
-   Recommended: (a), as the milestone's entry has it. A port that already mixes for itself, as Dusklight does, needs
-   neither.
-
-3. **FAudio's platform layer.**
-   - (a) FAudio's own SDL3 layer on SDL-xenon, unchanged. There's no platform code to write; a title using FAudio links
-     SDL3, and FAudio mixes on SDL's device thread, fed as step 4 has it.
-   - (b) A layer of xsdk's own in the fork, on xsdk's audio API and pthreads, with no SDL. But off Windows,
-     FAudio_internal.h maps memory, maths and byte swaps to SDL as well, so those would change too, and the fork would
-     drift from upstream.
-
-   Recommended: (a).
-
-4. **XMA.**
-   - (a) A milestone of its own, later, that starts with how to make XMA data without Microsoft's tools.
-   - (b) In this milestone, a probe of the context calls with no data: creating, initialising, enabling and releasing
-     contexts, and what the kernel writes into them. It shows the calls don't hang, not that anything decodes.
-
-   Recommended: (a).
+On 2026-10-21:
+1. **The render driver is fed** through an xsdk API whose feeder is the title's own thread, blocking until the kernel
+   takes a frame and counting the silent ones (step 3), with SDL-xenon and samples/sound on it. Every user of the
+   driver gets the same wake-up and the same counts, and the title keeps control of its threads, as milestone 26
+   decided for placement. xsdk starting a hidden thread of its own that calls the title back, as SDL does, and no xsdk
+   API, SDL-xenon's driver fixed alone, were the others.
+2. **The mixer: FAudio, ported,** in a repository of its own under xenosworks, as SDL-xenon and mbedtls-xenon are. You
+   create xenosworks/FAudio-xenon; it's pushed to only when you ask, after the work has passed on the console. It
+   brings XAudio2's API, which retail titles used, so XAudio2 code and FNA-based ports build against it, with its
+   effects, 3D and XACT; the cost is a fork to carry, mixing in scalar code. A mixer of xsdk's own, with no XAudio2
+   API, so each port rewrites its audio onto it, was the other way. A port that already mixes for itself, as
+   Dusklight does, needs neither.
+3. **FAudio's platform layer** is its own SDL3 layer on SDL-xenon, unchanged: there's no platform code to write, a
+   title using FAudio links SDL3, and FAudio mixes on SDL's device thread, fed as step 4 has it. A layer of xsdk's own
+   on its audio API and pthreads was the other way; off Windows, FAudio_internal.h maps memory, maths and byte swaps to
+   SDL as well, so those would change too, and the fork would drift from upstream.
+4. **XMA is a milestone of its own,** later, that starts with how to make XMA data without Microsoft's tools. A probe
+   of the context calls with no data in this milestone was the other way; it would show the calls don't hang, not that
+   anything decodes. What that milestone starts from:
    - **No public encoder.** FFmpeg decodes XMA1 and XMA2 (libavcodec/wmaprodec.c) but can't encode them, and Xenia
      decodes through FFmpeg (apu/xma_context.h:33-37). Microsoft's encoder is out (CLAUDE.md), and retail data can't
      go in the repository (CODE_GUIDELINES.md, section 2). So that milestone needs an encoder of our own for XMA's WMA
@@ -297,29 +281,18 @@ Xenia is a smoke check only.
      would run only with your go-ahead.
    - **Who needs it:** homebrew and ports from systems up to the GameCube and Wii bring PCM, ADPCM, Vorbis or Opus,
      which the CPU decodes. XMA matters to ports of 360 titles, whose data is XMA already.
-
-5. **Speaker configuration and the dashboard's volumes.**
-   - (a) `XAudioGetSpeakerConfig` in. Step 2 reads it with the dashboard as it is; you set the dashboard's audio output
-     the other way once (stereo or Dolby Digital 5.1) for a second read, a minute of yours, so its bits are mapped. The
-     voice-category volumes stay out.
-   - (b) The speaker configuration read raw only: no mapping, and no run of yours.
-   - (c) Both in, the volumes probed with guessed arguments.
-
-   Recommended: (a).
-
-6. **The defaults: frames queued ahead, and the feeder's priority.**
-   - (a) From steps 1 and 2: the smallest ring that holds twice the longest gap Dusklight showed, and no fewer than 8
-     frames (43 ms), as stability comes before latency. A title may ask for fewer. The feeder is raised only if step 2
-     shows a blocked feeder at NORMAL waking late beside a busy thread. A blocked feeder costs only the frames it
-     fills, where milestone 55's poll at 16 cost its sleeps' wake-ups too.
-   - (b) 3 frames ahead, 16 ms, as SDL-xenon has now, for the lowest latency.
-   - (c) No default: each title chooses.
-
-   Recommended: (a).
-
-7. **Listening.** Recommended: none needed to close the milestone. Silent frames and clipped samples are the measure.
-   You'll hear Dusklight when you next play it; if it still crackles with both at zero, that's a new finding to chase,
-   not this milestone's failure.
+5. **Speaker configuration in:** `XAudioGetSpeakerConfig` imported. Step 2 reads it with the dashboard as it is; you
+   set the dashboard's audio output the other way once (stereo or Dolby Digital 5.1) for a second read, a minute of
+   yours, so its bits are mapped. The voice-category volumes stay out. The configuration read raw only, with no
+   mapping and no run of yours, and the volumes probed with guessed arguments too, were the others.
+6. **The defaults** come from steps 1 and 2: the smallest ring that holds twice the longest gap Dusklight showed, and
+   no fewer than 8 frames (43 ms), as stability comes before latency; a title may ask for fewer. The feeder is raised
+   only if step 2 shows a blocked feeder at NORMAL waking late beside a busy thread. A blocked feeder costs only the
+   frames it fills, where milestone 55's poll at 16 cost its sleeps' wake-ups too. 3 frames ahead, 16 ms, as
+   SDL-xenon has now, and no default, each title choosing, were the others.
+7. **Nobody needs to listen** to close the milestone: silent frames and clipped samples are the measure. You'll hear
+   Dusklight when you next play it; if it still crackles with both at zero, that's a new finding to chase, not this
+   milestone's failure.
 
 ## Size
 
@@ -331,7 +304,7 @@ About milestone 54's.
 - **FAudio-xenon:** a new fork, its build, the big-endian fixes it turns out to need, and faudio_check.
 - **Console runs:** three sessions, the breaks run unattended through the agent:
   1. step 1's Dusklight run and step 2's probe, its last case with your go-ahead;
-  2. the speaker read with the dashboard set the other way, if decision 5 is (a);
+  2. the speaker read with the dashboard set the other way (Decided, 5);
   3. acceptance: xsdk_test, sdl_check and faudio_check with their breaks, and Dusklight once.
 
 XMA as a milestone of its own is bigger than this one: its encoder or hand-built stream alone is more work than all of
