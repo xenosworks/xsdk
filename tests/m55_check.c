@@ -17,7 +17,7 @@ void check(const char *name, bool passed)
 
 int main(void)
 {
-	xsdk_log_write("milestone 55 diagnostics v2: objects, threads, semaphores, pages and written code");
+	xsdk_log_write("milestone 55 diagnostics v3: objects, threads, semaphores, pages and written code");
 	const NTSTATUS splash = xsdk_splash_show(SPLASH_MS);
 	xsdk_log_write("m55 splash: status=0x%08X", (unsigned)splash);
 	check("splash: the vulkan4xenon logo shown", NT_SUCCESS(splash));

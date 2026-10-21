@@ -236,12 +236,15 @@ start a thread on its creator's hardware thread, so every thread a title starts 
 | `xsdk_thread_create_on(&handle, stack_bytes, entry, context, hardware_thread)` | a thread on that hardware thread, 1 MB of stack for 0 | its entry returning; `NtWaitForSingleObjectEx` on the handle waits for it, `NtClose` lets the handle go | any |
 | `xsdk_thread_move(hardware_thread)` | the calling thread moved | another move | any |
 | `xsdk_thread_place(handle, hardware_thread)` | the thread behind the handle moved; `XSDK_CURRENT_THREAD` selects the caller | another placement | any |
-| `xsdk_thread_set_priority(handle, priority, &previous)` | relative base priority -16..16; previous may be NULL | set its old priority | any |
+| `xsdk_thread_set_priority(handle, priority, &previous)` | relative base priority request -16..16; kernel may clamp; previous may be NULL | set its old priority | any |
 | `xsdk_thread_sleep(ms)`, `nanosleep` | the thread asleep, about a millisecond longer than asked | | any |
 
 - **Two busy threads on one core's two hardware threads** each get about half of it; on two cores, nearly all.
-- **Priority requests** accept -16 to 16, with 0 the default; exact read-back across that range is not yet
-  established. `pthread_setschedparam` accepts any policy; the kernel
+- **Priority requests** accept -16 to 16, with 0 the default. On the tested title thread, -16 and +16 read back
+  unchanged; requests -15..-4 read back -3, -3..4 read back unchanged, and 5..15 read back 4
+  ([console sweep](../results/2026-10-21-milestone-55-acceptance/m55_check_diagnostics_v2.log)).
+  Query the effective value rather than assuming each accepted request is a distinct level.
+  `pthread_setschedparam` accepts any policy; the kernel
   supplies relative base priorities rather than POSIX scheduling policies, so `pthread_getschedparam` reports
   `SCHED_OTHER`. A raised busy thread can starve the others on its hardware thread: the probe's +2 worker did 99%
   of the work. Keep audio and render workers bounded and let them block when idle.
@@ -256,8 +259,9 @@ start a thread on its creator's hardware thread, so every thread a title starts 
   and pulse events, recursive mutants, waitable timers without APCs, and interlocked singly linked lists. Wait-any
   returns `STATUS_WAIT_0 + index`; abandoned mutants return `STATUS_ABANDONED_WAIT_0`. `NT_SUCCESS` alone does not
   distinguish a successful wait from `STATUS_TIMEOUT`. Zero-initialize an 8-byte-aligned `SLIST_HEADER`.
-- M55 is not console-ready: mixed wait-all and the full priority read-back sweep fail, while corrected timer
-  and heap-return checks await another run. See the [acceptance results](../results/2026-10-21-milestone-55-acceptance/).
+- M55 acceptance is incomplete. Diagnostics v2 passed the revised timer and heap checks and established the
+  priority limits above. Its mixed wait returned immediately; diagnostics v3 separately tests an unfinished
+  thread behind a gate. See the [acceptance results](../results/2026-10-21-milestone-55-acceptance/) for remaining runs.
 - **Mutexes, condition variables, read-write locks, `once` and keys** are pthreads', and `std::mutex` and the rest on
   them. Free a mutex only once no thread can lock it again (docs/PITFALLS.md).
 - **Atomics** cost by their order: a relaxed `__atomic_fetch_add` 55 ns, acquire or release 70, seq_cst 125, against

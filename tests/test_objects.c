@@ -318,6 +318,9 @@ static void mixed_wait(void)
 			exit(1);
 		}
 	}
+	const NTSTATUS ready = wait_for(handles[3], 1000);
+	xsdk_log_write("objects: mixed completed thread status=0x%08X", (unsigned)ready);
+	check("objects: mixed ready control starts with a completed thread", ready == STATUS_SUCCESS);
 	const int64_t timeout = -10000000;
 	const int64_t start = now_ns();
 	const NTSTATUS status = NtWaitForMultipleObjectsEx(4, handles, WAIT_ALL, USER_MODE, 0, &timeout);
@@ -349,13 +352,93 @@ static void mixed_wait(void)
 	}
 }
 
+typedef struct {
+	HANDLE handles[4];
+	HANDLE ready;
+	NTSTATUS signalled;
+	NTSTATUS waited;
+	NTSTATUS released;
+	int64_t elapsed_ns;
+} MixedWaitWorker;
+
+static uint32_t wait_for_mixed(void *context)
+{
+	MixedWaitWorker *worker = context;
+	worker->signalled = NtSetEvent(worker->ready, NULL);
+	if (!NT_SUCCESS(worker->signalled))
+		return 1;
+	const int64_t timeout = -10000000;
+	const int64_t start = now_ns();
+	worker->waited = NtWaitForMultipleObjectsEx(4, worker->handles, WAIT_ALL, USER_MODE, 0, &timeout);
+	worker->elapsed_ns = now_ns() - start;
+	// The waiting thread must release its own mutant, even when diagnosing an unexpected wait result.
+	worker->released = NtReleaseMutant(worker->handles[2], 0);
+	return 0;
+}
+
+static void mixed_pending(void)
+{
+	EventWorker target = { .result = STATUS_TIMEOUT };
+	MixedWaitWorker worker = { .signalled = STATUS_TIMEOUT, .waited = STATUS_TIMEOUT, .released = STATUS_TIMEOUT };
+	if (!event(&target.ready, 0) || !event(&target.wake, 0) || !event(&worker.ready, 0))
+		exit(1);
+	const NTSTATUS created[] = {
+		NtCreateEvent(&worker.handles[0], NULL, NOTIFICATION_EVENT, 1),
+		NtCreateSemaphore(&worker.handles[1], NULL, 1, 1),
+		NtCreateMutant(&worker.handles[2], NULL, 0),
+		xsdk_thread_create_on(&worker.handles[3], WORKER_STACK, signal_wait, &target, 2),
+	};
+	for (unsigned i = 0; i < 4; i++) {
+		if (!NT_SUCCESS(created[i])) {
+			xsdk_log_write("objects: pending create index=%u status=0x%08X", i, (unsigned)created[i]);
+			check("objects: pending mixed wait setup", false);
+			exit(1);
+		}
+	}
+	const NTSTATUS target_ready = wait_for(target.ready, 1000);
+	HANDLE waiter;
+	const NTSTATUS waiter_created = xsdk_thread_create_on(&waiter, WORKER_STACK, wait_for_mixed, &worker, 4);
+	if (!NT_SUCCESS(waiter_created)) {
+		xsdk_log_write("objects: pending waiter create=0x%08X", (unsigned)waiter_created);
+		check("objects: pending waiter setup", false);
+		exit(1);
+	}
+	const NTSTATUS waiter_ready = wait_for(worker.ready, 1000);
+	// No logging in this window: the target stays behind its gate while the mixed waiter has time to block.
+	const NTSTATUS held = wait_for(waiter, 20);
+	const NTSTATUS target_held = wait_for(worker.handles[3], 0);
+	const NTSTATUS opened = NtSetEvent(target.wake, NULL);
+	finish(waiter);
+	finish(worker.handles[3]);
+	const NTSTATUS token = wait_for(worker.handles[1], 0);
+	xsdk_log_write("objects: pending ready target=0x%08X waiter=0x%08X signal=0x%08X held=0x%08X target=0x%08X",
+		(unsigned)target_ready, (unsigned)waiter_ready, (unsigned)worker.signalled, (unsigned)held,
+		(unsigned)target_held);
+	xsdk_log_write(
+		"objects: pending gate=0x%08X target wait=0x%08X mixed=0x%08X elapsed=%lld ns release=0x%08X token=0x%08X",
+		(unsigned)opened, (unsigned)target.result, (unsigned)worker.waited, (long long)worker.elapsed_ns,
+		(unsigned)worker.released, (unsigned)token);
+	check("objects: mixed wait-all stays pending while the target thread is gated",
+		target_ready == STATUS_SUCCESS && waiter_ready == STATUS_SUCCESS && NT_SUCCESS(worker.signalled) &&
+			held == STATUS_TIMEOUT && target_held == STATUS_TIMEOUT);
+	check("objects: pending mixed wait-all completes after the target thread ends",
+		NT_SUCCESS(opened) && target.result == STATUS_SUCCESS && worker.waited == STATUS_SUCCESS);
+	check("objects: pending mixed wait takes the semaphore and owns the mutant",
+		token == STATUS_TIMEOUT && NT_SUCCESS(worker.released));
+	for (unsigned i = 0; i < 3; i++)
+		check("objects: pending mixed handle closes", NT_SUCCESS(NtClose(worker.handles[i])));
+	check("objects: pending gate handles close",
+		NT_SUCCESS(NtClose(worker.ready)) && NT_SUCCESS(NtClose(target.wake)) && NT_SUCCESS(NtClose(target.ready)));
+}
+
 void test_objects(void)
 {
-	xsdk_log_write("objects: M55 acceptance diagnostics v2");
+	xsdk_log_write("objects: M55 acceptance diagnostics v3");
 	waits();
 	pulses();
 	mutants();
 	timers();
 	lists();
 	mixed_wait();
+	mixed_pending();
 }

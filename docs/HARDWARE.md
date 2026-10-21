@@ -4784,3 +4784,33 @@ in the full run. The full run also lacks network configuration and a connected c
 
 The separate [query v2 run](../results/2026-10-21-milestone-55-acceptance/probe_query_memory_v2.log) passed all 22
 checks, including both image refusals and the splash. It does not settle the four acceptance failures above.
+
+## M55 diagnostics v2 (2026-10-21)
+
+The [unchanged console log](../results/2026-10-21-milestone-55-acceptance/m55_check_diagnostics_v2.log), supplied
+from `local/m55/logs_check2/m55_check.log`, records 59 passes and one failure.
+
+- Twenty requested 5 ms periodic firings took 118.561 ms; individual intervals ranged from 4.999 to 6.000 ms.
+  The revised per-expiration allowance passed. Cancellation still timed out after its drain, as required.
+- The touched 32 MB heap allocation reduced free pages from 121074 to 112874; free restored 121074 (8,200 pages).
+  All 8192 touched words read back correctly. This verifies the corrected test and actual heap page return.
+- All 33 priority set/query pairs succeeded, with `SCHED_OTHER` reported. The title thread's read-backs were:
+
+  | Requested | Read back |
+  |---|---|
+  | -16 | -16 |
+  | -15 through -4 | -3 |
+  | -3 through +4 | unchanged |
+  | +5 through +15 | +4 |
+  | +16 | +16 |
+
+  Restoration to the original 0 succeeded. The old all-level assertion was incorrect. The SDK's native calls stay
+  unchanged; the test now checks these exact results. This observation is for the tested title thread; it does not
+  establish clamping under other process base priorities. The +2 share and previous-priority checks also passed.
+- Mixed event/semaphore/mutant/thread wait-all returned `STATUS_SUCCESS` in 2.646 microseconds and mutant release
+  succeeded. Logging before the wait may have allowed the target to finish; that is an inference, not a measured
+  explanation of the earlier failures. V3 explicitly separates completed-thread and gated pending-thread cases,
+  logs after the pending interval, and releases the mutant on its acquiring thread. The wait result remains strict.
+
+Diagnostics v3 and its new wait-any negative have not run on hardware. This log clears the timer/heap questions
+for this focused run, not the remaining baseline, full-suite, negative and port acceptance requirements.

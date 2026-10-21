@@ -6,9 +6,10 @@ work begins.
 ## Runtime and display
 
 - **Windows-style threading and memory, milestone 55:** the local M55 branch contains SDK APIs and checks;
-  console acceptance is failing, with four baseline failures recorded in
-  [the acceptance results](results/2026-10-21-milestone-55-acceptance/). Timer and heap-test defects are corrected;
-  mixed-wait statuses, all-level priority read-back and the revised baseline still need a console run.
+  diagnostics v2 passed 59 checks and failed the old exact-priority assumption. The kernel clamps ordinary
+  requests to -3..4, with distinct -16/+16. Timer and heap-return checks passed. Diagnostics v3 checks those
+  measured priorities and a gated pending-thread mixed wait; baseline, full-suite and affected negative runs
+  remain in [the acceptance results](results/2026-10-21-milestone-55-acceptance/).
   Port acceptance is incomplete (docs/scope/55-windows-threads-and-memory.md).
   - **Executable image memory:** xsdk's own `probe_exec_spike.log` in results/2026-10-20-milestone-55 records a
     function written into `.jit` returning 42 after flushing, then 99 after rewriting and flushing again.

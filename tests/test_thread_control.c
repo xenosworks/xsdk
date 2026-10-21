@@ -40,11 +40,13 @@ static void priorities(void)
 		check("thread control: priority query", false);
 		return;
 	}
-	enum { LEVELS = XSDK_PRIORITY_MAX - XSDK_PRIORITY_MIN + 1 };
+	// The title clamps ordinary requests (docs/HARDWARE.md, M55 diagnostics v2).
+	enum { LEVELS = XSDK_PRIORITY_MAX - XSDK_PRIORITY_MIN + 1, NORMAL_MIN = -3, NORMAL_MAX = 4 };
 	struct {
 		int set;
 		int get;
 		int actual;
+		int expected;
 		int policy;
 	} samples[LEVELS];
 	const int minimum = sched_get_priority_min(SCHED_OTHER);
@@ -54,12 +56,18 @@ static void priorities(void)
 		const struct sched_param desired = { .sched_priority = level };
 		struct sched_param actual = { .sched_priority = INT_MIN };
 		const unsigned index = level - XSDK_PRIORITY_MIN;
+		int expected = level;
+		if (level > XSDK_PRIORITY_MIN && level < NORMAL_MIN)
+			expected = NORMAL_MIN;
+		if (level < XSDK_PRIORITY_MAX && level > NORMAL_MAX)
+			expected = NORMAL_MAX;
+		samples[index].expected = expected;
 		policy = -1;
 		samples[index].set = pthread_setschedparam(self, SCHED_OTHER, &desired);
 		samples[index].get = pthread_getschedparam(self, &policy, &actual);
 		samples[index].actual = actual.sched_priority;
 		samples[index].policy = policy;
-		passed &= samples[index].set == 0 && samples[index].get == 0 && actual.sched_priority == level &&
+		passed &= samples[index].set == 0 && samples[index].get == 0 && actual.sched_priority == expected &&
 			policy == SCHED_OTHER;
 	}
 	const int restore_set = pthread_setschedparam(self, SCHED_OTHER, &original);
@@ -71,9 +79,10 @@ static void priorities(void)
 	xsdk_log_write("thread control: range=%d..%d restore set=%d get=%d requested=%d actual=%d", minimum, maximum,
 		restore_set, restore_get, original.sched_priority, restored_value.sched_priority);
 	for (unsigned i = 0; i < LEVELS; i++)
-		xsdk_log_write("thread control: priority requested=%d set=%d get=%d actual=%d policy=%d",
-			(int)i + XSDK_PRIORITY_MIN, samples[i].set, samples[i].get, samples[i].actual, samples[i].policy);
-	check("thread control: all priorities -16 through 16 read back and restore", passed);
+		xsdk_log_write("thread control: priority requested=%d set=%d get=%d actual=%d expected=%d policy=%d",
+			(int)i + XSDK_PRIORITY_MIN, samples[i].set, samples[i].get, samples[i].actual, samples[i].expected,
+			samples[i].policy);
+	check("thread control: priorities match kernel limits and restore", passed);
 	if (!restore_ok)
 		exit(1);
 	const struct sched_param invalid = { .sched_priority = 17 };

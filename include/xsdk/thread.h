@@ -26,7 +26,7 @@ NTSTATUS xsdk_thread_create_on(
 NTSTATUS xsdk_thread_move(uint32_t hardware_thread);
 // Places a thread by its handle; XSDK_CURRENT_THREAD names the caller.
 NTSTATUS xsdk_thread_place(HANDLE thread, uint32_t hardware_thread);
-// Relative base priorities -16..16, default 0; previous may be NULL.
+// Requests -16..16, default 0; the kernel may clamp them (docs/GUIDE.md). previous may be NULL.
 NTSTATUS xsdk_thread_set_priority(HANDLE thread, int32_t priority, int32_t *previous);
 // Borrowed handle: do not close; valid until join, or until a detached thread ends.
 HANDLE xsdk_pthread_handle(pthread_t thread);

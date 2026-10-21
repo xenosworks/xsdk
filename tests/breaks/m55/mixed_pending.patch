@@ -1,0 +1,11 @@
+--- a/tests/test_objects.c
++++ b/tests/test_objects.c
+@@ -369,7 +369,7 @@
+ 		return 1;
+ 	const int64_t timeout = -10000000;
+ 	const int64_t start = now_ns();
+-	worker->waited = NtWaitForMultipleObjectsEx(4, worker->handles, WAIT_ALL, USER_MODE, 0, &timeout);
++	worker->waited = NtWaitForMultipleObjectsEx(4, worker->handles, WAIT_ANY, USER_MODE, 0, &timeout);
+ 	worker->elapsed_ns = now_ns() - start;
+ 	// The waiting thread must release its own mutant, even when diagnosing an unexpected wait result.
+ 	worker->released = NtReleaseMutant(worker->handles[2], 0);

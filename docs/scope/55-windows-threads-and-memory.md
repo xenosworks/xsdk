@@ -187,7 +187,8 @@ On the console, each check its own line in xsdk_test, each broken on purpose onc
 51's are:
 - **Waits:** a wait on three events returns the index of the one set; a wait for all three times out with two set and
   returns once the third is; a wait on the most objects works and one more is refused, as step 1 found; a
-  signal-and-wait sets one event and wakes on another.
+  signal-and-wait sets one event and wakes on another. Mixed event/semaphore/mutant/thread wait-all is checked
+  both with a completed thread and with a thread held behind a gate until the waiter has had time to block.
 - **Events:** a cleared event stays clear; a pulse wakes the threads waiting on a manual-reset event and leaves it
   clear.
 - **Mutants:** the owner takes one twice, and another thread waits until it's released twice; another thread's release
@@ -199,8 +200,10 @@ On the console, each check its own line in xsdk_test, each broken on purpose onc
   the list.
 - **Semaphores:** `sem_post` on one thread wakes `sem_wait` on another; `sem_trywait` at zero fails with `EAGAIN`;
   `sem_timedwait` fails with `ETIMEDOUT` close to its deadline; `sem_getvalue` gives the count.
-- **Priorities:** each level from `sched_get_priority_min` to `max` reads back; of two busy threads on one hardware
-  thread, the raised one gets the share step 1 measured. These replace the check that priorities refuse a change.
+- **Priorities:** every request from `sched_get_priority_min` to `max` queries back the measured kernel result:
+  -16/+16 unchanged, interior requests clamped to -3..4 on the tested title thread (diagnostics v2, below).
+  The original priority is restored. Of two busy threads on one hardware thread, the raised one gets the share
+  step 1 measured. These replace the check that priorities refuse a change.
 - **Placement:** `xsdk_thread_place` moves another thread, busy and asleep in a wait, which then reports running there;
   `xsdk_pthread_handle` lets it move a `std::thread`.
 - **Pages:**
@@ -281,3 +284,16 @@ The timer check now budgets lateness per expiration; the heap test now prevents 
 checks that compiled malloc/free calls remain. Mixed-wait and priority assertions remain strict, with diagnostics
 for the missing statuses and actual levels. All four need the revised focused console run before negative-test
 acceptance can be claimed. The restored three-argument query's separate v2 run passed 22 of 22 checks.
+
+## Diagnostics v2 follow-up (2026-10-21)
+
+The [v2 console log](../../results/2026-10-21-milestone-55-acceptance/m55_check_diagnostics_v2.log) passed 59 checks
+and failed the old expectation that every accepted priority request reads back unchanged. The revised timer check
+passed at 118.561 ms for 20 firings. The heap check returned 8,200 pages after freeing the touched 32 MB allocation.
+All priority requests and queries succeeded: -16/+16 read back unchanged; ordinary requests saturated at -3 and +4.
+The SDK continues to expose the kernel's values; diagnostics v3 checks the exact measured mapping and restoration.
+
+Mixed wait-all passed in 2.646 microseconds. Logging before the wait may have let its worker finish; this run does
+not explain the earlier failures. V3 explicitly waits for a completed thread in the ready control and adds a
+separate target held behind a gate, with no logging during the pending wait. A wait-any mutation must fail that
+pending check. These changes still require a focused console run, then the full suite and affected negative runs.
