@@ -86,6 +86,8 @@ xboxkrnl.exe  0x0F2  NtReleaseMutant
 xboxkrnl.exe  0x0FA  NtSetTimerEx
 xboxkrnl.exe  0x0FB  NtSignalAndWaitForSingleObjectEx
 xboxkrnl.exe  0x0FE  NtWaitForMultipleObjectsEx
+xboxkrnl.exe  0x103  ObCreateSymbolicLink
+xboxkrnl.exe  0x104  ObDeleteSymbolicLink
 xboxkrnl.exe  0x105  ObDereferenceObject
 xboxkrnl.exe  0x110  ObReferenceObjectByHandle
 xam.xex       0x001  NetDll_WSAStartup

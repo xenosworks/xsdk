@@ -2,6 +2,7 @@
 #define XSDK_XAM_H
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #include "xsdk/kernel.h"
@@ -11,7 +12,7 @@ extern "C" {
 #endif
 
 // XAM's asynchronous calls, saves, the signed-in user and XAM's dialogs: docs/GUIDE.md, "Saves, the user and XAM's
-// dialogs".
+// dialogs". Launching another .xex: docs/GUIDE.md, "Launching".
 
 enum {
 	XSDK_XAM_USERS = 4,
@@ -25,6 +26,9 @@ enum {
 	// XamContentCreateEx's dispositions (xenia:src/xenia/kernel/xam/xam_content.cc:119).
 	XSDK_SAVE_CREATED = 1,
 	XSDK_SAVE_OPENED = 2,
+	// The most launch data that reaches the launched title (docs/HARDWARE.md, "XAM's sockets and loader, milestone
+	// 56").
+	XSDK_LAUNCH_DATA_MAX_BYTES = 1020,
 };
 
 // Readies an overlapped not in use for one call: zeroed, with an event of its own that xsdk_xam_wait closes once the
@@ -78,6 +82,13 @@ uint32_t xsdk_save_mount(
 uint32_t xsdk_save_unmount(XsdkSave *save);
 // As xsdk_xam_wait, for the call running on the save; an unmount is done once its close is.
 uint32_t xsdk_save_wait(XsdkSave *save, uint32_t timeout_ms);
+
+// Ends the title as exit does, atexit handlers, files, the GPU, the display and the log, then starts the .xex at path,
+// with size_bytes of data, up to XSDK_LAUNCH_DATA_MAX_BYTES, as its launch data. Returns only if it can't, before
+// anything ends: -1, errno ENOENT where there's no .xex, E2BIG for more data, or what the path or the link gave.
+int xsdk_launch(const char *path, const void *data, size_t size_bytes);
+// The launch data the title was started with, up to size_bytes of it into buffer; returns its size, 0 for none.
+size_t xsdk_launch_data(void *buffer, size_t size_bytes);
 
 #ifdef __cplusplus
 }

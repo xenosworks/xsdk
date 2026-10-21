@@ -1,6 +1,8 @@
 #include "tests.h"
 
 #include <stdint.h>
+#include <string.h>
+#include <strings.h>
 
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
@@ -29,8 +31,11 @@ int main(int argc, char **argv)
 {
 	xsdk_log_write("xsdk test title");
 	check("splash: the vulkan4xenon logo shown", NT_SUCCESS(xsdk_splash_show(SPLASH_MS)));
-	check("start: main gets argc 1, an empty argv[0] and a null argv[1]",
-		argc == 1 && argv[0] && argv[0][0] == '\0' && !argv[1]);
+	// The command line holds only the .xex's name, in quotes: xsdk_test's on the console, default.xex in Xenia.
+	const size_t name_length = argv[0] ? strlen(argv[0]) : 0;
+	check("start: main gets argc 1, argv[0] the .xex's name without its quotes, and a null argv[1]",
+		argc == 1 && name_length > 4 && !strchr(argv[0], '"') && strcasecmp(argv[0] + name_length - 4, ".xex") == 0 &&
+			!argv[1]);
 	test_image();
 	test_memory();
 	test_threads();

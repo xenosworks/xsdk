@@ -26,7 +26,7 @@ SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/thread.c src/file.c src/path
 	src/pthread.c src/lock.c src/reent.c src/time.c src/sysconf.c src/entropy.c src/exit.c src/gpu.c \
 	src/gpu_setup.c src/gpu_resolve.c src/gpu_draw.c src/gpu_constants.c src/gpu_tiles.c src/display.c src/shader.c \
 	src/microcode.c src/texture.c src/texture_layout.c src/tiled.c src/present.c src/splash.c src/copy.c src/socket.c \
-	src/netdb.c src/net.c src/xam.c src/save.c src/system_ui.c src/semaphore.c src/mman.c src/jit.c \
+	src/netdb.c src/net.c src/launch.c src/xam.c src/save.c src/system_ui.c src/semaphore.c src/mman.c src/jit.c \
 	src/system.c src/terminate.c
 # xost's compiler, in the SDK for titles and built for the PC as libxsc.so for the shader tools.
 XSC_SOURCES := src/xsc_memory.c src/xsc_spirv.c src/xsc_resolve.c src/xsc_unroll.c src/xsc_encode.c src/xsc_container.c \
@@ -89,7 +89,8 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/m55_check.xex $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
-	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(BUILD)/terminate_check.xex $(PROBES:%=$(BUILD)/%.xex)
+	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(BUILD)/terminate_check.xex \
+	$(BUILD)/launch_check.xex $(BUILD)/launch_target.xex $(PROBES:%=$(BUILD)/%.xex)
 
 # Configures CMake project $(1) in $(2) with this toolchain, afresh when $(2) was configured with another, whose
 # compiler a configure would keep.
@@ -148,6 +149,17 @@ $(BUILD)/save_check.xex: $(BUILD)/save_check.elf tools/elf2xex.py
 
 $(BUILD)/save_check_t2.xex: $(BUILD)/save_check.elf tools/elf2xex.py
 	$(PYTHON) tools/elf2xex.py --title-id 0x5853444E --title-name "xsdk save_check 2" $< $@
+
+# Milestone 56's launch round trip, each title under a title ID of its own; launch_check launches launch_target beside
+# it, and tools/net_http.py serves launch_target for curl_check's.
+$(BUILD)/launch_%.elf: $(BUILD)/tests/launch_%.o $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/launch_$*.o $(LIBS)
+
+$(BUILD)/launch_check.xex: $(BUILD)/launch_check.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --title-id 0x58534452 --title-name "xsdk launch_check" $< $@
+
+$(BUILD)/launch_target.xex: $(BUILD)/launch_target.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --title-id 0x58534453 --title-name "xsdk launch_target" $< $@
 
 $(BUILD)/probe_%.elf: $(BUILD)/tests/probe_%.o $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/probe_$*.o $(LIBS)

@@ -174,10 +174,21 @@ static void check_save(void)
 	check("xam: the save is deleted", deleted == ERROR_SUCCESS);
 }
 
+// Launched by the agent, or from the dashboard, a title gets no launch data (results/2026-10-21-milestone-56/
+// probe_launch_record.txt).
+static void check_launch_data(void)
+{
+	uint8_t data[TEXT_BYTES];
+	const size_t size = xsdk_launch_data(data, sizeof(data));
+	xsdk_log_write("launch: xsdk_launch_data gives %u bytes", (unsigned)size);
+	check("launch: launched by the agent, xsdk_launch_data finds no launch data", size == 0);
+}
+
 void test_xam(void)
 {
 	check_signed_in();
 	check_device();
 	check_event();
 	check_save();
+	check_launch_data();
 }

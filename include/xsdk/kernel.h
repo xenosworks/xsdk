@@ -369,8 +369,9 @@ void ExTerminateThread(uint32_t exit_code);
 // dashboards read their own path there (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:177-185,
 // xenia:src/xenia/kernel/kernel_state.cc:351-360).
 extern const char *const ExLoadedImageName;
-// The title's command line, which Xenia lays out as its .xex's name in quotes, then any arguments
-// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:187-204); the console's layout is unverified.
+// The title's command line: on the console its .xex's name in quotes and nothing else, whoever launched it
+// (docs/HARDWARE.md, "XAM's sockets and loader, milestone 56"); in Xenia "default.xex" in quotes, then its --cl option
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:187-204).
 extern const char *const ExLoadedCommandLine;
 NTSTATUS KeDelayExecutionThread(uint32_t processor_mode, uint32_t alertable, const int64_t *interval);
 // Xenia returns it as 32 bits (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:312-315).
@@ -566,6 +567,10 @@ uint32_t InterlockedFlushSList(SLIST_HEADER *list);
 // the check (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:84-116). ObDereferenceObject releases it.
 NTSTATUS ObReferenceObjectByHandle(HANDLE handle, uint32_t object_type, uint32_t *out_object);
 NTSTATUS ObDereferenceObject(uint32_t object);
+// A drive, link as "\??\name:", standing for target, a device path; Xenia strips the "\??\"
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:151-178).
+NTSTATUS ObCreateSymbolicLink(const ANSI_STRING *link, const ANSI_STRING *target);
+NTSTATUS ObDeleteSymbolicLink(const ANSI_STRING *link);
 
 // XAM's sockets are Winsock's calls with the caller's type first, a title's XNCALLER_TITLE
 // (xenia:src/xenia/kernel/xam/xam_net.cc:42-47); their sockets are XAM's handles, and their errors Winsock's.
@@ -713,10 +718,13 @@ uint32_t XamInputGetState(uint32_t user_index, uint32_t flags, INPUT_STATE *stat
 uint32_t XamInputSetState(uint32_t user_index, uint32_t flags, const INPUT_VIBRATION *vibration);
 uint32_t XamIsUIActive(void);
 // The launch data the title was started with, up to size bytes; ERROR_NOT_FOUND for none
-// (xenia:src/xenia/kernel/xam/xam_info.cc:257-287).
+// (xenia:src/xenia/kernel/xam/xam_info.cc:257-287). On the console it's gone once read, and 1020 bytes at most arrive
+// (docs/HARDWARE.md, "XAM's sockets and loader, milestone 56").
 uint32_t XamLoaderGetLaunchData(void *buffer, uint32_t size);
 uint32_t XamLoaderGetLaunchDataSize(uint32_t *size);
 // Ends the title and starts the .xex at path; Xenia runs a bare name from the title's own folder (xam_info.cc:289-316).
+// The console takes game: and bare names, not device paths, and ends the title for a path to nothing (docs/HARDWARE.md,
+// "XAM's sockets and loader, milestone 56").
 void XamLoaderLaunchTitle(const char *path, uint32_t flags);
 // The data the next title is started with (xam_info.cc:247-255).
 uint32_t XamLoaderSetLaunchData(const void *data, uint32_t size);
