@@ -1,0 +1,10 @@
+log: game:\probe_exec.log
+log: named after \Device\Harddisk0\Partition1\xsdk\probe\probe_exec.xex
+log: also over UDP to 192.168.0.125:7371
+probe_exec: mode query; .jit pool at 82080000, 65536 bytes
+exec: query: the .jit section's protection; nothing runs
+exec: .jit pool at 82080000, 65536 bytes
+exec: MmQueryAddressProtect(.jit) = 00000020
+exec: NtQueryVirtualMemory(.jit) = C000000D: state 00000000, protect 00000000, size 00000000
+probe_exec: 0 passed, 0 failed
+exit: status 0

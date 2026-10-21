@@ -1,0 +1,17 @@
+log: game:\probe_exec.log
+log: named after \Device\Harddisk0\Partition1\xsdk\probe\probe_exec.xex
+log: also over UDP to 192.168.0.125:7371
+probe_exec: mode spike; .jit pool at 82080000, 65536 bytes
+exec: spike: write code into the .jit section, flush, call; may hang if .jit isn't executable
+exec: T1: writing li r3, 42; blr at 82080000
+exec: T1: calling the .jit code
+exec: T1: returned 42, want 42
+PASS: exec: a function in the .jit section runs and returns 42
+exec: T2: rewriting li r3, 99; blr
+exec: T2: calling the rewritten .jit code
+exec: T2: returned 99, want 99
+PASS: exec: the rewritten function runs and returns 99
+exec: rewriting li r3, 42; blr WITHOUT a flush
+exec: without a flush the call returned 42 (42 means the write was seen, 99 means it wasn't)
+probe_exec: 2 passed, 0 failed
+exit: status 0

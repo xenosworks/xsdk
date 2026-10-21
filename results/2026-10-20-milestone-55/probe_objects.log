@@ -1,0 +1,57 @@
+log: game:\probe_objects.log
+log: named after \Device\Harddisk0\Partition1\xsdk\probe\probe_objects.xex
+log: also over UDP to 192.168.0.125:7371
+probe_objects: Windows-style objects, priorities and pages on the console
+objects: NtClearEvent = 00000000; a wait after it = 00000102
+PASS: objects: NtClearEvent leaves a set event unsignalled
+objects: NtPulseEvent = 00000000, previous 0; waiter woke 1; event after = 00000102
+PASS: objects: NtPulseEvent wakes a waiter and leaves the event clear
+objects: wait-all on 3 set events = 00000000
+PASS: objects: a wait-all over set objects succeeds
+objects: wait-all with object 1 clear = 00000102
+PASS: objects: a wait-all times out when one object is clear
+objects: wait-any with only index 2 set = 00000002 (want 00000002)
+PASS: objects: a wait-any returns the signalled object's index
+objects: WARNING next wait is on 65 objects, past NT's 64; may be refused or hang
+objects: a wait on 65 objects = C000000D; the most was 64
+objects: the most objects a wait took = 64
+PASS: objects: a wait on many objects works up to a limit
+objects: NtSignalAndWaitForSingleObjectEx = 00000000, the thread woke 1
+PASS: objects: NtSignalAndWaitForSingleObjectEx signals one object and waits on another
+objects: mutant re-acquire = 00000000, release = 00000000 then 00000000
+objects: a release of an unowned mutant = C0000046 (want C0000046)
+PASS: objects: a mutant's owner re-acquires it; an unowned release is refused
+objects: WARNING about to wait on a mutant whose owner ended holding it; may hang
+objects: a wait on an abandoned mutant = 00000080 (want 00000080)
+PASS: objects: a wait on an abandoned mutant returns abandoned
+objects: one-shot NtSetTimerEx = 00000000, wait = 00000000, 202422 ticks later
+PASS: objects: a one-shot timer signals once
+objects: periodic timer fired 100 times; cancel = 00000000; a wait after cancel = 00000102
+PASS: objects: a periodic timer fires repeatedly and cancels
+objects: this thread's base priority = 0
+objects: KeSetBasePriorityThread(-16): previous 0, now reads -16
+objects: KeSetBasePriorityThread(-2): previous -16, now reads -2
+objects: KeSetBasePriorityThread(-1): previous -2, now reads -1
+objects: KeSetBasePriorityThread(0): previous -1, now reads 0
+objects: KeSetBasePriorityThread(1): previous 0, now reads 1
+objects: KeSetBasePriorityThread(2): previous 1, now reads 2
+objects: KeSetBasePriorityThread(16): previous 2, now reads 16
+PASS: objects: base priority sets and reads back
+objects: on one hardware thread, the +2 thread did 99% of the work, the +0 thread 0%
+PASS: objects: a raised thread gets at least its share on one hardware thread
+objects: ObReferenceObjectByHandle = 00000000, native object 3005D020
+objects: KeSetAffinityThread(->3) = 00000000, previous mask 00000001; thread ran on 0, now 3
+PASS: objects: another thread is moved by its handle
+objects: NtAllocateVirtualMemory(65536) = 00000000 at 1DAF0000
+objects: NtQueryVirtualMemory = C000000D: state 00000000, protect 00000000, size 00000000, base 00000000
+objects: NtProtectVirtualMemory(READONLY) = 00000000, old 00000004; now reads protect 00001002, value A5A50000
+objects: a write to the read-only page isn't tried here (no fault handler); left to xsdk_test
+PASS: objects: pages protect read-only and back to read-write
+objects: NtFreeVirtualMemory decommit = 00000000, release = 00000000; free pages 121368 -> 121369
+PASS: objects: anonymous pages reserve, commit and free
+objects: MmQueryAddressProtect physical: 00000404 -> set RO -> 00000002 -> set RW -> 00000004
+PASS: objects: MmSetAddressProtect changes a physical allocation's protection
+objects: SList pushed 1000, popped 1000; flush returned 8206081C, a pop after flush 00000000
+PASS: objects: a lock-free list pushes, pops every entry, and flushes
+probe_objects: 18 passed, 0 failed
+exit: status 0
