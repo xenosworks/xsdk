@@ -244,3 +244,23 @@ On 2026-10-20:
    would be its own repository and scope after this one.
 5. **Public hosts in the checks:** example.com and badssl.com, as mbedtls-xenon's checks use, and one public download
    for the internet's rate, such as speed.cloudflare.com's, its rate logged, not judged, as it depends on your line.
+
+## Step 1 on the console (2026-10-21)
+
+docs/HARDWARE.md, "XAM's sockets and loader, milestone 56", has the results. What they change in the steps above:
+- **Step 2:** the address is there at once on a wired console that's been on. `xsdk_net_address`'s `EAGAIN` stays,
+  for an address still pending, untried on the console.
+- **Step 3:** xsdk passes `SO_RCVTIMEO` and `SO_SNDTIMEO` to XAM as milliseconds, as XAM honours them for a receive,
+  and keeps no `select` of its own; xsdk_test's send check settles sends. `SO_LINGER` turns POSIX's `struct linger`
+  into Winsock's two 16-bit fields and back. Whether {1, 0} resets the connection is that check's to show: in the probe
+  the PC found it neither reset nor closed.
+- **Step 4:** `NetDll_XNetStartup` takes up to 232 sockets of each kind and buffers up to 63 KB, and a socket's
+  `SO_RCVBUF` goes to 255 KB on its own. Where the log started the network before `main`, xsdk restarts it with the
+  title's `xsdk_network_limits`, as the restart probe showed XAM takes them. The socket table grows to 232.
+- **Step 5:** XAM takes `game:\` and bare names, not device paths. `xsdk_launch` gives XAM a path in the title's own
+  folder as `game:\...`; anywhere else, such as `hdd:` outside it or `usb:`, through a symbolic link of the title's
+  own to the folder (`ObCreateSymbolicLink`, xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:151-168), which
+  launch_check tries from a folder outside its own. If XAM doesn't follow such a link, `xsdk_launch` takes only the
+  title's own folder, `EXDEV` for anywhere else, and docs/GUIDE.md says so. `E2BIG` past 1020 bytes. `ENOENT` is
+  checked before anything ends, as XAM ends the title for a path to nothing. `argv` holds the name alone, `argc` 1.
+- **Step 6:** curl's socket pair binds 127.0.0.1, which XAM refuses, so `CURL_DISABLE_SOCKETPAIR` is set.

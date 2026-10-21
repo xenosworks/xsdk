@@ -4842,3 +4842,38 @@ Dusklight's title scene lost about 2.5% in its heaviest windows. SDL's audio thr
 turns into 16, and its xsdk driver polls with `SDL_Delay(1)`. Ignoring requests for 16 alone, or the driver asking for
 NORMAL (SDL-xenon `d16871365`), brought the frame rate back; Aurora's own requests and the heap's decommit didn't
 ([runs](../results/2026-10-21-milestone-55-acceptance/README.md#dusklight-and-sdl_check)).
+
+## XAM's sockets and loader, milestone 56 (2026-10-21)
+
+Step 1 of docs/scope/56-store-networking.md, probe_net and probe_launch on the console
+([results](../results/2026-10-21-milestone-56/README.md)).
+
+**Sockets,** against tools/net_echo.py:
+- The link read `0000000B` and the address 192.168.0.152 1 ms after `NetDll_XNetStartup`, `XNetGetTitleXnAddr`'s
+  status `00000068`: no wait for the address on a wired console that's been on.
+- With every setting 0, `NetDll_XNetGetOpt(1)` reads XAM's defaults: 32 stream sockets, 8 datagram, 16 KB buffers. The
+  33rd TCP socket and the 9th UDP one fail with 10055 (WSAENOBUFS). Asking for 64 and 16 with 64 KB buffers gives 64
+  and 16 with 63 KB; asking for 255 of each gives 232 of each, still 63 KB.
+- On one socket, `SO_RCVBUF` asked for 64 KB reads 65536 and for 256 KB 261120; `SO_SNDBUF` reads 64512 above that.
+- `SO_RCVTIMEO` in Winsock's milliseconds holds: a blocking `recv` from a silent PC returned -1 after 500 ms with
+  10060 (WSAETIMEDOUT), twice on one socket. `SO_SNDTIMEO` reads back as set, but the probe's sends never filled the
+  window (17,844 bytes went at once), so when a send times out isn't settled.
+- `SO_LINGER` is Winsock's: two 16-bit fields in 4 bytes, the on/off first; unset, it reads `0000003C`. Winsock's
+  {1, 0} reads back `00010000`, and after `closesocket` net_echo.py found the connection still open, neither reset
+  nor closed. POSIX's 8-byte {1, 0}, as it comes, reads 1 and closes with a FIN.
+- Binding 127.0.0.1 fails with 10049 (WSAEADDRNOTAVAIL), the socket marked insecure or not; a listener on 0.0.0.0
+  takes connections to 127.0.0.1 and to the console's own address.
+- `NetDll_XNetCleanup` and a second `NetDll_XNetStartup` take new settings: 64 and 16 sockets and 63 KB buffers read
+  back, 64 TCP sockets open, and an echo through the PC works after.
+
+**The loader,** probe_launch and probe_launch_t2, title IDs 0x5853444B and 0x58534451:
+- `XamLoaderLaunchTitle` takes `game:\probe_launch_t2.xex` and the bare `probe_launch_t2.xex`. Given
+  `\Device\Harddisk0\Partition1\xsdk\m56\probe_launch_t2.xex` or `\Device\Mass0\probe_launch_t2.xex`, it doesn't
+  return and the console goes to the stock dashboard, the title never starting. Given a `.xex` that isn't there, it
+  doesn't return either, and the title ends.
+- It launches alike with the GPU and the display handed back first, as `exit` does, and with them still held.
+- `XamLoaderSetLaunchData` returns 0 for every size up to the probe's 64 KB, but the launched title reads 1020 bytes at
+  most, the data's first 1020, whole. Once read, `XamLoaderGetLaunchDataSize` returns 0x490 (ERROR_NOT_FOUND): the
+  title it launches back gets none, and none is left after the dashboard.
+- `ExLoadedCommandLine` holds the image's name and nothing else, in quotes (`"probe_launch.xex"`), whether the agent,
+  another title or Aurora launched it. A title's arguments travel in launch data.

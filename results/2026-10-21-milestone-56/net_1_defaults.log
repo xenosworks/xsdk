@@ -1,0 +1,67 @@
+log: game:\probe_net.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m56\probe_net.xex
+log: no net_log.txt beside the .xex, so not over the network
+net probe: 7 cases. None should hang.
+open: NtCreateFile(game:\net_log.txt) failed: 0xC0000034
+net: XNetStartup, flags 0, stream sockets 0, datagram 0, receive 0 KB, send 0 KB: 0
+net: WSAStartup 2.2: 0
+net: the PC at 192.168.0.125, port 7370
+net probe: case address
+net: address: 1 ms after XNetStartup: link 0000000B, address status 00000068, 192.168.0.152
+net probe: case address done in 0 ms
+net probe: case settings
+net: XNetGetOpt(1) after the start: 0, 13 bytes: 0D 00 08 20 10 10 08 20 40 02 03 08 02 
+net:   flags 0, datagram sockets 8, stream sockets 32, receive 16 KB, send 16 KB
+net probe: case settings done in 1 ms
+net probe: case limits
+net: TCP sockets open at once: 32, error 10055
+net: UDP sockets open at once: 8, error 10055
+net:   socket failed: 10055
+net: TCP connections to the PC open at once: 32
+net: buffers on a new socket:
+net:   SO_RCVBUF (0x1002) reads 16384, 4 bytes: 0, error 0
+net:   SO_SNDBUF (0x1001) reads 16384, 4 bytes: 0, error 0
+net:   setsockopt SO_RCVBUF (0x1002), 4 bytes: 0, error 0
+net:   SO_RCVBUF (0x1002) reads 65536, 4 bytes: 0, error 0
+net:   setsockopt SO_SNDBUF (0x1001), 4 bytes: 0, error 0
+net:   SO_SNDBUF (0x1001) reads 64512, 4 bytes: 0, error 0
+net:   setsockopt SO_RCVBUF (0x1002), 4 bytes: 0, error 0
+net:   SO_RCVBUF (0x1002) reads 261120, 4 bytes: 0, error 0
+net:   setsockopt SO_SNDBUF (0x1001), 4 bytes: 0, error 0
+net:   SO_SNDBUF (0x1001) reads 64512, 4 bytes: 0, error 0
+net probe: case limits done in 13 ms
+net probe: case receive_timeout
+net:   setsockopt SO_RCVTIMEO, as milliseconds (0x1006), 4 bytes: 0, error 0
+net:   SO_RCVTIMEO (0x1006) reads 500, 4 bytes: 0, error 0
+net: receive timeout: blocking recv 1 returned -1 after 500 ms, error 10060
+net: receive timeout: blocking recv 2 returned -1 after 500 ms, error 10060
+net probe: case receive_timeout done in 1008 ms
+net probe: case send_timeout
+net:   setsockopt SO_SNDTIMEO, as milliseconds (0x1005), 4 bytes: 0, error 0
+net:   SO_SNDTIMEO (0x1005) reads 500, 4 bytes: 0, error 0
+net: send timeout: send 1, after 0 bytes, returned 1460 after 0 ms, error 0
+net: send timeout: the send after returned 16384 after 0 ms, error 0; 0 bytes before
+net probe: case send_timeout done in 2 ms
+net probe: case linger
+net: linger: getsockopt with 4 bytes: 0, 4 bytes: 00 00 00 3C 00 00 00 00
+net: linger: getsockopt with 8 bytes: 0, 4 bytes: 00 00 00 3C 00 00 00 00
+net: linger: no linger set: closesocket 0 after 0 ms; the PC saw fin
+net:   setsockopt Winsock's {1, 0} (0x0080), 4 bytes: 0, error 0
+net:   SO_LINGER (0x0080) reads 65536, 4 bytes: 0, error 0
+net: linger: Winsock's {1, 0}: closesocket 0 after 0 ms; the PC saw open
+net:   setsockopt POSIX's {1, 0} (0x0080), 8 bytes: 0, error 0
+net:   SO_LINGER (0x0080) reads 1, 4 bytes: 0, error 0
+net: linger: POSIX's {1, 0}: closesocket 0 after 0 ms; the PC saw fin
+net:   setsockopt Winsock's {1, 2} (0x0080), 4 bytes: 0, error 0
+net: linger: {1, 2} with about 196608 bytes unread by the PC: closesocket 0 after 0 ms
+net probe: case linger done in 9331 ms
+net probe: case loopback
+net: loopback: plain: bound to 127.0.0.1:0, listening no (error 10049), port 0; connected to 127.0.0.1 no, accepted no, a line through no
+net: loopback: plain: bound to 0.0.0.0:7375, listening yes (error 0), port 7375; connected to 127.0.0.1 yes, accepted yes, a line through yes
+net: loopback: plain: bound to 0.0.0.0:7377, listening yes (error 0), port 7377; connected to 192.168.0.152 yes, accepted yes, a line through yes
+net: loopback: marked 0x5801: bound to 127.0.0.1:0, listening no (error 10049), port 0; connected to 127.0.0.1 no, accepted no, a line through no
+net: loopback: marked 0x5801: bound to 0.0.0.0:7376, listening yes (error 0), port 7376; connected to 127.0.0.1 yes, accepted yes, a line through yes
+net: loopback: marked 0x5801: bound to 0.0.0.0:7378, listening yes (error 0), port 7378; connected to 192.168.0.152 yes, accepted yes, a line through yes
+net probe: case loopback done in 3 ms
+net probe: done
+exit: status 0

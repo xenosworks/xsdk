@@ -1,0 +1,11 @@
+log: game:\probe_launch.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m56\probe_launch.xex
+log: no net_log.txt beside the .xex, so not over the network
+open: NtCreateFile(game:\probe_launch_state.txt) failed: 0xC0000034
+probe_launch: probe_launch.xex, hop 0 of look, by device : only looks, then exits to the dashboard
+ExLoadedImageName: \Device\Harddisk0\Partition1\XSDK\m56\probe_launch.xex
+ExLoadedCommandLine at 0x801a5960
+ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+probe_launch: hop 0 of look done; exiting to the dashboard
+exit: status 0

@@ -1,0 +1,30 @@
+log: game:\probe_net.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m56\probe_net.xex
+log: no net_log.txt beside the .xex, so not over the network
+net probe: 2 cases. restart: WSACleanup, XNetCleanup and a second XNetStartup may hang the title or leave it no network.
+open: NtCreateFile(game:\net_log.txt) failed: 0xC0000034
+net: XNetStartup, flags 0, stream sockets 0, datagram 0, receive 0 KB, send 0 KB: 0
+net: WSAStartup 2.2: 0
+net: the PC at 192.168.0.125, port 7370
+net probe: case settings
+net: XNetGetOpt(1) after the start: 0, 13 bytes: 0D 00 08 20 10 10 08 20 40 02 03 08 02 
+net:   flags 0, datagram sockets 8, stream sockets 32, receive 16 KB, send 16 KB
+net probe: case settings done in 1 ms
+net probe: case restart
+net: buffers before the restart:
+net:   SO_RCVBUF (0x1002) reads 16384, 4 bytes: 0, error 0
+net:   SO_SNDBUF (0x1001) reads 16384, 4 bytes: 0, error 0
+net: restart: WSACleanup 0
+net: restart: XNetCleanup 0
+net: restart: XNetStartup, stream sockets 64, datagram 16, receive 64 KB, send 64 KB: 0
+net: restart: WSAStartup 0
+net: XNetGetOpt(1) after the restart: 0, 13 bytes: 0D 00 10 40 3F 3F 08 20 40 02 03 08 02 
+net:   flags 0, datagram sockets 16, stream sockets 64, receive 63 KB, send 63 KB
+net: buffers after the restart:
+net:   SO_RCVBUF (0x1002) reads 64512, 4 bytes: 0, error 0
+net:   SO_SNDBUF (0x1001) reads 64512, 4 bytes: 0, error 0
+net: TCP, after the restart, sockets open at once: 64, error 10055
+net: marked 0x5801: TCP to the PC and back: yes
+net probe: case restart done in 8 ms
+net probe: done
+exit: status 0

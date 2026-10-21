@@ -1,0 +1,150 @@
+08:17:15 probe_launch.xex, hop 0 of look: probe_launch: probe_launch.xex, hop 0 of look, by device : only looks, then exits to the dashboard
+08:17:15 probe_launch.xex, hop 0 of look: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:17:15 probe_launch.xex, hop 0 of look: ExLoadedCommandLine at 0x801a5960
+08:17:15 probe_launch.xex, hop 0 of look: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:17:15 probe_launch.xex, hop 0 of look: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:17:15 probe_launch.xex, hop 0 of look: probe_launch: hop 0 of look done; exiting to the dashboard
+08:18:35 probe_launch.xex, hop 0 of path: probe_launch: probe_launch.xex, hop 0 of path, by device : ends by launching the other title; a path that doesn't work may return, hang the console or go to the dashboard
+08:18:35 probe_launch.xex, hop 0 of path: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:18:35 probe_launch.xex, hop 0 of path: ExLoadedCommandLine at 0x801a5960
+08:18:35 probe_launch.xex, hop 0 of path: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:18:35 probe_launch.xex, hop 0 of path: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:18:35 probe_launch.xex, hop 0 of path: XamLoaderSetLaunchData, 64 bytes: 0x00000000
+08:18:35 probe_launch.xex, hop 0 of path: launching \Device\Harddisk0\Partition1\xsdk\m56\probe_launch_t2.xex, by device, for hop 1
+08:19:12 probe_launch.xex, hop 0 of path: probe_launch: probe_launch.xex, hop 0 of path, by game : ends by launching the other title; a path that doesn't work may return, hang the console or go to the dashboard
+08:19:12 probe_launch.xex, hop 0 of path: a stale state: hop 1 of path, by device, was for probe_launch_t2.xex, which never arrived
+08:19:12 probe_launch.xex, hop 0 of path: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:19:12 probe_launch.xex, hop 0 of path: ExLoadedCommandLine at 0x801a5960
+08:19:12 probe_launch.xex, hop 0 of path: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:19:12 probe_launch.xex, hop 0 of path: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:19:12 probe_launch.xex, hop 0 of path: XamLoaderSetLaunchData, 64 bytes: 0x00000000
+08:19:12 probe_launch.xex, hop 0 of path: launching game:\probe_launch_t2.xex, by game, for hop 1
+08:19:13 probe_launch_t2.xex, hop 1 of path: probe_launch: probe_launch_t2.xex, hop 1 of path, by game : launched by the probe; logs what arrived
+08:19:13 probe_launch_t2.xex, hop 1 of path: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch_t2.xex
+08:19:13 probe_launch_t2.xex, hop 1 of path: ExLoadedCommandLine at 0x801a5960
+08:19:13 probe_launch_t2.xex, hop 1 of path: ExLoadedCommandLine: ""probe_launch_t2.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 5F 74 32 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 
+08:19:13 probe_launch_t2.xex, hop 1 of path: launch data: XamLoaderGetLaunchDataSize 0x00000000, 64 bytes
+08:19:13 probe_launch_t2.xex, hop 1 of path: launch data: XamLoaderGetLaunchData 0x00000000: 58 53 44 4B 4C 4E 43 48 00 00 00 40 C8 F5 2A 92 30 CE F4 92 A9 47 6C 0B 22 C0 E5 84 9B 39 5E FC ; the probe's, 64 bytes made, seed C8F52A92, whole
+08:19:13 probe_launch_t2.xex, hop 1 of path: launch data: after reading it, XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:19:13 probe_launch_t2.xex, hop 1 of path: path: arrived by game
+08:19:13 probe_launch_t2.xex, hop 1 of path: probe_launch: hop 1 of path done; exiting to the dashboard
+08:19:29 probe_launch.xex, hop 0 of path: probe_launch: probe_launch.xex, hop 0 of path, by bare : ends by launching the other title; a path that doesn't work may return, hang the console or go to the dashboard
+08:19:29 probe_launch.xex, hop 0 of path: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:19:29 probe_launch.xex, hop 0 of path: ExLoadedCommandLine at 0x801a5960
+08:19:29 probe_launch.xex, hop 0 of path: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:19:29 probe_launch.xex, hop 0 of path: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:19:29 probe_launch.xex, hop 0 of path: XamLoaderSetLaunchData, 64 bytes: 0x00000000
+08:19:29 probe_launch.xex, hop 0 of path: launching probe_launch_t2.xex, by bare, for hop 1
+08:19:30 probe_launch_t2.xex, hop 1 of path: probe_launch: probe_launch_t2.xex, hop 1 of path, by bare : launched by the probe; logs what arrived
+08:19:30 probe_launch_t2.xex, hop 1 of path: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch_t2.xex
+08:19:30 probe_launch_t2.xex, hop 1 of path: ExLoadedCommandLine at 0x801a5960
+08:19:30 probe_launch_t2.xex, hop 1 of path: ExLoadedCommandLine: ""probe_launch_t2.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 5F 74 32 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 
+08:19:30 probe_launch_t2.xex, hop 1 of path: launch data: XamLoaderGetLaunchDataSize 0x00000000, 64 bytes
+08:19:30 probe_launch_t2.xex, hop 1 of path: launch data: XamLoaderGetLaunchData 0x00000000: 58 53 44 4B 4C 4E 43 48 00 00 00 40 CA 01 1F 2C F0 8E 2C CB 77 15 B3 52 FE 9C 3B D9 85 24 C2 60 ; the probe's, 64 bytes made, seed CA011F2C, whole
+08:19:30 probe_launch_t2.xex, hop 1 of path: launch data: after reading it, XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:19:30 probe_launch_t2.xex, hop 1 of path: path: arrived by bare
+08:19:30 probe_launch_t2.xex, hop 1 of path: probe_launch: hop 1 of path done; exiting to the dashboard
+08:19:56 probe_launch.xex, hop 0 of data: probe_launch: probe_launch.xex, hop 0 of data, by game : steps XamLoaderSetLaunchData up to 64 KB, then ends by launching the other title, which launches this one back
+08:19:56 probe_launch.xex, hop 0 of data: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:19:56 probe_launch.xex, hop 0 of data: ExLoadedCommandLine at 0x801a5960
+08:19:56 probe_launch.xex, hop 0 of data: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:19:56 probe_launch.xex, hop 0 of data: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 1 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 1 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 64 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 64 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 256 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 256 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 512 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 512 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 1000 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 1000 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 1024 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 1020 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 2048 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 1020 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 4096 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 1020 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 8192 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 1020 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 16384 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 1020 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData, 65536 bytes: 0x00000000; this title's XamLoaderGetLaunchDataSize then 0x00000000, 1020 bytes
+08:19:56 probe_launch.xex, hop 0 of data: sizes: XamLoaderSetLaunchData took every size up to the probe's 65536 bytes
+08:19:56 probe_launch.xex, hop 0 of data: XamLoaderSetLaunchData, 65536 bytes: 0x00000000
+08:19:56 probe_launch.xex, hop 0 of data: launching game:\probe_launch_t2.xex, by game, for hop 1
+08:19:56 probe_launch_t2.xex, hop 1 of data: probe_launch: probe_launch_t2.xex, hop 1 of data, by game : launched by the probe; logs what arrived, then ends by launching the other title back
+08:19:56 probe_launch_t2.xex, hop 1 of data: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch_t2.xex
+08:19:56 probe_launch_t2.xex, hop 1 of data: ExLoadedCommandLine at 0x801a5960
+08:19:56 probe_launch_t2.xex, hop 1 of data: ExLoadedCommandLine: ""probe_launch_t2.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 5F 74 32 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 
+08:19:56 probe_launch_t2.xex, hop 1 of data: launch data: XamLoaderGetLaunchDataSize 0x00000000, 1020 bytes
+08:19:56 probe_launch_t2.xex, hop 1 of data: launch data: XamLoaderGetLaunchData 0x00000000: 58 53 44 4B 4C 4E 43 48 00 01 00 00 CB 86 8D 4B D9 3B 9C FE 52 B4 15 77 E7 49 AB 0D 60 C2 24 85 ; the probe's, 65536 bytes made, seed CB868D4B, its pattern right but its size not what was made
+08:19:56 probe_launch_t2.xex, hop 1 of data: launch data: after reading it, XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:19:56 probe_launch_t2.xex, hop 1 of data: launching game:\probe_launch.xex, by game, for hop 2
+08:19:56 probe_launch.xex, hop 2 of data: probe_launch: probe_launch.xex, hop 2 of data, by game : launched by the probe; logs what arrived
+08:19:56 probe_launch.xex, hop 2 of data: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:19:56 probe_launch.xex, hop 2 of data: ExLoadedCommandLine at 0x801a5960
+08:19:56 probe_launch.xex, hop 2 of data: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:19:56 probe_launch.xex, hop 2 of data: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:19:56 probe_launch.xex, hop 2 of data: data: back after two launches; the launch data above is what's left of the first title's
+08:19:56 probe_launch.xex, hop 2 of data: probe_launch: hop 2 of data done; exiting to the dashboard
+08:20:23 probe_launch.xex, hop 0 of look: probe_launch: probe_launch.xex, hop 0 of look, by device : only looks, then exits to the dashboard
+08:20:23 probe_launch.xex, hop 0 of look: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:20:23 probe_launch.xex, hop 0 of look: ExLoadedCommandLine at 0x801a5960
+08:20:23 probe_launch.xex, hop 0 of look: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:20:23 probe_launch.xex, hop 0 of look: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:20:23 probe_launch.xex, hop 0 of look: probe_launch: hop 0 of look done; exiting to the dashboard
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: probe_launch: probe_launch.xex, hop 0 of gpu_closed, by game : hands the GPU and the display back, then ends by launching the other title
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: ExLoadedCommandLine at 0x801a5960
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: gpu: xsdk_gpu_open 0x00000000
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: gpu: xsdk_splash_begin 0x00000000
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: gpu: handed back: xsdk_gpu_close 0x00000000
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: XamLoaderSetLaunchData, 64 bytes: 0x00000000
+08:20:40 probe_launch.xex, hop 0 of gpu_closed: launching game:\probe_launch_t2.xex, by game, for hop 1
+08:20:42 probe_launch_t2.xex, hop 1 of gpu_closed: probe_launch: probe_launch_t2.xex, hop 1 of gpu_closed, by game : launched by the probe; logs what arrived
+08:20:42 probe_launch_t2.xex, hop 1 of gpu_closed: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch_t2.xex
+08:20:42 probe_launch_t2.xex, hop 1 of gpu_closed: ExLoadedCommandLine at 0x801a5960
+08:20:42 probe_launch_t2.xex, hop 1 of gpu_closed: ExLoadedCommandLine: ""probe_launch_t2.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 5F 74 32 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 
+08:20:42 probe_launch_t2.xex, hop 1 of gpu_closed: launch data: XamLoaderGetLaunchDataSize 0x00000000, 64 bytes
+08:20:42 probe_launch_t2.xex, hop 1 of gpu_closed: launch data: XamLoaderGetLaunchData 0x00000000: 58 53 44 4B 4C 4E 43 48 00 00 00 40 CE 4D 21 DE 7F 1D 43 E1 06 A4 CA 68 8D 2C 51 EF 14 B3 D8 76 ; the probe's, 64 bytes made, seed CE4D21DE, whole
+08:20:42 probe_launch_t2.xex, hop 1 of gpu_closed: launch data: after reading it, XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:20:42 probe_launch_t2.xex, hop 1 of gpu_closed: gpu: arrived, launched with the GPU handed back
+08:20:42 probe_launch_t2.xex, hop 1 of gpu_closed: probe_launch: hop 1 of gpu_closed done; exiting to the dashboard
+08:21:05 probe_launch.xex, hop 0 of path: probe_launch: probe_launch.xex, hop 0 of path, by usb probe_launch_t2.xex: ends by launching the other title; a path that doesn't work may return, hang the console or go to the dashboard
+08:21:05 probe_launch.xex, hop 0 of path: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:21:05 probe_launch.xex, hop 0 of path: ExLoadedCommandLine at 0x801a5960
+08:21:05 probe_launch.xex, hop 0 of path: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:21:05 probe_launch.xex, hop 0 of path: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:21:05 probe_launch.xex, hop 0 of path: XamLoaderSetLaunchData, 64 bytes: 0x00000000
+08:21:05 probe_launch.xex, hop 0 of path: launching \Device\Mass0\probe_launch_t2.xex, by usb, for hop 1
+08:21:39 probe_launch.xex, hop 0 of path: probe_launch: probe_launch.xex, hop 0 of path, by missing : ends by launching the other title; a path that doesn't work may return, hang the console or go to the dashboard
+08:21:39 probe_launch.xex, hop 0 of path: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:21:39 probe_launch.xex, hop 0 of path: ExLoadedCommandLine at 0x801a5960
+08:21:39 probe_launch.xex, hop 0 of path: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:21:39 probe_launch.xex, hop 0 of path: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:21:39 probe_launch.xex, hop 0 of path: XamLoaderSetLaunchData, 64 bytes: 0x00000000
+08:21:39 probe_launch.xex, hop 0 of path: launching game:\probe_launch_none.xex, by missing, for hop 1
+08:21:56 probe_launch.xex, hop 0 of look: probe_launch: probe_launch.xex, hop 0 of look, by device : only looks, then exits to the dashboard
+08:21:56 probe_launch.xex, hop 0 of look: a stale state: hop 1 of path, by missing, was for probe_launch_none.xex, which never arrived
+08:21:56 probe_launch.xex, hop 0 of look: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:21:56 probe_launch.xex, hop 0 of look: ExLoadedCommandLine at 0x801a5960
+08:21:56 probe_launch.xex, hop 0 of look: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:21:56 probe_launch.xex, hop 0 of look: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:21:56 probe_launch.xex, hop 0 of look: probe_launch: hop 0 of look done; exiting to the dashboard
+08:22:50 probe_launch.xex, hop 0 of gpu_held: probe_launch: probe_launch.xex, hop 0 of gpu_held, by game : launches with the GPU and the display still the title's, which may hang the console
+08:22:50 probe_launch.xex, hop 0 of gpu_held: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch.xex
+08:22:50 probe_launch.xex, hop 0 of gpu_held: ExLoadedCommandLine at 0x801a5960
+08:22:50 probe_launch.xex, hop 0 of gpu_held: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:22:50 probe_launch.xex, hop 0 of gpu_held: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:22:50 probe_launch.xex, hop 0 of gpu_held: gpu: xsdk_gpu_open 0x00000000
+08:22:50 probe_launch.xex, hop 0 of gpu_held: gpu: xsdk_splash_begin 0x00000000
+08:22:50 probe_launch.xex, hop 0 of gpu_held: XamLoaderSetLaunchData, 64 bytes: 0x00000000
+08:22:50 probe_launch.xex, hop 0 of gpu_held: launching game:\probe_launch_t2.xex, by game, for hop 1
+08:22:52 probe_launch_t2.xex, hop 1 of gpu_held: probe_launch: probe_launch_t2.xex, hop 1 of gpu_held, by game : launched by the probe; logs what arrived
+08:22:52 probe_launch_t2.xex, hop 1 of gpu_held: ExLoadedImageName: \Device\Harddisk0\Partition1\xsdk\m56\probe_launch_t2.xex
+08:22:52 probe_launch_t2.xex, hop 1 of gpu_held: ExLoadedCommandLine at 0x801a5960
+08:22:52 probe_launch_t2.xex, hop 1 of gpu_held: ExLoadedCommandLine: ""probe_launch_t2.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 5F 74 32 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 
+08:22:52 probe_launch_t2.xex, hop 1 of gpu_held: launch data: XamLoaderGetLaunchDataSize 0x00000000, 64 bytes
+08:22:52 probe_launch_t2.xex, hop 1 of gpu_held: launch data: XamLoaderGetLaunchData 0x00000000: 58 53 44 4B 4C 4E 43 48 00 00 00 40 D6 05 97 22 F6 94 B9 57 6E 0D 32 D0 E7 86 AB 49 60 FE 24 C2 ; the probe's, 64 bytes made, seed D6059722, whole
+08:22:52 probe_launch_t2.xex, hop 1 of gpu_held: launch data: after reading it, XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:22:52 probe_launch_t2.xex, hop 1 of gpu_held: gpu: arrived, launched with the GPU held
+08:22:52 probe_launch_t2.xex, hop 1 of gpu_held: probe_launch: hop 1 of gpu_held done; exiting to the dashboard
+08:28:25 probe_launch.xex, hop 0 of look: probe_launch: probe_launch.xex, hop 0 of look, by device : only looks, then exits to the dashboard
+08:28:25 probe_launch.xex, hop 0 of look: ExLoadedImageName: \Device\Harddisk0\Partition1\XSDK\m56\probe_launch.xex
+08:28:25 probe_launch.xex, hop 0 of look: ExLoadedCommandLine at 0x801a5960
+08:28:25 probe_launch.xex, hop 0 of look: ExLoadedCommandLine: ""probe_launch.xex""; first bytes 22 70 72 6F 62 65 5F 6C 61 75 6E 63 68 2E 78 65 78 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+08:28:25 probe_launch.xex, hop 0 of look: launch data: XamLoaderGetLaunchDataSize 0x00000490, 0 bytes
+08:28:25 probe_launch.xex, hop 0 of look: probe_launch: hop 0 of look done; exiting to the dashboard
