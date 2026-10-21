@@ -6,10 +6,10 @@ gets a title built and onto the console, and docs/PITFALLS.md says what breaks o
 
 - **Statuses:** calls that wrap the kernel return its `NTSTATUS`, which `NT_SUCCESS` tests (`kernel.h`). Log a failure
   with the call's name and the status as `0x%08X`, as the samples do. The C and POSIX calls set `errno` as POSIX says.
-- **Threads:** the GPU layer, `gpu.h`, `shader.h`, `present.h`, `splash.h` and `display.h`, holds no locks: call it
-  from one thread at a time, the one that draws, called the drawing thread below. `xsdk_gpu_alloc`, `xsdk_gpu_free`
-  and `texture.h`, which only allocate and copy, may run on any thread, as may logging, reading controllers, writing
-  memory the GPU isn't using, and the C and POSIX calls.
+- **Threads:** the GPU layer, `gpu.h`, `shader.h`, `present.h`, `splash.h`, `display.h` and `text.h`, holds no locks:
+  call it from one thread at a time, the one that draws, called the drawing thread below. `xsdk_gpu_alloc`,
+  `xsdk_gpu_free` and `texture.h`, which only allocate and copy, may run on any thread, as may logging, reading
+  controllers, writing memory the GPU isn't using, and the C and POSIX calls.
 - **Undone by:** what puts the state back, or ends what the call started. The title's exit closes the display and the
   GPU and gives them back to XAM, whatever the title left open (src/exit.c).
 
@@ -225,6 +225,48 @@ until a resolve copies it out, and the resolve then clears eDRAM for the next fr
 
 A recording holds draws and state, with no fences, resolves or executes; it saves the CPU writing the same packets
 every frame.
+
+## Text on screen
+
+[tests/test_text.c](../tests/test_text.c)
+
+`text.h` draws X11's misc-fixed 10x20, a public-domain bitmap font: 1,188 glyphs of ASCII, Latin-1, Latin Extended-A,
+Greek, Cyrillic, general punctuation, currency, arrows, box drawing, block elements and geometric shapes. The font's
+bits and its shaders are in `libxsdk.a`, so a title brings neither, and they link only into titles that draw text.
+
+| Call | Leaves set | Undone by | Threads |
+|---|---|---|---|
+| `xsdk_text_open()` | the font's 1024x256 R8 atlas, the text shaders, and a 256 KiB vertex ring with its index list, in GPU memory | `xsdk_text_close`, or exit | drawing, the GPU open |
+| `xsdk_text_draw(x, y, scale, argb, utf8)` | the string queued, a draw a string; for the draws after, the text shaders and their literals, vertex stream 0, texture slot 0, vertex and pixel constant 0, blending over what's drawn by `argb`'s alpha, and depth, stencil and culling off | the next set of each | drawing |
+| `xsdk_text_measure(utf8, scale, &w, &h)` | nothing: the longest line's width and the lines' height, in pixels | | any |
+| `xsdk_text_close()` | nothing: waits for the GPU, then frees what `xsdk_text_open` made | | drawing, before `xsdk_gpu_close` |
+
+- **Pixels from the viewport's top left:** the first cell's top-left corner at (x, y), each cell 10x20 times `scale`,
+  1 to 8, point sampled, so text stays sharp. A cell's edges sit half a pixel up and left of its first pixel's centre,
+  as xsdk puts pixel centres where D3D9 does (src/text.c), so each of the font's pixels covers whole screen pixels.
+- **It keeps the target, the viewport and the scissor,** so `xsdk_gpu_set_scissor` clips text.
+- **UTF-8 in:** `'\n'` starts the next line at x; other control characters draw nothing; a code point the font lacks,
+  CJK among them, and a malformed byte each draw the font's default glyph, a box.
+- **The ring** holds 4,096 glyphs in four blocks of 1,024. Leaving a block queues a fence, and a block is written again
+  only once the GPU has passed it, so a string crossing into the next block takes a draw more, and past 3,072 glyphs a
+  frame the CPU may wait for the GPU. Text in a recording or a tiled pass stops at an assert, as a recorded draw could
+  outlive its block.
+- **Format with `snprintf`.** A line of frame time over the frame, between `xsdk_gpu_set_target` and the resolve:
+
+```c
+struct timespec now;
+clock_gettime(CLOCK_MONOTONIC, &now);
+const uint64_t now_us = (uint64_t)now.tv_sec * 1000000 + (uint64_t)now.tv_nsec / 1000;
+XsdkPresentStats stats;
+xsdk_present_stats(&stats);
+char line[64];
+snprintf(line, sizeof line, "%.2f ms, %u missed", (now_us - last_us) / 1000.0, (unsigned)stats.missed);
+last_us = now_us;
+xsdk_text_draw(16, 16, 1, 0xFFFFFFFF, line);
+```
+
+Windows, widgets and TrueType text come from Dear ImGui on the GPU layer, in imgui-xenon, whose docs/README-xsdk.md says
+how a title adds it.
 
 ## Threads and where they run
 

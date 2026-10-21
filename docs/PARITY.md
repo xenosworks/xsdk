@@ -4,8 +4,8 @@ xsdk's goal is to let anyone make homebrew and port games to the Xbox 360 withou
 map: for each area, what a title gets from xsdk today, how to use it, which test proves it on the console, and what's
 missing. It was drawn up on 2026-10-15, at xsdk `3e889a7`, brought up to date on 2026-10-20, at `e43c0e1`, after
 milestones 41 and 44 to 52, and again for milestone 54's files, drives, settings and Xbox Home and milestone 55's
-threads, waits and memory. SCOPE.md has the milestones and TODO.md the open items; where they and this page disagree,
-they win, and this page is out of date.
+threads, waits and memory, and on 2026-10-21 for milestone 57's text and Dear ImGui. SCOPE.md has the milestones and
+TODO.md the open items; where they and this page disagree, they win, and this page is out of date.
 
 **Status:**
 - **Yes:** works, and a test proves it on the console.
@@ -98,7 +98,7 @@ which implements what the games it runs need:
 | The Guide over the title | Yes | automatic, through `xsdk_present_*` | `tests/guide_check.c`, by hand | The Guide on the kernel's display mode and interlaced outputs (TODO.md) |
 | Knowing when to pause for the Guide | Partial | `xsdk_system_ui_open` (`xam.h`), from the XN_SYS_UI notifications `tests/guide_check.c` reads; `XamIsUIActive` raw | `tests/save_check.c`, by hand | |
 | Ending the title by itself while the Guide is open | No | | | It hangs as it ends; leaving through Xbox Home is fine (TODO.md) |
-| On-screen keyboard, message boxes, sign-in prompt | Partial | `xsdk_xam_keyboard` and `xsdk_xam_message_box` (`xam.h`), each started in one call and polled once a frame; `XamShowSigninUI` raw | `tests/save_check.c`, by hand; `tests/probe_xam.c` | What a cancelled keyboard gives. XAM refuses a dialog with 5 under the Guide or straight after another, and needs an overlapped (docs/HARDWARE.md) |
+| On-screen keyboard, message boxes, sign-in prompt | Partial | `xsdk_xam_keyboard` and `xsdk_xam_message_box` (`xam.h`), each started in one call and polled once a frame; `XamShowSigninUI` raw; ImGui's text fields open it (imgui-xenon) | `tests/save_check.c`, by hand; `tests/probe_xam.c` | What a cancelled keyboard gives. XAM refuses a dialog with 5 under the Guide or straight after another, and needs an overlapped (docs/HARDWARE.md) |
 | Keeping the screen from dimming in cutscenes | No | | | `XamResetInactivity` (xam_input.cc) |
 | Where notifications pop up | No | | | `XNotifyPositionUI` (xam_notify.cc) |
 
@@ -128,6 +128,12 @@ which implements what the games it runs need:
 | 2 or 3 front buffers, paced to vblank, swap intervals | Yes | `xsdk_present_open` | `tests/test_pacing.c` | |
 | Other modes: 1080p, 480p and the rest | No | `XSDK_DISPLAY_KERNEL` keeps the kernel's own | | |
 | 720p on interlaced outputs, 480i and 1080i | No | the kernel's 640x480 there | | TODO.md |
+
+## Text and UI
+
+| Capability | Status | How | Verified by | Missing |
+|---|---|---|---|---|
+| Text on screen, a public-domain 10x20 bitmap font of 1,188 glyphs, Latin, Greek and Cyrillic, scaled by whole numbers | Yes | `xsdk_text_*` (`text.h`) | `tests/test_text.c` | Proportional and TrueType fonts and CJK, which ImGui gives a title that brings its own TrueType |
 
 ## GPU
 
@@ -178,6 +184,7 @@ Each in its own repository under xenosworks.
 | SDL3 (SDL-xenon) | Partial | audio, up to four controllers, paths, threads, timers | `test/xsdk/sdl_check.c` there | A video, render or GPU driver: titles draw with xsdk's GPU layer or vulkan4xenon (SDL-xenon's docs/README-xsdk.md) |
 | Vulkan 1.0, a subset (vulkan4xenon) | Partial | a Vulkan layer on xsdk's GPU layer | its test title and vkbench | What its docs/SUPPORT.md leaves out |
 | Mbed TLS 3.6 (mbedtls-xenon) | Yes | TLS 1.2 and its cryptography | its self-tests and HTTPS check | TLS 1.3 |
+| Dear ImGui (imgui-xenon) | Yes | windows and widgets on the GPU layer, driven by controller 1, text fields through XAM's keyboard | `examples/example_xsdk/imgui_check.cpp` there | Physical keyboards; ImGui through vulkan4xenon |
 
 ## System information and control
 
@@ -243,4 +250,4 @@ What a porter would hit first, as proposed on 2026-10-15, each a milestone agree
     country and the time zone, milestone 54; launching titles, milestone 56. Open: the rest.
 
 Done since, beside the list: shader model 3 HLSL (milestone 50), loops in shaders (46), xost's code quality (45, 48),
-the pass after a depth clear (49), and counted loops in compiled CPU code (52).
+the pass after a depth clear (49), counted loops in compiled CPU code (52), and text on screen and Dear ImGui (57).
