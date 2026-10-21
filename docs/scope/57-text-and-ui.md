@@ -1,7 +1,8 @@
 # Milestone 57: text and UI
 
-Proposed on 2026-10-21, not yet agreed. What was agreed of it: a glyph atlas on the GPU layer, then Dear ImGui, for
-debug overlays and homebrew menus. The rest is proposed here, with what's open under "For you to decide".
+Agreed on 2026-10-21, with every recommendation taken (Decided, below).
+
+The entry agreed with the user: a glyph atlas on the GPU layer, then Dear ImGui, for debug overlays and homebrew menus.
 
 ## Why
 
@@ -103,7 +104,7 @@ sizes with all of Latin, Greek and Cyrillic, and every size has WGL4's box drawi
 - **Scaling** by whole numbers only, point sampled, so text is never blurred.
 - 10x20 gives 128 columns and 36 lines at 1280x720; 2 times gives a menu heading.
 
-Not chosen (For you to decide, 3):
+Not chosen (Decided, 3):
 - **A TrueType font under the OFL, rasterised at build time:** smooth at any size, but host tools are standard-library
   Python, so it needs a TrueType rasteriser written in Python, or stb_truetype (public domain or MIT,
   imgui:imstb_truetype.h:6, 5049-5068) in a C host tool, a second exception to CODE_GUIDELINES.md 2. The OFL also asks
@@ -146,7 +147,7 @@ Not chosen (For you to decide, 3):
   (vulkan4xenon:docs/ROADMAP.md:3055). ImGui's frame is tens to hundreds of draws, so either is small; what decides is
   who can use it.
 
-Not chosen (For you to decide, 1): imgui_impl_vulkan through vulkan4xenon. It's 2,029 lines that need no change, and
+Not chosen (Decided, 1): imgui_impl_vulkan through vulkan4xenon. It's 2,029 lines that need no change, and
 vulkan4xenon lists what it uses: push constants, dynamic viewport and scissor, buffer-to-image copies and
 `R8G8B8A8_UNORM` vertex input (vulkan4xenon:docs/SUPPORT.md:31, 200, 223, 750). But only a title built on Vulkan could
 use it, so homebrew on the GPU layer and SDL3 titles couldn't. It's the way for Aurora's menus, as vulkan4xenon's
@@ -158,7 +159,7 @@ work (Left out).
   `ImGuiBackendFlags_HasGamepad`, so a title turns on `ImGuiConfigFlags_NavEnableGamepad`. A title that reads its
   controllers itself passes a state in with `ImGui_ImplXsdk_ProcessGamepad`, which the frame's call uses too.
 - **Display size and time:** the size `xsdk_present_open` gave, and the time from `clock_gettime`'s monotonic clock.
-- **Text fields through XAM's keyboard** (For you to decide, 5): when a field takes focus to type, the backend opens
+- **Text fields through XAM's keyboard** (Decided, 5): when a field takes focus to type, the backend opens
   `xsdk_xam_keyboard` with the field's text, polls it once a frame as docs/GUIDE.md says, and on accept replaces the
   field's text through ImGui's own key and character events, select all then the characters. A cancelled keyboard
   leaves the field as it was, whatever XAM returns for a cancel, which milestone 51 left open (docs/PARITY.md).
@@ -168,8 +169,7 @@ work (Left out).
   (xenia:src/xenia/kernel/xam/xam_input.cc:155-180), so what a chatpad or USB keyboard gives is the console's to
   settle, with the hardware on hand.
 
-**Where it lives: a fork, xenosworks/imgui-xenon** (For you to decide, 2), as SDL-xenon, mbedtls-xenon and curl-xenon
-are:
+**Where it lives: a fork, xenosworks/imgui-xenon** (Decided, 2), as SDL-xenon, mbedtls-xenon and curl-xenon are:
 - Dear ImGui's latest release, v1.93.0 of 2026-10-14 on its releases page, on a `xenon` branch; upstream's files as
   they are, as ImGui builds for xsdk unchanged (Aurora, above).
 - Added: the backend, its shaders and their header, `examples/example_xsdk/` with a demo and a check title built through
@@ -180,7 +180,7 @@ are:
 
 ### A debug overlay of xsdk's own
 
-Proposed: none (For you to decide, 4). With `xsdk_text_draw` and `snprintf`, a title's overlay is a few lines, and it
+None (Decided, 4). With `xsdk_text_draw` and `snprintf`, a title's overlay is a few lines, and it
 knows what's worth showing; ImGui's windows and plots do the rest. docs/GUIDE.md shows a frame-time line as the example.
 
 ## What it takes
@@ -270,7 +270,7 @@ You can try the demo when you like; the milestone closes on the checks, not on a
 
 ## Left out
 
-- **An overlay of xsdk's own** (For you to decide, 4).
+- **An overlay of xsdk's own** (Decided, 4).
 - **In xsdk's text:** TrueType and proportional fonts, kerning, scales between whole numbers, rotation, combining marks,
   right-to-left scripts and CJK. ImGui draws a title's TrueType, CJK included.
 - **Text and ImGui inside recordings and tiled passes,** which stop at an `assert`.
@@ -281,51 +281,27 @@ You can try the demo when you like; the milestone closes on the checks, not on a
 - **ImGui's docking branch and multiple viewports,** until a title asks; FreeType in ImGui.
 - **An SDL3 render driver,** docs/PARITY.md's seventh gap: ImGui doesn't give SDL one.
 
-## For you to decide
+## Decided
 
-1. **ImGui's renderer.**
-   - (a) A backend on xsdk's GPU layer, about 500 lines, as imgui_impl_dx9 is on D3D9.
-   - (b) imgui_impl_vulkan unchanged, through vulkan4xenon.
-   - (c) Both.
-
-   Recommended: (a). Every xsdk title can use it, at a third of the CPU a draw, and it's D3D9's shape. (b) needs no new
-   renderer but only serves titles on Vulkan; it suits Aurora's menus, and can be vulkan4xenon's own milestone.
-
-2. **Where ImGui lives.**
-   - (a) A fork, xenosworks/imgui-xenon, which you'd create: ImGui's latest release on a `xenon` branch, the backend,
-     its check and demo added. Costs a repository, a push when you ask, and a check title of its own, as sdl_check is.
-     xsdk stays C.
-   - (b) Vendored in xsdk under `third_party/imgui`: one repository and one run, but about 69,000 lines of ImGui's
-     C++ in xsdk, a C++ backend against CODE_GUIDELINES.md 2's C17 rule, and two copies of ImGui in a title that
-     brings its own, as Aurora does.
-   - (c) The backend alone in xsdk, ImGui fetched from upstream by the check's build: no new repository, but C++ in
-     xsdk all the same, and a download in xsdk's build.
-
-   Recommended: (a), as the other ports are; ImGui itself builds unchanged, so the fork only adds files, and taking a
-   new release is a merge of upstream's.
-
-3. **The font.**
-   - (a) X11's misc-fixed 10x20, public domain, about 900 glyphs, whole-number scales.
-   - (b) The same, and 6x13 beside it for dense overlays: about 12 KB more in titles, and a font argument on the
-     calls.
-   - (c) A TrueType under the OFL, rasterised at build time: smooth sizes, but a TrueType rasteriser in the tools and the
-     OFL's terms.
-
-   Recommended: (a). It's the plainest that's sharp on a television, and ImGui covers smooth and large text.
-
-4. **xsdk's own debug overlay.**
-   - (a) None: titles draw their own with the text calls or ImGui, and docs/GUIDE.md shows a frame-time line.
-   - (b) `xsdk_overlay_draw`: frame time and missed vblanks from `xsdk_present_stats`, the ring's waits from
-     `xsdk_gpu_stats`, and the log's last lines, which src/log.c would keep in memory under a lock: about 150 lines,
-     another check, and log.c changed on every title's path.
-
-   Recommended: (a). (b) can come when a porter asks; the log already reaches the PC (milestone 53).
-
-5. **Typing into ImGui's text fields.**
-   - (a) Through XAM's on-screen keyboard, which milestone 51 brought.
-   - (b) Not at all: fields show text, and a title opens the keyboard itself.
-
-   Recommended: (a). A shop's search and a homebrew's settings need it, and it's a small piece over milestone 51's call.
+On 2026-10-21:
+1. **ImGui's renderer:** a backend on xsdk's GPU layer, about 500 lines, as imgui_impl_dx9 is on D3D9. Every xsdk
+   title can use it, at a third of the CPU a draw, and it's D3D9's shape. imgui_impl_vulkan unchanged through
+   vulkan4xenon, and both, were the others; it serves only titles on Vulkan, suits Aurora's menus, and can be
+   vulkan4xenon's own milestone.
+2. **ImGui lives in a fork,** xenosworks/imgui-xenon, as the other ports are: ImGui's latest release on a `xenon`
+   branch, the backend, its check and demo added, and xsdk stays C. You create the repository; it's pushed to only
+   when you ask, after its run has passed. ImGui builds unchanged, so the fork only adds files, and taking a new
+   release is a merge of upstream's. ImGui vendored in xsdk under `third_party/imgui`, and the backend alone in xsdk
+   with ImGui fetched by the check's build, were the others, both putting C++ in xsdk.
+3. **The font:** X11's misc-fixed 10x20 alone, public domain, about 900 glyphs, at whole-number scales: the plainest
+   that's sharp on a television, and ImGui covers smooth and large text. 6x13 beside it for dense overlays, and a
+   TrueType under the OFL rasterised at build time, were the others.
+4. **No debug overlay of xsdk's own:** titles draw their own with the text calls or ImGui, and docs/GUIDE.md shows a
+   frame-time line. `xsdk_overlay_draw`, with frame time, the ring's waits and the log's last lines kept by src/log.c,
+   was the other way; it can come when a porter asks, as the log already reaches the PC (milestone 53).
+5. **ImGui's text fields** are typed into through XAM's on-screen keyboard, which milestone 51 brought: a shop's
+   search and a homebrew's settings need it, and it's a small piece over milestone 51's call. Fields that only show
+   text, a title opening the keyboard itself, were the other way.
 
 ## Size
 
@@ -333,7 +309,7 @@ You can try the demo when you like; the milestone closes on the checks, not on a
   font's BDF and two generated headers besides.
 - **imgui-xenon:** about 1,000 lines: the backend, its shaders, the check, the demo, the CMake and the README.
 - **Console:** two runs by the console agent, each with its breaks, plus vulkan4xenon_test and vkbench once.
-- **From you:** creating xenosworks/imgui-xenon, and the decisions above. Nothing needs you at the console.
+- **From you:** creating xenosworks/imgui-xenon. Nothing needs you at the console.
 
 ## Risks
 

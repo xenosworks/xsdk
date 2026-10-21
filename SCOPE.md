@@ -1027,10 +1027,10 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
     it, and the checks use public hosts too. Xbox Live stays out (results/2026-10-21-milestone-56-acceptance/;
     HARDWARE.md, "Milestone 56 on the console").
 
-57. **Text and UI.** Proposed on 2026-10-21, not yet agreed: docs/scope/57-text-and-ui.md, for debug overlays and
-    homebrew menus. Text from xsdk's own calls, X11's public-domain 10x20 bitmap font in a glyph atlas drawn through
-    the GPU layer; then Dear ImGui through a backend on the GPU layer in a fork, xenosworks/imgui-xenon, driven by the
-    controller, its text fields through XAM's keyboard. An overlay of xsdk's own, physical keyboards and ImGui through
+57. **Text and UI.** Agreed on 2026-10-21: docs/scope/57-text-and-ui.md, for debug overlays and homebrew menus. Text
+    from xsdk's own calls, X11's public-domain 10x20 bitmap font alone in a glyph atlas drawn through the GPU layer;
+    then Dear ImGui through a backend on the GPU layer in a fork, xenosworks/imgui-xenon, driven by the controller,
+    its text fields through XAM's keyboard. An overlay of xsdk's own, physical keyboards and ImGui through
     vulkan4xenon left out.
 
 **Networking**, a scope of its own rather than a numbered milestone: sockets, and TLS 1.2 in the title's own code.
