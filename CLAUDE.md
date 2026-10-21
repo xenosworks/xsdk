@@ -55,8 +55,10 @@ layer that drives Xenos directly. Scope, sources and milestones are in SCOPE.md.
 
 - Milestone 55's Xenia run cannot establish priority share, hardware-thread placement, or physical pages returned:
   it schedules host threads and estimates memory statistics. Use the console checks in `m55_check.xex`/`xsdk_test`.
-  `NtQueryVirtualMemory` returned C000000D with two arguments. Its public declaration/import are withdrawn;
-  `probe_query_memory` tests three arguments with the last zero. Xenia ignores that argument and cannot validate it.
+  `NtQueryVirtualMemory(address, information, 0)` works on allocated virtual regions but returns C000000D for
+  title code and `.jit` (results/2026-10-20-milestone-55/probe_query_memory.log). Use `MmQueryAddressProtect` for
+  image protection. Xenia ignores the third argument and cannot validate that ABI; its image results are not
+  console evidence. Only a zero third argument is established.
   Xenia's `InstrEmit_icbi` emits a no-op (xenia:src/xenia/cpu/ppc/ppc_emit_memory.cc:1132-1135), so a rewritten
   function may keep its translated old code and the JIT rewrite checks may fail there; this is not console evidence.
   The probe's no-flush observation had intervening logging that may have evicted code. Use host cache-operation

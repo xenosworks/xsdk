@@ -1,7 +1,10 @@
 # Milestone 55
 
-The three probe logs here are xsdk console results from steps 1 and 2.
-[probe_exec_spike.log](probe_exec_spike.log) establishes the `.jit` method. None tests the new SDK wrappers. See docs/HARDWARE.md for the measured facts and limits.
+The logs here are xsdk console results from steps 1 and 2 and the memory-query follow-up.
+[probe_exec_spike.log](probe_exec_spike.log) establishes the `.jit` method;
+[probe_query_memory.log](probe_query_memory.log) establishes the three-argument virtual-memory query and its
+refusal of image pages. None tests the new SDK wrappers. See [HARDWARE.md](../../docs/HARDWARE.md) for the measured
+facts and limits.
 
 ## SDK checks
 
@@ -44,8 +47,6 @@ SDK bookkeeping, not the console ABI, cache behaviour, scheduling, protection or
   were not modified by this work.
 - GCC's builtin/libgcc clear-cache patch and rebuild are tracked in [TODO.md](../../TODO.md). Until then,
   generated code must call `xsdk_code_flush` explicitly.
-- `NtQueryVirtualMemory` is withheld from the public SDK pending the three-argument probe below. Mappings use owned
-  page bookkeeping and protection checks use `MmQueryAddressProtect`.
 
 The milestone is not marked console-complete until its acceptance runs pass.
 
@@ -72,27 +73,44 @@ Build logs are local, ignored files in `local/m55/`; binaries and each mutation'
   their respective host checks. Console outcomes for these builds and the new range checks remain pending.
 - GCC and the installed toolchain were unchanged. Build logs are `local/m55/review-*.log`.
 
-## Three-argument memory query probe
+## Three-argument memory query result
 
-Launch `build/probe_query_memory.xex` with no configuration file and retain `probe_query_memory.log`.
-`net_log.txt` streams the log as usual; `dbgprint.txt` enables Watson output. It shows the splash, resolves kernel
-ordinal 0x0EE and calls the candidate `(address, information, 0)`. The last argument is deliberately zero, a
-hypothesis suggested by the rejected two-argument run, not a verified length or debug-memory flag.
+[probe_query_memory.log](probe_query_memory.log) is the unchanged v1 console log, copied from
+`Z:\Xbox-360-SDK\local\m55\logs\query\probe_query_memory.log`. Its SHA-256 is
+`3ededd0adfc1941567c8322dcc39b797aaa738d0e329b09d84bd3066e5853e50`.
 
-It logs every call and all seven output words, with guard words before and after the output. It checks a committed
-allocation and an interior address, then a read-only page and its writable neighbour, a decommitted page that stays
-reserved, the released range, title code and `.jit`. A successful status alone is insufficient: the returned region
-must contain the address, state/allocation must match the controlled case, and committed protection must agree with
-`MmQueryAddressProtect`. Guard corruption stops further calls. The free-range query runs before logging after release.
-The third argument's semantics need further evidence even if zero works. Xenia's two-argument implementation cannot
-validate this candidate. No new hardware result is claimed until the console log arrives.
+All six allocation queries passed: committed read-write, interior address, read-only first page, writable
+neighbour, decommitted/reserved page and released/free range. The seven-word results had intact guards and
+matched the controlled regions and `MmQueryAddressProtect`. Title code and `.jit` returned C000000D, left the
+output untouched and kept the guards intact; `MmQueryAddressProtect` returned 00000020 for both. The log's
+**20 passed, 2 failed** comes from v1 expecting successful image queries. The splash passed.
+
+The public declaration and ordinal 0x0EE import now take `(address, information, 0)` for regions from
+`NtAllocateVirtualMemory`, including `mmap`'s backing allocations. Use `MmQueryAddressProtect` for image
+protection. Only zero is established for the third argument; its meaning and nonzero values remain unverified.
+The log tests the raw allocation API, not the `mmap` wrapper. Xenia cannot validate the third argument.
+
+`build/probe_query_memory.xex` v2 uses the public import, keeps the six allocation checks and expects
+`STATUS_INVALID_PARAMETER` for both image queries. It retains output guards and the splash, and does not
+interpret an error result as valid memory information. Guard corruption stops further calls. The free-range
+query still runs before logging after release. Launch with no configuration; `net_log.txt` streams the log
+and `dbgprint.txt` enables Watson output. The retained v1 log is not a console run of this revised probe.
 
 The C host tests and focused title are explicit M55 exceptions in CODE_GUIDELINES.md. `m55_check` and its negative
 variants now show the splash. The host semaphore test fills its mock handle table, checks `sem_init` returns
 `ENOSPC` without changing the failed object, then frees the resources and retries successfully. This follows
 [POSIX sem_init](https://pubs.opengroup.org/onlinepubs/9799919799.2024edition/functions/sem_init.html).
 
-Follow-up local validation: a clean full rebuild had zero warnings; all six host checks passed, and restoring
+Before the console query result, a clean full rebuild had zero warnings; all six host checks passed, and restoring
 `ENOMEM` failed the new resource-exhaustion assertion. All 47 negative titles rebuilt without diagnostics. Object
 inspection confirms the candidate call sets r5 to zero; archive inspection confirms the old query import is absent.
-Logs are `local/m55/followup-*.log`. The query probe and splash changes still require console validation.
+Logs are `local/m55/followup-*.log`. The later v1 console query and its splash are recorded above;
+`m55_check`'s splash and the revised v2 query probe have not yet been run on the console.
+
+## Restored query validation (2026-10-20)
+
+- A clean full rebuild completed with zero compiler/linker warnings or errors; all six M55 host checks passed.
+- Linked PowerPC inspection confirms ordinal 0x0EE and r5=0 at the public `NtQueryVirtualMemory` call.
+- The copied console log matches its source byte for byte and has the SHA-256 recorded above.
+- These build and host checks do not establish a new console result for v2. Logs and disassembly are in
+  `local/m55/query-restored-*`.

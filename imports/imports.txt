@@ -80,6 +80,7 @@ xboxkrnl.exe  0x0DA  NtDuplicateObject
 xboxkrnl.exe  0x0DC  NtFreeVirtualMemory
 xboxkrnl.exe  0x0E1  NtProtectVirtualMemory
 xboxkrnl.exe  0x0E2  NtPulseEvent
+xboxkrnl.exe  0x0EE  NtQueryVirtualMemory
 xboxkrnl.exe  0x0F2  NtReleaseMutant
 xboxkrnl.exe  0x0FA  NtSetTimerEx
 xboxkrnl.exe  0x0FB  NtSignalAndWaitForSingleObjectEx

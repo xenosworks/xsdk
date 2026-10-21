@@ -276,10 +276,17 @@ with `xsdk_gpu_free`. `mprotect` accepts `PROT_NONE`, `PROT_READ`, or `PROT_READ
 pages. Its address must be page-aligned. GPU memory uses the raw `MmSetAddressProtect` API instead.
 
 File-backed, shared and fixed mappings are refused with `ENOTSUP`, as is `PROT_EXEC` in either allocation or
-protection. Do not mix raw decommit/recommit calls with a mapping's tracked lifetime. `MmQueryAddressProtect`
-returns protection flags. `NtQueryVirtualMemory` has no public declaration while its ABI is under probe. The top
-of newlib's heap now decommits in 64 KB chunks when `free` trims it; live allocations above a freed block still
-prevent its return. Use a mapping for a large buffer that must be independently releasable.
+protection. Do not mix raw decommit/recommit calls with a mapping's tracked lifetime.
+
+`NtQueryVirtualMemory(address, &information, 0)` fills `MEMORY_BASIC_INFORMATION` for virtual regions from
+`NtAllocateVirtualMemory`, including those backing `mmap`. Pass zero as the third argument; other values and
+its meaning are unverified. The console probe covered committed, decommitted/reserved and released/free regions.
+Image pages, including title code and `.jit`, return `STATUS_INVALID_PARAMETER` (`0xC000000D`); use
+`MmQueryAddressProtect(address)` for their protection flags. See the unchanged
+[console query log](../results/2026-10-20-milestone-55/probe_query_memory.log).
+
+The top of newlib's heap now decommits in 64 KB chunks when `free` trims it; live allocations above a freed block
+still prevent its return. Use a mapping for a large buffer that must be independently releasable.
 
 Generated code uses the title's executable `.jit` image section. Give it the desired size in an assembly file:
 

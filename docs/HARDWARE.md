@@ -4721,10 +4721,10 @@ The unchanged logs are in [results/2026-10-20-milestone-55](../results/2026-10-2
 - A virtual allocation changed from read-write to read-only and back; the read-only query returned `00001002`.
   Decommit and release succeeded. Physical memory's protection changed from `00000404` to read-only `00000002`
   and read-write `00000004`.
-- **`NtQueryVirtualMemory` returned `C000000D`** for both the allocation and `.jit`, leaving the result zeroed.
-  Its Xenia-derived declaration remains unverified on hardware. `mmap` therefore tracks its own reservations and
-  committed pages; `munmap` releases a reservation after its last tracked page is decommitted. Protection checks use
-  the working `MmQueryAddressProtect`, not a fabricated query result.
+- **The initial two-argument `NtQueryVirtualMemory` calls returned `C000000D`** for both the allocation and `.jit`,
+  leaving the result zeroed. The three-argument follow-up below establishes the allocation query. `mmap` keeps
+  its own reservation and committed-page bookkeeping for ownership; `munmap` releases a reservation after its last
+  tracked page is decommitted.
 - The singly linked list pushed and popped 1000 entries, then flushed a remaining entry and was empty. Concurrent
   pushes are covered by the new checks, not this probe.
 - The 64 KB `.jit` pool at `82080000` reported protection `00000020`. Written code returned 42 after a flush;
@@ -4737,7 +4737,24 @@ Steps 3–8 add SDK APIs and console checks on top of these results. Their new c
 SDL, Dusklight and Vulkan regressions have not yet been run here. No new hardware result is claimed by a successful
 cross-build or host mock test. GCC's builtin/libgcc cache flush and rebuild remain tracked in [TODO.md](../TODO.md).
 
-M55 query follow-up: the rejected two-argument declaration and static import are withdrawn. The separate
-`probe_query_memory` resolves ordinal 0x0EE and tests `(address, information, 0)` with output guards, page-state
-transitions, title code and `.jit`. Neither the third argument's meaning nor the output layout is established by
-this build; the new console log is still required. The earlier two-argument logs remain the evidence above.
+M55 query follow-up (2026-10-20): the console ran `probe_query_memory` v1, retained unchanged as
+[probe_query_memory.log](../results/2026-10-20-milestone-55/probe_query_memory.log), copied from
+`Z:\Xbox-360-SDK\local\m55\logs\query\probe_query_memory.log`. It resolved ordinal 0x0EE and called
+`NtQueryVirtualMemory(address, information, 0)` with a guarded seven-word result.
+
+- All six allocation queries returned success with intact guards: the 64 KB committed read-write allocation,
+  an interior address, its first 4 KB changed to read-only, the writable neighbour, the decommitted first page
+  still reserved, and the free range immediately after release. The reported regions contained the address,
+  their state and allocation base matched, and committed protection agreed with `MmQueryAddressProtect`.
+- The read-only region was 4 KB with protection `00001002`; its neighbour was 60 KB with `00000004`.
+  After decommit, state was `00002000` with protection zero. After release, state was `00010000`, allocation
+  base zero and protection `00000001`.
+- Title code and `.jit` returned `C000000D` with all seven words still `A5A5A5A5` and guards intact.
+  `MmQueryAddressProtect` returned `00000020` for both image addresses. The log's **20 passed, 2 failed** reflects
+  v1 incorrectly expecting those image queries to succeed. v2 checks for `STATUS_INVALID_PARAMETER` instead;
+  this retained log is not a run of v2. The splash also passed.
+
+The SDK restores the three-argument declaration and import for regions from `NtAllocateVirtualMemory`, including
+`mmap`'s backing allocations (`src/mman.c`); this log did not separately exercise the `mmap` wrapper. Image
+protection uses `MmQueryAddressProtect`. Pass zero as the third argument: its meaning and nonzero values remain
+unverified. The earlier two-argument logs are retained as historical results.

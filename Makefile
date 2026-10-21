@@ -441,6 +441,6 @@ system_probes: $(BUILD)/probe_terminate.xex $(BUILD)/probe_letterbox.xex
 
 drive_probes: $(BUILD)/probe_drives.xex
 
-# Keep the unverified query ABI out of the shared acceptance checks.
+# The focused query probe also checks the executable image pool.
 $(BUILD)/probe_query_memory.elf: $(BUILD)/tests/probe_query_memory.o $(BUILD)/tests/jit_pool.o $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/probe_query_memory.o $(BUILD)/tests/jit_pool.o $(LIBS)

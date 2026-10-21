@@ -100,8 +100,8 @@ Each step rests on the console where Xenia can't answer. Steps 1 and 2 are the p
      (docs/HARDWARE.md, "The log over the network, milestone 53").
    - **One case a run,** named in `game:\probe_exec.txt` beside the `.xex`, as tests/probe_fault.c takes its mode; with
      no file, the default is the whole spike. The cases:
-     1. `query`: `MmQueryAddressProtect` on `.jit`, logged. The rejected two-argument virtual-memory query is now
-        isolated as a three-argument candidate in `probe_query_memory`; nothing generated runs in this mode.
+     1. `query`: `MmQueryAddressProtect` on `.jit`, logged. `probe_query_memory` separately tests the three-argument
+        virtual-memory query and its refusal of image pages; nothing generated runs in this mode.
      2. `spike`, the default: write `li r3, 42; blr` into the `.jit` section, flush, call, check 42; rewrite to
         `li r3, 99; blr`, flush, call, check 99; and an unflushed rewrite as a diagnostic. Logging may evict the
         previous code, so this does not isolate cache effects.
@@ -141,7 +141,8 @@ Each step rests on the console where Xenia can't answer. Steps 1 and 2 are the p
    - `sbrk` decommits whole 64 KB steps above the break when newlib's `malloc` shrinks the heap, so memory freed at the
      heap's top goes back to the kernel;
    - `MmSetAddressProtect` and `MmQueryAddressProtect` raw in kernel.h for GPU memory and protection queries.
-     `NtQueryVirtualMemory` is withheld until its separate probe validates the ABI.
+     `NtQueryVirtualMemory(address, information, 0)` queries regions from `NtAllocateVirtualMemory`/`mmap`; image
+     pages return C000000D, so use `MmQueryAddressProtect` for them (query follow-up below).
 
 7. **Executable memory, a `.jit` section,** as step 2's probe runs it:
    - src/xsdk.ld gives `.jit` its own 64 KB-aligned region; a title defines a `.jit` input section of the size it wants,
@@ -254,10 +255,13 @@ Steps 1 and 2 are recorded in `results/2026-10-20-milestone-55/`. Steps 3–8 no
 usage documentation; console acceptance remains pending. GCC's patch and rebuild remain in [TODO.md](../../TODO.md).
 Two changes follow the actual probe evidence:
 
-- `NtQueryVirtualMemory` failed with C000000D. `mmap` tracks its reservations and committed-page bits; `munmap`
-  decommits live subranges and releases after the last page. Protection checks use `MmQueryAddressProtect`.
-  The failing raw declaration and static import are removed. `probe_query_memory` resolves 0x0EE and tests the
-  candidate `(address, information, 0)` with guarded output and page-state transitions; console validation is pending.
+- The initial two-argument `NtQueryVirtualMemory` calls failed with C000000D. The
+  [query follow-up](../../results/2026-10-20-milestone-55/probe_query_memory.log) validates
+  `(address, information, 0)` for committed, reserved and free virtual regions; its declaration and ordinal 0x0EE
+  import are restored. Title code and `.jit` still return C000000D, so their protection queries use
+  `MmQueryAddressProtect`. Only the zero third argument is established. `mmap` uses `NtAllocateVirtualMemory`
+  and keeps its own reservations and committed-page bits for lifetime ownership; `munmap` decommits live
+  subranges and releases after the last page.
 - The unflushed rewrite returned the new value, with logging between the earlier call and rewrite. Incidental
   eviction was not excluded. Host checks reject missing cache maintenance; console wrong-code variants check returns.
 

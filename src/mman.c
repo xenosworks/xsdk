@@ -20,7 +20,7 @@ typedef struct Mapping {
 	unsigned char committed[];
 } Mapping;
 
-// The console refused NtQueryVirtualMemory in the probe; own only mmap's reservations and track their pages.
+// Own only mmap's reservations so partial unmaps release each reservation after its last live page.
 static Mapping *mappings;
 static pthread_mutex_t mappings_lock = PTHREAD_MUTEX_INITIALIZER;
 
