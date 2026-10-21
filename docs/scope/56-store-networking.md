@@ -264,3 +264,12 @@ docs/HARDWARE.md, "XAM's sockets and loader, milestone 56", has the results. Wha
   title's own folder, `EXDEV` for anywhere else, and docs/GUIDE.md says so. `E2BIG` past 1020 bytes. `ENOENT` is
   checked before anything ends, as XAM ends the title for a path to nothing. `argv` holds the name alone, `argc` 1.
 - **Step 6:** curl's socket pair binds 127.0.0.1, which XAM refuses, so `CURL_DISABLE_SOCKETPAIR` is set.
+
+## Done (2026-10-21)
+
+[The acceptance runs](../../results/2026-10-21-milestone-56-acceptance/README.md) passed: xsdk_test with only its
+controller checks failing, launch_check 5 of 5, curl_check 13 of 13 in curl-xenon, each of their 24 breaks failing its
+own checks, and vulkan4xenon_test twice and vkbench unchanged. docs/HARDWARE.md, "Milestone 56 on the console", records
+the download rates. Launching outside the title's folder works through a symbolic link of its own, so `EXDEV` wasn't
+needed. Three things curl needed of xsdk came in with it: `EAI_NONAME`, `AI_NUMERICSERV`, `TCP_NODELAY` and `SO_ERROR`
+as macros, `basename` and `dirname`, and `poll` reporting data to read as `POLLIN` alone.

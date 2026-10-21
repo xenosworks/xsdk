@@ -1,0 +1,12 @@
+log: game:\launch_check.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m56l\launch_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+launch_check: launches launch_target.xex beside it, then outside its folder, each launching back
+PASS: launch: argv holds the .xex's name alone, as the loader's command line does
+PASS: launch: a .xex that isn't there fails with ENOENT and 1021 bytes of data with E2BIG, the title running on
+FAIL: launch: the round trip through launch_target beside it brings the data back reversed
+PASS: launch: 1020 bytes of data, the most XAM passes on, arrive whole
+launch_check: back from stage 2 with 64 bytes of launch data
+FAIL: launch: launch_target outside the title's folder, launched through xsdk's link, launches back with the data reversed
+launch_check: 5 checks, 2 failed; done
+exit: status 1

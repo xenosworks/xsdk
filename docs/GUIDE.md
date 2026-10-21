@@ -408,6 +408,12 @@ rename("hdd:/store/game.zip.part", "hdd:/store/game.zip");
 A download that outlives the title, or power lost during one, isn't covered: the part keeps the old file through a
 dropped connection, and FATX through a power cut hasn't been tried.
 
+**Speed.** Raise `xsdk_network_limits`' buffers and set `SO_RCVBUF` to 255 KB on the download's socket (curl's
+`CURLOPT_SOCKOPTFUNCTION`): a download onto `hdd:` went from 1.6 to 3.2 MB/s to 5.6 to 8.2, and one from the internet
+from 1.1 to 5 to 8. Over HTTPS the cipher decides: ChaCha20-Poly1305 reached 8 MB/s and AES-256-GCM 1.9, the console's
+CPU doing the work, so a store's server should offer ChaCha20-Poly1305 first (docs/HARDWARE.md, "Milestone 56 on the
+console").
+
 ## Launching
 
 [tests/launch_check.c](../tests/launch_check.c), [tests/launch_target.c](../tests/launch_target.c), through `xam.h`

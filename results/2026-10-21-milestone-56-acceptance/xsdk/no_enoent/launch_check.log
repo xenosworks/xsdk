@@ -1,0 +1,10 @@
+log: game:\launch_check.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m56l\launch_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+launch_check: launches launch_target.xex beside it, then outside its folder, each launching back
+open: NtCreateFile(game:\launch_check_state.txt) failed: 0xC0000034
+launch_check: a first start, 0 bytes of launch data
+launch_check: argc 1, argv[0] "launch_check.xex"
+PASS: launch: argv holds the .xex's name alone, as the loader's command line does
+launch_check: 1021 bytes for launch_target.xex gave errno 7; now launch_none.xex, which isn't there
+exit: status 0, launching game:\launch_none.xex

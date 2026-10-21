@@ -1,0 +1,58 @@
+06:18:50 HTTP on port 7380, HTTPS on 7381, broken: range
+06:18:54 http 192.168.0.152:1206: "GET /catalog.json HTTP/1.1" 200 -
+06:18:54 http 192.168.0.152:1207: "GET /launch_target.xex HTTP/1.1" 200 -
+06:18:58 http 192.168.0.152:1208: "GET /catalog.json HTTP/1.1" 200 -
+06:18:58 http 192.168.0.152:1209: "GET /files/data_100000.bin HTTP/1.1" 200 -
+06:18:58 https 192.168.0.152:1210: "GET /files/data_100000.bin HTTP/1.1" 200 -
+06:18:59 http 192.168.0.152:1213: "GET /redirect HTTP/1.1" 302 -
+06:18:59 http 192.168.0.152:1213: "GET /files/data_4096.bin HTTP/1.1" 200 -
+06:18:59 http 192.168.0.152:1214: "GET /stall HTTP/1.1" 200 -
+06:18:59 http 192.168.0.152:1214: the stalled client closed
+06:18:59 http 192.168.0.152:1216: "GET /files/data_4096.bin HTTP/1.1" 200 -
+06:18:59 http 192.168.0.152:1217: "GET /files/data_65536.bin HTTP/1.1" 200 -
+06:18:59 http 192.168.0.152:1218: "GET /files/data_1048576.bin HTTP/1.1" 200 -
+06:18:59 http 192.168.0.152:1219: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:19:00 http 192.168.0.152:1220: "GET /catalog_bad.json HTTP/1.1" 200 -
+06:19:00 http 192.168.0.152:1221: "GET /drop/data_1048576.bin HTTP/1.1" 200 -
+06:19:00 http 192.168.0.152:1221: dropped after 524288 of 1048576 bytes
+06:19:00 http 192.168.0.152:1222: "GET /files/data_1048576.bin HTTP/1.1" 200 -
+----------------------------------------
+Exception occurred during processing of request from ('192.168.0.152', 1222)
+Traceback (most recent call last):
+06:19:00 http 192.168.0.152:1223: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+  File "C:\Users\Mena\AppData\Local\Programs\Python\Python313\Lib\socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Mena\AppData\Local\Programs\Python\Python313\Lib\socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Mena\AppData\Local\Programs\Python\Python313\Lib\socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "Z:\xsdk-worktrees\M56\Xbox-360-SDK\tools\net_http.py", line 71, in handle
+    super().handle()
+    ~~~~~~~~~~~~~~^^
+  File "C:\Users\Mena\AppData\Local\Programs\Python\Python313\Lib\http\server.py", line 447, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Mena\AppData\Local\Programs\Python\Python313\Lib\http\server.py", line 435, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "Z:\xsdk-worktrees\M56\Xbox-360-SDK\tools\net_http.py", line 98, in do_GET
+    self.send_file(path[len("/files/"):], drop=False)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "Z:\xsdk-worktrees\M56\Xbox-360-SDK\tools\net_http.py", line 148, in send_file
+    self.wfile.write(chunk)
+    ~~~~~~~~~~~~~~~~^^^^^^^
+  File "C:\Users\Mena\AppData\Local\Programs\Python\Python313\Lib\socketserver.py", line 845, in write
+    self._sock.sendall(b)
+    ~~~~~~~~~~~~~~~~~~^^^
+ConnectionAbortedError: [WinError 10053] An established connection was aborted by the software in your host machine
+----------------------------------------
+06:19:01 http 192.168.0.152:1224: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:19:05 http 192.168.0.152:1225: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:19:06 http 192.168.0.152:1226: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:19:08 https 192.168.0.152:1227: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:19:12 https 192.168.0.152:1228: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:19:22 https 192.168.0.152:1229: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:19:27 https 192.168.0.152:1230: "GET /files/data_8388608.bin HTTP/1.1" 200 -

@@ -1,0 +1,26 @@
+06:07:08 HTTP on port 7380, HTTPS on 7381
+06:07:13 http 192.168.0.152:1108: "GET /catalog.json HTTP/1.1" 200 -
+06:07:13 http 192.168.0.152:1109: "GET /launch_target.xex HTTP/1.1" 200 -
+06:07:17 http 192.168.0.152:1110: "GET /catalog.json HTTP/1.1" 200 -
+06:07:17 http 192.168.0.152:1111: "GET /files/data_100000.bin HTTP/1.1" 200 -
+06:07:17 https 192.168.0.152:1112: "GET /files/data_100000.bin HTTP/1.1" 200 -
+06:07:18 http 192.168.0.152:1115: "GET /redirect HTTP/1.1" 302 -
+06:07:18 http 192.168.0.152:1115: "GET /files/data_4096.bin HTTP/1.1" 200 -
+06:07:18 http 192.168.0.152:1116: "GET /stall HTTP/1.1" 200 -
+06:07:18 http 192.168.0.152:1116: the stalled client closed
+06:07:18 http 192.168.0.152:1119: "GET /files/data_4096.bin HTTP/1.1" 200 -
+06:07:18 http 192.168.0.152:1120: "GET /files/data_65536.bin HTTP/1.1" 200 -
+06:07:18 http 192.168.0.152:1121: "GET /files/data_1048576.bin HTTP/1.1" 200 -
+06:07:18 http 192.168.0.152:1122: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:07:19 http 192.168.0.152:1123: "GET /catalog_bad.json HTTP/1.1" 200 -
+06:07:19 http 192.168.0.152:1124: "GET /drop/data_1048576.bin HTTP/1.1" 200 -
+06:07:19 http 192.168.0.152:1124: dropped after 524288 of 1048576 bytes
+06:07:19 http 192.168.0.152:1125: "GET /files/data_1048576.bin HTTP/1.1" 206 -
+06:07:20 http 192.168.0.152:1126: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:07:20 http 192.168.0.152:1127: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:07:25 http 192.168.0.152:1128: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:07:26 http 192.168.0.152:1129: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:07:27 https 192.168.0.152:1130: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:07:32 https 192.168.0.152:1131: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:07:41 https 192.168.0.152:1132: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:07:45 https 192.168.0.152:1133: "GET /files/data_8388608.bin HTTP/1.1" 200 -

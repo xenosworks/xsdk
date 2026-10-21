@@ -1,0 +1,63 @@
+log: game:\curl_check.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m56c\curl_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 16113 us
+curl check: libcurl/8.23.0-DEV mbedTLS/3.6.7
+open: NtCreateFile(game:\curl_check_break.txt) failed: 0xC0000034
+curl check: http://192.168.0.125:7380/catalog.json: No error, HTTP 200, 719 bytes in 2 ms
+curl check: back with 45 bytes of launch data, 45 sent (curl_check at 2037179 ms)
+PASS: launch: launch_target.xex, downloaded and its SHA-256 checked, is launched and launches curl_check back with the data reversed
+curl check: http://192.168.0.125:7380/files/data_100000.bin: No error, HTTP 200, 100000 bytes in 9 ms
+PASS: http: a file comes from the PC over HTTP, every byte right
+curl check: https://localhost:7381/files/data_100000.bin: No error, HTTP 200, 100000 bytes in 113 ms, TLSv1.2 TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
+PASS: https: a file comes from the PC over HTTPS, its certificate checked against the test CA and the name localhost
+curl check: https://example.com/: No error, HTTP 200, 577 bytes in 213 ms, TLSv1.2 TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+PASS: https: example.com answers 200, its certificate checked against cacert.pem
+curl check: https://wrong.host.badssl.com/: SSL peer certificate or SSH remote key was not OK, HTTP 0, 0 bytes in 148 ms: mbedTLS: The certificate Common Name (CN) does not match with the expected CN
+
+PASS: https: wrong.host.badssl.com, its certificate for another name, is refused
+curl check: http://192.168.0.125:7380/redirect: No error, HTTP 200, 4096 bytes in 2 ms
+PASS: http: a redirect is followed to the file it names
+curl check: http://192.168.0.125:7380/stall: Timeout was reached, HTTP 200, 0 bytes in 501 ms: Operation timed out after 501 milliseconds with 0 out of 4096 bytes received
+PASS: http: a response that stalls after its headers ends in CURLE_OPERATION_TIMEDOUT within a second
+curl check: http://127.0.0.1:7379/: Could not connect to server, HTTP 0, 0 bytes in 0 ms: Failed to connect to 127.0.0.1:7379 after 0 ms: Could not connect to server
+PASS: http: a closed port gives CURLE_COULDNT_CONNECT
+curl check: http://nothing.invalid/: Could not resolve hostname, HTTP 0, 0 bytes in 1 ms: Could not resolve host: nothing.invalid
+PASS: http: a name that does not exist gives CURLE_COULDNT_RESOLVE_HOST
+curl check: http://192.168.0.125:7380/files/data_4096.bin: No error, HTTP 200, 4096 bytes in 1 ms
+curl check: data_4096.bin is not served as listed
+curl check: http://192.168.0.125:7380/files/data_65536.bin: No error, HTTP 200, 65536 bytes in 6 ms
+curl check: http://192.168.0.125:7380/files/data_1048576.bin: No error, HTTP 200, 1048576 bytes in 89 ms
+curl check: http://192.168.0.125:7380/files/data_8388608.bin: No error, HTTP 200, 8388608 bytes in 708 ms
+FAIL: catalogue: catalog.json reads with cJSON, and each file it lists is served with its size and SHA-256
+curl check: http://192.168.0.125:7380/catalog_bad.json: No error, HTTP 200, 61 bytes in 1 ms
+PASS: catalogue: a malformed catalogue is refused
+unlink: NtCreateFile(game:\data_1048576.bin.part) failed: 0xC0000034
+curl check: http://192.168.0.125:7380/drop/data_1048576.bin: Transferred a partial file, HTTP 200, 524288 bytes in 67 ms: end of response with 524288 bytes missing
+PASS: download: a dropped download fails, leaving the old file as it was and its part file
+curl check: http://192.168.0.125:7380/files/data_1048576.bin: No error, HTTP 206, 524288 bytes in 64 ms
+PASS: download: resumed with Range, the part file is whole, its SHA-256 the catalogue's, and it is renamed over the old file
+unlink: NtCreateFile(game:\data_1048576.bin.part) failed: 0xC0000034
+curl check: http://192.168.0.125:7380/files/data_8388608.bin: No error, HTTP 200, 8388608 bytes in 708 ms
+rate: HTTP from the PC, into memory, XAM's buffers: 8388608 bytes in 709 ms, 11554 KB/s, SO_RCVBUF 16384
+curl check: http://192.168.0.125:7380/files/data_8388608.bin: No error, HTTP 200, 8388608 bytes in 2928 ms
+rate: HTTP from the PC, onto hdd:, XAM's buffers: 8388608 bytes in 3065 ms, 2672 KB/s, SO_RCVBUF 16384
+curl check: http://192.168.0.125:7380/files/data_8388608.bin: No error, HTTP 200, 8388608 bytes in 708 ms
+rate: HTTP from the PC, into memory, raised buffers: 8388608 bytes in 709 ms, 11554 KB/s, SO_RCVBUF 261120
+curl check: http://192.168.0.125:7380/files/data_8388608.bin: No error, HTTP 200, 8388608 bytes in 1031 ms
+rate: HTTP from the PC, onto hdd:, raised buffers: 8388608 bytes in 1149 ms, 7129 KB/s, SO_RCVBUF 261120
+curl check: https://localhost:7381/files/data_8388608.bin: No error, HTTP 200, 8388608 bytes in 4406 ms, TLSv1.2 TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
+rate: HTTPS from the PC, into memory, XAM's buffers: 8388608 bytes in 4407 ms, 1858 KB/s, SO_RCVBUF 16384, TLSv1.2 TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
+curl check: https://localhost:7381/files/data_8388608.bin: No error, HTTP 200, 8388608 bytes in 9763 ms, TLSv1.2 TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
+rate: HTTPS from the PC, onto hdd:, XAM's buffers: 8388608 bytes in 9831 ms, 833 KB/s, SO_RCVBUF 16384, TLSv1.2 TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
+curl check: https://localhost:7381/files/data_8388608.bin: No error, HTTP 200, 8388608 bytes in 4391 ms, TLSv1.2 TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
+rate: HTTPS from the PC, into memory, raised buffers: 8388608 bytes in 4392 ms, 1865 KB/s, SO_RCVBUF 261120, TLSv1.2 TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
+curl check: https://localhost:7381/files/data_8388608.bin: No error, HTTP 200, 8388608 bytes in 6621 ms, TLSv1.2 TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
+rate: HTTPS from the PC, onto hdd:, raised buffers: 8388608 bytes in 6716 ms, 1219 KB/s, SO_RCVBUF 261120, TLSv1.2 TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384
+curl check: https://speed.cloudflare.com/__down?bytes=5000000: No error, HTTP 200, 5000000 bytes in 4256 ms, TLSv1.2 TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+rate: HTTPS from speed.cloudflare.com, into memory, XAM's buffers: 5000000 bytes in 4257 ms, 1147 KB/s, SO_RCVBUF 16384, TLSv1.2 TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+curl check: https://speed.cloudflare.com/__down?bytes=5000000: No error, HTTP 200, 5000000 bytes in 613 ms, TLSv1.2 TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+rate: HTTPS from speed.cloudflare.com, into memory, raised buffers: 5000000 bytes in 614 ms, 7952 KB/s, SO_RCVBUF 261120, TLSv1.2 TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256
+tests: 12 passed, 1 failed
+exit: status 1

@@ -4877,3 +4877,28 @@ Step 1 of docs/scope/56-store-networking.md, probe_net and probe_launch on the c
   title it launches back gets none, and none is left after the dashboard.
 - `ExLoadedCommandLine` holds the image's name and nothing else, in quotes (`"probe_launch.xex"`), whether the agent,
   another title or Aurora launched it. A title's arguments travel in launch data.
+
+## Milestone 56 on the console (2026-10-21)
+
+The checks of docs/scope/56-store-networking.md passed, each break failing its own
+([results](../results/2026-10-21-milestone-56-acceptance/README.md)). What they showed beyond step 1's probes:
+- **XAM launches through a link the title makes:** `\??\launch:` linked to `\Device\Harddisk0\Partition1\...` with
+  `ObCreateSymbolicLink`, `XamLoaderLaunchTitle("launch:\launch_target.xex")` starts it, where the device path itself
+  goes to the stock dashboard.
+- **A {1, 0} linger closes without a FIN or a reset reaching the PC:** tools/net_echo.py found the connection still
+  open after `close`, as in step 1, where a close without the linger sends a FIN.
+- **Buffers of 63 KB in `NetDll_XNetStartup` read back as 65700 bytes** of `SO_RCVBUF` on a new socket.
+- **Download rates,** curl_check over the wired 100 Mbit/s link, 8 MB from the PC in nine runs and 5 MB from
+  speed.cloudflare.com, with XAM's 16 KB buffers and with `SO_RCVBUF` raised to 255 KB:
+
+  | Download | XAM's buffers | Raised |
+  |---|---|---|
+  | HTTP from the PC, into memory | 10.9 to 11.6 MB/s | 11.4 to 11.6 MB/s |
+  | HTTP from the PC, onto `hdd:` | 1.6 to 3.2 MB/s | 5.6 to 8.2 MB/s |
+  | HTTPS from the PC, TLS-ECDHE-ECDSA-WITH-AES-256-GCM-SHA384, into memory | 1.84 to 1.87 MB/s | 1.86 to 1.87 MB/s |
+  | The same onto `hdd:` | 0.80 to 1.04 MB/s | 0.86 to 1.22 MB/s |
+  | HTTPS from Cloudflare, TLS-ECDHE-ECDSA-WITH-CHACHA20-POLY1305-SHA256, into memory | 1.06 to 1.19 MB/s | 5.3 to 8.0 MB/s |
+
+  Plain HTTP into memory runs at the link. Raised buffers speed up what waits on the disk or a far host. HTTPS with
+  AES-256-GCM stays at 1.9 MB/s whatever the buffers, where ChaCha20-Poly1305 reaches 5 to 8: the cipher, on the
+  console's CPU, is what holds it back.

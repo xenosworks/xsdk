@@ -191,6 +191,10 @@ it removes.
 
 ## Questions the console hasn't answered
 
+- **The console's state after a long session.** On 2026-10-21, after some hours of titles and launches, three of
+  milestone 55's mutant checks failed in a build that had passed them; and after about an hour of launch round trips,
+  the console agent's launch returned 1 and no title started. Each passed again after a reboot
+  (results/2026-10-21-milestone-56-acceptance/README.md). What builds up isn't known.
 - **The depth-bias slope.** `XsdkRaster` takes it, but milestone 14 tested only the constant term.
 - **Point mip filtering exactly halfway between two levels:** the nearer level, or the one below. Milestone 15
   avoided it.

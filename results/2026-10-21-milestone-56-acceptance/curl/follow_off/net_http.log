@@ -1,0 +1,30 @@
+05:44:06 HTTP on port 7380, HTTPS on 7381
+05:44:06 http 192.168.0.152:1079: "GET /catalog.json HTTP/1.1" 200 -
+05:44:06 http 192.168.0.152:1080: "GET /files/data_100000.bin HTTP/1.1" 200 -
+05:44:06 https 192.168.0.152:1081: "GET /files/data_100000.bin HTTP/1.1" 200 -
+05:44:06 http 192.168.0.152:1084: "GET /redirect HTTP/1.1" 302 -
+05:44:06 http 192.168.0.152:1085: "GET /stall HTTP/1.1" 200 -
+05:44:10 http 192.168.0.152:1086: "GET /catalog.json HTTP/1.1" 200 -
+05:44:10 http 192.168.0.152:1087: "GET /launch_target.xex HTTP/1.1" 200 -
+05:44:13 http 192.168.0.152:1088: "GET /catalog.json HTTP/1.1" 200 -
+05:44:14 http 192.168.0.152:1089: "GET /files/data_100000.bin HTTP/1.1" 200 -
+05:44:14 https 192.168.0.152:1090: "GET /files/data_100000.bin HTTP/1.1" 200 -
+05:44:14 http 192.168.0.152:1093: "GET /redirect HTTP/1.1" 302 -
+05:44:14 http 192.168.0.152:1094: "GET /stall HTTP/1.1" 200 -
+05:44:15 http 192.168.0.152:1094: the stalled client closed
+05:44:15 http 192.168.0.152:1096: "GET /files/data_4096.bin HTTP/1.1" 200 -
+05:44:15 http 192.168.0.152:1097: "GET /files/data_65536.bin HTTP/1.1" 200 -
+05:44:15 http 192.168.0.152:1098: "GET /files/data_1048576.bin HTTP/1.1" 200 -
+05:44:15 http 192.168.0.152:1099: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+05:44:15 http 192.168.0.152:1100: "GET /catalog_bad.json HTTP/1.1" 200 -
+05:44:15 http 192.168.0.152:1101: "GET /drop/data_1048576.bin HTTP/1.1" 200 -
+05:44:15 http 192.168.0.152:1101: dropped after 524288 of 1048576 bytes
+05:44:16 http 192.168.0.152:1102: "GET /files/data_1048576.bin HTTP/1.1" 206 -
+05:44:16 http 192.168.0.152:1103: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+05:44:17 http 192.168.0.152:1104: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+05:44:20 http 192.168.0.152:1105: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+05:44:20 http 192.168.0.152:1106: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+05:44:22 https 192.168.0.152:1107: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+05:44:26 https 192.168.0.152:1108: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+05:44:36 https 192.168.0.152:1109: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+05:44:40 https 192.168.0.152:1110: "GET /files/data_8388608.bin HTTP/1.1" 200 -

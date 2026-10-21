@@ -1018,13 +1018,14 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
     with the user's go-ahead. APCs and I/O completion ports left out (results/2026-10-21-milestone-55-acceptance/;
     HARDWARE.md, "M55 acceptance").
 
-56. **A homebrew store's networking.** Agreed on 2026-10-20: docs/scope/56-store-networking.md, after 54, whose
-    `fsync` and drive names a download uses. What a store needs to list, download and start software: an HTTP and
-    HTTPS client, libcurl on xsdk's sockets and mbedtls-xenon in xenosworks/curl-xenon; JSON through cJSON; the link
-    status and the console's address; socket timeouts, linger and XAM's socket limits; a measured download rate, and
-    downloads written to a part file and renamed into place; and launching another `.xex` with launch data and
+56. **A homebrew store's networking.** Agreed on 2026-10-20 and done on 2026-10-21: docs/scope/56-store-networking.md,
+    after 54, whose `fsync` and drive names a download uses. What a store needs to list, download and start software: an
+    HTTP and HTTPS client, libcurl on xsdk's sockets and mbedtls-xenon in xenosworks/curl-xenon; JSON through cJSON; the
+    link status and the console's address; socket timeouts, linger and XAM's socket limits; a measured download rate,
+    and downloads written to a part file and renamed into place; and launching another `.xex` with launch data and
     arguments, and being launched back. Launching is tested by a round trip of two titles, no sample store comes with
-    it, and the checks use public hosts too. Xbox Live stays out.
+    it, and the checks use public hosts too. Xbox Live stays out (results/2026-10-21-milestone-56-acceptance/;
+    HARDWARE.md, "Milestone 56 on the console").
 
 **Networking**, a scope of its own rather than a numbered milestone: sockets, and TLS 1.2 in the title's own code.
 Agreed and done on 2026-10-14: docs/scope/networking.md.

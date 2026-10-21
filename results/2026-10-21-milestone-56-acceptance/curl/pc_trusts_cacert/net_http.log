@@ -1,0 +1,26 @@
+06:04:19 HTTP on port 7380, HTTPS on 7381
+06:04:24 http 192.168.0.152:1251: "GET /catalog.json HTTP/1.1" 200 -
+06:04:24 http 192.168.0.152:1252: "GET /launch_target.xex HTTP/1.1" 200 -
+06:04:27 http 192.168.0.152:1253: "GET /catalog.json HTTP/1.1" 200 -
+06:04:27 http 192.168.0.152:1254: "GET /files/data_100000.bin HTTP/1.1" 200 -
+06:04:28 https 192.168.0.152:1255: handshake failed: [SSL: TLSV1_ALERT_UNKNOWN_CA] tlsv1 alert unknown ca (_ssl.c:1032)
+06:04:31 http 192.168.0.152:1027: "GET /redirect HTTP/1.1" 302 -
+06:04:31 http 192.168.0.152:1027: "GET /files/data_4096.bin HTTP/1.1" 200 -
+06:04:31 http 192.168.0.152:1028: "GET /stall HTTP/1.1" 200 -
+06:04:32 http 192.168.0.152:1028: the stalled client closed
+06:04:32 http 192.168.0.152:1030: "GET /files/data_4096.bin HTTP/1.1" 200 -
+06:04:32 http 192.168.0.152:1031: "GET /files/data_65536.bin HTTP/1.1" 200 -
+06:04:32 http 192.168.0.152:1032: "GET /files/data_1048576.bin HTTP/1.1" 200 -
+06:04:32 http 192.168.0.152:1033: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:04:32 http 192.168.0.152:1034: "GET /catalog_bad.json HTTP/1.1" 200 -
+06:04:32 http 192.168.0.152:1035: "GET /drop/data_1048576.bin HTTP/1.1" 200 -
+06:04:33 http 192.168.0.152:1035: dropped after 524288 of 1048576 bytes
+06:04:33 http 192.168.0.152:1036: "GET /files/data_1048576.bin HTTP/1.1" 206 -
+06:04:33 http 192.168.0.152:1037: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:04:34 http 192.168.0.152:1038: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:04:37 http 192.168.0.152:1039: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:04:38 http 192.168.0.152:1040: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:04:39 https 192.168.0.152:1041: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:04:44 https 192.168.0.152:1042: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:04:54 https 192.168.0.152:1043: "GET /files/data_8388608.bin HTTP/1.1" 200 -
+06:04:58 https 192.168.0.152:1044: "GET /files/data_8388608.bin HTTP/1.1" 200 -
