@@ -171,7 +171,8 @@ typedef struct {
 	int32_t limit;
 } KernelSemaphore;
 
-static KernelSemaphore semaphores[16];
+enum { KERNEL_SEMAPHORES = 16 };
+static KernelSemaphore semaphores[KERNEL_SEMAPHORES];
 static pthread_mutex_t kernel_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t kernel_changed = PTHREAD_COND_INITIALIZER;
 static bool release_failure;
@@ -180,7 +181,7 @@ NTSTATUS NtCreateSemaphore(HANDLE *handle, const OBJECT_ATTRIBUTES *attributes, 
 {
 	(void)attributes;
 	pthread_mutex_lock(&kernel_lock);
-	for (uint32_t i = 1; i < 16; i++) {
+	for (uint32_t i = 1; i < KERNEL_SEMAPHORES; i++) {
 		if (!semaphores[i].open) {
 			semaphores[i] = (KernelSemaphore){ true, count, limit };
 			*handle = i;
@@ -195,7 +196,8 @@ NTSTATUS NtCreateSemaphore(HANDLE *handle, const OBJECT_ATTRIBUTES *attributes, 
 NTSTATUS NtClose(HANDLE handle)
 {
 	pthread_mutex_lock(&kernel_lock);
-	const NTSTATUS status = handle < 16 && semaphores[handle].open ? STATUS_SUCCESS : STATUS_INVALID_HANDLE;
+	const NTSTATUS status =
+		handle < KERNEL_SEMAPHORES && semaphores[handle].open ? STATUS_SUCCESS : STATUS_INVALID_HANDLE;
 	if (status == STATUS_SUCCESS)
 		semaphores[handle].open = false;
 	pthread_mutex_unlock(&kernel_lock);
@@ -208,7 +210,8 @@ NTSTATUS NtReleaseSemaphore(HANDLE handle, int32_t count, int32_t *previous)
 		return STATUS_INVALID_HANDLE;
 	assert(count == 1);
 	pthread_mutex_lock(&kernel_lock);
-	assert(handle < 16 && semaphores[handle].open && semaphores[handle].value < semaphores[handle].limit);
+	assert(
+		handle < KERNEL_SEMAPHORES && semaphores[handle].open && semaphores[handle].value < semaphores[handle].limit);
 	if (previous)
 		*previous = semaphores[handle].value;
 	semaphores[handle].value++;
@@ -221,7 +224,7 @@ NTSTATUS NtWaitForSingleObjectEx(HANDLE handle, uint32_t mode, uint32_t alertabl
 {
 	assert(mode == USER_MODE && !alertable);
 	pthread_mutex_lock(&kernel_lock);
-	assert(handle < 16 && semaphores[handle].open);
+	assert(handle < KERNEL_SEMAPHORES && semaphores[handle].open);
 	struct timespec until;
 	clock_gettime(CLOCK_REALTIME, &until);
 	if (timeout) {
@@ -256,6 +259,20 @@ static void *take_many(void *context)
 	for (uint32_t i = 0; i < 10000; i++)
 		assert(sem_wait(context) == 0);
 	return NULL;
+}
+
+static void semaphore_resources(void)
+{
+	sem_t live[KERNEL_SEMAPHORES - 1];
+	for (uint32_t i = 0; i < KERNEL_SEMAPHORES - 1; i++)
+		assert(sem_init(&live[i], 0, 0) == 0);
+	sem_t refused = { .handle = UINT32_MAX, .value = 77 };
+	assert(sem_init(&refused, 0, 0) == -1 && errno == ENOSPC);
+	assert(refused.handle == UINT32_MAX && refused.value == 77);
+	for (uint32_t i = 0; i < KERNEL_SEMAPHORES - 1; i++)
+		assert(sem_destroy(&live[i]) == 0);
+	assert(sem_init(&refused, 0, 0) == 0 && sem_destroy(&refused) == 0);
+	puts("PASS: sem_init resource exhaustion returns ENOSPC without changing the object; retry succeeds");
 }
 
 static void semaphore_checks(void)
@@ -314,6 +331,7 @@ int main(void)
 {
 	pages();
 	semaphore_checks();
+	semaphore_resources();
 	heap_checks();
 	return 0;
 }

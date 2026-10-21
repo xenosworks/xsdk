@@ -16,7 +16,7 @@ int sem_init(sem_t *semaphore, int shared, unsigned value)
 	const NTSTATUS status = NtCreateSemaphore(&handle, NULL, (int32_t)value, SEM_VALUE_MAX);
 	if (!NT_SUCCESS(status)) {
 		xsdk_log_write("sem_init: NtCreateSemaphore failed: 0x%08X", (unsigned)status);
-		errno = ENOMEM;
+		errno = ENOSPC;
 		return -1;
 	}
 	*semaphore = (sem_t){ .handle = handle, .value = (int32_t)value };
