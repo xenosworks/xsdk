@@ -1,0 +1,13 @@
+--- a/src/socket.c
++++ b/src/socket.c
+@@ -496,9 +496,7 @@
+ 		errno = EINVAL;
+ 		return -1;
+ 	}
+-	const WinsockLinger winsock = { .on = linger->l_onoff != 0,
+-		.seconds = linger->l_linger > UINT16_MAX ? UINT16_MAX : (uint16_t)linger->l_linger };
+-	return set_option(slot, SOL_SOCKET, SO_LINGER, &winsock, sizeof(winsock));
++	return set_option(slot, SOL_SOCKET, SO_LINGER, linger, length);
+ }
+ 
+ static int get_linger(const SocketSlot *slot, void *value, socklen_t *length)

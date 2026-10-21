@@ -1,0 +1,11 @@
+--- a/src/socket.c
++++ b/src/socket.c
+@@ -111,7 +111,7 @@
+ 
+ static void start_network(void)
+ {
+-	const XsdkNetworkLimits limits = xsdk_network_limits;
++	const XsdkNetworkLimits limits = { 0 };
+ 	const uint8_t params[STARTUP_PARAMS_BYTES] = { [0] = STARTUP_PARAMS_BYTES,
+ 		[STARTUP_DATAGRAM_SOCKETS] = limits.datagram_sockets,
+ 		[STARTUP_STREAM_SOCKETS] = limits.stream_sockets,

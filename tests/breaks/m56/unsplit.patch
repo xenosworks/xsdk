@@ -1,0 +1,13 @@
+--- a/src/start.c
++++ b/src/start.c
+@@ -88,7 +88,9 @@
+ 	(void)atexit(run_fini_array);
+ 
+ 	(void)snprintf(command_line, sizeof command_line, "%s", ExLoadedCommandLine ? ExLoadedCommandLine : "");
+-	int argc = split_command_line(command_line, arguments);
++	int argc = 1;
++	arguments[0] = command_line;
++	(void)split_command_line;
+ 	// argv[0] empty is C's "no program name" (C11 5.1.2.2.1); desktop code reads its arguments from argv[1].
+ 	if (argc == 0) {
+ 		static char program_name[] = "";

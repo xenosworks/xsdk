@@ -1,0 +1,14 @@
+--- a/src/launch.c
++++ b/src/launch.c
+@@ -29,8 +29,10 @@
+ static void read_launch_data(void)
+ {
+ 	uint32_t size = 0;
+-	if (XamLoaderGetLaunchDataSize(&size) != ERROR_SUCCESS || size == 0)
++	if (XamLoaderGetLaunchDataSize(&size) != ERROR_SUCCESS || size == 0) {
++		launch_data_bytes = sizeof(launch_data);
+ 		return;
++	}
+ 	if (size > sizeof(launch_data))
+ 		size = sizeof(launch_data);
+ 	const uint32_t result = XamLoaderGetLaunchData(launch_data, size);

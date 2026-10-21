@@ -1,0 +1,11 @@
+--- a/src/launch.c
++++ b/src/launch.c
+@@ -117,7 +117,7 @@
+ 		return -1;
+ 	}
+ 	if (size_bytes) {
+-		const uint32_t result = XamLoaderSetLaunchData(data, (uint32_t)size_bytes);
++		const uint32_t result = XamLoaderSetLaunchData(data, (uint32_t)size_bytes - 1);
+ 		if (result != ERROR_SUCCESS) {
+ 			xsdk_log_write("launch: XamLoaderSetLaunchData failed: 0x%08X", (unsigned)result);
+ 			errno = EIO;

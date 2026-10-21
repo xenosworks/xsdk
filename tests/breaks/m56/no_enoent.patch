@@ -1,0 +1,16 @@
+--- a/src/launch.c
++++ b/src/launch.c
+@@ -103,13 +103,6 @@
+ 		return -1;
+ 	}
+ 	// XAM ends the title for a path to nothing (docs/HARDWARE.md), so that fails here first.
+-	struct stat info;
+-	if (stat(resolved, &info) != 0)
+-		return -1;
+-	if (S_ISDIR(info.st_mode)) {
+-		errno = EISDIR;
+-		return -1;
+-	}
+ 	char xam[XSDK_PATH_BYTES];
+ 	error = xam_path(resolved, xam);
+ 	if (error) {

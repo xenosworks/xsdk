@@ -1,0 +1,11 @@
+--- a/src/socket.c
++++ b/src/socket.c
+@@ -454,6 +454,8 @@
+ // 56").
+ static int set_timeout(const SocketSlot *slot, int name, const void *value, socklen_t length)
+ {
++	if (name == SO_RCVTIMEO)
++		return 0;
+ 	if (length < sizeof(struct timeval)) {
+ 		errno = EINVAL;
+ 		return -1;

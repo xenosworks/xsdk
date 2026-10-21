@@ -1,0 +1,11 @@
+--- a/src/launch.c
++++ b/src/launch.c
+@@ -86,7 +86,7 @@
+ 	const int error = link_folder(folder);
+ 	if (error)
+ 		return error;
+-	(void)snprintf(xam, XSDK_PATH_BYTES, "%s%s", LINK_DRIVE, name);
++	(void)snprintf(xam, XSDK_PATH_BYTES, "%.0s%s", LINK_DRIVE, resolved);
+ 	return 0;
+ }
+ 

@@ -1,0 +1,10 @@
+--- a/src/net.c
++++ b/src/net.c
+@@ -38,6 +38,6 @@
+ 	if (!(status & (ADDRESS_STATIC | ADDRESS_DHCP | ADDRESS_PPPOE)))
+ 		return EADDRNOTAVAIL;
+ 	// Both in network order, which is the console's own.
+-	address->s_addr = found.address;
++	address->s_addr = __builtin_bswap32(found.address);
+ 	return 0;
+ }

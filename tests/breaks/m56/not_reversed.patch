@@ -1,0 +1,14 @@
+--- a/tests/launch_target.c
++++ b/tests/launch_target.c
+@@ -24,11 +24,6 @@
+ 		return 1;
+ 	char back[XSDK_LAUNCH_DATA_MAX_BYTES];
+ 	memcpy(back, data, (size_t)(end - data) + 1);
+-	for (size_t i = 0; i < size / 2; i++) {
+-		const uint8_t byte = data[i];
+-		data[i] = data[size - 1 - i];
+-		data[size - 1 - i] = byte;
+-	}
+ 	xsdk_log_write("launch_target: launching %s, the data reversed", back);
+ 	(void)xsdk_launch(back, data, size);
+ 	xsdk_log_write("launch_target: xsdk_launch(%s) failed: errno %d", back, errno);

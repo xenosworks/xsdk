@@ -1,0 +1,11 @@
+--- a/tests/launch_target.c
++++ b/tests/launch_target.c
+@@ -30,7 +30,7 @@
+ 		data[size - 1 - i] = byte;
+ 	}
+ 	xsdk_log_write("launch_target: launching %s, the data reversed", back);
+-	(void)xsdk_launch(back, data, size);
++	(void)xsdk_launch(back, data, 0);
+ 	xsdk_log_write("launch_target: xsdk_launch(%s) failed: errno %d", back, errno);
+ 	return 1;
+ }
