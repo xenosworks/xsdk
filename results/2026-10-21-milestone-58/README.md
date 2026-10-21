@@ -21,3 +21,5 @@ found.
   kernel's calls and the feeder's progress 100 ms into each check, with the main thread asleep, then at the feeder's
   join and after the close: each 5 s wait on a thread's handle timed out within 13 ms by the time base, the calls
   keeping their rate until the close.
+- [step7_speakers_stereo.log](step7_speakers_stereo.log): probe_audio's speakers case at `dc127c7` with the dashboard's
+  audio output switched to stereo; at Dolby Digital 5.1, step2_probe_audio.log read `00010001`.

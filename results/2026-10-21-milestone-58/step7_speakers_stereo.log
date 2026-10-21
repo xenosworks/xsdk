@@ -1,0 +1,10 @@
+log: game:\probe_audio.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m58\probe_audio.xex
+log: no net_log.txt beside the .xex, so not over the network
+open: NtCreateFile(game:\net_log.txt) failed: 0xC0000034
+audio probe: 1 cases, net_log.txt not beside. None should hang.
+audio probe: case speakers
+audio: speakers: XAudioGetSpeakerConfig returned 00000000, the word 00000001 (A5A5A5A5 if unwritten)
+audio probe: case speakers done in 0 ms
+audio probe: done
+exit: status 0

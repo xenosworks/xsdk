@@ -233,8 +233,8 @@ NTSTATUS xsdk_audio_speakers(XsdkAudioSpeakers *speakers)
 		xsdk_log_write("xsdk_audio_speakers: XAudioGetSpeakerConfig failed: 0x%08X", (unsigned)result);
 		return STATUS_UNSUCCESSFUL;
 	}
-	// unverified: 5.1 as the high half set; a read with the dashboard set the other way names the bits
-	// (docs/HARDWARE.md, "Audio's feeding, milestone 58").
+	// The word read 0x00010001 with the dashboard at Dolby Digital 5.1 and 0x00000001 at stereo (docs/HARDWARE.md,
+	// "Audio's feeding, milestone 58").
 	*speakers = config >> 16 ? XSDK_AUDIO_SPEAKERS_SURROUND : XSDK_AUDIO_SPEAKERS_STEREO;
 	return STATUS_SUCCESS;
 }

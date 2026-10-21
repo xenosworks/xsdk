@@ -474,8 +474,8 @@ console").
 - **Paths** are xsdk's: `game:`, `hdd:`, `usb:`, relative ones, or a device path such as `ExLoadedImageName`. XAM
   takes drives such as `game:` but not device paths, so xsdk gives it a `.xex` in the title's own folder as
   `game:\...`, and one elsewhere through `launch:`, a drive it links to that `.xex`'s folder with
-  `ObCreateSymbolicLink` (src/launch.c). launch_check tries both; until it has passed on the console, take a launch
-  from outside the title's folder as unverified.
+  `ObCreateSymbolicLink` (src/launch.c); launch_check passed both on the console (docs/HARDWARE.md, "Milestone 56 on
+  the console").
 - **Launch data** is how a title gets its arguments; xsdk gives it no format of its own. XAM keeps it only until the
   launched title reads it, so one launched after that, or after the dashboard, finds none. xsdk reads it at the first
   `xsdk_launch_data` and keeps it.
@@ -549,12 +549,11 @@ has taken a frame and then fills the next. xsdk starts no thread for it, and not
 - **Closing** wakes a feeder waiting in `xsdk_audio_next_frame`, which returns `STATUS_INVALID_HANDLE`. The frames
   and the event stay allocated to the end, as a callback can still run after unregistering returns, and the next
   `xsdk_audio_open` reuses them. One client a title: close before opening again.
-- **The speakers:** `XAudioGetSpeakerConfig` gave the word `0x00010001` on the console with the dashboard as it was,
-  as Xenia always does (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_audio.cc:22-26). Which bits mean 5.1 is unverified
-  until a read with the dashboard set the other way; until then `xsdk_audio_speakers` says 5.1 when the word's high
-  half is set. The driver takes 6 channels either way, and on a stereo set the centre and back channels sound as a
-  downmix allows (docs/HARDWARE.md, "Runtime, milestone 2"). A title that offers a stereo and a surround mix picks
-  its default from it.
+- **The speakers:** `XAudioGetSpeakerConfig` gave the word `0x00010001` on the console with the dashboard at Dolby
+  Digital 5.1, as Xenia always does (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_audio.cc:22-26), and `0x00000001` at
+  stereo, so `xsdk_audio_speakers` says 5.1 when the word's high half is set. The driver takes 6 channels either way,
+  and on a stereo set the centre and back channels sound as a downmix allows (docs/HARDWARE.md, "Runtime, milestone 2").
+  A title that offers a stereo and a surround mix picks its default from it.
 - **SDL3** feeds through it: SDL-xenon's device thread is the feeder, and its default device reports this format,
   so SDL, and FAudio's mastering voice by default, mix at 48 kHz in 5.1 without converting (SDL-xenon's
   docs/README-xsdk.md).

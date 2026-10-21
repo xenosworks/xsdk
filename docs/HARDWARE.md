@@ -4935,7 +4935,8 @@ Dusklight's JAS mutex there. The device thread ran on hardware thread 0, beside 
   clear (0x150, xenia:src/xenia/kernel/xthread.h:73-86).
 - It asks for a frame every 5.33 ms, 4.4 to 6.3 ms apart, and none before registering returns: 10 in the first 50 ms,
   the first after 1.2 ms. A second client registers too, and the two are called alike.
-- `XAudioGetSpeakerConfig` returned 0 and the word `00010001`.
+- `XAudioGetSpeakerConfig` returned 0 and the word `00010001` with the dashboard's audio at Dolby Digital 5.1, and
+  `00000001` at stereo ([log](../results/2026-10-21-milestone-58/step7_speakers_stereo.log)): bit 16 is 5.1.
 
 **Waking a feeder beside a busy thread** on hardware thread 1:
 - Two busy threads at one priority share it in turns of 20 ms: each went up to 19,997 us without running.

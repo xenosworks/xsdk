@@ -358,7 +358,8 @@ static void check_speakers(void)
 	xsdk_log_write("audio: XAudioGetSpeakerConfig returned 0x%08X, the word %08X; xsdk_audio_speakers 0x%08X, %s",
 		(unsigned)result, (unsigned)config, (unsigned)status,
 		speakers == XSDK_AUDIO_SPEAKERS_SURROUND ? "5.1" : "stereo");
-	check("audio: XAudioGetSpeakerConfig gives 00010001, as at step 2, and xsdk_audio_speakers 5.1 for it (unverified)",
+	// The dashboard set to Dolby Digital 5.1, as it was at step 2; at stereo the word is 0x00000001.
+	check("audio: XAudioGetSpeakerConfig gives 00010001 at Dolby Digital 5.1, and xsdk_audio_speakers 5.1 for it",
 		result == ERROR_SUCCESS && config == STEP_2_SPEAKER_CONFIG && status == STATUS_SUCCESS &&
 			speakers == XSDK_AUDIO_SPEAKERS_SURROUND);
 }
