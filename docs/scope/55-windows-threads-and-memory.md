@@ -1,6 +1,6 @@
 # Milestone 55: Windows-style threading and memory
 
-Proposed on 2026-10-20, not yet agreed.
+Agreed on 2026-10-20, with every recommendation the proposal made (Decided, below).
 
 The gap docs/PARITY.md ranks sixth, "Threading for Windows-style code", with the Memory rows beside it: what code
 written for Windows, and emulators, expect of threads and pages. Every piece is a kernel export Xenia implements, but
@@ -149,7 +149,7 @@ Each step rests on the console where Xenia can't answer. Steps 1 and 2 are the p
 
 7. **Running written code, as step 2 found:**
    - **A page the title allocated runs,** with or without an execute protection: `mmap` and `mprotect` take `PROT_EXEC`
-     as that protection, and written code is flushed as For you to decide, 4 settles.
+     as that protection, and `__builtin___clear_cache` is made to flush (Decided, 4).
    - **Only some other route runs it,** the image's own code pages, say: the results come back to you before anything
      is built for it.
    - **Nothing runs:** `PROT_EXEC` fails with `ENOTSUP`, and JIT emulators interpret.
@@ -166,8 +166,8 @@ Each step rests on the console where Xenia can't answer. Steps 1 and 2 are the p
   same for a port, xsdk never waits alertably, and milestone 51 took XAM's results through events for that reason.
 - **I/O completion ports:** nothing in xsdk completes into one, as files open synchronous (src/file.c) and sockets are
   XAM's. As a work queue, a semaphore and a lock-free list do it.
-- **A Win32 layer** (`windows.h`, `CreateEvent`, `WaitForMultipleObjects`, `VirtualAlloc`), unless you choose it (For
-  you to decide, 1).
+- **A Win32 layer** (`windows.h`, `CreateEvent`, `WaitForMultipleObjects`, `VirtualAlloc`), until a port asks
+  (Decided, 1).
 - **Named objects and opening them by name, suspending and resuming threads, starting one suspended**
   (`xsdk_thread_create_on` places a thread as it starts), **priority boosts, priorities in thread attributes, named
   semaphores** (`sem_open`).
@@ -227,41 +227,19 @@ guesses; CLAUDE.md will say so.
   row Yes; `mmap`, `munmap`, `mprotect` and `sem_*` off the guide's list of what doesn't link.
 - Dusklight's title scene runs no slower with its priorities honoured.
 
-## For you to decide
+## Decided
 
-1. **The API's shape.**
-   - (a) POSIX where POSIX has the call (`sem_*`, `mmap`, `munmap`, `mprotect`, `pthread_setschedparam`); the
-     Windows-style objects as raw exports in kernel.h; three xsdk calls where the kernel is awkward
-     (`xsdk_thread_place`, `xsdk_thread_set_priority`, `xsdk_pthread_handle`).
-   - (b) As (a), plus thin xsdk calls for the waits and objects, taking milliseconds: about a dozen more, over the same
-     exports.
-   - (c) As (a), plus a `windows.h` of Win32's names over the exports, so Windows code builds unchanged: the most code,
-     and a second way to do everything.
-
-   Recommended: (a). The exports take Win32's arguments and return its wait results, so a port's own platform layer
-   maps each call in a line; the timeout is the one conversion, -10,000 times the milliseconds. (b) or (c) can come
+1. **The API's shape:** POSIX where POSIX has the call (`sem_*`, `mmap`, `munmap`, `mprotect`,
+   `pthread_setschedparam`); the Windows-style objects as raw exports in kernel.h, which take Win32's arguments and
+   return its wait results; and three xsdk calls where the kernel is awkward, `xsdk_thread_place`,
+   `xsdk_thread_set_priority` and `xsdk_pthread_handle`. Thin xsdk calls for the waits, or a `windows.h`, can come
    when a port asks.
-
-2. **Which of APCs, completion ports and timers.** Recommended: timers in, without APC routines, as a periodic timer
-   may hold its period where a 1 ms sleep takes 2, which emulators pacing frames want; step 1 measures it. APCs and
-   completion ports out (Left out).
-
-3. **The executable-memory probe.** Cases 3 to 5 may hang the console until you restart it. Nothing is written but the
-   log, so a hang costs a restart. Recommended: run it, cases 1 and 2 first, then 3, 4 and 5 one run each, with your
-   go-ahead before each, stopping at the first that runs code. If running code needs the hypervisor or the code-buffer
-   exports, it stays out.
-
-4. **The cache flush for written code,** if step 7 builds it.
-   - (a) gcc-xsdk.patch makes `__builtin___clear_cache` and libgcc's `__clear_cache` flush as libxenon does, and the
-     toolchain and everything on it are rebuilt, as milestone 52 did.
-   - (b) An xsdk call, `xsdk_code_flush`, with the builtin left a silent no-op and docs/PITFALLS.md saying so.
-
-   Recommended: (a). Code that calls the builtin then works unchanged, and a flush that silently does nothing is the
-   worse trap. (b) is smaller.
-
-5. **Priorities on by default.** Honouring them changes titles that already ask: Dusklight's threads through Aurora,
-   and SDL's audio thread at time-critical. Recommended: on, with Dusklight's title scene checked once; if it's slower,
-   Aurora's requests change, not xsdk.
-
-6. **The heap.** Recommended: `sbrk` gives back the heap's top (step 6), and a title that frees big buffers in the
-   middle takes them from `mmap`. A replacement `malloc` waits for a port that needs one.
+2. **Timers in,** without APC routines; APCs and completion ports out.
+3. **The executable-memory probe runs:** cases 1 and 2 first, then 3, 4 and 5 one run each, each only with your
+   go-ahead, stopping at the first that runs code. If running code needs the hypervisor or the code-buffer exports, it
+   stays out.
+4. **The cache flush:** gcc-xsdk.patch makes `__builtin___clear_cache` and libgcc's `__clear_cache` flush, the
+   toolchain and everything on it rebuilt, only if step 2 shows a title can run code it wrote.
+5. **Priorities on by default,** with Dusklight's title scene and SDL-xenon's sdl_check run once; if Dusklight is
+   slower, Aurora's requests change, not xsdk.
+6. **The heap:** `sbrk` gives back the heap's top, and `mmap` serves big buffers freed in the middle; no new `malloc`.
