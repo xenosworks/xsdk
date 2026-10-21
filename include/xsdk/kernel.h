@@ -369,6 +369,9 @@ void ExTerminateThread(uint32_t exit_code);
 // dashboards read their own path there (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:177-185,
 // xenia:src/xenia/kernel/kernel_state.cc:351-360).
 extern const char *const ExLoadedImageName;
+// The title's command line, which Xenia lays out as its .xex's name in quotes, then any arguments
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:187-204); the console's layout is unverified.
+extern const char *const ExLoadedCommandLine;
 NTSTATUS KeDelayExecutionThread(uint32_t processor_mode, uint32_t alertable, const int64_t *interval);
 // Xenia returns it as 32 bits (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:312-315).
 uint64_t KeQueryPerformanceFrequency(void);
@@ -590,6 +593,15 @@ typedef struct {
 	int32_t microseconds;
 } WSA_TIMEVAL;
 
+// XNADDR, which NetDll_XNetGetTitleXnAddr fills in, its address in network order (xam_net.cc:51-58).
+typedef struct {
+	uint32_t address;
+	uint32_t online_address;
+	uint16_t online_port;
+	uint8_t ethernet[6];
+	uint8_t online[20];
+} XNADDR;
+
 // An asynchronous XAM call returns ERROR_IO_PENDING, then writes result, extended_error and length and sets event
 // (xenia:src/xenia/xbox.h:176-184, xenia:src/xenia/kernel/kernel_state.cc:696-720).
 typedef struct {
@@ -652,6 +664,7 @@ int32_t NetDll_setsockopt(
 	uint32_t caller, int32_t socket, int32_t level, int32_t name, const void *value, int32_t length);
 int32_t NetDll_shutdown(uint32_t caller, int32_t socket, int32_t how);
 int32_t NetDll_socket(uint32_t caller, int32_t family, int32_t type, int32_t protocol);
+int32_t NetDll_WSACleanup(uint32_t caller);
 int32_t NetDll_WSAGetLastError(void);
 int32_t NetDll_WSAStartup(uint32_t caller, uint16_t version, void *data);
 // Starts the lookup and gives its XNDNS, which XAM fills in and sets event, if one is given, when done
@@ -663,6 +676,15 @@ int32_t NetDll_XNetStartup(uint32_t caller, const uint8_t *params);
 // The console's time zone into info, and TIME_ZONE_ID_DAYLIGHT, _STANDARD or _UNKNOWN for which time it is now
 // (wine:include/timezoneapi.h:39-58); XAM exports it (xenia:src/xenia/kernel/xam/xam_table.inc:883).
 uint32_t GetTimeZoneInformation(TIME_ZONE_INFORMATION *info);
+// Ends what NetDll_XNetStartup started (xam_net.cc:194-204).
+int32_t NetDll_XNetCleanup(uint32_t caller, void *params);
+// XNET_ETHERNET_LINK_ bits, active 0x01 among them; a stub giving 0 in Xenia (xam_net.cc:529-540).
+uint32_t NetDll_XNetGetEthernetLinkStatus(uint32_t caller);
+// Option 1 is the XNetStartupParams in force; size holds the buffer's bytes, and what was needed if it was too small
+// (xam_net.cc:206-223).
+int32_t NetDll_XNetGetOpt(uint32_t caller, uint32_t option, void *buffer, uint32_t *size);
+// XNET_GET_XNADDR_ bits, 0 while the address is pending; a stub giving loopback in Xenia (xam_net.cc:429-476).
+uint32_t NetDll_XNetGetTitleXnAddr(uint32_t caller, XNADDR *address);
 // The content calls (xenia:src/xenia/kernel/xam/xam_content.cc, xam_content_device.cc). A package mounts under root,
 // "save" as save:, until closed.
 uint32_t XamContentClose(const char *root, XAM_OVERLAPPED *overlapped);
@@ -690,6 +712,14 @@ uint32_t XamGetOverlappedResult(XAM_OVERLAPPED *overlapped, uint32_t *length, ui
 uint32_t XamInputGetState(uint32_t user_index, uint32_t flags, INPUT_STATE *state);
 uint32_t XamInputSetState(uint32_t user_index, uint32_t flags, const INPUT_VIBRATION *vibration);
 uint32_t XamIsUIActive(void);
+// The launch data the title was started with, up to size bytes; ERROR_NOT_FOUND for none
+// (xenia:src/xenia/kernel/xam/xam_info.cc:257-287).
+uint32_t XamLoaderGetLaunchData(void *buffer, uint32_t size);
+uint32_t XamLoaderGetLaunchDataSize(uint32_t *size);
+// Ends the title and starts the .xex at path; Xenia runs a bare name from the title's own folder (xam_info.cc:289-316).
+void XamLoaderLaunchTitle(const char *path, uint32_t flags);
+// The data the next title is started with (xam_info.cc:247-255).
+uint32_t XamLoaderSetLaunchData(const void *data, uint32_t size);
 void XamLoaderTerminateTitle(void);
 // A listener for the notification areas whose bits mask sets, an area being bits 25-30 of a notification's id; its
 // handle, or 0 (xenia:src/xenia/kernel/xam/xam_notify.cc:21-41, xnotifylistener.h:25-32).
