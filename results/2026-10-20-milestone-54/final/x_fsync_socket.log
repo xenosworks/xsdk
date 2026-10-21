@@ -1,0 +1,994 @@
+log: game:\x_fsync_socket.log
+log: named after \Device\Harddisk0\Partition1\xsdk\main\x_fsync_socket.xex
+log: no net_log.txt beside the .xex, so not over the network
+xsdk test title
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 17612 us
+PASS: splash: the vulkan4xenon logo shown
+PASS: start: main gets argc 1, an empty argv[0] and a null argv[1]
+PASS: read-only data
+PASS: initialised data
+PASS: zeroed data
+PASS: data is writable
+PASS: MmQueryStatistics: a wrong size refused
+PASS: MmQueryStatistics: answers
+memory: 131072 pages in all, 784 the kernel's, highest page 0x1FFFF
+memory: title: 118980 pages free; 767 MB virtual, 465 MB reserved
+memory: title pages: 920 physical, 2 pool, 256 stack, 2592 image, 96 heap
+memory: title pages: 16 virtual, 2 page table, 16 cache
+memory: system: 1411 pages free; 31 MB virtual, 14 MB reserved
+memory: system pages: 924 physical, 157 pool, 374 stack, 2000 image, 2464 heap
+memory: system pages: 12 virtual, 2 page table, 64 cache
+memory: 464 MB free for the title
+PASS: MmQueryStatistics: the title's free pages lie within the total
+PASS: sysconf: the physical pages and their size are the console's
+PASS: sbrk: the heap's reservation covers the title's free memory
+memory: 118980 pages free before 16 MB of heap growth, 114880 after
+PASS: MmQueryStatistics: heap growth takes free pages
+threads: producer queued 100 items
+threads: consumer summed 100 items
+threads: done event 0x00000000, sum 5050
+PASS: threads hand work over
+PASS: threads exit
+placement: the main thread runs on hardware thread 0
+PASS: placement: the main thread runs on one of the six hardware threads
+placement: an unplaced thread ran on 0
+PASS: placement: an unplaced thread runs where its creator does
+placement: threads started on 0 to 5 ran on 0 1 2 3 4 5
+PASS: placement: a thread started on each hardware thread runs there
+placement: a thread moved to 0 to 5 ran on 0 1 2 3 4 5
+PASS: placement: a thread moved to each hardware thread runs there
+placement: one busy thread did 18653184 passes in 300 ms; two on two cores 100% and 93% of that, two on one hardware thread 51% and 53%
+PASS: placement: two busy threads on two cores each get most of one's work done
+PASS: placement: two busy threads on one hardware thread share its time
+pthread: a thread's stack is 1048576 bytes by default, 393216 when 393216 are asked for
+PASS: pthread: a thread gets the stack size its attributes ask for
+PASS: pthread: a thread made detached runs
+PASS: pthread: a bad detach state and a one-byte stack are refused
+PASS: pthread: priorities report one level and refuse a change
+PASS: clocks: CLOCK_MONOTONIC_RAW reads the time base CLOCK_MONOTONIC does
+clocks: steps of 100 ns monotonic, 100 ns raw, 1000000 ns realtime
+PASS: clocks: CLOCK_MONOTONIC and CLOCK_MONOTONIC_RAW step finer than 0.1 ms
+clocks: over 252000000 ns of the kernel's system time CLOCK_MONOTONIC counted 251928903 ns, -282 ppm off
+PASS: clocks: CLOCK_MONOTONIC keeps the kernel's time to 0.05%
+clocks: 20 sleeps of 2000000 ns took 2001223 to 3000180 ns
+PASS: clocks: nanosleep never returns early
+clocks: KeQueryPerformanceFrequency reports 50000000 Hz
+PASS: clocks: KeQueryPerformanceFrequency, declared with its 64-bit return, reads 50 MHz
+kernel entry: while holding 64-bit values and doubles, GCC's code had in r14-r31 low halves FFE00000, high halves FFE00000, f14-f31 FF000000, v14-v31 00000000
+kernel entry: while holding twenty vectors, GCC's code had in r14-r31 low halves FF800000, high halves FF800000, f14-f31 F0000000, v14-v31 FFFFC000
+kernel entry: after it returned, its caller found changed r14-r31 low halves 00000000, high halves 00000000, f14-f31 00000000, v14-v31 00000000
+PASS: kernel entry: GCC's code held 64-bit values in r14-r31, high halves too
+PASS: kernel entry: GCC's code held doubles in f14-f31
+PASS: kernel entry: GCC's code held vectors in v14-v19
+PASS: kernel entry: called as the kernel calls it, GCC's code gives back r14-r31 whole, f14-f31 and v14-v31
+interrupts: 267602 permutations in half a second of clock interrupts, 0 wrong
+PASS: interrupts: 64-bit values held across interrupts come through whole
+files: the log opened for reading while it's open: 0x00000000, starting "log: "
+PASS: log read while it's open
+files: a line to time, 1 of 100
+files: a line to time, 2 of 100
+files: a line to time, 3 of 100
+files: a line to time, 4 of 100
+files: a line to time, 5 of 100
+files: a line to time, 6 of 100
+files: a line to time, 7 of 100
+files: a line to time, 8 of 100
+files: a line to time, 9 of 100
+files: a line to time, 10 of 100
+files: a line to time, 11 of 100
+files: a line to time, 12 of 100
+files: a line to time, 13 of 100
+files: a line to time, 14 of 100
+files: a line to time, 15 of 100
+files: a line to time, 16 of 100
+files: a line to time, 17 of 100
+files: a line to time, 18 of 100
+files: a line to time, 19 of 100
+files: a line to time, 20 of 100
+files: a line to time, 21 of 100
+files: a line to time, 22 of 100
+files: a line to time, 23 of 100
+files: a line to time, 24 of 100
+files: a line to time, 25 of 100
+files: a line to time, 26 of 100
+files: a line to time, 27 of 100
+files: a line to time, 28 of 100
+files: a line to time, 29 of 100
+files: a line to time, 30 of 100
+files: a line to time, 31 of 100
+files: a line to time, 32 of 100
+files: a line to time, 33 of 100
+files: a line to time, 34 of 100
+files: a line to time, 35 of 100
+files: a line to time, 36 of 100
+files: a line to time, 37 of 100
+files: a line to time, 38 of 100
+files: a line to time, 39 of 100
+files: a line to time, 40 of 100
+files: a line to time, 41 of 100
+files: a line to time, 42 of 100
+files: a line to time, 43 of 100
+files: a line to time, 44 of 100
+files: a line to time, 45 of 100
+files: a line to time, 46 of 100
+files: a line to time, 47 of 100
+files: a line to time, 48 of 100
+files: a line to time, 49 of 100
+files: a line to time, 50 of 100
+files: a line to time, 51 of 100
+files: a line to time, 52 of 100
+files: a line to time, 53 of 100
+files: a line to time, 54 of 100
+files: a line to time, 55 of 100
+files: a line to time, 56 of 100
+files: a line to time, 57 of 100
+files: a line to time, 58 of 100
+files: a line to time, 59 of 100
+files: a line to time, 60 of 100
+files: a line to time, 61 of 100
+files: a line to time, 62 of 100
+files: a line to time, 63 of 100
+files: a line to time, 64 of 100
+files: a line to time, 65 of 100
+files: a line to time, 66 of 100
+files: a line to time, 67 of 100
+files: a line to time, 68 of 100
+files: a line to time, 69 of 100
+files: a line to time, 70 of 100
+files: a line to time, 71 of 100
+files: a line to time, 72 of 100
+files: a line to time, 73 of 100
+files: a line to time, 74 of 100
+files: a line to time, 75 of 100
+files: a line to time, 76 of 100
+files: a line to time, 77 of 100
+files: a line to time, 78 of 100
+files: a line to time, 79 of 100
+files: a line to time, 80 of 100
+files: a line to time, 81 of 100
+files: a line to time, 82 of 100
+files: a line to time, 83 of 100
+files: a line to time, 84 of 100
+files: a line to time, 85 of 100
+files: a line to time, 86 of 100
+files: a line to time, 87 of 100
+files: a line to time, 88 of 100
+files: a line to time, 89 of 100
+files: a line to time, 90 of 100
+files: a line to time, 91 of 100
+files: a line to time, 92 of 100
+files: a line to time, 93 of 100
+files: a line to time, 94 of 100
+files: a line to time, 95 of 100
+files: a line to time, 96 of 100
+files: a line to time, 97 of 100
+files: a line to time, 98 of 100
+files: a line to time, 99 of 100
+files: a line to time, 100 of 100
+files: 100 log lines as the title runs took 43223 us, 432.236 us a line
+PASS: log: a line costs under 1500 us
+files: a line to time, 1 of 10
+files: a line to time, 2 of 10
+files: a line to time, 3 of 10
+files: a line to time, 4 of 10
+files: a line to time, 5 of 10
+files: a line to time, 6 of 10
+files: a line to time, 7 of 10
+files: a line to time, 8 of 10
+files: a line to time, 9 of 10
+files: a line to time, 10 of 10
+files: 10 log lines with DbgPrint on took 77568 us, 7756.830 us a line
+files: game:\xsdk_file_test.txt
+PASS: file written
+PASS: file read back
+PASS: file size from seek
+PASS: file append
+PASS: pread: reads at an offset and leaves the position
+PASS: pread: reads nothing at the end
+PASS: open: a file opens twice, to write and to read
+PASS: pwrite: writes at an offset, read back by pread, the position and size unchanged
+PASS: flockfile: another thread waits while the lock is held, twice and then once
+open: NtCreateFile(game:\xsdk_file_test.txt) failed: 0xC0000034
+PASS: rename: a file renamed over another takes its place
+files: ftruncate: wrote 16; to 9 bytes 0 (errno 0), size 9; to 16 bytes 0 (errno 0), size 16; pread 16: 6C696E65206F6E650A00000000000000
+files: truncate: wrote 16; to 9 bytes 0 (errno 0), size 9; to 16 bytes 0 (errno 0), size 16; pread 16: 6C696E65206F6E650A00000000000000
+PASS: ftruncate and truncate: shorten a file, then lengthen it with zeros
+files: a byte written at 16 past a 9-byte end: pread 17: 6C696E65206F6E650A6C696E6520320A21
+FAIL: pwrite: past the end, the gap before it reads zeros
+FAIL: fsync: flushes a file and fails on a socket
+files: statvfs(game:\): 16384-byte units, 8488952 of 9453636 free; a file of 65537 bytes took 5
+PASS: statvfs: a written file takes its allocation units from the free ones, fstatvfs agreeing on the unit
+drives: hdd:\ lists 48 entries; hdd:\xsdk\main\x_fsync_socket.xex and game:\x_fsync_socket.xex are the same file
+PASS: drives: hdd: lists its root and holds the .xex game: runs from
+drives: usb: lists 5 entries (errno 0), \Device\Mass0\ 5 (0x00000000); statvfs 0 (errno 0): 32768-byte units, 1875724 of 1877248 free
+PASS: drives: usb: lists its root as \Device\Mass0\ does, or fails with ENOENT where it does
+open: NtCreateFile(\Device\Cdrom0\) failed: 0xC0000013
+statvfs: NtCreateFile(\Device\Cdrom0\) failed: 0xC0000013
+drives: dvd: lists -1 entries (errno 2), \Device\Cdrom0\ -1 (0xC0000013); statvfs -1 (errno 2): 0-byte units, 0 of 0 free
+PASS: drives: dvd: lists its root as \Device\Cdrom0\ does, or fails with ENOENT where it does
+open: NtCreateFile(\Device\Mu0\) failed: 0xC00002B6
+statvfs: NtCreateFile(\Device\Mu0\) failed: 0xC00002B6
+drives: mu: lists -1 entries (errno 2), \Device\Mu0\ -1 (0xC00002B6); statvfs -1 (errno 2): 0-byte units, 0 of 0 free
+PASS: drives: mu: lists its root as \Device\Mu0\ does, or fails with ENOENT where it does
+xam: sign-in states OR'd 0x0; xsdk_xam_signed_in_user 0x00000525, user 0xFE, ''
+PASS: xam: nobody is signed in
+xam: user 0's XamUserGetXUID 0x80070525, XamUserGetName 0x00000525
+PASS: xam: with nobody signed in, user 0's XUID and name fail as on the console
+xam: xsdk_save_device 0x00000000 in 11 ms, device 0x1; its data 0x00000000, type 0x1, 139082989568 bytes free
+PASS: xam: the device enumerator finds the hard disk
+xam: XamContentGetDeviceState(0x1) returned 0x000003E5, then 0x00000000; event closed 1
+PASS: xam: an overlapped call completes through its event
+xam: xsdk_save_mount returned 0x000003E5, then 0x00000000 after 150 ms
+xam: xsdk_save_unmount returned 0x000003E5, then 0x00000000 after 80 ms
+xam: the save's flush 0x00000000
+PASS: xam: a save no profile owns mounts, takes a file and unmounts
+PASS: xam: a save is flushed before it's unmounted
+xam: xsdk_save_mount returned 0x000003E5, then 0x00000000 after 33 ms
+xam: xsdk_save_unmount returned 0x000003E5, then 0x00000000 after 15 ms
+xam: mounted again with disposition 2
+PASS: xam: a save mounted again opens the package and reads back what was written
+xam: XamContentDelete returned 0x000003E5, then 0x00000000 after 33 ms
+PASS: xam: the save is deleted
+settings: GetTimeZoneInformation gave 2 and wrote 172 bytes; bias 300; standard "EST", bias 0, from 0-11-1, day of the week 0, 2:00:00.000; daylight "EDT", bias -60, from 0-3-2, day of the week 0, 2:00:00.000
+settings: time zone EDT, TZ <EST>5:00<EDT>4:00,M3.2.0/2:00:00,M11.1.0/2:00:00; daylight saving on to newlib, on to XAM; local time 21:27, -14400 s ahead of UTC
+PASS: settings: localtime is UTC moved by the console's time zone, and mktime takes it back
+settings: language 1, country 36 in XAM's locales; the console's settings hold language 1, country 103
+PASS: settings: the console's language and country read
+PASS: copies: memcpy, 0 to 300 bytes at every source and destination alignment
+PASS: copies: memcpy, 1 MB at four alignments
+PASS: copies: memcpy into write-combined memory, 0 to 300 bytes at every destination alignment, from two sources
+PASS: copies: memmove, ranges moved up and down over themselves
+PASS: xsc: vk_block_literals.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_texel_offsets.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_vertex_if.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_vertex_uniform_if.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_count_if.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_clip_distance.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_point_sprite.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_point_coord.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_dynamic_interpolator.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_dynamic_texcoord.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_dynamic_if.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_slow_fetch.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_frag_coord_rows.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_if_break.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_grid.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_vertex_loop_break.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_count_grid.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_break_data.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_count_stop.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_vertex_loop_count_break.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_float_count.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_data_count.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_while.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_count_skip.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_vertex_loop_data.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_data_grid.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_nest2.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_nest4.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_in_data_if.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_in_uniform_if.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_in_unrolled.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_vertex_loop_nest.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_nest_grid.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_step_grid.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_sample_lod.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_sample_grad.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_sample_computed.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_derivative.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_parallax.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_vertex_loop_sample.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_loop_sample_grid.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_scalar_input_loop.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_scalar_input.frag compiles into the PC's container, literals and resources
+PASS: xsc: vk_vertex_scalar_input.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_instance_cells.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_instance_step.vert compiles into the PC's container, literals and resources
+PASS: xsc: vk_indexed_reads.vert compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_vs.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_link_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_vpos_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_vface_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_depth_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_gaps_vs.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_gaps_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_loop_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_skin_vs.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_binding_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_if_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_return_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_switch_ps.hlsl compiles into the PC's container, literals and resources
+PASS: xsc: hlsl/grid_discard_ps.hlsl compiles into the PC's container, literals and resources
+PASS: net: net_host.txt names the PC
+net: connected to 192.168.0.125; getsockname gives 0.0.0.0, port 1223
+PASS: net: TCP to the PC and back, through send and recv
+net: the PC sees the console at 192.168.0.152
+PASS: net: a socket is a descriptor: fstat, write, read and close
+PASS: net: UDP to the PC and back, through sendto and recvfrom
+PASS: net: a connection from the PC, accepted
+net: example.com: found at 104.20.23.154
+PASS: net: getaddrinfo looks a host name up
+PASS: net: inet_pton and inet_ntop take dotted addresses, and refuse others
+net: a connection to the console's port 7379: connect -1, errno 111
+PASS: net: a connection to a closed port is refused, ECONNREFUSED
+net: without blocking: revents 000C, SO_ERROR 5
+PASS: net: a refused connection without blocking gives POLLERR and an SO_ERROR
+PASS: net: a non-blocking connection completes through poll, and recv with nothing there gives EAGAIN
+PASS: net: 1000 sockets opened and closed in turn
+PASS: static constructors run before main
+PASS: aligned and over-aligned allocation
+PASS: jthreads share a mutex and condition variable
+PASS: thread_local differs per thread
+PASS: 32-bit atomic count
+PASS: 64-bit atomic count
+atomics: over a 200 ms wait the waiter yielded 16 times and blocked 1 times
+PASS: atomic wait sleeps until notified
+PASS: exception thrown and caught
+PASS: exception passed between threads
+PASS: dynamic_cast and typeid
+unwind: of 200 throws, 0 lost registers with an empty catch (first run 200), 0 with a catch that reads them (first run 200)
+PASS: unwind: every one of 400 throws gives back r14-r31 whole, f14-f31 and v14-v31
+unwind: the deepest frame had changed r14-r31 low halves FFFFC000, high halves FFFFC000, f14-f31 FFFFC000, v14-v31 FFFFC000
+unwind: after, its caller found changed r14-r31 low halves 00000000, high halves 00000000, f14-f31 00000000, v14-v31 00000000
+unwind: frame 0 returns to 821D7F7C, CFA 7010EF90: r14 FFFFFFFFFFFFFFFF, r31 FFFFFFFFFFFFFFFF, f14 0000000000000000
+unwind: frame 1 returns to 821D7F60, CFA 7010F230: r14 FFFFFFFFFFFFFFFF, r31 FFFFFFFFFFFFFFFF, f14 0000000000000000
+unwind: frame 2 returns to 821D7F60, CFA 7010F4D0: r14 FFFFFFFFFFFFFFFF, r31 FFFFFFFFFFFFFFFF, f14 0000000000000000
+unwind: frame 3 returns to 821D7F60, CFA 7010F770: r14 FFFFFFFFFFFFFFFF, r31 FFFFFFFFFFFFFFFF, f14 0000000000000000
+unwind: frame 4 returns to 821D8094, CFA 7010FA10: r14 5A00000EC300000E, r31 5A00001FC300001F, f14 3FF0000E1234000E
+unwind: frame 5 returns to 821D2B7C, CFA 7010FA70: r14 5A00000EC300000E, r31 5A00001FC300001F, f14 3FF0000E1234000E
+unwind: deepest frame: r14 FFFFFFFFFFFFFFFF, r31 FFFFFFFFFFFFFFFF, f14 0000000000000000, v14 FFFFFFFF
+unwind: in the catch: r14 5A00000EC300000E, r31 5A00001FC300001F, f14 3FF0000E1234000E, v14 7100000E
+unwind: after: r14 5A00000EC300000E, r31 5A00001FC300001F, f14 3FF0000E1234000E, v14 7100000E
+PASS: unwind: r14-r31 whole, f14-f31 and v14-v31, all overwritten below, come back through a C++ exception
+unwind: the deepest frame had changed r14-r31 low halves FFFFC000, high halves FFFFC000, f14-f31 FFFFC000, v14-v31 FFFFC000
+unwind: after, its caller found changed r14-r31 low halves 00000000, high halves 00000000, f14-f31 00000000, v14-v31 00000000
+PASS: unwind: the same come back through setjmp and longjmp
+fp align: writing and reading floats and doubles at offsets 0 to 7
+fp align: 0 of 76 reads gave back other bits
+PASS: fp align: floats and doubles written and read back at every offset from 0 to 7, through memcpy, std::bit_cast and packed structs
+chrono: a 250 ms sleep took 250 ms on steady_clock
+PASS: steady_clock times a known delay
+chrono: system_clock reads 2026-10-21 01:27:33 UTC
+PASS: system_clock gives a plausible date
+open: NtCreateFile(game:\xsdk_fs_test) failed: 0xC0000034
+PASS: filesystem creates a directory
+PASS: filesystem lists a directory
+filesystem: absolute() gives game:/game:/xsdk_fs_test/file.txt, weakly_canonical() game:/game:/xsdk_fs_test/file.txt
+PASS: filesystem reaches a file through absolute() and weakly_canonical()
+PASS: filesystem renames a file over another, and a directory
+PASS: filesystem removes a directory
+PASS: std::format
+PASS: std::expected
+println: std::println reaches the log through stdout
+PASS: std::println
+input: polling controller 1 for 3 seconds; press some buttons
+input: packet 526 buttons 0x0000 triggers 0 0 left -1048 -1688 right -5339 538
+PASS: controller state read
+input: controller 1 rumbles at half strength for 500 ms
+PASS: controller rumble set and stopped
+audio: playing a 375 Hz tone for 500 ms
+audio: 94 frames submitted from callbacks
+PASS: audio tone
+PASS: gpu: open
+PASS: gpu: NOP and fence
+PASS: gpu: stats count the dwords written and the fence's kick
+gpu: 25604 dwords with no fence: 5 segments
+PASS: gpu: a long write runs in segments, before its fence
+gpu: 1311360 dwords as the stream wraps: 401 segments, 0 waits, 0 us waiting
+PASS: gpu: fences as the stream wraps
+gpu: the resolve took 271 us by the GPU's clock, and the wait returned 2124 ns after its fence
+gpu: the resolve took 271 us by the GPU's clock, and the wait returned 2972 ns after its fence
+gpu: the resolve took 271 us by the GPU's clock, and the wait returned 2524 ns after its fence
+gpu: the resolve took 271 us by the GPU's clock, and the wait returned 2614 ns after its fence
+gpu: the resolve took 271 us by the GPU's clock, and the wait returned 2150 ns after its fence
+gpu: the resolve took 271 us by the GPU's clock, and the wait returned 2416 ns after its fence
+gpu: the resolve took 271 us by the GPU's clock, and the wait returned 2564 ns after its fence
+gpu: the resolve took 271 us by the GPU's clock, and the wait returned 2890 ns after its fence
+PASS: gpu: a wait set to spin returns within 100 us of its fence passing, by the GPU's clock
+PASS: gpu: the GPU writes a word after a resolve
+gpu: the wait on a word held the GPU for 20 ms, then passed yes, 1998 us after the CPU wrote it
+PASS: gpu: the GPU waits on a word until the CPU writes it
+gpu: the clock: 47798105, then copies 47799240 and 99145753, then 100142230: 498.751 a microsecond, high word 0
+PASS: gpu: the clock counts at 498.75 MHz, the GPU's copies between the CPU's reads
+PASS: gpu: fences as the ring wraps
+PASS: gpu: close
+PASS: present: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: present: display open at 1280x720
+PASS: present: front buffers
+display: the line counter reached 720 after 20601 us
+PASS: present: every resolve's fence landed
+PASS: present: every frame held the colour cleared before it
+PASS: present: every frame shown
+PASS: present: GPU close
+PASS: triangle: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: triangle: display open at 1280x720
+PASS: triangle: shaders load
+PASS: triangle: vertex fetches patched for the layout
+PASS: triangle: vertex and front buffers
+display: the line counter reached 720 after 18268 us
+triangle: the last frame drew 258720 pixels
+PASS: triangle: every frame's fence landed
+PASS: triangle: every frame has red, green and blue corners on the clear colour
+PASS: triangle: the last frame covers the triangle's area
+PASS: triangle: every frame shown
+PASS: triangle: GPU close
+PASS: texture: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: texture: display open at 1280x720
+PASS: texture: shaders load
+PASS: texture: vertex fetches patched for a float4 position and float2 coordinates
+shader: texture fetch past the fetch constants or the microcode
+PASS: texture: a texture fetch moved to fetch constant 5 and back, and nothing of a shader without one
+PASS: texture: linear and tiled textures made
+PASS: texture: linear and tiled textures read back as uploaded
+PASS: texture: R8 levels uploaded a half at a time read back whole, the packed tail's too
+PASS: texture: vertex and front buffers
+display: the line counter reached 720 after 18403 us
+PASS: texture: every frame's fence landed
+texture: linear: the last frame had 0 wrong pixels
+PASS: texture: linear: every frame's corner and middle texels in place
+PASS: texture: linear: the last frame holds every texel, one to a pixel
+texture: tiled: the last frame had 0 wrong pixels
+PASS: texture: tiled: every frame's corner and middle texels in place
+PASS: texture: tiled: the last frame holds every texel, one to a pixel
+PASS: texture: every frame shown
+PASS: texture: GPU close
+PASS: render: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: render: display open at 1280x720
+PASS: render: shaders load
+PASS: render: vertex fetches patched
+PASS: render: source texture and render target made
+PASS: render: vertex and front buffers
+display: the line counter reached 720 after 22018 us
+PASS: render: every frame's fence landed
+render: source: the last frame of each half had 0 wrong pixels
+PASS: render: source: every frame's corner and middle texels in place
+PASS: render: source: the last frame of each half holds every texel
+render: rendered: the last frame of each half had 0 wrong pixels
+PASS: render: rendered: every frame's corner and middle texels in place
+PASS: render: rendered: the last frame of each half holds every texel
+PASS: render: every frame shown
+PASS: render: GPU close
+PASS: resolve rect: GPU open
+PASS: resolve rect: shaders, vertices and textures made
+PASS: resolve rect: the resolves' fence landed
+resolve rect: 0 texels wrong in the rectangles' texture, 0 in the whole's
+PASS: resolve rect: rectangles inside a target and at its edges, off the 8-pixel grid there, resolve into the same texels and no others
+PASS: resolve rect: each rectangle's resolve clears it alone
+resolve rect: 0 texels wrong after the rectangle's depth clear
+PASS: resolve rect: a rectangle's depth clear clears its depth alone, and draws find it
+resolve rect: 96 cells queued in 1532 us, 0 texels wrong
+PASS: resolve rect: 96 rectangles, more than xsdk keeps, queue without waiting out the GPU in sleeps
+PASS: resolve rect: 96 rectangles, more than xsdk keeps, each resolve their own texels
+PASS: resolve rect: GPU close
+PASS: visibility: GPU open
+PASS: visibility: shaders, vertices, the target's memory and the words made
+PASS: visibility: the queries' fence landed
+visibility: query 0, id 1: status word 0000000A
+visibility: query 1, id 2: status word 0000000A
+visibility: query 2, id 3: status word 0000000A
+visibility: query 3, id 1: status word 00000008
+visibility: query 4, id 63: status word 80000000
+visibility: query 5, id 32: status word 80000000
+PASS: visibility: a query around a drawn quad sets its bit
+PASS: visibility: a query around no draw leaves its bit clear
+visibility: the hidden quad's query came back set; set is the conservative answer the probe found
+PASS: visibility: a query around a quad hidden behind another sets its bit too, the conservative answer
+PASS: visibility: an id begun again around no draw, after a quad set its bit, comes back clear
+PASS: visibility: ids 32 to 63 answer in the second status word, 63's quad set and 32's no draw clear
+PASS: visibility: GPU close
+PASS: pacing: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 27983 us
+PASS: pacing: 3 buffers, every vblank: scene and present open
+pacing: 3 buffers, every vblank: 0 reused buffers held the wrong frame
+pacing: 3 buffers, every vblank: 30 swaps, fence 0005EBA9, landed 0005EBA9; XAM drew 0, showed 0
+pacing: 3 buffers, every vblank: 30 frames, 30 flips over 30 vblanks (first 1, last 30), 0 missed, 0 late; longest wait 17985 us
+PASS: pacing: 3 buffers, every vblank: every frame shown
+PASS: pacing: 3 buffers, every vblank: no vblank missed
+PASS: pacing: 3 buffers, every vblank: a flip every swap interval
+PASS: pacing: 3 buffers, every vblank: every flip inside vblank
+PASS: pacing: 3 buffers, every vblank: every frame resolved with its bar
+PASS: pacing: 3 buffers, every vblank: every frame through the kernel's swap, its last fence landed
+PASS: pacing: 3 buffers, every vblank: every frame showed its own buffer, the Guide closed
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 31058 us
+PASS: pacing: 2 buffers, every vblank: scene and present open
+pacing: 2 buffers, every vblank: 0 reused buffers held the wrong frame
+pacing: 2 buffers, every vblank: 30 swaps, fence 0005EBE5, landed 0005EBE5; XAM drew 0, showed 0
+pacing: 2 buffers, every vblank: 30 frames, 30 flips over 30 vblanks (first 1, last 30), 0 missed, 0 late; longest wait 17986 us
+PASS: pacing: 2 buffers, every vblank: every frame shown
+PASS: pacing: 2 buffers, every vblank: no vblank missed
+PASS: pacing: 2 buffers, every vblank: a flip every swap interval
+PASS: pacing: 2 buffers, every vblank: every flip inside vblank
+PASS: pacing: 2 buffers, every vblank: every frame resolved with its bar
+PASS: pacing: 2 buffers, every vblank: every frame through the kernel's swap, its last fence landed
+PASS: pacing: 2 buffers, every vblank: every frame showed its own buffer, the Guide closed
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 1387 us
+PASS: pacing: 3 buffers, every second vblank: scene and present open
+pacing: 3 buffers, every second vblank: 0 reused buffers held the wrong frame
+pacing: 3 buffers, every second vblank: 30 swaps, fence 0005EC21, landed 0005EC21; XAM drew 0, showed 0
+pacing: 3 buffers, every second vblank: 30 frames, 30 flips over 59 vblanks (first 1, last 59), 0 missed, 0 late; longest wait 33981 us
+PASS: pacing: 3 buffers, every second vblank: every frame shown
+PASS: pacing: 3 buffers, every second vblank: no vblank missed
+PASS: pacing: 3 buffers, every second vblank: a flip every swap interval
+PASS: pacing: 3 buffers, every second vblank: every flip inside vblank
+PASS: pacing: 3 buffers, every second vblank: every frame resolved with its bar
+PASS: pacing: 3 buffers, every second vblank: every frame through the kernel's swap, its last fence landed
+PASS: pacing: 3 buffers, every second vblank: every frame showed its own buffer, the Guide closed
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 3124 us
+PASS: pacing: 2 buffers, every second vblank: scene and present open
+pacing: 2 buffers, every second vblank: 0 reused buffers held the wrong frame
+pacing: 2 buffers, every second vblank: 30 swaps, fence 0005EC5D, landed 0005EC5D; XAM drew 0, showed 0
+pacing: 2 buffers, every second vblank: 30 frames, 30 flips over 59 vblanks (first 1, last 59), 0 missed, 0 late; longest wait 33981 us
+PASS: pacing: 2 buffers, every second vblank: every frame shown
+PASS: pacing: 2 buffers, every second vblank: no vblank missed
+PASS: pacing: 2 buffers, every second vblank: a flip every swap interval
+PASS: pacing: 2 buffers, every second vblank: every flip inside vblank
+PASS: pacing: 2 buffers, every second vblank: every frame resolved with its bar
+PASS: pacing: 2 buffers, every second vblank: every frame through the kernel's swap, its last fence landed
+PASS: pacing: 2 buffers, every second vblank: every frame showed its own buffer, the Guide closed
+PASS: pacing: GPU close
+PASS: scale: GPU open
+PASS: scale: the kernel reports the output's size
+PASS: scale: the kernel's own scaler settings fail the check
+display: 1280x720 scaled to the 1920x1080 output
+PASS: scale: display open at 1280x720
+display: the line counter reached 720 after 18295 us
+PASS: scale: image shown
+PASS: scale: the scaler holds 2 taps, the built-in filter and the output's scale factors
+scale: 1280x720 on the 1920x1080 output, desktop height 1080; showing it for 500 ms for a capture
+PASS: scale: the kernel's scaler settings are back
+PASS: scale: the kernel's mode opens at the kernel's size
+PASS: scale: kernel's mode: buffer shown
+PASS: scale: the kernel's mode leaves the scaler alone
+PASS: scale: the kernel's scaler settings are still there
+display: 1280x720 scaled to the 1920x1080 output
+display: xsdk_present letterboxes its frames, as the title asks
+display: the line counter reached 960 after 22162 us
+PASS: scale: letterboxed, the display shows a 1280x960 front buffer, the scaler planned for it
+PASS: scale: letterboxed, the front buffer is black above row 128 and from row 848, the frame between
+PASS: scale: letterboxing's scaler is taken back as the present closes
+PASS: scale: GPU close
+constants: XAM had SQ_VS_CONST 000FF000, SQ_PS_CONST 000FF100
+PASS: constants: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: constants: display open at 1280x720
+PASS: constants: shaders load
+PASS: constants: vertex fetch patched for a float4 position
+PASS: constants: vertex, front and constant buffers
+display: the line counter reached 720 after 24682 us
+constants: 0 of 59 frames checked held a wrong point; 0 points wrong
+constants: SQ_VS_CONST 000FF000, SQ_PS_CONST 000FF100 after the frames
+PASS: constants: every frame's fence landed
+PASS: constants: every quad placed and coloured by its constants
+PASS: constants: every frame shown
+constants: the last frame stays on screen for 500 ms for a capture
+constants, loaded from memory: 0 of 59 frames checked held a wrong point; 0 points wrong
+constants: SQ_VS_CONST 000FF000, SQ_PS_CONST 000FF100 after the frames
+PASS: constants: every frame's fence landed, loaded from memory
+PASS: constants: every quad placed and coloured by its constants, loaded from memory
+PASS: constants: GPU close
+PASS: indexed: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: indexed: display open at 1280x720
+PASS: indexed: shaders load
+PASS: indexed: vertex fetch patched for a float4 position
+PASS: indexed: vertex, index and front buffers
+display: the line counter reached 720 after 22268 us
+indexed: 0 of 59 frames checked held a wrong point; 0 points wrong
+PASS: indexed: every frame's fence landed
+PASS: indexed: every way drew its shape in its cell
+PASS: indexed: every frame shown
+indexed: the last frame stays on screen for 500 ms for a capture
+PASS: indexed: GPU close
+PASS: depth: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: depth: display open at 1280x720
+PASS: depth: shaders load
+PASS: depth: vertex fetch patched for a float4 position
+PASS: depth: texture shaders load, patched for a float4 position and float2 coordinates
+PASS: depth: vertex and front buffers
+display: the line counter reached 720 after 24901 us
+PASS: depth: a tiled D24S8 texture made
+depth: resolved, far alone at (80, 260): 60000000, for depth 600000 and stencil 0
+depth: resolved, near over far at (180, 360): 40000000, for depth 400000 and stencil 0
+depth: resolved, near before far at (500, 360): 40000000, for depth 400000 and stencil 0
+depth: resolved, far after near at (600, 460): 60000000, for depth 600000 and stencil 0
+depth: resolved, inside the stencil mask at (820, 360): 80000001, for depth 800000 and stencil 1
+depth: resolved, outside the stencil mask at (700, 240): 80000000, for depth 800000 and stencil 0
+depth: resolved, behind the clear at (1060, 360): 80000000, for depth 800000 and stencil 0
+depth: resolved, in front of the clear at (1220, 360): 40000000, for depth 400000 and stencil 0
+depth: resolved, two-sided, the front face's mark at (140, 610): 80000011, for depth 800000 and stencil 17
+depth: resolved, two-sided, the back face's mark at (340, 610): 80000022, for depth 800000 and stencil 34
+PASS: depth: the overlaps' depth resolved into a D24S8 texture, each word its depth above its stencil
+depth: sampled, far alone at (80, 260): stored 000060FF, for red 96
+depth: sampled, near over far at (180, 360): stored 000040FF, for red 64
+depth: sampled, near before far at (500, 360): stored 000040FF, for red 64
+depth: sampled, far after near at (600, 460): stored 000060FF, for red 96
+depth: sampled, inside the stencil mask at (820, 360): stored 000080FF, for red 128
+depth: sampled, outside the stencil mask at (700, 240): stored 000080FF, for red 128
+depth: sampled, behind the clear at (1060, 360): stored 000080FF, for red 128
+depth: sampled, in front of the clear at (1220, 360): stored 000040FF, for red 64
+depth: sampled, two-sided, the front face's mark at (140, 610): stored 000080FF, for red 128
+depth: sampled, two-sided, the back face's mark at (340, 610): stored 000080FF, for red 128
+PASS: depth: a fetch of the D24S8 texture returns its depth in red, green and blue 0, alpha 1
+PASS: depth: the resolved depth's fences landed
+depth: depth test on: 0 of 59 frames checked held a wrong point
+depth: depth test off: 9 of 9 frames got every depth check wrong and every other right
+PASS: depth: every frame's fence landed
+PASS: depth: overlaps, the stencil mask, two-sided stencil and the cleared depth all right with the depth test on
+PASS: depth: with the depth test off, the depth checks fail and only they do
+PASS: depth: every frame shown
+depth: the depth-tested frame stays on screen for 500 ms for a capture
+PASS: depth: GPU close
+PASS: hiz: GPU open
+PASS: hiz: shaders load
+PASS: hiz: vertex and resolve buffers
+hiz: 8 hidden full-screen quads through the long shader took 239 us, 8 drawn ones 20063 us
+PASS: hiz: hidden pixels through a long shader cost under an eighth of drawn ones
+hiz: 0 of 12 frames held a wrong pixel, 0 pixels in all
+PASS: hiz: every frame's fence landed
+PASS: hiz: near and far drawn both ways over depth clears, less-than and greater-than, every pixel right
+hiz: of 921600 pixels, 0 hid a draw writing nearer depth, 0 a draw over one writing farther
+PASS: hiz: draws whose pixel shader writes depth are tested and leave depth by what it writes
+PASS: hiz: GPU close
+PASS: raster: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: raster: display open at 1280x720
+PASS: raster: shaders load
+PASS: raster: vertex fetch patched for a float4 position
+PASS: raster: vertex and front buffers
+PASS: raster: xost compiles and xsdk loads the point sprite shaders on the console
+PASS: raster: xost compiles and xsdk loads vk_dynamic_interpolator.vert on the console
+PASS: raster: xost compiles and xsdk loads vk_dynamic_texcoord.frag, vk_dynamic_if.frag, vk_slow_fetch.frag, vk_loop_grid.frag, vk_loop_count_grid.frag, vk_loop_data_grid.frag, vk_loop_nest_grid.frag, vk_loop_step_grid.frag and vk_loop_sample_grid.frag on the console
+display: the line counter reached 720 after 22883 us
+raster: 29 points a frame, 10 of the clip planes; 0 and 0 of 59 frames checked held a wrong one, 0 points wrong
+PASS: raster: every frame's fence landed
+PASS: raster: blends, constant blends, write mask, culling, scissor, viewport and depth bias as worked out
+PASS: raster: a wireframe quad draws its triangles' edges and nothing inside, a point-filled one its corners alone
+PASS: raster: clip planes 0, 3 and 5 cut their cells at their lines, and nothing once they're off
+PASS: raster: point sprites from xost's shaders compiled on the console as wide as their gl_PointSize, 24 and 64 pixels, gl_PointCoord across them from the top left
+PASS: raster: one draw of xost's vk_dynamic_interpolator.vert compiled on the console colours each of 560 quads as its vertices' index, 0 to 15, picks, read at a0 past the interpolators' alloc: 0 of 33040 wrong
+PASS: raster: one draw of xost's vk_dynamic_texcoord.frag compiled on the console samples each of 280 quads' texel at coords[i], i 0 to 15, read at a0 past j's load: 0 of 16520 wrong
+PASS: raster: two draws of xost's vk_dynamic_if.frag compiled on the console colour each of 280 quads from rows at i read before and past an if/else on a uniform whose arm reads at j, the arm taken in the first: 0 of 16520 wrong
+PASS: raster: one draw of xost's vk_slow_fetch.frag compiled on the console colours every pixel of 128 quads from two fetches far across a 1024 by 1024 texture, read in the next exec, and a third at the row they give, pixels: 0 of 755200 wrong
+PASS: raster: one draw of xost's vk_loop_grid.frag compiled on the console colours every pixel of 80 cells of 10 by 10 as it leaves an unrolled loop at its own pass, on breaks on data in arms of an if/else, a continue on data and a break the unroller folds: 0 of 472000 wrong
+PASS: raster: one draw of xost's vk_loop_count_grid.frag compiled on the console colours every pixel of 112 cells of 10 by 10 as it leaves a hardware loop at its own pass, on a continue and two breaks on data, and its counter after the loop: 0 of 660800 wrong
+PASS: raster: one draw of xost's vk_loop_data_grid.frag compiled on the console colours every pixel of 128 cells of 10 by 10 by its own counts from data, 0 to 321, of a for loop, a while left on data and a do/while continued past on data, each stopping at 255 passes: 0 of 755200 wrong
+PASS: raster: one draw of xost's vk_loop_nest_grid.frag compiled on the console colours every pixel of 192 cells of 10 by 10 by its own passes at each of 3 nested hardware loops, continued past and left on data, two of them in the arms of an if/else on data: 0 of 1132800 wrong
+PASS: raster: one draw of xost's vk_loop_step_grid.frag compiled on the console colours every pixel of 48 cells of 10 by 10 by the passes of loops from 100 and by 2 to a push constant's 300, 200 and 150 as xsdk_xsc_loop_passes works them out, and their counters after: 0 of 283200 wrong
+PASS: raster: one draw of xost's vk_loop_sample_grid.frag compiled on the console colours every pixel of 48 cells of 10 by 10 by the flat levels it samples in loops' passes, one left at a height it samples, at LODs and gradients worked out and the GPU's, a derivative and tints at the counter: 0 of 283200 wrong
+PASS: raster: every frame shown
+raster: the last frame stays on screen for 500 ms for a capture
+PASS: raster: vk_loop_count_grid.frag over the whole target, every pixel leaving at its loop's first pass, takes 1444263 GPU clocks under a count of 255, within a tenth of 1444316 under a count of 1
+PASS: raster: GPU close
+PASS: sampling: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: sampling: display open at 1280x720
+PASS: sampling: shaders load
+PASS: sampling: vertex fetches patched for a float4 position and float2 coordinates
+PASS: sampling: textures made with their levels
+PASS: sampling: vertex and front buffers
+display: the line counter reached 720 after 23748 us
+sampling: 65 cells, 650 points a frame; 0 of 59 frames checked held a wrong one, 0 points wrong
+sampling: the last frame had 0 of 373875 pixels wrong across the cells and their edges
+PASS: sampling: every frame's fence landed
+PASS: sampling: every level of square, wide, tall and packed-base textures, one texel to a pixel
+PASS: sampling: magnification, minification and mip filters as worked out
+PASS: sampling: wrap, mirror and clamp as worked out
+PASS: sampling: mirror once, halfway, and black and white borders as worked out
+sampling: the black border's alpha read 00
+PASS: sampling: the black border's alpha is 0, as Xenia's backends take it
+PASS: sampling: every frame shown
+sampling: the last frame stays on screen for 500 ms for a capture
+PASS: sampling: GPU close
+PASS: cube and 3D: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: cube and 3D: display open at 1280x720
+PASS: cube and 3D: xost's shaders load, the vertex fetches patched for two float4s
+PASS: cube and 3D: two cubes and two 3D textures made, uploaded face by face and slice by slice
+PASS: cube and 3D: every face and slice of every level reads back as uploaded
+PASS: cube and 3D: vertex and front buffers
+display: the line counter reached 720 after 30948 us
+PASS: cube and 3D: every frame's fence landed
+PASS: cube and 3D: a 32x32 cube's six faces at levels 0 and 1, each where Vulkan's directions point
+PASS: cube and 3D: an 8x8 cube's six faces at levels 0 and 2, from each face's packed tail
+PASS: cube and 3D: a 32x32x8 texture's eight slices, each at its w
+PASS: cube and 3D: an 8x8x3 texture's three slices, from its packed tail
+PASS: cube and 3D: w wrapped, clamped, and filtered halfway between two slices
+PASS: cube and 3D: every frame shown
+cube and 3D: the last frame stays on screen for 500 ms for a capture
+PASS: cube and 3D: GPU close
+PASS: anisotropy: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: anisotropy: shaders, striped texture with its levels, vertex and front buffers
+PASS: anisotropy: every frame's fence landed
+anisotropy: at most 0: stripes' contrast 0, mean 501, per mille
+anisotropy: at most 1: stripes' contrast 0, mean 501, per mille
+anisotropy: at most 2: stripes' contrast 0, mean 501, per mille
+anisotropy: at most 4: stripes' contrast 501, mean 500, per mille
+anisotropy: at most 8: stripes' contrast 1000, mean 500, per mille
+anisotropy: at most 16: stripes' contrast 1000, mean 500, per mille
+PASS: anisotropy: at most 16, the stripes keep their contrast
+PASS: anisotropy: without, the level the GPU picks greys the stripes
+display: the line counter reached 720 after 26728 us
+PASS: anisotropy: the last frame shown
+anisotropy: the last frame stays on screen for 500 ms for a capture
+PASS: anisotropy: GPU close
+PASS: formats: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: formats: display open at 1280x720
+PASS: formats: shaders load
+PASS: formats: vertex fetches patched for a float4 position and float2 coordinates
+PASS: formats: textures made in every format
+PASS: formats: vertex and front buffers
+display: the line counter reached 720 after 22217 us
+formats: the largest error in a channel: A8R8G8B8 0, R5G6B5 0, A1R5G5B5 0, A4R4G4B4 0, A2B10G10R10 0, R8 1, R8G8 0, R16F 0, R16G16F 0, R16G16B16A16F 0, DXT1 3, DXT3 3, DXT5 4, R8G8B8A8 1, B8G8R8A8 1, R32F 0, D24S8 0, DXN 4, DXT5A 4, R16 0, R16G16 0, R16G16B16A16 0, B10G11R11 0, B11G11R10 0
+formats: 97 cells, 970 points a frame; 0 of 59 frames checked held a wrong one, 0 points wrong
+formats: the last frame had 0 of 121962 pixels wrong across the cells and their edges
+PASS: formats: every frame's fence landed
+PASS: formats: every format, linear and tiled, as decoded on the CPU
+PASS: formats: DXN, DXT5A, 16-bit fixed point and 10-11-11, linear and tiled, as decoded on the CPU
+PASS: formats: every level of six formats' mipped textures, as decoded on the CPU
+PASS: formats: R8 and R8G8 with their channels picked, as decoded on the CPU
+PASS: formats: 8-, 10- and 16-bit channels read signed, two's complement from -1 to 1, as decoded on the CPU
+PASS: formats: 8-bit and DXT colours read through gamma, Xenos's piecewise-linear curve, as decoded on the CPU
+PASS: formats: every frame shown
+formats: the last frame stays on screen for 500 ms for a capture
+PASS: formats: GPU close
+PASS: uploads: tiled uploads from word-aligned rows write what a block at a time does, byte for byte
+uploads: a 512x512 R8 tiled upload took 463 us, 566 MB/s
+PASS: uploads: a 512x512 R8 tiled upload takes under 750 us
+uploads: a 512x512 A8R8G8B8 tiled upload took 945 us, 1109 MB/s
+PASS: uploads: a 512x512 A8R8G8B8 tiled upload takes under 1500 us
+PASS: multisample: a 240x128 target takes 32, 64 and 128 eDRAM tiles at 1, 2 and 4 samples
+PASS: multisample: 8_8_8_8, 16_16_16_16, 2_10_10_10 and its 7e3 float take their tiles at 1, 2 and 4 samples, a 64-bit target twice a 32-bit one's
+PASS: multisample: GPU open
+PASS: multisample: shaders load and patch
+PASS: multisample: vertices and textures
+PASS: multisample: every round's fence landed
+multisample: 1 sample: edge pixels by samples covered: 2844, 2032; 0 between steps, 0 wrong off the edges
+PASS: multisample: 1 sample: edge pixels one colour or the other, the rest as worked out
+multisample: 2 samples: edge pixels by samples covered: 2368, 956, 1552; 0 between steps, 0 wrong off the edges
+PASS: multisample: 2 samples: edge pixels blend in halves, the rest as worked out
+multisample: 4 samples: edge pixels by samples covered: 2132, 464, 500, 452, 1328; 0 between steps, 0 wrong off the edges
+PASS: multisample: 4 samples: edge pixels blend in quarters, the rest as worked out
+multisample: 1 sample, placed: edge pixels by samples covered: 2844, 2032; 0 between steps, 0 wrong off the edges
+PASS: multisample: 1 sample, placed: edge pixels one colour or the other, the rest as worked out
+multisample: 2 samples, placed: edge pixels by samples covered: 2368, 956, 1552; 0 between steps, 0 wrong off the edges
+PASS: multisample: 2 samples, placed: edge pixels blend in halves, the rest as worked out
+multisample: 4 samples, placed: edge pixels by samples covered: 2132, 464, 500, 452, 1328; 0 between steps, 0 wrong off the edges
+PASS: multisample: 4 samples, placed: edge pixels blend in quarters, the rest as worked out
+multisample: 8_8_8_8 at 2 samples: edge pixels by samples covered: 592, 239, 388; 0 between steps, 0 wrong off the edges
+PASS: multisample: 8_8_8_8 at 2 samples: edge pixels blend in halves, the rest as worked out
+multisample: 16_16_16_16 at 2 samples: edge pixels by samples covered: 592, 239, 388; 0 between steps, 0 wrong off the edges
+PASS: multisample: 16_16_16_16 at 2 samples: edge pixels blend in halves, the rest as worked out
+multisample: 2_10_10_10 at 2 samples: edge pixels by samples covered: 592, 239, 388; 0 between steps, 0 wrong off the edges
+PASS: multisample: 2_10_10_10 at 2 samples: edge pixels blend in halves, the rest as worked out
+multisample: 2_10_10_10_FLOAT at 2 samples: edge pixels by samples covered: 592, 239, 388; 0 between steps, 0 wrong off the edges
+PASS: multisample: 2_10_10_10_FLOAT at 2 samples: edge pixels blend in halves, the rest as worked out
+multisample: four at once at 2 samples, target 0, 8_8_8_8: edge pixels by samples covered: 592, 239, 388; 0 between steps, 0 wrong off the edges
+PASS: multisample: four at once at 2 samples, target 0, 8_8_8_8: edge pixels blend in halves, the rest as worked out
+multisample: four at once at 2 samples, target 1, 16_16_16_16: edge pixels by samples covered: 592, 239, 388; 0 between steps, 0 wrong off the edges
+PASS: multisample: four at once at 2 samples, target 1, 16_16_16_16: edge pixels blend in halves, the rest as worked out
+multisample: four at once at 2 samples, target 2, 2_10_10_10: edge pixels by samples covered: 592, 239, 388; 0 between steps, 0 wrong off the edges
+PASS: multisample: four at once at 2 samples, target 2, 2_10_10_10: edge pixels blend in halves, the rest as worked out
+multisample: four at once at 2 samples, target 3, 2_10_10_10_FLOAT: edge pixels by samples covered: 592, 239, 388; 0 between steps, 0 wrong off the edges
+PASS: multisample: four at once at 2 samples, target 3, 2_10_10_10_FLOAT: edge pixels blend in halves, the rest as worked out
+multisample: 8_8_8_8 at 4 samples: edge pixels by samples covered: 533, 116, 125, 113, 332; 0 between steps, 0 wrong off the edges
+PASS: multisample: 8_8_8_8 at 4 samples: edge pixels blend in quarters, the rest as worked out
+multisample: 16_16_16_16 at 4 samples: edge pixels by samples covered: 533, 116, 125, 113, 332; 0 between steps, 0 wrong off the edges
+PASS: multisample: 16_16_16_16 at 4 samples: edge pixels blend in quarters, the rest as worked out
+multisample: 2_10_10_10 at 4 samples: edge pixels by samples covered: 533, 116, 125, 113, 332; 0 between steps, 0 wrong off the edges
+PASS: multisample: 2_10_10_10 at 4 samples: edge pixels blend in quarters, the rest as worked out
+multisample: 2_10_10_10_FLOAT at 4 samples: edge pixels by samples covered: 533, 116, 125, 113, 332; 0 between steps, 0 wrong off the edges
+PASS: multisample: 2_10_10_10_FLOAT at 4 samples: edge pixels blend in quarters, the rest as worked out
+multisample: four at once at 4 samples, target 0, 8_8_8_8: edge pixels by samples covered: 533, 116, 125, 113, 332; 0 between steps, 0 wrong off the edges
+PASS: multisample: four at once at 4 samples, target 0, 8_8_8_8: edge pixels blend in quarters, the rest as worked out
+multisample: four at once at 4 samples, target 1, 16_16_16_16: edge pixels by samples covered: 533, 116, 125, 113, 332; 0 between steps, 0 wrong off the edges
+PASS: multisample: four at once at 4 samples, target 1, 16_16_16_16: edge pixels blend in quarters, the rest as worked out
+multisample: four at once at 4 samples, target 2, 2_10_10_10: edge pixels by samples covered: 533, 116, 125, 113, 332; 0 between steps, 0 wrong off the edges
+PASS: multisample: four at once at 4 samples, target 2, 2_10_10_10: edge pixels blend in quarters, the rest as worked out
+multisample: four at once at 4 samples, target 3, 2_10_10_10_FLOAT: edge pixels by samples covered: 533, 116, 125, 113, 332; 0 between steps, 0 wrong off the edges
+PASS: multisample: four at once at 4 samples, target 3, 2_10_10_10_FLOAT: edge pixels blend in quarters, the rest as worked out
+display: 1280x720 scaled to the 1920x1080 output
+multisample: alpha to coverage at 1 samples: samples covered at alphas 0 to 16/16: 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1; at 1/16 after the target set again: 1
+PASS: multisample: alpha to coverage at 1 sample: each square covers the samples the probe found at its alpha, every pixel, the rest the clear
+multisample: alpha to coverage at 2 samples: samples covered at alphas 0 to 16/16: 0 0 0 0 1 1 1 1 1 1 1 1 2 2 2 2 2; at 1/16 after the target set again: 2
+PASS: multisample: alpha to coverage at 2 samples: each square covers the samples the probe found at its alpha, every pixel, the rest the clear
+multisample: alpha to coverage at 4 samples: samples covered at alphas 0 to 16/16: 0 0 1 1 1 1 2 2 2 2 3 3 3 3 4 4 4; at 1/16 after the target set again: 4
+PASS: multisample: alpha to coverage at 4 samples, through xsdk_gpu_set_blends: each square covers the samples the probe found at its alpha, every pixel, the rest the clear
+PASS: multisample: alpha to coverage: off again once the target is set, alpha 1/16 covering every sample at 1, 2 and 4 samples
+display: the line counter reached 720 after 21643 us
+PASS: multisample: alpha to coverage: the squares shown at 1280x720
+PASS: multisample: GPU close
+PASS: targets: GPU open
+PASS: targets: shaders and vertices
+PASS: targets: 2_10_10_10 holds its clear and a quad's colour, each channel in place
+PASS: targets: 2_10_10_10 blends a quad onto itself, doubling it
+PASS: targets: 2_10_10_10_FLOAT holds its clear and a quad's colour, each channel in place
+targets: 2_10_10_10_FLOAT: a quad blended onto itself gave 3 4.5 6 0.666504; 512 of 512 texels doubled
+PASS: targets: 16_16_16_16 holds its clear and a quad's colour, each channel in place
+targets: 16_16_16_16: a quad blended onto itself gave 3 4.5 6 -1; 512 of 512 texels doubled
+PASS: targets: 16_16_FLOAT holds its clear and a quad's colour, each channel in place
+targets: 16_16_FLOAT: a quad blended onto itself gave 65536 131008 0 0; 0 of 512 texels doubled
+PASS: targets: 16_16_16_16_FLOAT holds its clear and a quad's colour, each channel in place
+targets: 16_16_16_16_FLOAT: a quad blended onto itself gave 65536 131008 131008 -0; 0 of 512 texels doubled
+PASS: targets: 32_FLOAT holds its clear and a quad's colour, each channel in place
+targets: 32_FLOAT: a quad blended onto itself gave nan 0 0 0; 0 of 512 texels doubled
+PASS: targets: four at once: target 0, 8_8_8_8, oC0 added onto what it holds
+PASS: targets: four at once: target 1, 2_10_10_10, oC1 blended by its alpha, red, green and blue alone
+PASS: targets: four at once: target 2, 16_16_16_16_FLOAT, oC2 past 1, red and alpha alone
+PASS: targets: four at once: target 3, 32_FLOAT, oC3 past 1, kept from the second draw
+PASS: targets: GPU close
+PASS: tiles: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: tiles: display open at 1280x720
+PASS: tiles: shaders, xost's gradient compiled, vertices, textures and the recording's buffer
+tiles: 1280x720, 8_8_8_8 and depth: 1 bands, for 1
+tiles: the same in bands of 384 rows: 2 bands, for 2
+tiles: the same in bands of 256 rows: 3 bands, for 3
+tiles: the same with depth whole: 3 bands, for 3
+tiles: the same with depth whole at the top: 3 bands, for 3
+gpu: a 1280x720 pass of 1 colour targets and depth at 1 samples can't be tiled
+tiles: depth at the top in bands: 0 bands, for 0, refused when begun
+tiles: 1280x720, four targets, one 64-bit, and depth: 3 bands, for 3
+tiles: 2048x2048 depth alone: 2 bands, for 2
+tiles: 2048x2048 8_8_8_8 alone: 2 bands, for 2
+tiles: 1280x720, 8_8_8_8 and depth, at 2 samples: 2 bands, for 2
+tiles: the same at 2 samples with depth whole: 3 bands, for 3
+tiles: 1280x720, 8_8_8_8 and depth, at 4 samples: 3 bands, for 3
+gpu: a 1280x720 pass of 1 colour targets and depth at 2 samples can't be tiled
+tiles: 16_16_16_16_FLOAT at 2 samples, which doesn't take them: 0 bands, for 0, refused when begun
+gpu: a 1280x720 pass of 1 colour targets and depth at 3 samples can't be tiled
+tiles: 3 samples: 0 bands, for 0, refused when begun
+gpu: a 1280x720 pass of 1 colour targets and depth at 1 samples can't be tiled
+tiles: bands of 48 rows: 0 bands, for 0, refused when begun
+gpu: a 1280x8193 pass of 1 colour targets and depth at 1 samples can't be tiled
+tiles: 8193 rows: 0 bands, for 0, refused when begun
+gpu: a 1280x720 pass of 0 colour targets at 1 samples can't be tiled
+tiles: nothing drawn: 0 bands, for 0, refused when begun
+gpu: a 8192x8192 pass of 4 colour targets and depth at 1 samples can't be tiled
+tiles: 8192x8192, four 64-bit targets and depth, past 64 bands: 0 bands, for 0, refused when begun
+PASS: tiles: band counts as the tiles say, and passes that can't be tiled refused
+tiles: 1280x720 in 2 bands of 384 rows: 0 of 921600 pixels differ from untiled
+PASS: tiles: 1280x720 in 2 bands of 384 rows, every pixel as untiled
+display: the line counter reached 720 after 16434 us
+tiles: 1280x720 in 3 bands of 256 rows: 0 of 921600 pixels differ from untiled
+PASS: tiles: 1280x720 in 3 bands of 256 rows, every pixel as untiled
+tiles: 1280x720 with depth whole in 3 bands of 256 rows: 0 of 921600 pixels differ from untiled
+PASS: tiles: 1280x720 with depth whole in 3 bands of 256 rows, every pixel as untiled
+tiles: 1280x720 with depth whole at eDRAM's top in 3 bands of 256 rows: 0 of 921600 pixels differ from untiled
+PASS: tiles: 1280x720 with depth whole at eDRAM's top in 3 bands of 256 rows, every pixel as untiled
+tiles: drawn back: 0 of 921600 pixels differ
+PASS: tiles: a pass drawing its texture back first and resolving into it, every pixel as it was
+tiles: back to back: 0 of 921600 pixels not the second's clear
+PASS: tiles: two passes laid out the same back to back, the second's every pixel its own clear
+tiles: 1280x720 at 2 samples in 2 bands of 384 rows: 0 of 921600 pixels differ from untiled
+PASS: tiles: 1280x720 at 2 samples in 2 bands of 384 rows, every pixel as untiled
+tiles: 1280x720 at 2 samples with depth whole in 3 bands of 256 rows: 0 of 921600 pixels differ from untiled
+PASS: tiles: 1280x720 at 2 samples with depth whole in 3 bands of 256 rows, every pixel as untiled
+tiles: 1280x720 at 4 samples in 3 bands of 256 rows: 0 of 921600 pixels differ from untiled
+PASS: tiles: 1280x720 at 4 samples in 3 bands of 256 rows, every pixel as untiled
+tiles: 1280x720 at 4 samples in 3 bands of 256 rows, its depth resolved too: 0 of 921600 pixels differ from untiled
+PASS: tiles: 1280x720 at 4 samples in 3 bands of 256 rows, its depth resolved too, every pixel as untiled
+tiles: four targets at 1280x720 with depth take 3 bands
+tiles: four targets, target 0, 8_8_8_8: 0 of 921600 texels differ from untiled
+PASS: tiles: four targets at 1280x720 in bands, target 0, 8_8_8_8, every texel as untiled
+tiles: four targets, target 1, 2_10_10_10: 0 of 921600 texels differ from untiled
+PASS: tiles: four targets at 1280x720 in bands, target 1, 2_10_10_10, every texel as untiled
+tiles: four targets, target 2, 16_16_16_16_FLOAT: 0 of 921600 texels differ from untiled
+PASS: tiles: four targets at 1280x720 in bands, target 2, 16_16_16_16_FLOAT, every texel as untiled
+tiles: four targets, target 3, 32_FLOAT: 0 of 921600 texels differ from untiled
+PASS: tiles: four targets at 1280x720 in bands, target 3, 32_FLOAT, every texel as untiled
+tiles: 2048x2048 depth alone takes 2 bands
+tiles: 2048x2048 depth alone: 0 of 4194304 texels' depth wrong
+PASS: tiles: 2048x2048 depth alone in 2 bands, resolved a band at a time, every texel's depth as drawn
+tiles: 2048x2048 sampled: 0 of 4194304 texels wrong
+PASS: tiles: the 2048x2048 depth sampled by a quad in a tiled pass, every texel's red its depth
+PASS: tiles: every frame shown
+PASS: tiles: GPU close
+PASS: vertex: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: vertex: display open at 1280x720
+PASS: vertex: a vertex shader patched for each cell's layout
+PASS: vertex: vertex and front buffers
+display: the line counter reached 720 after 28049 us
+vertex: 27 cells, 135 points a frame; 0 of 59 frames checked held a wrong one, 0 points wrong
+vertex: the last frame had 0 of 117612 pixels wrong across the cells and their edges
+PASS: vertex: every frame's fence landed
+PASS: vertex: every format, stream, stride and offset drew its colours
+PASS: vertex: colours whose components lie in other orders, each picked back into place, drew their colours
+PASS: vertex: every frame shown
+vertex: the last frame stays on screen for 500 ms for a capture
+PASS: vertex: GPU close
+PASS: instancing: GPU open
+shader: an element at the instance's rate for a vertex shader that isn't instanced
+PASS: instancing: xsdk_shader_set_vertex_layout refuses an element at the instance's rate for a vertex shader that isn't instanced
+PASS: instancing: xost compiles vk_instance_cells.vert and vk_instance_step.vert on the console, and xsdk loads each instanced at the group register the compile lists
+PASS: instancing: streams, repeated indices and the target's buffer made, the elements at the instance's rate patched
+PASS: instancing: one draw of 12,000 instances of a 6-vertex quad from instance 100, in two pieces, colours each of 14,400 cells of 8 by 8 as its instance's element and gl_InstanceIndex, the 2,400 past them clear: 0 wrong
+PASS: instancing: one draw of the same 12,000 instances from a 4-vertex quad's 6 indices in 64 copies, 16-bit, moved on by 4: 0 of 14,400 cells wrong
+PASS: instancing: one draw of the same 12,000 instances from a quad at vertices 69,996 to 69,999 in as many copies as 24-bit indices hold, 128, 32-bit, moved on by 131072: 0 of 14,400 cells wrong
+PASS: instancing: 50 instances of a 6-vertex triangle strip from instance 7, an instance a piece, each moved and coloured by gl_InstanceIndex: 0 of 156 pixels wrong
+PASS: instancing: a point a vertex at V 255, 257 and 21,845, as many instances as a packet holds from instance 5, each on its own pixel in its colour: 0 of 196605 points wrong
+PASS: instancing: GPU close
+PASS: indexed reads: GPU open
+PASS: indexed reads: xost compiles vk_indexed_reads.vert on the console, and its grid is made
+PASS: indexed reads: one draw of vk_indexed_reads.vert, the optimiser on, places and colours each of 2304 quads by rows at its own i and j, read at a0 where they're used: 0 of 66816 quads wrong over 29 frames
+PASS: indexed reads: GPU close
+PASS: hlsl: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: hlsl: xost compiles the grid's HLSL shaders on the console, and the grid is made
+PASS: hlsl: the pixel shader reading COLOR1 and TEXCOORD3 declares 2 interpolators in its container, not 14
+PASS: hlsl: grid_binding_ps.hlsl's table names Low at fetch constant 3 and High at 7, as their s3 and s7, Step at float constant 2, Bright at boolean constant 130 and Count at loop constant 17, as their b2 and i1
+display: the line counter reached 720 after 28448 us
+hlsl: VFACE's front quad read +1 14400, -1 0 and neither 0 times, its back quad 0, 14400 and 0
+PASS: hlsl: a vertex shader's TEXCOORD0 and COLOR0 meet a pixel shader's by semantic, a TEXCOORD1 declared before them and the pixel shader's in the other order: 0 of 28800 pixels wrong
+PASS: hlsl: VPOS is each pixel's whole column and row: 0 of 28800 pixels wrong
+PASS: hlsl: VFACE is +1 on a front face, clockwise, and -1 on a back one, as D3D9's +1 and -1
+PASS: hlsl: DEPTH from TEXCOORD0's x, 0 to 1 across a quad, keeps its left half in front of a nearer quad at 0.5 and its right behind: 0 of 26280 pixels wrong
+PASS: hlsl: a vertex shader's TEXCOORD3, COLOR1, TEXCOORD0 and FOG meet a pixel shader's COLOR1 and TEXCOORD3 by semantic, the other two unread: 0 of 28800 pixels wrong
+PASS: hlsl: a hardware loop an int in $Global counts, each pixel leaving it once its red passes TEXCOORD0's x, draws what it carries and the pass it left at: 0 of 28800 pixels wrong
+PASS: hlsl: a quad skinned by float4x3 bones in vertex constants that its corners' int4 BLENDINDICES, UBYTE4s, pick lands where the palette puts it, the clear around it, and shades as the CPU's skinning of its corners: 0 of 28800 pixels wrong
+PASS: hlsl: samplers at s3 and s7 sample the textures bound at slots 3 and 7, an if reads a bool at b2 and a loop counts an int at i1, each set by name through the container's table, as D3D9 binds them: 0 of 28800 pixels wrong
+PASS: hlsl: a pixel shader without a loop, its if with no else and nested if/else each changing a value on TEXCOORD0's x, draws what HLSL defines at every column: 0 of 28800 pixels wrong
+PASS: hlsl: a pixel shader without a loop, its early returns under an if and in an if inside another, values changed before, between and after them on TEXCOORD0's x, draws what HLSL defines at every column: 0 of 28800 pixels wrong
+PASS: hlsl: a pixel shader without a loop, its switch on an int from TEXCOORD0's x taking cases that break, two literals sharing one, and a default, draws what HLSL defines at every column: 0 of 28800 pixels wrong
+PASS: hlsl: a pixel shader's clip before an if and discard in an if inside another, on TEXCOORD0's x, kill the columns HLSL kills, which keep the clear, and draw what HLSL defines at the others: 0 of 28800 pixels wrong
+hlsl: the last frame stays on screen for 500 ms for a capture
+PASS: hlsl: GPU close
+PASS: replay: GPU open
+gpu: the recording outgrew its 4-dword command buffer
+PASS: replay: a recording that outgrows its buffer fails
+replay: the background took 74 dwords, the bar 2
+PASS: replay: background and bar recorded
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 17193 us
+PASS: replay: present open at 1280x720
+replay: 0 reused buffers held the wrong frame
+replay: 30 frames, 30 flips over 30 vblanks (first 1, last 30), 0 missed, 0 late; longest wait 17985 us
+PASS: replay: every frame shown
+PASS: replay: no vblank missed
+PASS: replay: a flip every swap interval
+PASS: replay: every flip inside vblank
+PASS: replay: every frame drawn from the recordings, both bars in place
+PASS: replay: GPU close
+PASS: microcode: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: microcode: vertex and front buffers
+PASS: microcode: 200 small pixel shaders and a vertex shader load
+microcode: the 201 shaders took 16 of the kernel's 4 KB pages; a page each would be 3216
+PASS: microcode: the shaders share pages, two at most
+display: the line counter reached 720 after 23683 us
+microcode: 0 of 29 frames checked held a wrong tile; 0 points wrong
+PASS: microcode: every frame draws each shader's tile in its own colour
+microcode: freed, the title holds 3850 pages, from 3850 before the shaders
+PASS: microcode: freeing the shaders gives their pages back
+PASS: microcode: GPU close
+PASS: registers: GPU open
+display: 1280x720 scaled to the 1920x1080 output
+PASS: registers: display open at 1280x720
+PASS: registers: shaders load
+PASS: registers: vertex fetches patched for a float4 position
+PASS: registers: vertex and front buffers
+registers: drawing with 18 and 64 pixel shader registers and 64 vertex shader registers
+display: the line counter reached 720 after 26117 us
+registers: a pixel shader using 18 registers: 0 of 59 frames checked held a wrong point; 0 points wrong
+PASS: registers: a pixel shader using 18 registers draws, every register carried into its colour
+registers: a pixel shader using 64 registers: 0 of 59 frames checked held a wrong point; 0 points wrong
+PASS: registers: a pixel shader using 64 registers draws, every register carried into its colour
+registers: a vertex shader using 64 registers: 0 of 59 frames checked held a wrong point; 0 points wrong
+PASS: registers: a vertex shader using 64 registers draws, every register carried into its colour
+PASS: registers: every frame shown
+registers: the last frame stays on screen for 500 ms for a capture
+PASS: registers: GPU close
+tests: 548 passed, 2 failed
+exit: status 2
