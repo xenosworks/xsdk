@@ -155,6 +155,14 @@ typedef struct {
 	uint16_t actual_display_width;
 } DISPLAY_INFO;
 
+// A scaler filter's settings, as DISPLAY_INFO's scaler parameters hold them after each filter type
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc:70-86).
+typedef struct {
+	float nyquist;
+	float flicker_filter;
+	float beta;
+} D3DFILTER_PARAMETERS;
+
 // Pages are 4 KB here (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc:451-473, 496).
 typedef struct {
 	uint32_t available_pages;
@@ -443,6 +451,13 @@ uint32_t VdInitializeEngines(
 	uint32_t flags, void *callback, void *context, const uint32_t *pfp_microcode, const uint32_t *me_microcode);
 // size_log2 is log2 of the ring's size in 8-byte units (xenia:src/xenia/gpu/command_processor.cc:312).
 void VdInitializeRingBuffer(uint32_t physical_address, uint32_t size_log2);
+// Writes up to command_words words of packets that scale a source rectangle to an output rectangle, each corner as y
+// high and x low and each size as height high and width low, and returns how many; Xenia writes NOPs
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc:270-293).
+uint32_t VdInitializeScalerCommandBuffer(uint32_t source_xy, uint32_t source_wh, uint32_t output_xy, uint32_t output_wh,
+	uint32_t front_buffer_wh, uint32_t vertical_filter_type, const D3DFILTER_PARAMETERS *vertical_filter,
+	uint32_t horizontal_filter_type, const D3DFILTER_PARAMETERS *horizontal_filter, void *unknown, uint32_t *commands,
+	uint32_t command_words);
 void VdQueryVideoMode(VIDEO_MODE *mode);
 // Bit 30 always set, bits 28-29 the colour space (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc:166-183).
 uint32_t VdSetDisplayMode(uint32_t flags);
