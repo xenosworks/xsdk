@@ -1,0 +1,11 @@
+--- a/src/socket.c
++++ b/src/socket.c
+@@ -693,7 +693,7 @@ int poll(struct pollfd *fds, nfds_t count, int timeout_ms)
+ 		// Winsock's read set is data to read; its except set, a connection that failed, is POLLERR. POLLPRI's urgent
+ 		// data is never reported.
+ 		if (in_set(&readable, slot->handle))
+-			fds[i].revents |= (short)(fds[i].events & POLLIN);
++			fds[i].revents |= (short)(fds[i].events & (POLLIN | POLLPRI));
+ 		if (in_set(&writable, slot->handle))
+ 			fds[i].revents |= POLLOUT;
+ 		if (in_set(&failed, slot->handle))

@@ -10,3 +10,5 @@ unsplit	launch_check	launch: argv holds the .xex's name alone, as the loader's c
 no_enoent	launch_check	launch_check never logs its end: XAM ends it at the launch to launch_none.xex
 no_link	launch_check	launch_check never logs its end: XAM goes to the dashboard at the launch outside its folder
 nosend	launch_target	curl_check's round trip, net_http.py --break nosend serving this launch_target; here, launch: the round trip through launch_target beside it brings the data back reversed; launch: 1020 bytes of data, the most XAM passes on, arrive whole; launch: launch_target outside the title's folder, launched through xsdk's link, launches back with the data reversed
+poll_pri	xsdk_test	net: an echo waiting to be read polls as POLLIN, not POLLPRI
+basename_whole	xsdk_test	files: basename and dirname split paths as POSIX has them, a drive's with \ too

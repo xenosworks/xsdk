@@ -1,0 +1,11 @@
+--- a/src/libgen.c
++++ b/src/libgen.c
+@@ -30,7 +30,7 @@ char *basename(char *path)
+ 	while (start > 0 && !separator(path[start - 1]))
+ 		start--;
+ 	// Nothing but separators leaves one, which is the name.
+-	return start == length ? path + length - 1 : path + start;
++	return path;
+ }
+ 
+ char *dirname(char *path)
