@@ -4650,3 +4650,27 @@ memory unit (results/2026-10-20-milestone-54/):
 - **A registration left in place froze the console** as the next title, Aurora, started. With the routine taking its
   registration out before it returned, the console came back (`probe_terminate_unregistered_late.txt`). The
   registration lives in the title's memory, which the kernel frees once the routines return.
+
+## Letterboxing, milestone 54 step 5 (2026-10-20)
+
+`tests/probe_letterbox.c` and xsdk_test on the console, its output 1920x1080 and widescreen
+(results/2026-10-20-milestone-54/):
+- **AVIVO's external overscan doesn't place the picture.** radeonhd keeps a picture's aspect with
+  `D1MODE_EXT_OVERSCAN_LEFT_RIGHT` and `_TOP_BOTTOM` (0x6588, 0x658C) as the bars and 0x659C, its guess at
+  `D1MODE_CENTER`, at 1 (xf86-video-radeonhd:src/rhd_crtc.c:612-679, 721-790). All three read 0 before a title wrote
+  them (`probe_letterbox_read.log`). Written with the rest of the scaler under its lock, 0x00880088 and 1, they read 0
+  again after ten presents, while the scale into 808 lines written with them held (`xsdk_test_overscan.log`), so Xenos
+  doesn't keep them there. The check that they went back passed only because they never changed, and the build that
+  never wrote the bars failed the same line (`xsdk_test_overscan_nobars.log`). No one looked at the screen.
+- **The kernel's scaler builder ends the title.** `VdInitializeScalerCommandBuffer` (xboxkrnl 0x1C5), asked for
+  1280x720 to the 1920x1080 output with the filters `VdGetCurrentDisplayInformation` names (type 1, settings 0), a
+  marker-filled buffer as its tenth argument and 1024 words of room, never returned: the log ends just before the
+  call, and the console kept answering, with no reboot (`probe_letterbox_kernel.log`). xsdk doesn't call it.
+- **Holding the display without `VdSwap` hung the console.** The probe's first fill case showed 1280x720 scaled to the
+  whole output right, the ring round in the user's capture, through `xsdk_display_show` alone, then polled the
+  controller every 50 ms with nothing pressed; the console stopped answering and needed a power cycle, the log ending
+  at "showing" (`probe_letterbox_fill.log`). Why isn't shown; a title presents through `VdSwap` every frame ("The
+  Guide shows through VdSwap"), as the probe now does.
+
+So xsdk letterboxes by drawing: on a 4:3 screen `xsdk_present`'s front buffers are 1280x960, the frame resolved from
+row 128 between black bars, and the scaler fills the output with them (src/present.c). That isn't on the console yet.
