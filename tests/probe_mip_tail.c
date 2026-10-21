@@ -11,7 +11,7 @@
 #include "xsdk/shader.h"
 #include "xsdk/texture.h"
 
-// Where the GPU reads the mips of textures 16 texels or smaller across, from pages whose every texel names itself.
+// Where the GPU reads small textures' levels, packed mips on or off, from pages whose every texel names itself.
 
 enum {
 	WIDTH = 1280,
@@ -37,6 +37,10 @@ enum {
 	MARK = 0xC0,
 	// The fetch constant's base and mip addresses (xenia:src/xenia/gpu/xenos.h:1230, 1282).
 	ADDRESS_MASK = 0xFFFFF000,
+	// Off, Xenia puts a base at the corner (xenia:src/xenia/gpu/xenos.h:1281; texture_util.cc:251-253).
+	PACKED_MIPS = 1 << 11,
+	// The third setup's textures go in a second column, as their rows would pass the target's bottom.
+	COLUMN_WIDTH = 600,
 };
 
 typedef struct {
@@ -59,13 +63,28 @@ static const Shape shapes[] = {
 	{ 1, 2, 1 },
 };
 
-enum {
-	SHAPES = sizeof shapes / sizeof shapes[0],
-	// The mips on the page after the base's, as the SDK puts them, then on the base's own page.
-	SETUPS = 2,
+// One level, packed mips off, a shape for each place the tail puts a base (src/texture_layout.c:79-98).
+static const Shape corner_shapes[] = {
+	{ 20, 11, 1 },
+	{ 11, 20, 1 },
+	{ 16, 16, 1 },
+	{ 32, 16, 1 },
+	{ 2, 1, 1 },
+	{ 4, 1, 1 },
+	{ 1, 1, 1 },
 };
 
-static const char *const setup_names[SETUPS] = { "mips on their own page", "mips on the base's page" };
+enum {
+	SHAPES = sizeof shapes / sizeof shapes[0],
+	CORNER_SHAPES = sizeof corner_shapes / sizeof corner_shapes[0],
+	// The mips on the page after the base's, as the SDK puts them, then on the base's own page; then packed mips off.
+	SETUPS = 3,
+	CORNER_SETUP = 2,
+	TEXTURES = SHAPES * CORNER_SETUP + CORNER_SHAPES,
+};
+
+static const char *const setup_names[SETUPS] = { "mips on their own page", "mips on the base's page",
+	"packed mips off" };
 
 typedef struct {
 	uint32_t texture;
@@ -87,6 +106,18 @@ static const XsdkVertexElement vertex_layout[] = {
 static uint32_t level_size(uint32_t size, uint32_t level)
 {
 	return size >> level ? size >> level : 1;
+}
+
+static uint32_t setup_of(uint32_t texture)
+{
+	return texture < SHAPES * CORNER_SETUP ? texture / SHAPES : CORNER_SETUP;
+}
+
+static const Shape *shape_of(uint32_t texture)
+{
+	if (setup_of(texture) == CORNER_SETUP)
+		return &corner_shapes[texture - SHAPES * CORNER_SETUP];
+	return &shapes[texture % SHAPES];
 }
 
 // Red holds x and green y, eight steps apart, and blue the mark and the page.
@@ -114,13 +145,14 @@ static bool make_texture(XsdkTexture *texture, const Shape *shape, uint32_t setu
 			xsdk_texture_create(&model, XSDK_FORMAT_A8R8G8B8, shape->width, shape->height, shape->levels, true)))
 		return false;
 	const uint32_t base = xsdk_gpu_address(pages);
-	const uint32_t mips = setup == 0 ? base + PAGE_BYTES : base;
+	const uint32_t mips = setup == 1 ? base : base + PAGE_BYTES;
+	const uint32_t cleared = setup == CORNER_SETUP ? ADDRESS_MASK | PACKED_MIPS : ADDRESS_MASK;
 	*texture = model;
 	texture->texels = pages;
 	texture->address = base;
 	texture->size_bytes = PAGES * PAGE_BYTES;
 	texture->fetch[1] = (model.fetch[1] & ~ADDRESS_MASK) | base;
-	texture->fetch[5] = (model.fetch[5] & ~ADDRESS_MASK) | mips;
+	texture->fetch[5] = (model.fetch[5] & ~cleared) | mips;
 	xsdk_texture_free(&model);
 	return true;
 }
@@ -160,13 +192,15 @@ static void put_quad(volatile uint32_t *vertices, const Cell *cell)
 static uint32_t make_cells(Cell *cells)
 {
 	uint32_t count = 0;
-	for (uint32_t texture = 0; texture < SHAPES * SETUPS; texture++) {
-		const Shape *const shape = &shapes[texture % SHAPES];
-		uint32_t x = 40;
+	for (uint32_t texture = 0; texture < TEXTURES; texture++) {
+		const Shape *const shape = shape_of(texture);
+		const uint32_t column = setup_of(texture) == CORNER_SETUP;
+		const uint32_t row = texture - column * SHAPES * CORNER_SETUP;
+		uint32_t x = 40 + column * COLUMN_WIDTH;
 		for (uint32_t level = 0; level < shape->levels; level++) {
 			const uint32_t width = level_size(shape->width, level);
 			const uint32_t height = level_size(shape->height, level);
-			cells[count++] = (Cell){ texture, level, x, 40 + texture * ROW_HEIGHT, width, height };
+			cells[count++] = (Cell){ texture, level, x, 40 + row * ROW_HEIGHT, width, height };
 			x += width + LEVEL_GAP;
 		}
 	}
@@ -192,7 +226,7 @@ static void describe(char *out, uint32_t size, uint32_t texel)
 // Whether the level reads one rectangle of one page, and where its corners came from.
 static void report(const Cell *cell, volatile const uint32_t *pixels)
 {
-	const Shape *const shape = &shapes[cell->texture % SHAPES];
+	const Shape *const shape = shape_of(cell->texture);
 	const uint32_t first = drawn_texel(pixels, cell->x, cell->y);
 	bool rectangle = (first & 0xF0) == MARK;
 	for (uint32_t j = 0; j < cell->height && rectangle; j++) {
@@ -208,7 +242,7 @@ static void report(const Cell *cell, volatile const uint32_t *pixels)
 	describe(corners[2], sizeof corners[2], drawn_texel(pixels, cell->x, cell->y + cell->height - 1));
 	describe(corners[3], sizeof corners[3], drawn_texel(pixels, cell->x + cell->width - 1, cell->y + cell->height - 1));
 	xsdk_log_write("mip tail probe: %ux%u, %s, level %u (%ux%u): %s; corners %s, %s, %s, %s", (unsigned)shape->width,
-		(unsigned)shape->height, setup_names[cell->texture / SHAPES], (unsigned)cell->level, (unsigned)cell->width,
+		(unsigned)shape->height, setup_names[setup_of(cell->texture)], (unsigned)cell->level, (unsigned)cell->width,
 		(unsigned)cell->height, rectangle ? "one rectangle" : "not one rectangle", corners[0], corners[1], corners[2],
 		corners[3]);
 }
@@ -227,11 +261,11 @@ int main(void)
 		NT_SUCCESS(xsdk_shader_set_vertex_layout(&vertex, vertex_layout, 2, (const uint32_t[]){ STRIDE_BYTES }));
 	static Cell cells[MAX_CELLS];
 	const uint32_t cell_count = make_cells(cells);
-	static XsdkTexture textures[SHAPES * SETUPS];
+	static XsdkTexture textures[TEXTURES];
 	bool made = ready;
-	for (uint32_t i = 0; i < SHAPES * SETUPS && made; i++) {
+	for (uint32_t i = 0; i < TEXTURES && made; i++) {
 		volatile uint32_t *const pages = xsdk_gpu_alloc(PAGES * PAGE_BYTES);
-		made = pages && make_texture(&textures[i], &shapes[i % SHAPES], i / SHAPES, pages);
+		made = pages && make_texture(&textures[i], shape_of(i), setup_of(i), pages);
 		if (made)
 			fill_pages(pages);
 	}
