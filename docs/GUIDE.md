@@ -18,9 +18,12 @@ gets a title built and onto the console, and docs/PITFALLS.md says what breaks o
 [samples/template](../samples/template/main.c), [samples/hello](../samples/hello/main.c)
 
 xsdk's start, `xsdk_start` in `libxsdk.a`, opens the log, sets the console's time zone, runs the static constructors
-and calls `main(1, argv)`, `argv[0]` empty. What `main` returns is the exit status; returning, or `exit`, runs `atexit`
-handlers and destructors, closes the display and the GPU, logs `exit: status <n>` and goes back to the dashboard
-(src/start.c, src/exit.c). A failed `assert` or `abort` logs `exit: signal 6` and ends the title the same way.
+and calls `main(argc, argv)`, `argv` split from the loader's command line. That holds the `.xex`'s name alone, whoever
+launched it, so `argc` is 1 and `argv[0]` the name, such as `hello.xex` (docs/HARDWARE.md, "XAM's sockets and loader,
+milestone 56"); a title's arguments travel in launch data (Launching, below). What `main` returns is the exit status;
+returning, or `exit`, runs `atexit` handlers and destructors, closes the display and the GPU, logs `exit: status <n>`
+and goes back to the dashboard (src/start.c, src/exit.c). A failed `assert` or `abort` logs `exit: signal 6` and ends
+the title the same way.
 
 Xbox Home, or the console agent sending the console to the dashboard, ends the title without `exit`: no `atexit`
 handler or destructor runs, and what stdio holds unwritten is lost, so a title flushes what it must keep as it goes.
@@ -352,6 +355,84 @@ services. The network starts at the first socket. xsdk marks each socket insecur
 sockets reach the LAN or the internet (docs/HARDWARE.md, "Sockets reach the LAN and the internet when marked
 insecure"). XAM refuses `SO_ERROR`, so a failed connection says only that it failed, `EIO`. TLS 1.2 is Mbed TLS's,
 ported in mbedtls-xenon.
+
+- **Timeouts and linger:** `SO_RCVTIMEO` and `SO_SNDTIMEO` take a `struct timeval`, which xsdk gives XAM in
+  milliseconds; a blocking `recv` or `send` that runs out fails with `EAGAIN`, as POSIX has it. `SO_LINGER` takes
+  POSIX's `struct linger`, which xsdk turns into Winsock's two 16-bit fields. `getsockopt` reads each back as set
+  (src/socket.c).
+- **The link and the address,** `net.h`: `xsdk_net_link` gives XAM's link bits, `XSDK_NET_LINK_ACTIVE` with a cable
+  in, and `xsdk_net_address` the console's IPv4 address, `EAGAIN` while XAM is still getting one. Both start the
+  network.
+- **XAM's limits** are 32 TCP sockets, 8 UDP and 16 KB buffers, which hold one download to about 0.6 MB/s at a 30 ms
+  round trip. A title that wants more defines them, and xsdk reads them as the network starts, before `main` where the
+  network log starts it:
+
+  ```c
+  #include "xsdk/net.h"
+
+  const XsdkNetworkLimits xsdk_network_limits = {
+      .stream_sockets = 64, .datagram_sockets = 16, .receive_kb = 63, .send_kb = 63,
+  };
+  ```
+
+  XAM takes up to 232 sockets of each kind and buffers up to 63 KB, and `SO_RCVBUF` takes one socket's up to 255 KB
+  (docs/HARDWARE.md, "XAM's sockets and loader, milestone 56"). In C++, include the header before the definition, so
+  its `extern "C"` keeps the name the linker looks for.
+- **Descriptors:** sockets are numbered from 35, up to 232 of them. `select`'s `fd_set` holds 64, so sockets numbered
+  64 and up work with `poll` and the descriptor calls, not `select`; `poll` takes 64 sockets at once.
+- **Loopback:** a socket can't be bound to 127.0.0.1, but one listening on 0.0.0.0 takes connections to 127.0.0.1.
+
+## Downloading
+
+A download cut off halfway mustn't leave a broken file where a good one was. curl_check, in curl-xenon, does it this
+way, against `tools/net_http.py` on the PC:
+
+1. Write what arrives to `<name>.part` beside the final name. FATX takes names of 42 characters at most
+   (docs/HARDWARE.md, "Shaders compiled as the game asks"), so the final name has 37 at most.
+2. Check the whole part against the size and SHA-256 the catalogue gave, then `fsync` it and `rename` it over the
+   final name, which replaces the old file (docs/HARDWARE.md, "Files renamed on the console").
+3. After a dropped connection, the part holds what arrived: ask for the rest with `Range: bytes=<its length>-` and
+   append. A server that answers 200, not 206, is sending the whole file again, so start the part over.
+
+```c
+struct stat part;
+const off_t have = stat("hdd:/store/game.zip.part", &part) == 0 ? part.st_size : 0;
+FILE *file = fopen("hdd:/store/game.zip.part", have ? "ab" : "wb");
+// ... fetch from byte `have` on, writing what arrives, then check it ...
+fflush(file);
+fsync(fileno(file));
+fclose(file);
+rename("hdd:/store/game.zip.part", "hdd:/store/game.zip");
+```
+
+A download that outlives the title, or power lost during one, isn't covered: the part keeps the old file through a
+dropped connection, and FATX through a power cut hasn't been tried.
+
+## Launching
+
+[tests/launch_check.c](../tests/launch_check.c), [tests/launch_target.c](../tests/launch_target.c), through `xam.h`
+
+| Call | Leaves set | Undone by | Threads |
+|---|---|---|---|
+| `xsdk_launch(path, data, size_bytes)` | nothing: ends the title as `exit` does, then starts the `.xex` at `path` with `size_bytes` of `data` as its launch data | | any |
+| `xsdk_launch_data(buffer, size_bytes)` | the launch data the title started with, up to `size_bytes` of it, in `buffer`; returns its size, 0 for none | | any |
+
+- **It fails before anything ends:** `ENOENT` where there's no `.xex`, as XAM would end the title for a path to
+  nothing, and `E2BIG` past `XSDK_LAUNCH_DATA_MAX_BYTES`, 1020: XAM takes more, but the launched title gets the first
+  1020 bytes (docs/HARDWARE.md, "XAM's sockets and loader, milestone 56").
+- **The title ends as `exit` does:** `atexit` handlers and destructors run, the display and the GPU go back to XAM, and
+  the log's last line is `exit: status 0, launching <path>`; then XAM's `XamLoaderLaunchTitle` starts the next title.
+- **Paths** are xsdk's: `game:`, `hdd:`, `usb:`, relative ones, or a device path such as `ExLoadedImageName`. XAM
+  takes drives such as `game:` but not device paths, so xsdk gives it a `.xex` in the title's own folder as
+  `game:\...`, and one elsewhere through `launch:`, a drive it links to that `.xex`'s folder with
+  `ObCreateSymbolicLink` (src/launch.c). launch_check tries both; until it has passed on the console, take a launch
+  from outside the title's folder as unverified.
+- **Launch data** is how a title gets its arguments; xsdk gives it no format of its own. XAM keeps it only until the
+  launched title reads it, so one launched after that, or after the dashboard, finds none. xsdk reads it at the first
+  `xsdk_launch_data` and keeps it.
+- **Coming back:** a store passes its own path, `ExLoadedImageName`, in the data, and the title it launched launches
+  that back when it's done, as launch_target does for launch_check. A title not built with xsdk goes to the dashboard
+  when it exits.
 
 ## Input and audio through the kernel
 

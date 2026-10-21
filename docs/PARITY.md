@@ -16,8 +16,8 @@ they win, and this page is out of date.
 **What retail titles call** is judged from Xenia (xenia-project/xenia `95a5c3e`, in `xenos-toolchain/reference/xenia`),
 which implements what the games it runs need:
 - **The kernel:** its table lists 922 xboxkrnl exports. 239 have code in Xenia, 200 of them more than a stub. xsdk
-  imports 60 (`imports/imports.txt`).
-- **XAM:** its table lists 1,735 exports. 169 have code in Xenia, 106 of them more than a stub. xsdk imports 50, 22 of
+  imports 86 (`imports/imports.txt`).
+- **XAM:** its table lists 1,735 exports. 169 have code in Xenia, 106 of them more than a stub. xsdk imports 59, 27 of
   them for sockets.
 
 ## Building and packaging
@@ -163,7 +163,8 @@ which implements what the games it runs need:
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
-| TCP and UDP sockets, `poll`, `select`, non-blocking | Yes | BSD sockets (`src/socket.c`) | `tests/test_net.c`, with `tools/net_echo.py` on the PC | IPv6; why a connect failed, as XAM refuses `SO_ERROR` (src/socket.c) |
+| TCP and UDP sockets, `poll`, `select`, non-blocking; `SO_RCVTIMEO`, `SO_SNDTIMEO` and `SO_LINGER`; up to 232 sockets and 63 KB buffers | Yes | BSD sockets (`src/socket.c`); XAM's limits raised through `xsdk_network_limits` (`net.h`) | `tests/test_net.c`, with `tools/net_echo.py` on the PC | IPv6; why a connect failed, as XAM refuses `SO_ERROR` (src/socket.c); `select` on sockets numbered 64 and up, which `poll` takes |
+| The link and the console's address | Yes | `xsdk_net_link`, `xsdk_net_address` (`net.h`) | `tests/test_net.c`, the address against the one the PC sees | An address still pending, untried on the console; a wireless adapter's link bits |
 | DNS | Yes | `getaddrinfo` (`src/netdb.c`) | `tests/test_net.c` | |
 | TLS 1.2 | Yes | the mbedtls-xenon fork | docs/HARDWARE.md, "TLS 1.2 through Mbed TLS" | TLS 1.3; an HTTP client |
 | System Link | No | | | XNet's secure transport (xam_net.cc) |
@@ -187,7 +188,7 @@ Each in its own repository under xenosworks.
 | Language, country, time zone | Yes | `xsdk_system_language`, `xsdk_system_country` (`system.h`); the time zone as newlib's, above | `tests/test_system.c` | |
 | Region and AV settings | No | | | `ExGetXConfigSetting` (xboxkrnl_xconfig.cc) raw |
 | A routine when Xbox Home ends the title | Yes | `xsdk_on_terminate` (`terminate.h`), on a thread of the console's with the title frozen, its handles closed and `game:` gone | `tests/terminate_check.c`: the routine's marker read after, and the console carrying on; the notification, `tests/probe_terminate.c` | Flushing stdio and running `atexit` there, which the frozen title's handles and locks rule out (docs/HARDWARE.md) |
-| Launching another `.xex`, and passing it data | No | | | `XamLoaderLaunchTitle`, `XamLoaderSetLaunchData` (xam_info.cc) |
+| Launching another `.xex`, and passing it data | Yes | `xsdk_launch`, `xsdk_launch_data` (`xam.h`); `argv` from the loader's command line | `tests/launch_check.c` and `tests/launch_target.c`, launching each other | More than 1020 bytes of data; arguments on the command line, which holds only the `.xex`'s name, so they go in the data |
 | Rebooting and powering off | No | | | `HalReturnToFirmware` (xboxkrnl_hal.cc) |
 | The SMC: LEDs, temperatures, fan, power button, AV cable | No | | | `HalSendSMCMessage` and `HalGetCurrentAVPack`, which Xenia doesn't implement, so only the console can settle them |
 | Hashes and encryption for a title's own data | No | | | `XeCryptSha`, `XeCryptAesCbc` (xboxkrnl_crypt.cc), `RtlComputeCrc32` (xboxkrnl_rtl.cc) |
@@ -239,7 +240,7 @@ What a porter would hit first, as proposed on 2026-10-15, each a milestone agree
    them. Open: sample counts in queries, memory export, and the formats and textures in the GPU table's Missing column.
 9. **Audio:** XMA decoding, speaker configuration. Open.
 10. **Input and the system:** keyboards, controller types, language and region, launching titles, the SMC. Language,
-    country and the time zone, milestone 54. Open: the rest.
+    country and the time zone, milestone 54; launching titles, milestone 56. Open: the rest.
 
 Done since, beside the list: shader model 3 HLSL (milestone 50), loops in shaders (46), xost's code quality (45, 48),
 the pass after a depth clear (49), and counted loops in compiled CPU code (52).
