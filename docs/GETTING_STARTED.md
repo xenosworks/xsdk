@@ -223,7 +223,7 @@ They land in `build/samples/<sample>/<sample>.xex`:
 | `hello` | the log, the display and a controller: the screen's colour follows the sticks and triggers, and A rumbles | Back |
 | `triangle` | GLSL shaders, vertices in GPU memory, a draw, a resolve and a present: a triangle whose colours move round once a second | Back |
 | `cube` | an indexed, textured cube with depth, its matrix in shader constants, turned by the left stick | Back |
-| `sound` | a tone through the kernel's audio driver, its pitch on the triggers, the logo left up | Back |
+| `sound` | a tone fed through `xsdk_audio_*` from a thread of its own, its pitch on the triggers, the logo left up | Back |
 | `sdl3` | SDL3's gamepad and audio beside xsdk's drawing; its gamepad check fails unless a controller is connected as it starts | Back |
 | `template` | the start of a title of your own: it clears the screen; built as `title.xex` | Back |
 

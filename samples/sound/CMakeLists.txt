@@ -1,4 +1,4 @@
-# sound: a tone through the kernel's render driver (main.c). Build it with xsdk's toolchain file:
+# sound: a tone fed to the kernel's render driver through xsdk_audio_* (main.c). Build it with xsdk's toolchain file:
 #   cmake -S samples/sound -B build/samples/sound -G Ninja -DCMAKE_TOOLCHAIN_FILE=<xsdk>/cmake/xsdk.cmake
 cmake_minimum_required(VERSION 3.25)
 project(sound C)
