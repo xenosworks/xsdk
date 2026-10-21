@@ -1,0 +1,9 @@
+atlas_rows	xsdk_test	text: every glyph of the font, and a line with one from each of its blocks at (37, 23), drawn at scale 1, each cell's pixels the font's bits; text: the line of samples at scales 2 and 3, each of the font's pixels a 2x2 and a 3x3 block; text: a two-line string measures 30x40 and its first line 20x20, its second line drawn at x 20 below, and U+4E00 and a lone 0xFF drawn as the default box
+half_pixel	xsdk_test	text: every glyph of the font, and a line with one from each of its blocks at (37, 23), drawn at scale 1, each cell's pixels the font's bits; text: the line of samples at scales 2 and 3, each of the font's pixels a 2x2 and a 3x3 block; text: a two-line string measures 30x40 and its first line 20x20, its second line drawn at x 20 below, and U+4E00 and a lone 0xFF drawn as the default box
+scale_cells	xsdk_test	text: the line of samples at scales 2 and 3, each of the font's pixels a 2x2 and a 3x3 block
+blend_off	xsdk_test	text: 0x80FF0000 over mid grey, its pixels blended to within 1 a channel and the others untouched
+newline_glyph	xsdk_test	text: a two-line string measures 30x40 and its first line 20x20, its second line drawn at x 20 below, and U+4E00 and a lone 0xFF drawn as the default box
+measure_bytes	xsdk_test	text: a two-line string measures 30x40 and its first line 20x20, its second line drawn at x 20 below, and U+4E00 and a lone 0xFF drawn as the default box
+scissor_open	xsdk_test	text: a string half outside the scissor leaves the pixels outside it untouched
+ring_nowait	xsdk_test	text: 20,000 glyphs a frame, more than the ring holds, then a marked string, over three frames, the GPU held at each frame's start: every string on screen has its first and last glyph where drawn
+draw_per_glyph	xsdk_test	text: a 1280x720 screen of glyphs, 4,608, queued in under 1 ms of CPU

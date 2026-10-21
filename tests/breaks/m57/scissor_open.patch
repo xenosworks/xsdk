@@ -1,0 +1,10 @@
+--- a/src/text.c
++++ b/src/text.c
+@@ -266,6 +266,7 @@
+ 	xsdk_gpu_set_blend(&text.blend);
+ 	xsdk_gpu_set_depth_stencil(&text.depth_stencil);
+ 	xsdk_gpu_set_raster(&text.raster);
++	xsdk_gpu_set_scissor(0, 0, (uint32_t)view_width, (uint32_t)view_height);
+ }
+ 
+ // Writes the glyph's quad into the block, its atlas coordinates on its cell's edges.

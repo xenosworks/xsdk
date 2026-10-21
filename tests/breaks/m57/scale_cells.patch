@@ -1,0 +1,11 @@
+--- a/src/text.c
++++ b/src/text.c
+@@ -337,7 +337,7 @@
+ 			next_block();
+ 			first = 0;
+ 		}
+-		put_glyph(glyph_of(point), pen, top, width, height);
++		put_glyph(glyph_of(point), pen, top, XSDK_TEXT_CELL_WIDTH, XSDK_TEXT_CELL_HEIGHT);
+ 		pen += width;
+ 	}
+ 	draw_piece(first);

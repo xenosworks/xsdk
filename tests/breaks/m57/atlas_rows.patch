@@ -1,0 +1,11 @@
+--- a/src/text.c
++++ b/src/text.c
+@@ -86,7 +86,7 @@
+ 	uint8_t *const cell = &texels[glyph / ATLAS_COLUMNS * XSDK_TEXT_CELL_HEIGHT * ATLAS_WIDTH +
+ 		glyph % ATLAS_COLUMNS * XSDK_TEXT_CELL_WIDTH];
+ 	for (uint32_t row = 0; row < XSDK_TEXT_CELL_HEIGHT; row++) {
+-		const uint32_t bits = text_font_rows[glyph][row];
++		const uint32_t bits = text_font_rows[glyph][(row + 1) % XSDK_TEXT_CELL_HEIGHT];
+ 		for (uint32_t column = 0; column < XSDK_TEXT_CELL_WIDTH; column++)
+ 			cell[row * ATLAS_WIDTH + column] = bits << column & LEFT_BIT ? LIT : 0;
+ 	}

@@ -1,0 +1,11 @@
+--- a/src/text.c
++++ b/src/text.c
+@@ -339,6 +339,8 @@
+ 		}
+ 		put_glyph(glyph_of(point), pen, top, width, height);
+ 		pen += width;
++		draw_piece(first);
++		first = text.block_glyphs;
+ 	}
+ 	draw_piece(first);
+ }

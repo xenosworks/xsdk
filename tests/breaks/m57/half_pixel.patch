@@ -1,0 +1,13 @@
+--- a/src/text.c
++++ b/src/text.c
+@@ -319,8 +319,8 @@
+ 	const float height = (float)(XSDK_TEXT_CELL_HEIGHT * scale);
+ 	// Pixel centres sit on whole coordinates, D3D9's (src/gpu_setup.c; xenia:src/xenia/gpu/xenos.h:861-868), so a
+ 	// cell's edges are half a pixel up and left of its first pixel's.
+-	const float left = (float)x - 0.5f;
+-	float top = (float)y - 0.5f;
++	const float left = (float)x + 0.5f;
++	float top = (float)y + 0.5f;
+ 	float pen = left;
+ 	uint32_t first = text.block_glyphs;
+ 	for (const uint8_t *s = (const uint8_t *)utf8; *s;) {

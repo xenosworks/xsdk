@@ -1,0 +1,16 @@
+--- a/src/text.c
++++ b/src/text.c
+@@ -325,12 +325,7 @@
+ 	uint32_t first = text.block_glyphs;
+ 	for (const uint8_t *s = (const uint8_t *)utf8; *s;) {
+ 		const uint32_t point = next_code_point(&s);
+-		if (point == '\n') {
+-			pen = left;
+-			top += height;
+-			continue;
+-		}
+-		if (is_control(point))
++		if (is_control(point) && point != '\n')
+ 			continue;
+ 		if (text.block_glyphs == BLOCK_GLYPHS) {
+ 			draw_piece(first);

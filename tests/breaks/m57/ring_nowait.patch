@@ -1,0 +1,12 @@
+--- a/src/text.c
++++ b/src/text.c
+@@ -304,9 +304,6 @@
+ 	text.fences[text.block] = xsdk_gpu_fence();
+ 	text.block = (text.block + 1) % RING_BLOCKS;
+ 	text.block_glyphs = 0;
+-	const NTSTATUS status = xsdk_gpu_wait(text.fences[text.block], WAIT_TIMEOUT_MS);
+-	if (!NT_SUCCESS(status))
+-		xsdk_log_write("text: xsdk_gpu_wait for the ring's next block failed: 0x%08X", (unsigned)status);
+ }
+ 
+ void xsdk_text_draw(int32_t x, int32_t y, uint32_t scale, uint32_t argb, const char *utf8)

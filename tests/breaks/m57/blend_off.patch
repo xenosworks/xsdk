@@ -1,0 +1,17 @@
+--- a/src/text.c
++++ b/src/text.c
+@@ -171,11 +171,11 @@
+ 		return status;
+ 	}
+ 	// Over what's drawn by the colour's alpha.
+-	const XsdkBlend blend = { .color_source = XSDK_BLEND_SRC_ALPHA,
+-		.color_dest = XSDK_BLEND_ONE_MINUS_SRC_ALPHA,
++	const XsdkBlend blend = { .color_source = XSDK_BLEND_ONE,
++		.color_dest = XSDK_BLEND_ZERO,
+ 		.color_op = XSDK_BLEND_OP_ADD,
+ 		.alpha_source = XSDK_BLEND_ONE,
+-		.alpha_dest = XSDK_BLEND_ONE_MINUS_SRC_ALPHA,
++		.alpha_dest = XSDK_BLEND_ZERO,
+ 		.alpha_op = XSDK_BLEND_OP_ADD,
+ 		.write_mask = XSDK_WRITE_ALL };
+ 	xsdk_gpu_blend_state(&text.blend, &blend);
