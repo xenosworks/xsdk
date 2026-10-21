@@ -29,11 +29,12 @@ work begins.
     the title scene");
   - `std::mutex` has no destructor when its type has a static initializer (libstdc++ bits/std_mutex.h), so each one
     ever locked leaks its 28-byte critical section when it goes.
-- **A folder removed while it's open.** xsdk opens every file and folder sharing nothing (src/file.c, src/path.c), so
-  the kernel refuses to delete one another handle holds open, 0xC0000043. libstdc++'s `remove_all` deletes an emptied
-  folder within another while its own handle on it is still open (gcc:libstdc++-v3/src/c++17/fs_dir.cc:492-506), so it
-  fails on any folder within a folder; a flat one goes. POSIX allows both. The likely fix is opening with
-  `FILE_SHARE_DELETE` and the other shares, as a POSIX title expects, with `unlinkat` sharing all three.
+- **A folder removed while it's open.** `open` shares reading and writing but not deleting (src/file.c), and removing
+  or renaming opens sharing nothing (src/path.c), so the kernel refuses to delete a file or folder another handle holds
+  open, 0xC0000043. libstdc++'s `remove_all` deletes an emptied folder within another while its own handle on it is
+  still open (gcc:libstdc++-v3/src/c++17/fs_dir.cc:492-506), so it fails on any folder within a folder; a flat one
+  goes. POSIX allows both. The likely fix is opening with `FILE_SHARE_DELETE` and the other shares, as a POSIX title
+  expects, with `unlinkat` sharing all three.
 - **Small GPU allocations other than shaders.** `xsdk_gpu_alloc` rounds each one up to a 64 KiB large page (src/gpu.c,
   `allocate`). Shaders' microcode shares pages since milestone 25; the rest, three small ones in Dusklight's title
   scene (results/2026-10-12-gpu-allocations/), still take a page each.

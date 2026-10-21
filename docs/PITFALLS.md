@@ -70,13 +70,15 @@ where the evidence is; docs/HARDWARE.md is cited by section.
 - **Evidence:** "Sleeps, write speeds, and a set-up that wouldn't run from a cached stream"; "SDL's drivers and the
   fixed clocks on the console"; "Fence waits, and drawing after a resolve, milestone 34".
 
-## Files that share nothing
+## Open files can't be removed or renamed
 
-- **Looks like:** opening a file that's open already fails, `open` with `EBUSY` from the kernel's 0xC0000043, a
-  sharing violation; `std::filesystem::remove_all` fails on a folder holding folders. Xenia allows both.
-- **Do:** open a file once and keep the handle, or close it before opening it again; remove nested folders from the
-  inside out, closing each first. Only the log is opened shared, for reading.
-- **Evidence:** "The log, read while it's open, milestone 27"; TODO.md, "A folder removed while it's open".
+- **Looks like:** removing or renaming a file or folder that's open fails, `EBUSY` from the kernel's 0xC0000043, a
+  sharing violation; `std::filesystem::remove_all` fails on a folder holding folders. Opening a file again while it's
+  open, to read or to write, works. Xenia allows all of it.
+- **Do:** close a file or folder before removing or renaming it; remove nested folders from the inside out, closing
+  each first.
+- **Evidence:** "The log, read while it's open, milestone 27"; tests/test_files.c, "open: a file opens twice, to
+  write and to read"; TODO.md, "A folder removed while it's open".
 
 ## Absolute POSIX paths
 

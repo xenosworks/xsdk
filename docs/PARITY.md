@@ -63,16 +63,16 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Wall clock, monotonic clocks, sleeps | Yes | `clock_gettime`, `gettimeofday`, `nanosleep` (`src/time.c`), `std::chrono` | `tests/test_clocks.c`, `test_cpp_chrono.cpp` | Short sleeps: a 1 ms sleep took about 2 ms (docs/HARDWARE.md, "Sleeps, write speeds, and a set-up that wouldn't run from a cached stream") |
-| Local time in the console's time zone | Partial | `localtime`, `mktime`, `strftime`, newlib's `TZ` set at start-up from XAM's `GetTimeZoneInformation` (`src/system.c`) | `tests/test_system.c`; on the console XAM gave a zone of all zeros, as `ExGetXConfigSetting` did | A run with a time zone known to be set (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") |
+| Local time in the console's time zone | Yes | `localtime`, `mktime`, `strftime`, newlib's `TZ` set at start-up from XAM's `GetTimeZoneInformation` (`src/system.c`) | `tests/test_system.c`, with US Eastern set and with no zone (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | |
 
 ## Files, drives and storage
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
-| Files and folders beside the `.xex` (`game:`) | Yes | POSIX `open`, `read`, `stat`, `opendir`, `mkdir`, `rename`, `unlink`; `std::filesystem` | `tests/test_files.c`, `test_cpp_filesystem.cpp` | Asynchronous I/O; files open sharing nothing, so `remove_all` fails on nested folders (TODO.md) |
-| Other drives: the hard disk, USB, memory units, the DVD | Partial | `hdd:`, `usb:` to `usb2:`, `mu:` to `mu1:` and `dvd:`, each its device's root (`src/path.c`); a path starting with `\` goes to the kernel as written | `tests/test_files.c`'s drive checks, not yet on the console; the device paths, `tests/probe_drives.c` (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | A memory unit and a disc, with none on hand yet |
-| Writing at an offset, flushing, free space | Yes | `pwrite`, `fsync`, `fdatasync`, `statvfs`, `fstatvfs` (`src/file.c`, `src/path.c`) | `tests/test_files.c` | |
-| Setting a file's size | Partial | `truncate`, `ftruncate`, writing the zeros a file grows by themselves, as the hard disk brings its old bytes back (docs/HARDWARE.md) | `tests/test_files.c`'s `ftruncate` check, not yet passed on the console | The console run with the zeros written |
+| Files and folders beside the `.xex` (`game:`) | Yes | POSIX `open`, `read`, `stat`, `opendir`, `mkdir`, `rename`, `unlink`; `std::filesystem` | `tests/test_files.c`, `test_cpp_filesystem.cpp` | Asynchronous I/O; a file that's open can't be removed or renamed, so `remove_all` fails on nested folders (TODO.md) |
+| Other drives: the hard disk, USB, memory units, the DVD | Yes | `hdd:`, `usb:` to `usb2:`, `mu:` to `mu1:` and `dvd:`, each its device's root (`src/path.c`); a path starting with `\` goes to the kernel as written | `tests/test_files.c`'s drive checks: `hdd:` and a USB stick listed, `dvd:` and `mu:` empty; the device paths, `tests/probe_drives.c` (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | A memory unit and a disc listed, with none on hand yet |
+| Writing at an offset, flushing, free space | Yes | `pwrite`, `fsync`, `fdatasync`, `statvfs`, `fstatvfs` (`src/file.c`, `src/path.c`) | `tests/test_files.c` | Whether a write past the end leaves zeros in the gap, which the console has yet to answer |
+| Setting a file's size | Yes | `truncate`, `ftruncate`, writing the zeros a file grows by themselves, as the hard disk brings its old bytes back (docs/HARDWARE.md) | `tests/test_files.c` | |
 | The DVD drive's tray | No | | | `HalOpenCloseODDTray`, which Xenia doesn't implement |
 
 ## Save data, content and profiles
@@ -119,6 +119,7 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | 1280x720, scaled to the output up to 1080p | Yes | `xsdk_display_open`, `xsdk_present_*` (`display.h`, `present.h`) | `tests/test_present.c`, `test_scale.c` | |
+| 1280x720 letterboxed on a 4:3 screen | Yes | `xsdk_present_*`: 1280x960 front buffers, the frame on rows 128 to 847 between black bars, the title still drawing 1280x720 | `tests/test_scale.c`, forced on a widescreen screen; a 4:3 480p capture (docs/HARDWARE.md, "Letterboxing, milestone 54 step 5") | |
 | 2 or 3 front buffers, paced to vblank, swap intervals | Yes | `xsdk_present_open` | `tests/test_pacing.c` | |
 | Other modes: 1080p, 480p and the rest | No | `XSDK_DISPLAY_KERNEL` keeps the kernel's own | | |
 | 720p on interlaced outputs, 480i and 1080i | No | the kernel's 640x480 there | | TODO.md |
@@ -178,8 +179,9 @@ Each in its own repository under xenosworks.
 |---|---|---|---|---|
 | Ending the title, back to the dashboard | Yes | `exit` (`src/exit.c`) | every title | |
 | Random numbers | Yes | `getentropy` (`src/entropy.c`) | mbedtls-xenon's checks | |
-| Language, country, time zone | Partial | `xsdk_system_language`, `xsdk_system_country` (`system.h`); the time zone as newlib's, above | `tests/test_system.c`: language and country read on the console; the time zone not yet | Region and AV settings, through `ExGetXConfigSetting` (xboxkrnl_xconfig.cc) raw |
-| A routine when Xbox Home ends the title | Partial | `xsdk_on_terminate` (`terminate.h`), on a thread of the console's with the title frozen, its handles closed and `game:` gone | the notification, `tests/probe_terminate.c`; `tests/terminate_check.c`, not yet on the console | Flushing stdio and running `atexit` there, which the frozen title's handles and locks rule out (docs/HARDWARE.md) |
+| Language, country, time zone | Yes | `xsdk_system_language`, `xsdk_system_country` (`system.h`); the time zone as newlib's, above | `tests/test_system.c` | |
+| Region and AV settings | No | | | `ExGetXConfigSetting` (xboxkrnl_xconfig.cc) raw |
+| A routine when Xbox Home ends the title | Yes | `xsdk_on_terminate` (`terminate.h`), on a thread of the console's with the title frozen, its handles closed and `game:` gone | `tests/terminate_check.c`: the routine's marker read after, and the console carrying on; the notification, `tests/probe_terminate.c` | Flushing stdio and running `atexit` there, which the frozen title's handles and locks rule out (docs/HARDWARE.md) |
 | Launching another `.xex`, and passing it data | No | | | `XamLoaderLaunchTitle`, `XamLoaderSetLaunchData` (xam_info.cc) |
 | Rebooting and powering off | No | | | `HalReturnToFirmware` (xboxkrnl_hal.cc) |
 | The SMC: LEDs, temperatures, fan, power button, AV cable | No | | | `HalSendSMCMessage` and `HalGetCurrentAVPack`, which Xenia doesn't implement, so only the console can settle them |

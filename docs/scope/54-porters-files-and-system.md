@@ -31,8 +31,8 @@ Each step probes on the console first where Xenia can't answer.
    and `\Device\Cdrom0` (xenia:src/xenia/emulator.cc:298-353); xsdk's log already falls back to `\Device\Mass0`
    (src/log.c). The probe lists the root of each candidate path, with and without a USB stick and a disc.
 3. **The console's settings:**
-   - the time zone from `ExGetXConfigSetting` (0x10), its bias and daylight-saving dates (xboxkrnl_xconfig.cc:69-75),
-     set at start-up as newlib's time zone, so `localtime` and `mktime` give the console's local time;
+   - the time zone from XAM's `GetTimeZoneInformation` (0x43F), Win32's bias, names and daylight-saving dates, set at
+     start-up as newlib's time zone, so `localtime` and `mktime` give the console's local time (Decided 4);
    - the language through `XGetLanguage` (XAM 0x3CD) and the country through `XamGetLocaleEx` (XAM 0x5D7), as
      `xsdk_system_language` and `xsdk_system_country`.
 4. **Xbox Home:** `xsdk_on_terminate` registers a title's routine with `ExRegisterTitleTerminateNotification` (0x15),
@@ -41,9 +41,10 @@ Each step probes on the console first where Xenia can't answer.
    and it was given 2 s; a registration left in place froze the console as the next title started
    (results/2026-10-20-milestone-54/, the terminate probe), so xsdk's routine always takes the registration out before
    it returns. stdio's unflushed bytes have no handle left and are lost; the docs say so.
-5. **Letterboxing on 4:3:** where `VdQueryVideoMode` says the output isn't widescreen, the display controller shows
-   1280x720 at the output's width with bars above and below, in place of stretching. The probe settles which of the
-   scaler's registers place the picture.
+5. **Letterboxing on 4:3:** where `VdQueryVideoMode` says the output isn't widescreen, 1280x720 shows at the output's
+   width with bars above and below, in place of stretching: `xsdk_present`'s front buffers are 1280x960, the frame
+   resolved on rows 128 to 847 between black bars, and the scaler fills the output with them, the title still drawing
+   1280x720 (Decided 5).
 
 Left out: asynchronous and unbuffered reads, `mmap`, the device selector (milestone 51 left it to XAM's own UI),
 720p on interlaced outputs (TODO.md), and running `atexit` handlers on Xbox Home, unless step 4's probe shows the
@@ -52,17 +53,19 @@ notification has the time and the threads' locks to run them safely.
 ## Verification
 
 On the console, each check its own line in xsdk_test, each broken on purpose once:
-- **Files:** `pwrite` at an offset reads back with `pread`, the file's size unchanged; `ftruncate` shortens and lengthens
-  a file; `fsync` returns 0 on a file and fails on a socket; `statvfs` of `game:` gives a block size and free blocks
-  that go down by a written file's size.
-- **Drives:** `hdd:\` lists the folder xsdk_test runs from under it; `usb:` and `dvd:` list their roots where a stick
-  or disc is in, and fail with `ENOENT` where not.
-- **Settings:** `localtime` minus `gmtime` equals the console's bias; the language and country are logged and match
-  what the dashboard shows.
-- **Xbox Home:** a probe title writes through stdio without flushing, then the console agent sends the console to the
-  dashboard; after it, the file holds every line and the title's routine ran.
-- **Letterboxing:** with the console set to 4:3, the display controller's registers hold the planned bars, and you
-  see 1280x720 unstretched once.
+- **Files:** `pwrite` at an offset reads back with `pread`, the file's size unchanged; `ftruncate` and `truncate`
+  shorten and lengthen a file, the bytes added zero; a write past the end leaves the gap zero; `fsync` returns 0 on a
+  file and fails on a socket with `EINVAL`; `statvfs` of `game:` gives a block size and free blocks that go down by a
+  written file's size.
+- **Drives:** `hdd:\` lists its root and holds the `.xex` xsdk_test runs from; `usb:`, `dvd:` and `mu:` list their
+  roots as their devices do where something is in, and fail with `ENOENT` where not.
+- **Settings:** `localtime` minus `gmtime` equals the console's bias, with its daylight or standard bias as XAM says;
+  the language and country are logged and match what the dashboard shows.
+- **Xbox Home:** terminate_check's routine writes a marker through a device path as the console agent sends the
+  console to the dashboard; the next run reads the marker, and the console carries on.
+- **Letterboxing:** forced on the widescreen output, the display shows a 1280x960 front buffer with the scaler planned
+  for it, the frame between black bars, and the scaler goes back as the present closes; with the console set to 4:3,
+  you see 1280x720 unstretched once.
 
 vulkan4xenon_test twice and vkbench, unchanged.
 
@@ -79,3 +82,9 @@ what's there.
    routine runs, so on the user's choice xsdk gives the safe hook alone: `xsdk_on_terminate`, its routine on a system
    thread, the registration always taken out, and the docs saying what's lost.
 3. **Letterboxing** is in this milestone; you set the console to 4:3 once and look.
+4. **The time zone from `GetTimeZoneInformation`:** `ExGetXConfigSetting`'s time zone settings read 0 on the first
+   run, so xsdk reads XAM's `GetTimeZoneInformation` instead, in Win32's layout. With US Eastern set it gave EST and
+   EDT and their dates (results/2026-10-20-milestone-54/step3_xsdk_test_eastern.log).
+5. **Letterboxing by 1280x960 front buffers:** the overscan registers radeonhd letterboxes with read 0 after a present,
+   and the kernel's scaler builder, asked how it places the picture, ended the title (docs/HARDWARE.md, "Letterboxing,
+   milestone 54 step 5"), so xsdk draws the bars into taller front buffers and leaves the scaler filling the output.

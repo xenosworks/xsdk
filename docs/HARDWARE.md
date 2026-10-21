@@ -4620,40 +4620,57 @@ xsdk_test's log over UDP to `tools/net_log.py` (results/2026-10-20-milestone-53/
 
 ## Drives, time zones and Xbox Home, milestone 54 (2026-10-20)
 
-`tests/probe_drives.c`, `tests/probe_terminate.c` and xsdk_test on the console, with a USB stick in and no disc or
-memory unit (results/2026-10-20-milestone-54/):
+`tests/probe_drives.c`, `tests/probe_terminate.c`, `tests/terminate_check.c` and xsdk_test on the console, with a USB
+stick in and no disc or memory unit (results/2026-10-20-milestone-54/):
 - **Drive roots open as folders only with their closing backslash.** `\Device\Harddisk0\Partition1\` and
   `\Device\Mass0\`, the USB stick, opened and listed; without the backslash both answered 0xC0000103, not a directory
   (`probe_drives.log`). `\Device\Mass1`, `Mass2`, `Mu0`, `Mu1`, `BuiltInMuSfc` and `BuiltInMuUsb\Storage` answered
   0xC00002B6, no device; `\Device\Cdrom0`, with no disc, 0xC0000013; the `Mass<n>PartitionFile\Storage` paths and
   `BuiltInMuMmc\Storage` 0xC000003A, no such path. `\Device\Harddisk0\Partition0` is the whole disk, 0xC000014F as a
   folder.
+- **xsdk's drive names reach them.** `hdd:\` listed 48 entries and held the `.xex` `game:` ran from, the same size
+  and time; `usb:` listed the stick's 5 entries, with 32,768-byte units; `dvd:` and `mu:` failed with `ENOENT`
+  (`step2_xsdk_test.log`). Mapping `hdd:` to the stick failed that check alone (`step2_xsdk_test_hdd_device.log`).
 - **Their sizes,** `NtQueryVolumeInformationFile`'s size class: the hard disk's data partition has 16,384-byte units,
   9,453,636 of them; the USB stick 32,768-byte units; `Partition0` 512-byte sectors. A file of 65,537 bytes, written
   and flushed, took 5 units of `game:`'s (`step1_xsdk_test.log`).
-- **`pwrite`, `fsync` and `statvfs` passed** their checks. `ftruncate`'s failed with no call failing: a 16-byte file
-  cut to 9 bytes and set to 16 again read back its old bytes 9 to 15, `line 2\n`, not zeros, its sizes right
-  (`step2_xsdk_test.log`). The hard disk's file system moves the end without clearing what's past it, so `truncate`
-  and `ftruncate` now write the zeros themselves.
-- **The time zone read as all zeros both ways.** `ExGetXConfigSetting`'s user category settings 1-7, the time zone's
-  biases, names and dates, all read 0, while its language, 1, and country, 103, the US, were right
-  (`step1_xsdk_test.log`). XAM's `GetTimeZoneInformation` (0x43F) resolved, answered 0, `TIME_ZONE_ID_UNKNOWN`, and
-  wrote 172 bytes, Win32's size, all zeros (`step2_xsdk_test.log`). Whether the console had a time zone set when these
-  ran isn't confirmed. `XGetLanguage` gave 1 and `XamGetLocaleEx(111, 43)` 36, the US in XAM's locales.
+- **`pwrite`, `fsync` and `statvfs` passed** their checks; the break writing at the descriptor's position failed
+  `pwrite`'s alone (`step2_xsdk_test_pwrite_position.log`).
+- **The hard disk brings a file's old bytes back when its end moves out again.** A 16-byte file cut to 9 bytes and set
+  to 16 with the end-of-file class read back its old bytes 9 to 15, `line 2\n`, not zeros, its sizes right
+  (`step2_xsdk_test.log`). With `truncate` and `ftruncate` writing the zeros themselves after setting the end, they
+  read back zeros (`step3_xsdk_test_ftruncate_zeros.log`).
+- **The time zone is XAM's `GetTimeZoneInformation`'s** (0x43F), in Win32's layout. With no zone set on the console it
+  answered 0 and wrote Win32's 172 bytes, all zeros (`step2_xsdk_test.log`), as `ExGetXConfigSetting`'s user
+  category settings 1-7 had read 0 (`step1_xsdk_test.log`). With US Eastern set it answered 2, daylight time, and
+  wrote 172 bytes: bias 300; "EST", bias 0, from month 11, week 1, Sunday, 2:00; "EDT", bias -60, from month 3,
+  week 2, Sunday, 2:00, Windows' week-in-the-month dates. xsdk made it the `TZ`
+  `<EST>5:00<EDT>4:00,M3.2.0/2:00:00,M11.1.0/2:00:00`, and `localtime` ran 14,400 s behind UTC, daylight saving on to
+  newlib and to XAM (`step3_xsdk_test_eastern.log`, 546 of 546); the break giving the offsets the wrong sign failed
+  that check alone
+  (`step3_xsdk_test_tz_sign_eastern.log`, beside `ftruncate`'s, from before its fix). `XGetLanguage` gave 1 and
+  `XamGetLocaleEx(111, 43)` 36, the US in XAM's locales, while the settings' own country read 103.
 - **The title-terminate notification's routine runs on a thread of the console's,** hardware thread 3, not one the
   title made, when the title is ended from outside (`probe_terminate_registered_late.txt`):
   - every thread of the title is frozen: none counted in 1 ms, and a mutex a frozen thread held stayed held through
     20 ms of tries;
   - the title's file handles are closed, `NtWriteFile` 0xC0000008, and `game:` is gone: it wrote through
     `\Device\Harddisk0\Partition1\` instead; 54 bytes stdio held unwritten were lost;
-  - it ran the 2 s it asked for and returned.
+  - it ran the 2 s it asked for and returned;
+  - its r3 held 0x82070838, an address in the title's image, and r4 0. In a rebuild of the probe at both commits run,
+    that's `__dso_handle`, not the registration, at 0x82070898; what the kernel passes there isn't known. Xenia's call
+    of the routines, commented out, passes nothing (xenia:src/xenia/kernel/kernel_state.cc:489-504).
 - **A registration left in place froze the console** as the next title, Aurora, started. With the routine taking its
   registration out before it returned, the console came back (`probe_terminate_unregistered_late.txt`). The
   registration lives in the title's memory, which the kernel frees once the routines return.
+- **`xsdk_on_terminate` works so:** terminate_check's routine, the one registered last, wrote its marker through
+  `\Device\Harddisk0\Partition1\` as the title was ended from outside, and the console went on to the dashboard; the
+  next run read it back (`step4_terminate_check.log`). The build that never registers left no marker and failed both
+  lines (`step4_terminate_check_noregister.log`).
 
 ## Letterboxing, milestone 54 step 5 (2026-10-20)
 
-`tests/probe_letterbox.c` and xsdk_test on the console, its output 1920x1080 and widescreen
+`tests/probe_letterbox.c` and xsdk_test on the console, its output 1920x1080 and widescreen, and once 480p at 4:3
 (results/2026-10-20-milestone-54/):
 - **AVIVO's external overscan doesn't place the picture.** radeonhd keeps a picture's aspect with
   `D1MODE_EXT_OVERSCAN_LEFT_RIGHT` and `_TOP_BOTTOM` (0x6588, 0x658C) as the bars and 0x659C, its guess at
@@ -4667,10 +4684,16 @@ memory unit (results/2026-10-20-milestone-54/):
   marker-filled buffer as its tenth argument and 1024 words of room, never returned: the log ends just before the
   call, and the console kept answering, with no reboot (`probe_letterbox_kernel.log`). xsdk doesn't call it.
 - **Holding the display without `VdSwap` hung the console.** The probe's first fill case showed 1280x720 scaled to the
-  whole output right, the ring round in the user's capture, through `xsdk_display_show` alone, then polled the
-  controller every 50 ms with nothing pressed; the console stopped answering and needed a power cycle, the log ending
-  at "showing" (`probe_letterbox_fill.log`). Why isn't shown; a title presents through `VdSwap` every frame ("The
-  Guide shows through VdSwap"), as the probe now does.
-
-So xsdk letterboxes by drawing: on a 4:3 screen `xsdk_present`'s front buffers are 1280x960, the frame resolved from
-row 128 between black bars, and the scaler fills the output with them (src/present.c). That isn't on the console yet.
+  whole output right, the ring round in the user's capture (`fill_16x9_1080p_fixed_surface.png`), through
+  `xsdk_display_show` alone, then polled the controller every 50 ms with nothing pressed; the console stopped answering
+  and needed a power cycle, the log ending at "showing" (`probe_letterbox_fill.log`). Why isn't shown; a title
+  presents through `VdSwap` every frame ("The Guide shows through VdSwap"), as the probe now does.
+- **So xsdk letterboxes by drawing,** and that works: on a 4:3 screen `xsdk_present`'s front buffers are 1280x960,
+  the frame resolved from row 128 between black bars, and the scaler fills the output with them (src/present.c).
+  Forced on the widescreen output, the display showed a 1280x960 surface with the scaler planned for it, the line
+  counter reaching 960; the buffer held black above row 128 and from row 848 with the frame between on every row; and
+  the scaler went back as the present closed (`step5_xsdk_test.log`, 549 of 549). The break resolving the frame at
+  row 0 failed the bars' check alone (`step5_xsdk_test_lb_row0.log`).
+- **On a 4:3 screen the frame keeps its shape.** The probe's fill case, presenting through `xsdk_present` on a 4:3
+  480p output, showed 1280x720 in OBS's 800x600 capture as an 800x450 picture between bars of about 82 and 68 lines,
+  128 and 112 rows of the 960, the circle round and the squares square (`letterbox_4x3_480p.png`).

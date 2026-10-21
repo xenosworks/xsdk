@@ -27,16 +27,17 @@ handler or destructor runs, and what stdio holds unwritten is lost, so a title f
 `xsdk_on_terminate(routine)` (`terminate.h`) has a routine run then, on a thread of the console's with every thread of
 the title frozen, its file handles closed and `game:` gone. It may take no lock the title's threads could hold and use
 no stdio, `malloc` or other newlib state: only raw kernel calls, on device paths such as
-`\Device\Harddisk0\Partition1\...`, in well under the 2 s the console gave it (docs/HARDWARE.md, "Drives, time zones
-and Xbox Home, milestone 54"; tests/terminate_check.c).
+`\Device\Harddisk0\Partition1\...`, in well under the 2 s the console gave it. xsdk takes the routine's registration
+out once it returns, and at exit, as one left in place froze the console as the next title started (docs/HARDWARE.md,
+"Drives, time zones and Xbox Home, milestone 54"; tests/terminate_check.c).
 
 | Call | Leaves set | Undone by | Threads |
 |---|---|---|---|
 | `xsdk_splash_show(ms)` | nothing: fades the logo in, holds it `ms` from the start, lets the GPU and the display go | itself | one, before `xsdk_gpu_open` |
 | `xsdk_gpu_open()` | the GPU taken from XAM's D3D device, its ring and xsdk's set-up | `xsdk_gpu_close`, or exit | drawing |
 | `xsdk_splash_begin()` | the logo up on a 1280x720 display, the GPU open | `xsdk_splash_end`, or `xsdk_present_open` taking the display over, the logo staying until its first frame | drawing |
-| `xsdk_present_open(mode, buffers, interval, &w, &h)` | the display at `w` by `h`, 1280x720 in `XSDK_DISPLAY_720P`, scaled to the output; 2 or 3 front buffers; frames paced to vblank, each shown `interval` vblanks | `xsdk_present_close`, or exit | drawing |
-| `xsdk_present_begin(&address, ms)` | the next front buffer's GPU address, once it's off screen | `xsdk_present_end` | drawing |
+| `xsdk_present_open(mode, buffers, interval, &w, &h)` | the display at `w` by `h`, 1280x720 in `XSDK_DISPLAY_720P`, scaled to the output; 2 or 3 front buffers, 1280x960 on a 4:3 screen, the frame on rows 128 to 847 between black bars; frames paced to vblank, each shown `interval` vblanks | `xsdk_present_close`, or exit | drawing |
+| `xsdk_present_begin(&address, ms)` | the GPU address to resolve the next frame into, once its buffer is off screen; 128 rows into the buffer where letterboxed | `xsdk_present_end` | drawing |
 | `xsdk_present_end()` | the frame queued, shown at a vblank once the GPU has finished it | | drawing |
 | `xsdk_present_close()` | nothing: waits for the queued frames, closes the display, frees the buffers | | drawing |
 | `xsdk_gpu_close()` | nothing: the registers xsdk changed written back, the GPU XAM's again | | drawing |
@@ -54,6 +55,12 @@ output, so a title draws at the size `xsdk_present_open` returns. While the Guid
 by itself, `xsdk_present_stats`'s `system_frames` counting them, and keeps Back from the title (docs/HARDWARE.md, "The
 Guide, milestone 37"). `xsdk_present_stats` and `xsdk_gpu_stats` count flips, missed vblanks and the ring's waits, to
 measure a title by. `display.h` is the display without the pacing, for a title that shows buffers itself.
+
+On a 4:3 screen the frame is letterboxed: each front buffer is 1280x960, black but for the 1280x720 frame on rows 128
+to 847, and the scaler fills the screen with it, so the frame keeps its shape. The title still draws 1280x720:
+`xsdk_present_begin`, `xsdk_present_pixels` and `xsdk_present_buffer_address` give the frame's address, not the
+buffer's. `xsdk_display_force_letterbox` is a test hook that letterboxes on any screen, which squashes the picture on
+a widescreen one (docs/HARDWARE.md, "Letterboxing, milestone 54 step 5").
 
 ## Memory the GPU reads
 
@@ -257,14 +264,14 @@ drive with nothing in it fails with `ENOENT` (docs/HARDWARE.md, "Drives, time zo
 
 `open`, `read`, `write`, `pread`, `pwrite`, `lseek`, `fsync`, `stat`, `statvfs`, `opendir`, `mkdir`, `rename`,
 `unlink`, `truncate`, `ftruncate`, stdio and `std::filesystem` all work there (tests/test_files.c,
-tests/test_cpp_filesystem.cpp). `statvfs`'s block is the drive's allocation unit, 16 KB on the hard disk. `truncate`
-and `ftruncate` write the zeros a file grows by themselves, as the hard disk brings back what was there before. A file
-opens more than once, to read and to write, but one that's open can't be removed or renamed, so
-`std::filesystem::remove_all` fails on a folder holding folders (docs/PITFALLS.md, TODO.md). Permissions can't change,
-and there are no links. The log,
-`xsdk_log_write` from any thread, is `<title>.log` in `game:\`; `stdout` and `stderr` go there too. With a
-`net_log.txt` beside the `.xex` each line also goes to a PC running `tools/net_log.py`, and with a `dbgprint.txt`, or
-after `xsdk_log_set_dbgprint(true)`, to `DbgPrint` (docs/GETTING_STARTED.md, "Reading the log").
+tests/test_cpp_filesystem.cpp). `statvfs`'s block is the drive's allocation unit: 16 KB on the hard disk, 32 KB on the
+USB stick tried. `truncate` and `ftruncate` write the zeros a file grows by themselves, as the hard disk brings back
+what was there before. A file opens more than once, to read and to write, but one that's open can't be removed or
+renamed, so `std::filesystem::remove_all` fails on a folder holding folders (docs/PITFALLS.md, TODO.md). Permissions
+can't change, and there are no links. The log, `xsdk_log_write` from any thread, is `<title>.log` in `game:\`;
+`stdout` and `stderr` go there too. With a `net_log.txt` beside the `.xex` each line also goes to a PC running
+`tools/net_log.py`, and with a `dbgprint.txt`, or after `xsdk_log_set_dbgprint(true)`, to `DbgPrint`
+(docs/GETTING_STARTED.md, "Reading the log").
 
 ## Sockets
 
@@ -339,9 +346,8 @@ At start-up xsdk sets newlib's time zone, `TZ`, from XAM's `GetTimeZoneInformati
 `strftime`'s `%Z` give the console's local time, daylight saving included; a title's own `setenv("TZ", ...)` and
 `tzset()` replace it. `xsdk_system_language()` is the console's language, `XGetLanguage`'s number, which
 `XsdkLanguage` names, and `xsdk_system_country()` its country, XAM's number for it in its list of locales, 36 for the
-US. On the console so far, `GetTimeZoneInformation` and `ExGetXConfigSetting` both gave a zone of all zeros, UTC;
-whether the console had a zone set then isn't confirmed (docs/HARDWARE.md, "Drives, time zones and Xbox Home,
-milestone 54").
+US. A console set to US Eastern gives `TZ` as `<EST>5:00<EDT>4:00,M3.2.0/2:00:00,M11.1.0/2:00:00`; one with no time
+zone set gives UTC (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54").
 
 ## Porting: the C and POSIX calls
 

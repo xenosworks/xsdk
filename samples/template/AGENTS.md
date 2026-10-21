@@ -57,7 +57,7 @@ evidence):
   vertex stream and index list on 4 bytes and each texture on 4 KB.
 - **A sleep takes up to a millisecond more than asked,** 2 ms for 1 ms; pace frames with `xsdk_present_begin`, not
   sleeps.
-- **Files open sharing nothing:** a second open of a file already open fails.
+- **An open file can't be removed or renamed;** a second open of it, to read or to write, works.
 - **A mutex locked after its memory is freed corrupts the heap.**
 
 ## Code
