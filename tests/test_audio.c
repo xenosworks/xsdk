@@ -9,8 +9,7 @@
 #include "xsdk/thread.h"
 
 // Milestone 58's checks of xsdk_audio_* (docs/scope/58-audio.md). Each feeds from a thread of its own, as the call
-// that waits raises its thread, on the main thread's hardware thread, as SDL-xenon's feeder ran on the console: on
-// hardware thread 1, xsdk_test's feeders never ran (results/2026-10-21-milestone-58/xsdk_test_hw1.log).
+// that waits raises its thread.
 
 enum {
 	TONE_HZ = 375,
@@ -39,9 +38,6 @@ enum {
 	STEP_2_SPEAKER_CONFIG = 0x00010001,
 	UNWRITTEN = 0xA5A5A5A5,
 };
-
-// 100 ns units.
-static const int64_t MS_100NS = 10000;
 
 typedef struct {
 	NTSTATUS status;
@@ -145,12 +141,18 @@ static HANDLE start(XsdkThreadEntry entry)
 	return thread;
 }
 
+// Polls, as a thread waiting on another's handle stopped the kernel's audio callbacks while it waited
+// (docs/HARDWARE.md, "Audio's feeding, milestone 58").
 static bool join(HANDLE thread)
 {
 	if (!thread)
 		return false;
-	const int64_t timeout = -THREAD_WAIT_MS * MS_100NS;
-	const NTSTATUS status = NtWaitForSingleObjectEx(thread, USER_MODE, 0, &timeout);
+	const int64_t now = 0;
+	const uint32_t start_tick = time_base();
+	NTSTATUS status;
+	while ((status = NtWaitForSingleObjectEx(thread, USER_MODE, 0, &now)) == STATUS_TIMEOUT &&
+		time_base() - start_tick < THREAD_WAIT_MS * TICKS_PER_MS)
+		(void)xsdk_thread_sleep(1);
 	if (status != STATUS_SUCCESS)
 		xsdk_log_write("audio: a thread didn't end in %d ms: 0x%08X", THREAD_WAIT_MS, (unsigned)status);
 	(void)NtClose(thread);

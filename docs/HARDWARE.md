@@ -4945,3 +4945,21 @@ Dusklight's JAS mutex there. The device thread ran on hardware thread 0, beside 
   outside the title's handles. `KeSetEvent` on the event's object, from `ObReferenceObjectByHandle`, works: a feeder at
   +1 or above woke within 3 us of each frame the kernel took, once a frame, the busy thread losing nothing measurable.
   At the default priority it still waited up to 19.9 ms.
+
+**A thread waiting on another thread's handle stopped the kernel's audio calls**
+([log](../results/2026-10-21-milestone-58/xsdk_test_join_stops_callbacks.log), xsdk_test at `aac0931`, which counted
+the kernel's calls in `audio.c`). Each audio check opened the API, started a feeder on hardware thread 0, slept 100 ms
+and then waited on the feeder's handle with `NtWaitForSingleObjectEx` and a 5 s timeout:
+- In the first 100 ms, the main thread asleep, the kernel called back 18 or 19 times, on hardware thread 4, with no
+  failed submit, no call before the driver was stored, and the callback never caught inside.
+- Over the wait, which timed out each time, the calls stopped: 19 before and after it in the first check, 18 then 21
+  in the second, 19 and 19 in the ring's check, which fed for under 100 ms. The busy-thread check, whose main thread
+  waited on the busy thread's handle, logged no call by then. A feeder waiting for a slot stayed inside
+  `xsdk_audio_next_frame` until the close, and the ring check's feeder, done 76 ms before the wait began, still
+  wasn't seen to end.
+- The time base, read on hardware thread 0 before and after each wait, advanced 0.66 ms, 12.6 ms and 0.51 ms over
+  them.
+- The closing check, whose main thread slept 50 ms instead, got 10 calls and passed. sdl_check, faudio_check and
+  Dusklight, whose main threads don't wait on a thread's handle while audio plays, played with no silent frame.
+
+Why isn't known. The audio checks now poll a thread's handle with a zero timeout and sleep 1 ms between.

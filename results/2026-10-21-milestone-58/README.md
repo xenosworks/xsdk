@@ -16,4 +16,7 @@ found.
 - [xsdk_test_hw1.log](xsdk_test_hw1.log): xsdk_test at `f7d3a9f`, its audio checks' feeders started on hardware
   thread 1. None ended within its 5 s join, the kernel took a frame or a few from each and then no more, and the
   breaks' runs, the polling one among them, failed the same; sdl_check and faudio_check, feeding the same `audio.c` from
-  hardware thread 0, passed in the same session.
+  hardware thread 0, passed in the same session. The joins, not hardware thread 1, turned out the cause (below).
+- [xsdk_test_join_stops_callbacks.log](xsdk_test_join_stops_callbacks.log): xsdk_test at `aac0931`, which logs the
+  kernel's calls and the feeder's progress 100 ms into each check, with the main thread asleep, then at the feeder's
+  join and after the close: the calls stopped while the main thread waited on a thread's handle.
