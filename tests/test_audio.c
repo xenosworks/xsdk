@@ -70,7 +70,23 @@ typedef struct {
 	XsdkAudioStats stats;
 } Depth;
 
+// Diagnostic for milestone 58's console run, removed once read (src/audio.c).
+enum { AUDIO_DIAGNOSTICS = 8, DIAGNOSTIC_SLEEP_MS = 100 };
+
+void xsdk_audio_diagnostics(uint32_t diagnostics[AUDIO_DIAGNOSTICS]);
+
+// Diagnostic too: what the last feeder did, and whether it's inside xsdk_audio_next_frame.
+typedef struct {
+	uint32_t calls;
+	uint32_t feeds;
+	NTSTATUS status;
+	uint32_t tick;
+	uint32_t inside;
+	uint32_t hardware_thread;
+} Progress;
+
 // What threads touch is static, in case one outlasts its join.
+static Progress progress;
 static float tone[XSDK_AUDIO_FRAME_FLOATS];
 static Run run;
 static Feeder feeder;
@@ -99,9 +115,17 @@ static uint32_t frames_in(uint32_t ticks)
 static NTSTATUS feed(uint32_t timeout_ms)
 {
 	float *frame;
+	progress.hardware_thread = xsdk_thread_hardware_thread();
+	progress.inside = 1;
+	progress.tick = time_base();
 	const NTSTATUS status = xsdk_audio_next_frame(timeout_ms, &frame);
+	progress.inside = 0;
+	progress.tick = time_base();
+	progress.status = status;
+	progress.calls++;
 	if (status != STATUS_SUCCESS)
 		return status;
+	progress.feeds++;
 	volatile float *const out = frame;
 	for (uint32_t i = 0; i < XSDK_AUDIO_FRAME_FLOATS; i++)
 		out[i] = tone[i];
@@ -157,13 +181,34 @@ static bool join(HANDLE thread)
 	return status == STATUS_SUCCESS;
 }
 
+static void log_diagnostics(const char *when)
+{
+	uint32_t values[AUDIO_DIAGNOSTICS];
+	xsdk_audio_diagnostics(values);
+	xsdk_log_write(
+		"audio: diagnostics, %s: %u kernel calls on hardware thread %u, %u before the driver was stored, "
+		"%u failed submits (last 0x%08X), %u feeder waits (last 0x%08X), the callback at step %u; the feeder on "
+		"hardware thread %u, %u calls, %u feeds, last 0x%08X, %s xsdk_audio_next_frame for %u us",
+		when, (unsigned)values[0], (unsigned)values[4], (unsigned)values[1], (unsigned)values[2], (unsigned)values[3],
+		(unsigned)values[5], (unsigned)values[6], (unsigned)values[7], (unsigned)progress.hardware_thread,
+		(unsigned)progress.calls, (unsigned)progress.feeds, (unsigned)progress.status,
+		progress.inside ? "inside" : "out of", (unsigned)to_us(time_base() - progress.tick));
+}
+
 // Opens, runs entry on a thread of its own to its end, and closes.
 static bool run_feeder(XsdkThreadEntry entry)
 {
+	progress = (Progress){ 0 };
 	if (!open_audio())
 		return false;
-	const bool ran = join(start(entry));
-	return close_audio() && ran;
+	const HANDLE thread = start(entry);
+	(void)xsdk_thread_sleep(DIAGNOSTIC_SLEEP_MS);
+	log_diagnostics("100 ms in, the main thread asleep");
+	const bool ran = join(thread);
+	log_diagnostics("at the join");
+	const bool closed = close_audio();
+	log_diagnostics("after the close");
+	return closed && ran;
 }
 
 static uint32_t keep_coming(void *context)
@@ -264,11 +309,13 @@ static void check_beside_busy_thread(void)
 {
 	feeder = (Feeder){ 0 };
 	busy = (Busy){ 0 };
+	progress = (Progress){ 0 };
 	XsdkAudioStats stats = { 0 };
 	bool ran = open_audio();
 	if (ran) {
 		const HANDLE feeding = start(feed_until_stopped);
 		ran = feeding && wait_ready() && join(start(spin));
+		log_diagnostics("at the busy thread's join");
 		xsdk_audio_stats(&stats);
 		__atomic_store_n(&feeder.stop, 1, __ATOMIC_RELEASE);
 		ran = join(feeding) && ran;
@@ -323,15 +370,18 @@ static void check_closing(void)
 		"audio: xsdk_audio_close returns a waiting feeder within 5 ms, and no callback "
 		"counts 20 ms on";
 	feeder = (Feeder){ 0 };
+	progress = (Progress){ 0 };
 	if (!open_audio()) {
 		check(name, false);
 		return;
 	}
 	const HANDLE feeding = start(feed_until_stopped);
 	(void)xsdk_thread_sleep(CLOSE_AFTER_MS);
+	log_diagnostics("50 ms in, the main thread asleep");
 	const uint32_t closed_tick = time_base();
 	const bool closed = close_audio();
 	const bool ended = join(feeding);
+	log_diagnostics("at the join after the close");
 	const uint32_t returned_us = to_us(feeder.returned_tick - closed_tick);
 	(void)xsdk_thread_sleep(SETTLE_MS);
 	XsdkAudioStats settled;
