@@ -121,12 +121,14 @@ static bool polls_as_data(int fd, const char *line)
 {
 	const size_t length = strlen(line);
 	struct pollfd wanted = { .fd = fd, .events = POLLIN | POLLPRI };
-	const bool ready = send(fd, line, length, 0) == (ssize_t)length && poll(&wanted, 1, TIMEOUT_MS) == 1;
+	const ssize_t sent = send(fd, line, length, 0);
+	const int ready = sent == (ssize_t)length ? poll(&wanted, 1, TIMEOUT_MS) : -1;
 	char reply[LINE_BYTES];
 	// The echo may come in parts; what's ready is enough.
-	const bool drained = ready && recv(fd, reply, sizeof(reply), 0) > 0;
-	xsdk_log_write("net: poll for an echo gave revents 0x%04X", (unsigned)wanted.revents);
-	return drained && wanted.revents == POLLIN;
+	const ssize_t received = ready == 1 ? recv(fd, reply, sizeof(reply), 0) : -1;
+	xsdk_log_write("net: polled for an echo: sent %d, poll %d, revents 0x%04X, recv %d, errno %d", (int)sent, ready,
+		(unsigned)wanted.revents, (int)received, errno);
+	return received > 0 && wanted.revents == POLLIN;
 }
 
 // A blocking connection to the PC, or -1.
@@ -180,9 +182,14 @@ static void test_tcp(const Host *pc, struct sockaddr_in *console)
 	xsdk_log_write(
 		"net: connected to %s; getsockname gives %s, port %u", pc->text, text, (unsigned)ntohs(local.sin_port));
 	check("net: TCP to the PC and back, through send and recv", fd >= 0 && echoes(fd, "tcp through send\n"));
-	check("net: an echo waiting to be read polls as POLLIN, not POLLPRI", fd >= 0 && polls_as_data(fd, "tcp polled\n"));
 	if (fd >= 0)
 		close(fd);
+	// A connection of its own: net_echo.py echoes one line a connection, then closes it.
+	const int polled = connect_to(pc);
+	check("net: an echo waiting to be read polls as POLLIN, not POLLPRI",
+		polled >= 0 && polls_as_data(polled, "tcp polled\n"));
+	if (polled >= 0)
+		close(polled);
 
 	in_addr_t address = 0;
 	if (ask_address(pc, &address))
