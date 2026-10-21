@@ -40,6 +40,8 @@
 #   taken back as the present closes" alone. The scaler stays letterboxed until the dashboard sets its own.
 # - usb_mass1: usb: names \Device\Mass1\; with a stick in the first port, fails "drives: usb: lists its root as
 #   \Device\Mass0\ does, or fails with ENOENT where it does" alone.
+# - write_gap: a write starting past a file's end leaves the gap unfilled; fails "pwrite: past the end, the gap before
+#   it reads zeros" alone.
 set -eu
 cd "$(dirname "$0")/../.."
 build_break()
@@ -55,7 +57,7 @@ build_break()
 }
 for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0 \
 	pwrite_position tz_sign hdd_device letterbox_row0 ftruncate_nozeros fsync_socket statvfs_sector language_zero \
-	letterbox_720 letterbox_kept usb_mass1; do
+	letterbox_720 letterbox_kept usb_mass1 write_gap; do
 	build_break "$name" xsdk_test
 done
 build_break terminate_noregister terminate_check

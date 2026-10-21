@@ -32,6 +32,8 @@ typedef struct {
 	uint64_t position;
 	bool append;
 	bool directory;
+	// Set where position may be past the file's end, after lseek or ftruncate, for the next write to look.
+	bool past_end;
 	// A directory's kernel path, which openat and unlinkat resolve against.
 	char path[XSDK_PATH_BYTES];
 } FileSlot;
@@ -269,6 +271,7 @@ int openat(int dir_fd, const char *path, int flags, ...)
 		return -1;
 	}
 	file->position = 0;
+	file->past_end = false;
 	file->append = (flags & O_APPEND) != 0;
 	file->directory = directory;
 	memcpy(file->path, resolved, sizeof(resolved));
@@ -339,6 +342,17 @@ ssize_t pread(int fd, void *buffer, size_t length_bytes, off_t offset)
 	return read_at("pread", fd, file, buffer, length_bytes, (uint64_t)offset);
 }
 
+// A write starting past the end leaves a gap that reads back old bytes, not zeros
+// (results/2026-10-20-milestone-54/final_xsdk_test.log), so the file grows to it with zeros first.
+static NTSTATUS fill_gap(HANDLE handle, uint64_t position)
+{
+	uint64_t size;
+	const NTSTATUS status = query_size(handle, &size);
+	if (!NT_SUCCESS(status) || position <= size)
+		return status;
+	return xsdk_file_set_size(handle, position);
+}
+
 static ssize_t write_at(
 	const char *call, int fd, const FileSlot *file, const void *buffer, size_t length_bytes, uint64_t position)
 {
@@ -367,6 +381,11 @@ ssize_t write(int fd, const void *buffer, size_t length_bytes)
 		const NTSTATUS status = query_size(file->handle, &file->position);
 		if (!NT_SUCCESS(status))
 			return fail_with_status("write", fd, status);
+	} else if (file->past_end) {
+		const NTSTATUS status = fill_gap(file->handle, file->position);
+		if (!NT_SUCCESS(status))
+			return fail_with_status("write", fd, status);
+		file->past_end = false;
 	}
 	const ssize_t written_bytes = write_at("write", fd, file, buffer, length_bytes, file->position);
 	if (written_bytes > 0)
@@ -386,12 +405,15 @@ ssize_t pwrite(int fd, const void *buffer, size_t length_bytes, off_t offset)
 		errno = EINVAL;
 		return -1;
 	}
+	const NTSTATUS status = fill_gap(file->handle, (uint64_t)offset);
+	if (!NT_SUCCESS(status))
+		return fail_with_status("pwrite", fd, status);
 	return write_at("pwrite", fd, file, buffer, length_bytes, (uint64_t)offset);
 }
 
 int ftruncate(int fd, off_t length_bytes)
 {
-	const FileSlot *file = find_file(fd);
+	FileSlot *file = find_file(fd);
 	if (!file)
 		return -1;
 	if (length_bytes < 0) {
@@ -399,6 +421,7 @@ int ftruncate(int fd, off_t length_bytes)
 		return -1;
 	}
 	const NTSTATUS status = xsdk_file_set_size(file->handle, (uint64_t)length_bytes);
+	file->past_end = true;
 	return NT_SUCCESS(status) ? 0 : fail_with_status("ftruncate", fd, status);
 }
 
@@ -442,6 +465,7 @@ off_t lseek(int fd, off_t offset, int whence)
 		return -1;
 	}
 	file->position = (uint64_t)position;
+	file->past_end = true;
 	return (off_t)position;
 }
 

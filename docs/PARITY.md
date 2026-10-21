@@ -71,7 +71,7 @@ which implements what the games it runs need:
 |---|---|---|---|---|
 | Files and folders beside the `.xex` (`game:`) | Yes | POSIX `open`, `read`, `stat`, `opendir`, `mkdir`, `rename`, `unlink`; `std::filesystem` | `tests/test_files.c`, `test_cpp_filesystem.cpp` | Asynchronous I/O; a file that's open can't be removed or renamed, so `remove_all` fails on nested folders (TODO.md) |
 | Other drives: the hard disk, USB, memory units, the DVD | Yes | `hdd:`, `usb:` to `usb2:`, `mu:` to `mu1:` and `dvd:`, each its device's root (`src/path.c`); a path starting with `\` goes to the kernel as written | `tests/test_files.c`'s drive checks: `hdd:` and a USB stick listed, `dvd:` and `mu:` empty; the device paths, `tests/probe_drives.c` (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | A memory unit and a disc listed, with none on hand yet |
-| Writing at an offset, flushing, free space | Yes | `pwrite`, `fsync`, `fdatasync`, `statvfs`, `fstatvfs` (`src/file.c`, `src/path.c`) | `tests/test_files.c` | Whether a write past the end leaves zeros in the gap, which the console has yet to answer |
+| Writing at an offset, flushing, free space | Yes | `pwrite`, `fsync`, `fdatasync`, `statvfs`, `fstatvfs` (`src/file.c`, `src/path.c`) | `tests/test_files.c`, a write past the end leaving zeros in the gap, as xsdk writes them | |
 | Setting a file's size | Yes | `truncate`, `ftruncate`, writing the zeros a file grows by themselves, as the hard disk brings its old bytes back (docs/HARDWARE.md) | `tests/test_files.c` | |
 | The DVD drive's tray | No | | | `HalOpenCloseODDTray`, which Xenia doesn't implement |
 

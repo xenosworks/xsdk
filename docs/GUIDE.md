@@ -265,13 +265,13 @@ drive with nothing in it fails with `ENOENT` (docs/HARDWARE.md, "Drives, time zo
 `open`, `read`, `write`, `pread`, `pwrite`, `lseek`, `fsync`, `stat`, `statvfs`, `opendir`, `mkdir`, `rename`,
 `unlink`, `truncate`, `ftruncate`, stdio and `std::filesystem` all work there (tests/test_files.c,
 tests/test_cpp_filesystem.cpp). `statvfs`'s block is the drive's allocation unit: 16 KB on the hard disk, 32 KB on the
-USB stick tried. `truncate` and `ftruncate` write the zeros a file grows by themselves, as the hard disk brings back
-what was there before. A file opens more than once, to read and to write, but one that's open can't be removed or
-renamed, so `std::filesystem::remove_all` fails on a folder holding folders (docs/PITFALLS.md, TODO.md). Permissions
-can't change, and there are no links. The log, `xsdk_log_write` from any thread, is `<title>.log` in `game:\`;
-`stdout` and `stderr` go there too. With a `net_log.txt` beside the `.xex` each line also goes to a PC running
-`tools/net_log.py`, and with a `dbgprint.txt`, or after `xsdk_log_set_dbgprint(true)`, to `DbgPrint`
-(docs/GETTING_STARTED.md, "Reading the log").
+USB stick tried. `truncate` and `ftruncate`, and a write starting past the end, write the zeros a file grows by
+themselves, as the hard disk brings back what was there before. A file opens more than once, to read and to write,
+but one that's open can't be removed or renamed, so `std::filesystem::remove_all` fails on a folder holding folders
+(docs/PITFALLS.md, TODO.md). Permissions can't change, and there are no links. The log, `xsdk_log_write` from any
+thread, is `<title>.log` in `game:\`; `stdout` and `stderr` go there too. With a `net_log.txt` beside the `.xex` each
+line also goes to a PC running `tools/net_log.py`, and with a `dbgprint.txt`, or after `xsdk_log_set_dbgprint(true)`,
+to `DbgPrint` (docs/GETTING_STARTED.md, "Reading the log").
 
 ## Sockets
 

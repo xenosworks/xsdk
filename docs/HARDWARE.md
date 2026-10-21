@@ -4639,7 +4639,9 @@ stick in and no disc or memory unit (results/2026-10-20-milestone-54/):
 - **The hard disk brings a file's old bytes back when its end moves out again.** A 16-byte file cut to 9 bytes and set
   to 16 with the end-of-file class read back its old bytes 9 to 15, `line 2\n`, not zeros, its sizes right
   (`step2_xsdk_test.log`). With `truncate` and `ftruncate` writing the zeros themselves after setting the end, they
-  read back zeros (`step3_xsdk_test_ftruncate_zeros.log`).
+  read back zeros (`step3_xsdk_test_ftruncate_zeros.log`). A write past the end leaves the same: a byte written at 16
+  past a 9-byte end left bytes 9 to 15 reading `line 2\n` again (`final_xsdk_test.log`), so a write starting past the
+  end, `pwrite` there or `write` after `lseek`, now grows the file to it with zeros first.
 - **The time zone is XAM's `GetTimeZoneInformation`'s** (0x43F), in Win32's layout. With no zone set on the console it
   answered 0 and wrote Win32's 172 bytes, all zeros (`step2_xsdk_test.log`), as `ExGetXConfigSetting`'s user
   category settings 1-7 had read 0 (`step1_xsdk_test.log`). With US Eastern set it answered 2, daylight time, and

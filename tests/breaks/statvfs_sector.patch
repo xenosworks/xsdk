@@ -1,6 +1,6 @@
 --- a/src/file.c
 +++ b/src/file.c
-@@ -455,7 +455,8 @@
+@@ -479,7 +479,8 @@
  		return status;
  	// The size class has no counts of files or length of names, so those stay 0.
  	memset(info, 0, sizeof(*info));

@@ -1,6 +1,6 @@
 --- a/src/file.c
 +++ b/src/file.c
-@@ -200,7 +200,8 @@
+@@ -202,7 +202,8 @@
  		return status;
  	// A file grown again reads back its old bytes, not zeros (results/2026-10-20-milestone-54/step2_xsdk_test.log);
  	// set, then zeroed, it reads back zeros (step3_xsdk_test_ftruncate_zeros.log).

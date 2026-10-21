@@ -1,9 +1,9 @@
 --- a/src/file.c
 +++ b/src/file.c
-@@ -386,7 +386,8 @@
- 		errno = EINVAL;
- 		return -1;
- 	}
+@@ -408,7 +408,8 @@
+ 	const NTSTATUS status = fill_gap(file->handle, (uint64_t)offset);
+ 	if (!NT_SUCCESS(status))
+ 		return fail_with_status("pwrite", fd, status);
 -	return write_at("pwrite", fd, file, buffer, length_bytes, (uint64_t)offset);
 +	// Broken on purpose: written at the descriptor's position, not at the offset.
 +	return write_at("pwrite", fd, file, buffer, length_bytes, file->position);

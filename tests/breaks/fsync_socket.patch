@@ -1,6 +1,6 @@
 --- a/src/file.c
 +++ b/src/file.c
-@@ -404,6 +404,9 @@
+@@ -427,6 +427,9 @@
  
  int fsync(int fd)
  {

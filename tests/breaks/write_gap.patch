@@ -1,0 +1,12 @@
+--- a/src/file.c
++++ b/src/file.c
+@@ -346,6 +346,9 @@
+ // (results/2026-10-20-milestone-54/final_xsdk_test.log), so the file grows to it with zeros first.
+ static NTSTATUS fill_gap(HANDLE handle, uint64_t position)
+ {
++	// Broken on purpose: no gap filled, so its old bytes come back.
++	if (position)
++		return STATUS_SUCCESS;
+ 	uint64_t size;
+ 	const NTSTATUS status = query_size(handle, &size);
+ 	if (!NT_SUCCESS(status) || position <= size)
