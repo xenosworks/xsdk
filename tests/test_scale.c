@@ -178,14 +178,17 @@ static void check_kernel_mode(const uint32_t *start)
 	xsdk_gpu_free(pixels);
 }
 
-// The front buffer on screen, from its start: black above the frame and below it, the frame's colour between, at the
-// left edge, the middle and the right edge of every row.
+// The front buffer on screen starts 128 rows above the frame, and holds black above the frame and below it, the
+// frame's colour between, at the left edge, the middle and the right edge of every row.
 static bool letterbox_holds(uint32_t frame_address)
 {
 	const uint32_t shown = xsdk_display_shown_address();
-	if (shown > frame_address)
+	if (shown != frame_address - LETTERBOX_TOP * WIDTH * 4) {
+		xsdk_log_write("scale: letterboxed: the buffer shown starts at %08X, the frame at %08X", (unsigned)shown,
+			(unsigned)frame_address);
 		return false;
-	volatile const uint32_t *const buffer = xsdk_present_pixels(frame_address) - (frame_address - shown) / 4;
+	}
+	volatile const uint32_t *const buffer = xsdk_present_pixels(frame_address) - LETTERBOX_TOP * WIDTH;
 	const uint32_t columns[COLUMNS] = { 0, WIDTH / 2, WIDTH - 1 };
 	uint32_t wrong = 0;
 	for (uint32_t y = 0; y < LETTERBOX_HEIGHT; y++) {

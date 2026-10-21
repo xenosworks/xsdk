@@ -22,8 +22,9 @@ enum {
 };
 
 // Xenia's (xenia:src/xenia/emulator.cc:298-353), xsdk's log's fallback (src/log.c), and the others freestyledash mounts
-// for USB, memory units and the DVD (github.com/XboxUnity/freestyledash, Freestyle/Tools/Managers/Drives/
-// DrivesManager.cpp:15-32) or RB3Enhanced names (github.com/RBEnhanced/RB3Enhanced, source/xbox360_files.c:18-25).
+// for USB, memory units and the DVD
+// (github.com/XboxUnity/freestyledash, Freestyle/Tools/Managers/Drives/DrivesManager.cpp:15-32) or RB3Enhanced names
+// (github.com/RBEnhanced/RB3Enhanced, source/xbox360_files.c:18-25).
 static const char *const devices[] = {
 	"\\Device\\Harddisk0\\Partition1",
 	"\\Device\\Harddisk0\\Partition0",

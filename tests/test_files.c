@@ -32,6 +32,7 @@ enum {
 	// NT's MAX_PATH; ExLoadedImageName holds up to 256 bytes.
 	DRIVE_PATH_BYTES = 260,
 	DRIVE_CHECK_NAME_BYTES = 128,
+	QUERY_BYTES = 1024,
 };
 
 // game: is the launch folder on the console; Xenia mounts it read-only but lets titles write to cache:.
@@ -185,48 +186,88 @@ static void check_pwrite(const char *path)
 		read_back && position_kept && file_size(path) == 27);
 }
 
-// A descriptor's size by fstat, or -1.
-static long long fd_size(int fd)
+// The file's size, through the descriptor where it's open, else by its path; -1 where neither answers.
+static long long current_size(int fd, const char *path)
 {
 	struct stat info;
-	return fstat(fd, &info) == 0 ? (long long)info.st_size : -1;
+	const int result = fd >= 0 ? fstat(fd, &info) : stat(path, &info);
+	return result == 0 ? (long long)info.st_size : -1;
 }
 
-// ftruncate takes "line one\nline 2\n" to its first line, then to 16 bytes again, the 7 new ones zero. Every step's
-// result is logged, the bytes read back in hex, and the size once closed, for the console to say which step fails.
-static void check_ftruncate(const char *path)
+static void to_hex(char *hex, const unsigned char *bytes, size_t length_bytes)
 {
-	const int fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	for (size_t i = 0; i < length_bytes; i++)
+		(void)snprintf(hex + 2 * i, 3, "%02X", bytes[i]);
+}
+
+// ftruncate, or truncate by the path with the file closed, takes "line one\nline 2\n" to its first line, then to 16
+// bytes again, the 7 new ones zero. Every step's result is logged, the bytes read back in hex, for the console to say
+// which step fails.
+static bool shorten_and_lengthen(const char *path, bool by_path)
+{
+	int fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0644);
 	const ssize_t written = write(fd, "line one\nline 2\n", 16);
+	// truncate opens the file sharing nothing, so it isn't open here meanwhile.
+	if (by_path && fd >= 0) {
+		close(fd);
+		fd = -1;
+	}
 	errno = 0;
-	const int shortened = ftruncate(fd, 9);
+	const int shortened = by_path ? truncate(path, 9) : ftruncate(fd, 9);
 	const int shorten_errno = errno;
-	const long long short_size = fd_size(fd);
+	const long long short_size = current_size(fd, path);
 	errno = 0;
-	const int lengthened = ftruncate(fd, 16);
+	const int lengthened = by_path ? truncate(path, 16) : ftruncate(fd, 16);
 	const int lengthen_errno = errno;
-	const long long long_size = fd_size(fd);
+	const long long long_size = current_size(fd, path);
+	if (by_path)
+		fd = open(path, O_RDONLY);
 	unsigned char bytes[16];
 	memset(bytes, 'x', sizeof(bytes));
 	const ssize_t read_bytes = pread(fd, bytes, sizeof(bytes), 0);
 	if (fd >= 0)
 		close(fd);
-	const long closed_size = file_size(path);
 	(void)unlink(path);
 	char hex[sizeof(bytes) * 2 + 1];
-	for (size_t i = 0; i < sizeof(bytes); i++)
-		(void)snprintf(hex + 2 * i, 3, "%02X", bytes[i]);
+	to_hex(hex, bytes, sizeof(bytes));
 	xsdk_log_write(
-		"files: ftruncate: wrote %d; to 9 bytes %d (errno %d), fstat %lld; to 16 bytes %d (errno %d), fstat "
-		"%lld; pread %d: %s; %ld bytes once closed",
-		(int)written, shortened, shorten_errno, short_size, lengthened, lengthen_errno, long_size, (int)read_bytes, hex,
-		closed_size);
-	check("ftruncate: shortens a file, then lengthens it with zeros",
-		written == 16 && shortened == 0 && short_size == 9 && lengthened == 0 && long_size == 16 && read_bytes == 16 &&
-			memcmp(bytes, "line one\n\0\0\0\0\0\0\0", sizeof(bytes)) == 0);
+		"files: %s: wrote %d; to 9 bytes %d (errno %d), size %lld; to 16 bytes %d (errno %d), size %lld; "
+		"pread %d: %s",
+		by_path ? "truncate" : "ftruncate", (int)written, shortened, shorten_errno, short_size, lengthened,
+		lengthen_errno, long_size, (int)read_bytes, hex);
+	return written == 16 && shortened == 0 && short_size == 9 && lengthened == 0 && long_size == 16 &&
+		read_bytes == 16 && memcmp(bytes, "line one\n\0\0\0\0\0\0\0", sizeof(bytes)) == 0;
 }
 
-// fsync and fdatasync flush a file; a socket has nothing to flush, which POSIX lets fail with EINVAL.
+static void check_ftruncate(const char *path)
+{
+	const bool by_fd = shorten_and_lengthen(path, false);
+	const bool by_path = shorten_and_lengthen(path, true);
+	check("ftruncate and truncate: shorten a file, then lengthen it with zeros", by_fd && by_path);
+}
+
+// A write past the end of a file cut short leaves the gap reading zeros, not the bytes cut off. The hard disk brought
+// those back when ftruncate set the end alone (results/2026-10-20-milestone-54/step2_xsdk_test.log); whether a write
+// past the end does too is for the console to say, the bytes logged in hex.
+static void check_write_past_end(const char *path)
+{
+	const int fd = open(path, O_RDWR | O_CREAT | O_TRUNC, 0644);
+	const bool cut = fd >= 0 && write(fd, "line one\nline 2\n", 16) == 16 && ftruncate(fd, 9) == 0;
+	const bool past = cut && pwrite(fd, "!", 1, 16) == 1;
+	unsigned char bytes[17];
+	memset(bytes, 'x', sizeof(bytes));
+	const ssize_t read_bytes = pread(fd, bytes, sizeof(bytes), 0);
+	if (fd >= 0)
+		close(fd);
+	(void)unlink(path);
+	char hex[sizeof(bytes) * 2 + 1];
+	to_hex(hex, bytes, sizeof(bytes));
+	xsdk_log_write("files: a byte written at 16 past a 9-byte end: pread %d: %s", (int)read_bytes, hex);
+	check("pwrite: past the end, the gap before it reads zeros",
+		past && read_bytes == 17 && memcmp(bytes, "line one\n\0\0\0\0\0\0\0!", sizeof(bytes)) == 0);
+}
+
+// fsync and fdatasync flush a file; a socket has nothing to flush, so fails with EINVAL, as POSIX has it.
 static void check_fsync(const char *path)
 {
 	const int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
@@ -235,7 +276,7 @@ static void check_fsync(const char *path)
 		close(fd);
 	(void)unlink(path);
 	const int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-	const bool socket_refused = socket_fd >= 0 && fsync(socket_fd) != 0 && (errno == EINVAL || errno == EBADF);
+	const bool socket_refused = socket_fd >= 0 && fsync(socket_fd) != 0 && errno == EINVAL;
 	if (socket_fd >= 0)
 		close(socket_fd);
 	check("fsync: flushes a file and fails on a socket", file_synced && socket_refused);
@@ -313,8 +354,45 @@ static void check_hdd(void)
 	check("drives: hdd: lists its root and holds the .xex game: runs from", entries > 0 && same);
 }
 
-// A drive lists its root and gives statvfs where there's something in it, and fails both with ENOENT where not.
-static void check_drive(const char *drive)
+// The entries in a device's root through the kernel alone, as xsdk's paths can't name it with its closing backslash;
+// -1 where it doesn't open, its status in status.
+static int count_device_entries(const char *root, NTSTATUS *status)
+{
+	const ANSI_STRING name = {
+		.length = (uint16_t)strlen(root), .maximum_length = (uint16_t)(strlen(root) + 1), .pointer = root
+	};
+	const OBJECT_ATTRIBUTES attributes = { .root_directory = 0, .name = &name };
+	IO_STATUS_BLOCK io_status;
+	HANDLE handle;
+	*status = NtCreateFile(&handle, GENERIC_READ | SYNCHRONIZE, &attributes, &io_status, NULL, FILE_ATTRIBUTE_NORMAL,
+		FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN, FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE);
+	if (!NT_SUCCESS(*status))
+		return -1;
+	static const ANSI_STRING all = { .length = 1, .maximum_length = 2, .pointer = "*" };
+	static uint64_t buffer[QUERY_BYTES / sizeof(uint64_t)];
+	int entries = 0;
+	for (bool first = true;; first = false) {
+		// A FAT32 stick's driver leaves next_entry_offset as it finds it (docs/HARDWARE.md), so 0 ends the entries.
+		memset(buffer, 0, sizeof(buffer));
+		if (!NT_SUCCESS(NtQueryDirectoryFile(handle, 0, NULL, NULL, &io_status, (FILE_DIRECTORY_INFORMATION *)buffer,
+				sizeof(buffer), first ? &all : NULL, first)))
+			break;
+		for (uint32_t offset = 0;;) {
+			entries++;
+			const uint32_t next =
+				((const FILE_DIRECTORY_INFORMATION *)((const char *)buffer + offset))->next_entry_offset;
+			if (next == 0 || offset + next >= sizeof(buffer))
+				break;
+			offset += next;
+		}
+	}
+	(void)NtClose(handle);
+	return entries;
+}
+
+// A drive lists its root as its device does and gives statvfs where there's something in it, and fails both with
+// ENOENT where its device doesn't open.
+static void check_drive(const char *drive, const char *device_root)
 {
 	char root[DRIVE_PATH_BYTES];
 	(void)snprintf(root, sizeof(root), "%s/", drive);
@@ -325,18 +403,19 @@ static void check_drive(const char *drive)
 	errno = 0;
 	const int sized = statvfs(drive, &info);
 	const int statvfs_errno = errno;
-	if (entries >= 0) {
-		xsdk_log_write("drives: %s lists %d entries; statvfs %d (errno %d): %lu-byte units, %llu of %llu free", drive,
-			entries, sized, statvfs_errno, info.f_bsize, (unsigned long long)info.f_bfree,
-			(unsigned long long)info.f_blocks);
-	} else {
-		xsdk_log_write(
-			"drives: %s has nothing in it: opendir errno %d, statvfs errno %d", drive, open_errno, statvfs_errno);
-	}
+	NTSTATUS device_status;
+	const int device_entries = count_device_entries(device_root, &device_status);
+	xsdk_log_write(
+		"drives: %s lists %d entries (errno %d), %s %d (0x%08X); statvfs %d (errno %d): %lu-byte units, "
+		"%llu of %llu free",
+		drive, entries, open_errno, device_root, device_entries, (unsigned)device_status, sized, statvfs_errno,
+		info.f_bsize, (unsigned long long)info.f_bfree, (unsigned long long)info.f_blocks);
 	char name[DRIVE_CHECK_NAME_BYTES];
-	(void)snprintf(
-		name, sizeof(name), "drives: %s lists its root and gives statvfs, or both fail with ENOENT, empty", drive);
-	check(name, entries >= 0 ? sized == 0 && info.f_bsize > 0 : open_errno == ENOENT && statvfs_errno == ENOENT);
+	(void)snprintf(name, sizeof(name), "drives: %s lists its root as %s does, or fails with ENOENT where it does",
+		drive, device_root);
+	const bool listed = device_entries >= 0 && entries == device_entries && sized == 0 && info.f_bsize > 0;
+	const bool empty = device_entries < 0 && entries < 0 && open_errno == ENOENT && statvfs_errno == ENOENT;
+	check(name, listed || empty);
 }
 
 // The test file, renamed over another, takes its place, and its own name is gone.
@@ -421,11 +500,12 @@ void test_files(void)
 	sibling_path(folder, path, "");
 	sibling_path(other, path, "xsdk_sync_test.bin");
 	check_ftruncate(other);
+	check_write_past_end(other);
 	check_fsync(other);
 	check_statvfs(folder, other);
 
 	check_hdd();
-	check_drive("usb:");
-	check_drive("dvd:");
-	check_drive("mu:");
+	check_drive("usb:", "\\Device\\Mass0\\");
+	check_drive("dvd:", "\\Device\\Cdrom0\\");
+	check_drive("mu:", "\\Device\\Mu0\\");
 }

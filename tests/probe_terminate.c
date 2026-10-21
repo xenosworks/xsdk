@@ -21,10 +21,10 @@
 // stack and TLS it runs on, against the main thread's and the workers'; how far the title's threads count in 1 ms;
 // whether it can take the worker's mutex, trying for 20 ms; how many bytes stdio holds unwritten and, on one of the
 // title's own threads only, whether fflush of terminate_out.txt works and how long it takes; then a line a millisecond
-// with the threads' counts, until 2 s from its start, so the last line says how long it had. Should writes to that
-// file fail, it goes on in terminate_late.txt in game:, else in the hard disk's root. "read", run after, logs those
-// files and whether terminate_out.txt holds every line in order: as many as the routine saw written if its fflush
-// worked, else up to the unwritten bytes fewer, which is what Xbox Home loses today.
+// with the threads' counts, until 2 s from its start, so the last line says how long it had, then takes its
+// registration out. Should writes to that file fail, it goes on in terminate_late.txt in game:, else in the hard
+// disk's root. "read", run after, logs those files and whether terminate_out.txt holds every line in order: as many
+// as the routine saw written if its fflush worked, else up to the unwritten bytes fewer, which is what Xbox Home loses.
 
 enum {
 	// The time base's rate (docs/HARDWARE.md, "The time base runs at 49.875 MHz").
@@ -75,7 +75,6 @@ static volatile bool in_stdio;
 static volatile uint32_t lines_written;
 static volatile uint32_t last_line_time;
 static EX_TITLE_TERMINATE_REGISTRATION registration;
-static bool unregister_at_end;
 
 static uint32_t time_base(void)
 {
@@ -295,11 +294,9 @@ static void on_terminate(uint32_t argument_0, uint32_t argument_1)
 	try_mutex();
 	try_flush(thread);
 	heartbeat(start);
-	// The registration is in the title's memory, which the kernel frees once the routines return.
-	if (unregister_at_end) {
-		ExRegisterTitleTerminateNotification(&registration, 0);
-		note("notify: unregistered itself");
-	}
+	// Left in place, the registration froze the console as the next title started (docs/HARDWARE.md).
+	ExRegisterTitleTerminateNotification(&registration, 0);
+	note("notify: unregistered itself");
 }
 
 static uint32_t hold_mutex(void *context)
@@ -448,12 +445,6 @@ static int read_case(void)
 	return 0;
 }
 
-static int run_unregister_case(void)
-{
-	unregister_at_end = true;
-	return run_case();
-}
-
 typedef struct {
 	const char *name;
 	const char *what;
@@ -463,7 +454,6 @@ typedef struct {
 static const ProbeCase cases[] = {
 	{ "read", "logs what the last run's routine wrote, and how much of terminate_out.txt survived", read_case },
 	{ "run", "writes through stdio until ended from outside, the notification's routine recording", run_case },
-	{ "run_unreg", "as run, the routine taking its registration out before it returns", run_unregister_case },
 };
 
 enum { CASES = sizeof cases / sizeof cases[0] };
