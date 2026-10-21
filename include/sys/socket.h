@@ -51,8 +51,6 @@ enum {
 	// A struct timeval each, which xsdk gives XAM in milliseconds; a send or receive that runs out fails with EAGAIN.
 	SO_SNDTIMEO = 0x1005,
 	SO_RCVTIMEO = 0x1006,
-	// An errno value, as POSIX has it; xsdk works it out, as XAM refuses it (src/socket.c).
-	SO_ERROR = 0x1007,
 	SO_TYPE = 0x1008,
 	MSG_OOB = 0x1,
 	MSG_PEEK = 0x2,
@@ -61,6 +59,10 @@ enum {
 	SHUT_RDWR = 2,
 	SOMAXCONN = 0x7FFFFFFF,
 };
+
+// An errno value, as POSIX has it; xsdk works it out, as XAM refuses it (src/socket.c). A macro, as code tests for it
+// with #ifdef (curl-xenon:lib/cf-socket.c does).
+#define SO_ERROR 0x1007
 
 // Socket descriptors share the file descriptors' numbers, so close, read and write take them too.
 int socket(int domain, int type, int protocol);

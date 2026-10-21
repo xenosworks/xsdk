@@ -115,6 +115,19 @@ static bool echoes(int fd, const char *line)
 	return received == (ssize_t)length && memcmp(reply, line, length) == 0;
 }
 
+// Sends a line and polls for the echo with POLLPRI asked too: data to read comes back as POLLIN alone, as curl takes
+// POLLPRI for an error (curl-xenon:lib/select.c, Curl_socket_check).
+static bool polls_as_data(int fd, const char *line)
+{
+	const size_t length = strlen(line);
+	struct pollfd wanted = { .fd = fd, .events = POLLIN | POLLPRI };
+	const bool ready = send(fd, line, length, 0) == (ssize_t)length && poll(&wanted, 1, TIMEOUT_MS) == 1;
+	char reply[LINE_BYTES];
+	const bool drained = ready && recv(fd, reply, sizeof(reply), 0) == (ssize_t)length;
+	xsdk_log_write("net: poll for an echo gave revents 0x%04X", (unsigned)wanted.revents);
+	return drained && wanted.revents == POLLIN;
+}
+
 // A blocking connection to the PC, or -1.
 static int connect_to(const Host *pc)
 {
@@ -166,6 +179,7 @@ static void test_tcp(const Host *pc, struct sockaddr_in *console)
 	xsdk_log_write(
 		"net: connected to %s; getsockname gives %s, port %u", pc->text, text, (unsigned)ntohs(local.sin_port));
 	check("net: TCP to the PC and back, through send and recv", fd >= 0 && echoes(fd, "tcp through send\n"));
+	check("net: an echo waiting to be read polls as POLLIN, not POLLPRI", fd >= 0 && polls_as_data(fd, "tcp polled\n"));
 	if (fd >= 0)
 		close(fd);
 

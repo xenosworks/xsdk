@@ -1,6 +1,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
@@ -460,8 +461,36 @@ static void check_log_cost(void)
 	(void)xsdk_log_set_dbgprint(dbgprint);
 }
 
+// basename and dirname of each path, as POSIX gives them, and for a drive's path with \.
+static void check_path_parts(void)
+{
+	static const char *const cases[][3] = {
+		{ "usr/lib/", "lib", "usr" },
+		{ "/usr", "usr", "/" },
+		{ "file", "file", "." },
+		{ "/", "/", "/" },
+		{ "", ".", "." },
+		{ "game:\\saves\\slot1.dat", "slot1.dat", "game:\\saves" },
+	};
+	bool all = true;
+	for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+		char base_copy[PATH_BYTES];
+		char dir_copy[PATH_BYTES];
+		(void)snprintf(base_copy, sizeof(base_copy), "%s", cases[i][0]);
+		(void)snprintf(dir_copy, sizeof(dir_copy), "%s", cases[i][0]);
+		const char *const base = basename(base_copy);
+		const char *const dir = dirname(dir_copy);
+		const bool right = strcmp(base, cases[i][1]) == 0 && strcmp(dir, cases[i][2]) == 0;
+		if (!right)
+			xsdk_log_write("files: \"%s\": basename \"%s\", dirname \"%s\"", cases[i][0], base, dir);
+		all &= right;
+	}
+	check("files: basename and dirname split paths as POSIX has them, a drive's with \\ too", all);
+}
+
 void test_files(void)
 {
+	check_path_parts();
 	check_log_readable();
 	check_log_cost();
 

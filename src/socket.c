@@ -670,7 +670,7 @@ int poll(struct pollfd *fds, nfds_t count, int timeout_ms)
 			invalid++;
 			continue;
 		}
-		const bool added = (!(fds[i].events & (POLLIN | POLLPRI)) || add_to_set(&readable, slot->handle)) &&
+		const bool added = (!(fds[i].events & POLLIN) || add_to_set(&readable, slot->handle)) &&
 			(!(fds[i].events & POLLOUT) || add_to_set(&writable, slot->handle)) && add_to_set(&failed, slot->handle);
 		if (!added) {
 			errno = EINVAL;
@@ -690,8 +690,10 @@ int poll(struct pollfd *fds, nfds_t count, int timeout_ms)
 		const SocketSlot *slot = fds[i].fd >= 0 ? open_slot_of(fds[i].fd) : NULL;
 		if (!slot)
 			continue;
+		// Winsock's read set is data to read; its except set, a connection that failed, is POLLERR. POLLPRI's urgent
+		// data is never reported.
 		if (in_set(&readable, slot->handle))
-			fds[i].revents |= (short)(fds[i].events & (POLLIN | POLLPRI));
+			fds[i].revents |= (short)(fds[i].events & POLLIN);
 		if (in_set(&writable, slot->handle))
 			fds[i].revents |= POLLOUT;
 		if (in_set(&failed, slot->handle))
