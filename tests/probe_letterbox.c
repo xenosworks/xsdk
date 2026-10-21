@@ -12,21 +12,17 @@
 #include "xsdk/present.h"
 #include "xsdk/thread.h"
 
-// Milestone 54 step 5's probe (docs/scope/54-porters-files-and-system.md): letterboxing as xsdk does it, which places
-// the scaled picture with radeonhd's overscan (src/display.c). game:\letterbox_case.txt names the case; without it,
-// "read" runs. "read" logs the display controller's registers, VdQueryVideoMode and VdGetCurrentDisplayInformation,
-// writing nothing, and ends. "fill" and "letterbox" present a test picture through xsdk_present every frame, as a title
-// does, so XAM's VdSwap runs: a white border, 160-pixel squares from the centre, a ring of radius 300 there, and red,
-// green, blue and yellow corners at the top left, top right, bottom left and bottom right. Square squares and a round
-// ring mean unstretched; the border and four corners in view mean nothing is cut off. "fill" opens the display as a
-// title does, filling a widescreen output; "letterbox" forces letterboxing, as on a 4:3 screen, with bars above and
-// below. Each logs the registers before the display opens, once its frames are on screen, and after it closes. They
-// run until Back on controller 1, or until the title is ended from outside. "kernel" writes nothing to the display: as
-// "read", then it asks the kernel's own scaler builder, VdInitializeScalerCommandBuffer, for 1280x720 filling the
-// output, letterboxed at 3/4 of its height and pillarboxed at 3/4 of its width, with the filters the kernel's own
-// display information names. It logs each answer's count and every word, decoded as packets with the registers named,
-// and what it wrote past the count or into the unknown argument's buffer, so the three answers show which registers
-// place the picture. The packets aren't run.
+// Milestone 54 step 5's probe (docs/scope/54-porters-files-and-system.md): letterboxing as xsdk does it, each frame
+// between black bars in a 1280x960 front buffer the display scales as 4:3 (src/present.c). game:\letterbox_case.txt
+// names the case; without it, "read" runs. "read" logs the display controller's registers, VdQueryVideoMode and
+// VdGetCurrentDisplayInformation, writing nothing, and ends. "fill" and "letterbox" present a test picture through
+// xsdk_present every frame, as a title does, so XAM's VdSwap runs: a white border, 160-pixel squares from the centre, a
+// ring of radius 300 there, and red, green, blue and yellow corners at the top left, top right, bottom left and bottom
+// right. Square squares and a round ring mean unstretched; the border and four corners in view mean nothing is cut off.
+// "fill" opens the display as a title does: filling a widescreen output, letterboxed on a 4:3 one; "letterbox" forces
+// letterboxing, as on a 4:3 screen, with bars above and below. Each logs the registers before the display opens, once
+// its frames are on screen, and after it closes. They run until Back on controller 1, or until the title is ended from
+// outside.
 
 enum {
 	WIDTH = 1280,
@@ -53,16 +49,6 @@ enum {
 	// Long enough for the display to take new values at a vblank.
 	SETTLE_MS = 100,
 	NAME_BYTES = 16,
-	// Room for the scaler builder's packets, whose answer was 43 words (docs/HARDWARE.md), and for its unknown
-	// argument.
-	SCALER_WORDS = 1024,
-	// What both buffers hold before each call, so the words the kernel wrote show.
-	MARKER = 0xFEEDF00D,
-	// In VdGetCurrentDisplayInformation's scaler parameters, each filter's type, its settings after it
-	// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_video.cc:77-86).
-	VERTICAL_FILTER_TYPE = 6,
-	HORIZONTAL_FILTER_TYPE = 10,
-	CHANGED_LOGGED = 64,
 };
 
 // Display registers by index: libxenon's names (libxenon:drivers/xenos/xenos.h:11-60), else Xenia's style.
@@ -179,9 +165,6 @@ static const Register logged[] = {
 enum { LOGGED = sizeof logged / sizeof logged[0] };
 
 static const char *const case_path = "game:\\letterbox_case.txt";
-
-static uint32_t scaler_words[SCALER_WORDS];
-static uint32_t unknown_words[SCALER_WORDS];
 
 static void log_registers(const char *when)
 {
@@ -313,116 +296,6 @@ static int show(bool letterbox)
 	return NT_SUCCESS(status) ? 0 : 1;
 }
 
-static const char *register_name(uint32_t index)
-{
-	for (uint32_t i = 0; i < LOGGED; i++) {
-		if (logged[i].index == index)
-			return logged[i].name;
-	}
-	return "";
-}
-
-static void log_packet_header(const char *label, uint32_t at, uint32_t header, uint32_t body)
-{
-	const uint32_t type = header >> 30;
-	if (type == 0)
-		xsdk_log_write("kernel: %s: %u: %08X, type 0, %u words from %04X%s", label, (unsigned)at, (unsigned)header,
-			(unsigned)body, (unsigned)(header & 0x7FFF), header & 0x8000 ? ", all to it" : "");
-	else if (type == 1)
-		xsdk_log_write("kernel: %s: %u: %08X, type 1, to %04X and %04X", label, (unsigned)at, (unsigned)header,
-			(unsigned)(header & 0x7FF), (unsigned)((header >> 11) & 0x7FF));
-	else
-		xsdk_log_write("kernel: %s: %u: %08X, type %u, opcode %02X, %u words", label, (unsigned)at, (unsigned)header,
-			(unsigned)type, (unsigned)((header >> 8) & 0x7F), (unsigned)body);
-}
-
-// The packet at words[at], as Xenia reads PM4 (xenia:src/xenia/gpu/command_processor.cc:610-692); returns its words.
-static uint32_t log_packet(const char *label, const uint32_t *words, uint32_t at, uint32_t count)
-{
-	const uint32_t header = words[at];
-	const uint32_t type = header >> 30;
-	const uint32_t body = type == 2 ? 0 : type == 1 ? 2 : ((header >> 16) & 0x3FFF) + 1;
-	if (at + 1 + body > count) {
-		xsdk_log_write("kernel: %s: %u: %08X, type %u of %u words, runs past the %u words returned", label,
-			(unsigned)at, (unsigned)header, (unsigned)type, (unsigned)body, (unsigned)count);
-		for (uint32_t i = at + 1; i < count; i++)
-			xsdk_log_write("kernel: %s: %u:   %08X", label, (unsigned)i, (unsigned)words[i]);
-		return count - at;
-	}
-	log_packet_header(label, at, header, body);
-	for (uint32_t i = 0; i < body; i++) {
-		const uint32_t value = words[at + 1 + i];
-		if (type > 1) {
-			xsdk_log_write("kernel: %s: %u:   %08X", label, (unsigned)(at + 1 + i), (unsigned)value);
-			continue;
-		}
-		const uint32_t index = type == 1 ? (header >> (11 * i)) & 0x7FF : (header & 0x7FFF) + (header & 0x8000 ? 0 : i);
-		xsdk_log_write("kernel: %s: %u:   %08X to %04X (byte %04X) %s", label, (unsigned)(at + 1 + i), (unsigned)value,
-			(unsigned)index, (unsigned)(index * 4), register_name(index));
-	}
-	return 1 + body;
-}
-
-// The words of a buffer, filled with MARKER before the call, that the kernel changed from first on.
-static void log_changed(const char *label, const char *what, const uint32_t *words, uint32_t first)
-{
-	uint32_t changed = 0;
-	for (uint32_t i = first; i < SCALER_WORDS; i++) {
-		if (words[i] == MARKER)
-			continue;
-		if (changed < CHANGED_LOGGED)
-			xsdk_log_write("kernel: %s: %s word %u: %08X", label, what, (unsigned)i, (unsigned)words[i]);
-		changed++;
-	}
-	xsdk_log_write("kernel: %s: %u %s words changed", label, (unsigned)changed, what);
-}
-
-// Asks the kernel for the packets that show 1280x720 at an output rectangle, and logs them; nothing runs them.
-static void ask_kernel(
-	const char *label, uint32_t x, uint32_t y, uint32_t width, uint32_t height, const DISPLAY_INFO *info)
-{
-	for (uint32_t i = 0; i < SCALER_WORDS; i++) {
-		scaler_words[i] = MARKER;
-		unknown_words[i] = MARKER;
-	}
-	const uint32_t *const parameters = info->scaler_parameters;
-	D3DFILTER_PARAMETERS vertical;
-	D3DFILTER_PARAMETERS horizontal;
-	memcpy(&vertical, &parameters[VERTICAL_FILTER_TYPE + 1], sizeof vertical);
-	memcpy(&horizontal, &parameters[HORIZONTAL_FILTER_TYPE + 1], sizeof horizontal);
-	const uint32_t returned = VdInitializeScalerCommandBuffer(0, HEIGHT << 16 | WIDTH, y << 16 | x,
-		height << 16 | width, HEIGHT << 16 | WIDTH, parameters[VERTICAL_FILTER_TYPE], &vertical,
-		parameters[HORIZONTAL_FILTER_TYPE], &horizontal, unknown_words, scaler_words, SCALER_WORDS);
-	xsdk_log_write("kernel: %s: 1280x720 to %ux%u at %u,%u, filter types %u and %u; returned %u", label,
-		(unsigned)width, (unsigned)height, (unsigned)x, (unsigned)y, (unsigned)parameters[VERTICAL_FILTER_TYPE],
-		(unsigned)parameters[HORIZONTAL_FILTER_TYPE], (unsigned)returned);
-	const uint32_t count = returned < SCALER_WORDS ? returned : SCALER_WORDS;
-	for (uint32_t at = 0; at < count;)
-		at += log_packet(label, scaler_words, at, count);
-	log_changed(label, "packet buffer's, past the count,", scaler_words, count);
-	log_changed(label, "unknown argument's", unknown_words, 0);
-}
-
-static int kernel_case(void)
-{
-	log_modes();
-	log_registers("read");
-	VIDEO_MODE mode;
-	VdQueryVideoMode(&mode);
-	DISPLAY_INFO info;
-	VdGetCurrentDisplayInformation(&info);
-	const uint32_t output_width = mode.display_width;
-	const uint32_t output_height = mode.display_height;
-	// As src/display.c plans them: 3/4 of the output, a multiple of 4, centred.
-	const uint32_t letterbox_height = (output_height * 3 / 4) & ~3u;
-	const uint32_t pillarbox_width = (output_width * 3 / 4) & ~3u;
-	ask_kernel("fill", 0, 0, output_width, output_height, &info);
-	ask_kernel("letterbox", 0, (output_height - letterbox_height) / 2, output_width, letterbox_height, &info);
-	ask_kernel("pillarbox", (output_width - pillarbox_width) / 2, 0, pillarbox_width, output_height, &info);
-	log_registers("after");
-	return 0;
-}
-
 static int read_case(void)
 {
 	log_modes();
@@ -448,9 +321,8 @@ typedef struct {
 
 static const ProbeCase cases[] = {
 	{ "read", "logs the display registers and modes, writing nothing", read_case },
-	{ "fill", "presents 1280x720 as a title does, filling a widescreen output", fill_case },
+	{ "fill", "presents 1280x720 as a title does, letterboxed only on a 4:3 screen", fill_case },
 	{ "letterbox", "presents 1280x720 letterboxed, forced, as on a 4:3 screen", letterbox_case },
-	{ "kernel", "asks the kernel's scaler builder to fill, letterbox and pillarbox, writing nothing", kernel_case },
 };
 
 enum { CASES = sizeof cases / sizeof cases[0] };
