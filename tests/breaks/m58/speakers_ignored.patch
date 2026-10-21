@@ -1,0 +1,10 @@
+--- a/src/audio.c
++++ b/src/audio.c
+@@ -235,6 +235,6 @@
+ 	}
+ 	// unverified: 5.1 as the high half set; a read with the dashboard set the other way names the bits
+ 	// (docs/HARDWARE.md, "Audio's feeding, milestone 58").
+-	*speakers = config >> 16 ? XSDK_AUDIO_SPEAKERS_SURROUND : XSDK_AUDIO_SPEAKERS_STEREO;
++	*speakers = XSDK_AUDIO_SPEAKERS_STEREO;
+ 	return STATUS_SUCCESS;
+ }

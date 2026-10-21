@@ -1,0 +1,11 @@
+--- a/src/audio.c
++++ b/src/audio.c
+@@ -70,8 +70,6 @@
+ 		frame = slot_frame(taken % audio.slots);
+ 		audio.freed_tick[(taken + 1) % audio.slots] = time_base();
+ 		__atomic_store_n(&audio.taken, taken + 1, __ATOMIC_RELEASE);
+-	} else if (queued) {
+-		__atomic_store_n(&audio.silent, audio.silent + 1, __ATOMIC_RELAXED);
+ 	}
+ 	if (queued && waiting < audio.fewest_queued)
+ 		__atomic_store_n(&audio.fewest_queued, waiting, __ATOMIC_RELAXED);

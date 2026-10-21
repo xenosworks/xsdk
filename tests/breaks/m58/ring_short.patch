@@ -1,0 +1,11 @@
+--- a/src/audio.c
++++ b/src/audio.c
+@@ -119,7 +119,7 @@
+ 	const NTSTATUS status = create_once();
+ 	if (!NT_SUCCESS(status))
+ 		return status;
+-	audio.frames_ahead = frames_ahead ? frames_ahead : XSDK_AUDIO_FRAMES_AHEAD_DEFAULT;
++	audio.frames_ahead = (frames_ahead ? frames_ahead : XSDK_AUDIO_FRAMES_AHEAD_DEFAULT) - 1;
+ 	audio.slots = audio.frames_ahead + 1;
+ 	audio.raise_pending = true;
+ 	audio.queued = 0;

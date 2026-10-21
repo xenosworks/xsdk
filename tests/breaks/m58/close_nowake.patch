@@ -1,0 +1,11 @@
+--- a/src/audio.c
++++ b/src/audio.c
+@@ -214,7 +214,7 @@
+ 	if (!driver)
+ 		return STATUS_INVALID_HANDLE;
+ 	// Wakes a feeder waiting in xsdk_audio_next_frame, to find the driver gone.
+-	const NTSTATUS status = NtSetEvent(audio.event, NULL);
++	const NTSTATUS status = STATUS_SUCCESS;
+ 	const uint32_t result = XAudioUnregisterRenderDriverClient(driver);
+ 	if (result != ERROR_SUCCESS) {
+ 		xsdk_log_write("xsdk_audio_close: XAudioUnregisterRenderDriverClient failed: 0x%08X", (unsigned)result);

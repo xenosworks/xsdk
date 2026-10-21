@@ -1,0 +1,6 @@
+silence_tenth	xsdk_test	audio: a feeder queues a tone for 500 ms: the kernel plays 94 frames of it within 2, none silent; audio: the feeder beside a busy thread on hardware thread 1 for 500 ms: no frame silent, each freed slot filled within 1 ms, the busy thread losing under 1%
+silent_uncounted	xsdk_test	audio: the feeder stops for its 8 frames and 53 ms more: the stats count 10 silent frames, within 1 of the frames the kernel came for
+poll_default	xsdk_test	audio: the feeder beside a busy thread on hardware thread 1 for 500 ms: no frame silent, each freed slot filled within 1 ms, the busy thread losing under 1%
+ring_short	xsdk_test	audio: with 8 frames ahead, eight frames queue before xsdk_audio_next_frame(0) times out
+close_nowake	xsdk_test	audio: xsdk_audio_close returns a waiting feeder within 5 ms, and no callback counts 20 ms on
+speakers_ignored	xsdk_test	audio: XAudioGetSpeakerConfig gives 00010001, as at step 2, and xsdk_audio_speakers 5.1 for it (unverified)

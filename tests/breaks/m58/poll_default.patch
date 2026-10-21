@@ -1,0 +1,21 @@
+--- a/src/audio.c
++++ b/src/audio.c
+@@ -17,7 +17,7 @@
+ 	// The time base's rate (docs/HARDWARE.md, "The time base runs at 49.875 MHz").
+ 	TICKS_PER_MS = 49875,
+ 	// At +1 a feeder beside a busy thread woke in 3 us, at 0 up to 20 ms late (docs/HARDWARE.md, milestone 58).
+-	FEEDER_PRIORITY = 1,
++	FEEDER_PRIORITY = 0,
+ };
+ 
+ typedef struct {
+@@ -175,7 +175,8 @@
+ 			return STATUS_IO_TIMEOUT;
+ 		// The callback sets the event as it takes a frame, and closing sets it too.
+ 		const int64_t wait = -(int64_t)(limit - elapsed);
+-		const NTSTATUS status = NtWaitForSingleObjectEx(audio.event, USER_MODE, 0, &wait);
++		(void)wait;
++		const NTSTATUS status = xsdk_thread_sleep(1);
+ 		if (!NT_SUCCESS(status)) {
+ 			xsdk_log_write("xsdk_audio_next_frame: NtWaitForSingleObjectEx failed: 0x%08X", (unsigned)status);
+ 			return status;
