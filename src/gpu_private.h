@@ -266,6 +266,8 @@ bool xsdk_gpu_target_takes_samples(uint32_t format, uint32_t samples);
 uint32_t xsdk_gpu_copy_sample_select(bool depth);
 // For a resolve: draws need the target set again.
 void xsdk_gpu_undo_target(void);
+// The viewport's size in pixels, as the last target or viewport set it.
+void xsdk_gpu_viewport_size(float *width, float *height);
 // Whether calls go into a command buffer, not the ring.
 bool xsdk_gpu_recording(void);
 // Whether the hierarchical buffer can bound the depth of a surface this size at the last target's samples.

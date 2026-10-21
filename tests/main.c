@@ -91,6 +91,7 @@ int main(int argc, char **argv)
 	test_instancing();
 	test_indexed_reads();
 	test_hlsl();
+	test_text();
 	test_replay();
 	test_microcode();
 	test_registers();

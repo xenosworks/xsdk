@@ -203,6 +203,9 @@ static bool depth_only;
 static bool target_undone;
 // The predicate bit the draws carry, header bit 0 (xenia:src/xenia/gpu/command_processor.cc:704-713).
 static uint32_t draw_predicate;
+// The viewport's size in pixels, as the last target or viewport set it, for src/text.c.
+static float viewport_width;
+static float viewport_height;
 
 typedef struct {
 	uint32_t pitch_tiles;
@@ -405,6 +408,8 @@ static void put_target(uint32_t width, uint32_t height, uint32_t rows)
 	gpu_put_register(&packets, RB_COLOR_MASK, depth_only ? 0 : (1u << COLOR_MASK_BITS * color_target_count) - 1);
 	gpu_put_registers(&packets, RB_STENCILREFMASK_BF, viewport, 9);
 	xsdk_gpu_write(&packets);
+	viewport_width = (float)width;
+	viewport_height = (float)height;
 	xsdk_gpu_tiles_forget();
 	// A recorded target is set when its buffer runs, not now.
 	if (!xsdk_gpu_recording())
@@ -786,6 +791,14 @@ void xsdk_gpu_set_viewport(float x, float y, float width, float height, float mi
 	GpuPackets packets = gpu_reserve_packets(VIEWPORT_DWORDS);
 	gpu_put_registers(&packets, PA_CL_VPORT_XSCALE, viewport, 6);
 	gpu_packets_done(&packets);
+	viewport_width = width;
+	viewport_height = height;
+}
+
+void xsdk_gpu_viewport_size(float *width, float *height)
+{
+	*width = viewport_width;
+	*height = viewport_height;
 }
 
 // PA_CL_CLIP_CNTL's ucp_ena bits beside the clip space xsdk_gpu_set_target sets

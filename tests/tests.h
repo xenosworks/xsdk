@@ -168,6 +168,9 @@ void test_indexed_reads(void);
 // D3D9's semantics through glslang's HLSL (milestone 50 step 4).
 void test_hlsl(void);
 
+// Text on screen (milestone 57).
+void test_text(void);
+
 // Recorded command buffers (milestone 18).
 void test_replay(void);
 
