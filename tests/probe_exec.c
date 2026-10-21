@@ -9,7 +9,7 @@
 // Milestone 55 step 2; modes and console evidence: docs/scope/55-windows-threads-and-memory.md.
 
 enum {
-	// elf2xex marks execinstr pages Code (tools/elf2xex.py, page_descriptors).
+	// elf2xex marks execinstr pages Code (tools/elf2xex.py, section_type).
 	JIT_BYTES = 0x10000,
 	// The Xenon's cache line (libxenon:drivers/ppc/cache.S:1).
 	CACHE_LINE_BYTES = 128,
@@ -63,32 +63,14 @@ static void write_return(uint32_t value)
 	probe_jit_pool[1] = BLR;
 }
 
-static bool resolve(uint32_t ordinal, void **slot)
-{
-	HANDLE kernel = 0;
-	if (XexGetModuleHandle("xboxkrnl.exe", &kernel) != 0)
-		return false;
-	return XexGetProcedureAddress(kernel, ordinal, slot) >= 0 && *slot;
-}
-
 static void query_case(void)
 {
 	xsdk_log_write("exec: query: the .jit section's protection; nothing runs");
 	const uint32_t base = (uint32_t)(uintptr_t)probe_jit_pool;
 	xsdk_log_write("exec: .jit pool at %08X, %u bytes", (unsigned)base, (unsigned)JIT_BYTES);
 
-	typedef uint32_t (*QueryProtect)(uint32_t);
-	typedef NTSTATUS (*QueryVirtual)(uint32_t, MEMORY_BASIC_INFORMATION *);
-	QueryProtect query_protect;
-	QueryVirtual query_virtual;
-	if (resolve(0x0C4, (void **)&query_protect))
-		xsdk_log_write("exec: MmQueryAddressProtect(.jit) = %08X", (unsigned)query_protect(base));
-	if (resolve(0x0EE, (void **)&query_virtual)) {
-		MEMORY_BASIC_INFORMATION info = { 0 };
-		const NTSTATUS status = query_virtual(base, &info);
-		xsdk_log_write("exec: NtQueryVirtualMemory(.jit) = %08X: state %08X, protect %08X, size %08X", (unsigned)status,
-			(unsigned)info.state, (unsigned)info.protect, (unsigned)info.region_size);
-	}
+	xsdk_log_write("exec: MmQueryAddressProtect(.jit) = %08X", (unsigned)MmQueryAddressProtect(base));
+	xsdk_log_write("exec: NtQueryVirtualMemory ABI is tested separately by probe_query_memory");
 }
 
 static void spike_case(void)

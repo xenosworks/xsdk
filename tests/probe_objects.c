@@ -494,12 +494,6 @@ static void pages_case(void)
 	words[0] = GPR_PATTERN;
 	words[ALLOC_BYTES / 4 - 1] = GPR_PATTERN;
 
-	MEMORY_BASIC_INFORMATION info = { 0 };
-	const NTSTATUS queried = NtQueryVirtualMemory((uint32_t)(uintptr_t)base, &info);
-	xsdk_log_write("objects: NtQueryVirtualMemory = %08X: state %08X, protect %08X, size %08X, base %08X",
-		(unsigned)queried, (unsigned)info.state, (unsigned)info.protect, (unsigned)info.region_size,
-		(unsigned)info.base_address);
-
 	void *protect_base = base;
 	uint32_t protect_size = ALLOC_BYTES;
 	uint32_t old_protect = 0;

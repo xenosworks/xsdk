@@ -13,7 +13,8 @@ make m55_host_check m55_flush_check
 sh tests/breaks/m55/build.sh
 ```
 
-- `build/m55_check.xex` runs the new checks without the GPU suite. Launch this first and send `m55_check.log`.
+- `build/m55_check.xex` shows the splash, then runs the new checks without the GPU suite. Launch this first and
+  send `m55_check.log`.
   As with the probes, `net_log.txt` can stream it to `tools/net_log.py`; `dbgprint.txt` opts into Watson output.
 - `build/xsdk_test.xex` includes those same checks plus the existing suite. Its normal network and input setup still
   applies. Console acceptance needs this run too.
@@ -43,8 +44,8 @@ SDK bookkeeping, not the console ABI, cache behaviour, scheduling, protection or
   were not modified by this work.
 - GCC's builtin/libgcc clear-cache patch and rebuild are tracked in [TODO.md](../../TODO.md). Until then,
   generated code must call `xsdk_code_flush` explicitly.
-- `NtQueryVirtualMemory` remains a failed raw probe result. Mappings use owned page bookkeeping and the protection
-  checks use `MmQueryAddressProtect`. A correct raw query ABI still needs its own hardware investigation.
+- `NtQueryVirtualMemory` is withheld from the public SDK pending the three-argument probe below. Mappings use owned
+  page bookkeeping and protection checks use `MmQueryAddressProtect`.
 
 The milestone is not marked console-complete until its acceptance runs pass.
 
@@ -70,3 +71,28 @@ Build logs are local, ignored files in `local/m55/`; binaries and each mutation'
 - All 47 negative titles built without warnings. The no-flush and missing-subtraction variants were rejected by
   their respective host checks. Console outcomes for these builds and the new range checks remain pending.
 - GCC and the installed toolchain were unchanged. Build logs are `local/m55/review-*.log`.
+
+## Three-argument memory query probe
+
+Launch `build/probe_query_memory.xex` with no configuration file and retain `probe_query_memory.log`.
+`net_log.txt` streams the log as usual; `dbgprint.txt` enables Watson output. It shows the splash, resolves kernel
+ordinal 0x0EE and calls the candidate `(address, information, 0)`. The last argument is deliberately zero, a
+hypothesis suggested by the rejected two-argument run, not a verified length or debug-memory flag.
+
+It logs every call and all seven output words, with guard words before and after the output. It checks a committed
+allocation and an interior address, then a read-only page and its writable neighbour, a decommitted page that stays
+reserved, the released range, title code and `.jit`. A successful status alone is insufficient: the returned region
+must contain the address, state/allocation must match the controlled case, and committed protection must agree with
+`MmQueryAddressProtect`. Guard corruption stops further calls. The free-range query runs before logging after release.
+The third argument's semantics need further evidence even if zero works. Xenia's two-argument implementation cannot
+validate this candidate. No new hardware result is claimed until the console log arrives.
+
+The C host tests and focused title are explicit M55 exceptions in CODE_GUIDELINES.md. `m55_check` and its negative
+variants now show the splash. The host semaphore test fills its mock handle table, checks `sem_init` returns
+`ENOSPC` without changing the failed object, then frees the resources and retries successfully. This follows
+[POSIX sem_init](https://pubs.opengroup.org/onlinepubs/9799919799.2024edition/functions/sem_init.html).
+
+Follow-up local validation: a clean full rebuild had zero warnings; all six host checks passed, and restoring
+`ENOMEM` failed the new resource-exhaustion assertion. All 47 negative titles rebuilt without diagnostics. Object
+inspection confirms the candidate call sets r5 to zero; archive inspection confirms the old query import is absent.
+Logs are `local/m55/followup-*.log`. The query probe and splash changes still require console validation.

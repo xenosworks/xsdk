@@ -4736,3 +4736,8 @@ The unchanged logs are in [results/2026-10-20-milestone-55](../results/2026-10-2
 Steps 3–8 add SDK APIs and console checks on top of these results. Their new console checks, deliberate failures,
 SDL, Dusklight and Vulkan regressions have not yet been run here. No new hardware result is claimed by a successful
 cross-build or host mock test. GCC's builtin/libgcc cache flush and rebuild remain tracked in [TODO.md](../TODO.md).
+
+M55 query follow-up: the rejected two-argument declaration and static import are withdrawn. The separate
+`probe_query_memory` resolves ordinal 0x0EE and tests `(address, information, 0)` with output guards, page-state
+transitions, title code and `.jit`. Neither the third argument's meaning nor the output layout is established by
+this build; the new console log is still required. The earlier two-argument logs remain the evidence above.

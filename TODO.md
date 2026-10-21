@@ -12,7 +12,8 @@ work begins.
   - **Toolchain cache flush:** implement `__builtin___clear_cache` and libgcc's `__clear_cache` for this target,
     then rebuild GCC and its libraries. Both currently do nothing. Use `xsdk_code_flush` explicitly until then.
     This SDK change does not alter GCC or rebuild the toolchain.
-  - **Raw memory query:** `NtQueryVirtualMemory` returned C000000D in the probe; its ABI needs further investigation.
+  - **Raw memory query:** `NtQueryVirtualMemory` returned C000000D in the probe; its public declaration and import
+    are withdrawn. `probe_query_memory` tests `(address, information, 0)`; the third argument remains unverified.
     SDK mappings track their own reservations and committed pages.
 - **A stack overflow hangs the console,** with a fault handler or without, until it's restarted (docs/HARDWARE.md, "How
   the kernel hands a title its faults, milestone 40's probe"). The kernel puts the exception record and context on the

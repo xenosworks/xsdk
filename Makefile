@@ -72,7 +72,7 @@ SAVE_CHECK_OBJECTS := $(BUILD)/tests/save_check.o $(BUILD)/tests/bar_scene.o
 PROBES := probe_spin probe_print probe_cp probe_ring probe_interrupt probe_exports probe_engines probe_swap \
 	probe_display probe_guide probe_resolve probe_triangle probe_vblank probe_720p probe_constants probe_mip_tail \
 	probe_draw_after_resolve probe_pixel_rate probe_unroll probe_hiz probe_net probe_texel_rate probe_draw_cost \
-	probe_gpu_draw_cost probe_fault probe_depth_export probe_queries probe_occlusion probe_objects probe_exec
+	probe_gpu_draw_cost probe_fault probe_depth_export probe_queries probe_occlusion probe_objects probe_exec probe_query_memory
 # vulkan4xenon milestone 28's tries at the sample counts, a probe_occlusion_<try>.xex each, in the order to run them
 # (results/2026-10-16-vulkan4xenon-milestone-28/builds.sh); outside all.
 OCCLUSION_TRIES := registers viz_query reset reset_copy reset_event flush resolve no_counters group_all group_clock \
@@ -440,3 +440,7 @@ $(BUILD)/terminate_check.elf: $(BUILD)/tests/terminate_check.o $(BUILD)/libxsdk.
 system_probes: $(BUILD)/probe_terminate.xex $(BUILD)/probe_letterbox.xex
 
 drive_probes: $(BUILD)/probe_drives.xex
+
+# Keep the unverified query ABI out of the shared acceptance checks.
+$(BUILD)/probe_query_memory.elf: $(BUILD)/tests/probe_query_memory.o $(BUILD)/tests/jit_pool.o $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/probe_query_memory.o $(BUILD)/tests/jit_pool.o $(LIBS)

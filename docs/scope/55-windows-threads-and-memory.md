@@ -100,8 +100,8 @@ Each step rests on the console where Xenia can't answer. Steps 1 and 2 are the p
      (docs/HARDWARE.md, "The log over the network, milestone 53").
    - **One case a run,** named in `game:\probe_exec.txt` beside the `.xex`, as tests/probe_fault.c takes its mode; with
      no file, the default is the whole spike. The cases:
-     1. `query`: `NtQueryVirtualMemory` and `MmQueryAddressProtect` on the `.jit` section, the title's code, its data
-        and the heap, logged. Nothing runs.
+     1. `query`: `MmQueryAddressProtect` on `.jit`, logged. The rejected two-argument virtual-memory query is now
+        isolated as a three-argument candidate in `probe_query_memory`; nothing generated runs in this mode.
      2. `spike`, the default: write `li r3, 42; blr` into the `.jit` section, flush, call, check 42; rewrite to
         `li r3, 99; blr`, flush, call, check 99; and an unflushed rewrite as a diagnostic. Logging may evict the
         previous code, so this does not isolate cache effects.
@@ -135,13 +135,13 @@ Each step rests on the console where Xenia can't answer. Steps 1 and 2 are the p
 6. **Pages,** in include/sys/mman.h, src/mman.c and src/sbrk.c:
    - `mmap` of anonymous memory, `MAP_PRIVATE | MAP_ANONYMOUS`, through `NtAllocateVirtualMemory`; a file, `MAP_FIXED`
      or `MAP_SHARED` refused;
-   - `munmap` decommits its range, and releases the reservation once `NtQueryVirtualMemory` shows none of it committed;
+   - `munmap` decommits its range, and releases the reservation once its tracked committed pages are all gone;
    - `mprotect` through `NtProtectVirtualMemory`: `PROT_NONE`, `PROT_READ`, `PROT_READ | PROT_WRITE`; `PROT_EXEC`
      refused with `ENOTSUP`, as executable memory is the `.jit` section (step 7), not a run-time protection change;
    - `sbrk` decommits whole 64 KB steps above the break when newlib's `malloc` shrinks the heap, so memory freed at the
      heap's top goes back to the kernel;
-   - `NtQueryVirtualMemory`, `MmSetAddressProtect` and `MmQueryAddressProtect` raw in kernel.h, for code that queries
-     pages and for GPU memory.
+   - `MmSetAddressProtect` and `MmQueryAddressProtect` raw in kernel.h for GPU memory and protection queries.
+     `NtQueryVirtualMemory` is withheld until its separate probe validates the ABI.
 
 7. **Executable memory, a `.jit` section,** as step 2's probe runs it:
    - src/xsdk.ld gives `.jit` its own 64 KB-aligned region; a title defines a `.jit` input section of the size it wants,
@@ -205,7 +205,7 @@ On the console, each check its own line in xsdk_test, each broken on purpose onc
 - **Pages:**
   - an anonymous mapping comes back zeroed and takes writes, and `munmap` gives its pages back, `MmQueryStatistics`'
     free pages rising by its size;
-  - `mprotect` read-only reads back as read-only from `NtQueryVirtualMemory` and still reads, then takes a write once
+  - `mprotect` read-only reads back as read-only from `MmQueryAddressProtect` and still reads, then takes a write once
     read-write again, `PROT_EXEC` refused with `ENOTSUP`;
   - `MmSetAddressProtect` on GPU memory reads back through `MmQueryAddressProtect`;
   - a file mapping and `MAP_FIXED` are refused;
@@ -256,8 +256,8 @@ Two changes follow the actual probe evidence:
 
 - `NtQueryVirtualMemory` failed with C000000D. `mmap` tracks its reservations and committed-page bits; `munmap`
   decommits live subranges and releases after the last page. Protection checks use `MmQueryAddressProtect`.
-  The raw query stays declared with its console limitation documented; its signature is not guessed or silently
-  treated as successful. The resolved query and broader raw query coverage remain an open hardware investigation.
+  The failing raw declaration and static import are removed. `probe_query_memory` resolves 0x0EE and tests the
+  candidate `(address, information, 0)` with guarded output and page-state transitions; console validation is pending.
 - The unflushed rewrite returned the new value, with logging between the earlier call and rewrite. Incidental
   eviction was not excluded. Host checks reject missing cache maintenance; console wrong-code variants check returns.
 

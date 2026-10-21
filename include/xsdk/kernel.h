@@ -499,7 +499,7 @@ enum {
 	STATUS_MUTANT_NOT_OWNED = (int32_t)0xC0000046,
 };
 
-// NtQueryVirtualMemory's answer (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc:288-296).
+// Xenia's query layout; console ABI under probe (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc:288-296).
 typedef struct {
 	uint32_t base_address;
 	uint32_t allocation_base;
@@ -549,8 +549,6 @@ int32_t KeSetBasePriorityThread(void *thread, int32_t increment);
 NTSTATUS NtFreeVirtualMemory(void **base, uint32_t *size_bytes, uint32_t free_type, uint32_t debug_memory);
 NTSTATUS NtProtectVirtualMemory(
 	void **base, uint32_t *size_bytes, uint32_t protect, uint32_t *old_protect, uint32_t debug_memory);
-// Xenia's two-argument ABI; returned C000000D on console (results/2026-10-20-milestone-55). Unverified there.
-NTSTATUS NtQueryVirtualMemory(uint32_t base_address, MEMORY_BASIC_INFORMATION *information);
 // Returns the pages' protection, 0 if none (xboxkrnl_memory.cc:413-423).
 uint32_t MmQueryAddressProtect(uint32_t base_address);
 void MmSetAddressProtect(void *base_address, uint32_t region_size, uint32_t protect);

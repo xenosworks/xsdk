@@ -44,7 +44,7 @@ which implements what the games it runs need:
 |---|---|---|---|---|
 | A heap of all the title's free memory | Yes | `sbrk` (`src/sbrk.c`) | `tests/test_memory.c` | |
 | GPU memory, write-combined and physical | Yes | `xsdk_gpu_alloc` (`gpu.h`) | xsdk_test | Small allocations: each takes a 64 KiB page, and only shaders share (TODO.md) |
-| Returning the heap top; anonymous mappings and page protection | Pending | `sbrk` decommits 64 KB chunks; `mmap`, partial `munmap`, `mprotect` | M55 raw allocation/protection probe; `test_pages.c` console pending; host bookkeeping checks pass | File/shared/fixed mappings, runtime execute protection; raw `NtQueryVirtualMemory` failed on console |
+| Returning the heap top; anonymous mappings and page protection | Pending | `sbrk` decommits 64 KB chunks; `mmap`, partial `munmap`, `mprotect` | M55 raw allocation/protection probe; `test_pages.c` console pending; host bookkeeping checks pass | File/shared/fixed mappings, runtime execute protection; `NtQueryVirtualMemory` withheld pending the three-argument probe |
 | Executable image pool and explicit cache flush | Pending | `.jit`, `xsdk_jit_pool`, `xsdk_code_flush` | `probe_exec` returned 42 then 99; SDK API `test_pages.c` console pending | Builtin/libgcc clear-cache patch and rebuild: [TODO.md](../TODO.md) |
 | Physical page protection | Yes | `MmSetAddressProtect`, `MmQueryAddressProtect` | M55 probe | |
 | Memory statistics | Partial | `MmQueryStatistics` (`kernel.h`), raw | `tests/test_memory.c` | Xenia's statistics are estimates |

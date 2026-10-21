@@ -277,7 +277,7 @@ pages. Its address must be page-aligned. GPU memory uses the raw `MmSetAddressPr
 
 File-backed, shared and fixed mappings are refused with `ENOTSUP`, as is `PROT_EXEC` in either allocation or
 protection. Do not mix raw decommit/recommit calls with a mapping's tracked lifetime. `MmQueryAddressProtect`
-returns protection flags; the raw `NtQueryVirtualMemory` declaration still failed in the console probe. The top
+returns protection flags. `NtQueryVirtualMemory` has no public declaration while its ABI is under probe. The top
 of newlib's heap now decommits in 64 KB chunks when `free` trims it; live allocations above a freed block still
 prevent its return. Use a mapping for a large buffer that must be independently releasable.
 
