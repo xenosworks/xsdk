@@ -1,7 +1,7 @@
 --- a/src/text.c
 +++ b/src/text.c
-@@ -171,11 +171,11 @@
- 		return status;
+@@ -180,11 +180,11 @@ NTSTATUS xsdk_text_open(void)
+ 		text.cell_uv[glyph][1] = (float)(glyph / ATLAS_COLUMNS * XSDK_TEXT_CELL_HEIGHT) / ATLAS_HEIGHT;
  	}
  	// Over what's drawn by the colour's alpha.
 -	const XsdkBlend blend = { .color_source = XSDK_BLEND_SRC_ALPHA,
