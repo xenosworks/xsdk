@@ -1010,12 +1010,13 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
     names, the console's time zone and language, Xbox Home, and letterboxing on 4:3 (results/2026-10-20-milestone-54/;
     HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54").
 
-55. **Windows-style threading and memory.** Agreed on 2026-10-20: docs/scope/55-windows-threads-and-memory.md, the
-    next gap docs/PARITY.md ranks. Waits on several objects, event resets and pulses, owned mutexes, waitable timers
-    and lock-free lists as raw kernel exports; thread priorities, on by default, and moving another thread; POSIX
-    semaphores; `mmap`, `munmap`, `mprotect` and a heap that gives its top back; and a console probe of whether a title
-    can run code it wrote, each case that may hang the console run only with the user's go-ahead. APCs and I/O
-    completion ports left out.
+55. **Windows-style threading and memory.** Agreed on 2026-10-20 and done on 2026-10-21:
+    docs/scope/55-windows-threads-and-memory.md, the next gap docs/PARITY.md ranks. Waits on several objects, event
+    resets and pulses, owned mutexes, waitable timers and lock-free lists as raw kernel exports; thread priorities, on
+    by default, and moving another thread; POSIX semaphores; `mmap`, `munmap`, `mprotect` and a heap that gives its top
+    back; and a console probe of whether a title can run code it wrote, each case that may hang the console run only
+    with the user's go-ahead. APCs and I/O completion ports left out (results/2026-10-21-milestone-55-acceptance/;
+    HARDWARE.md, "M55 acceptance").
 
 **Networking**, a scope of its own rather than a numbered milestone: sockets, and TLS 1.2 in the title's own code.
 Agreed and done on 2026-10-14: docs/scope/networking.md.

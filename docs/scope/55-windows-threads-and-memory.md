@@ -307,3 +307,14 @@ the combined wait returned `STATUS_WAIT_0 + 3` after 20.991 ms, consumed the sem
 ready control returned zero. V4 requires exactly index 3 for the gated case and documents that wait-all can return
 a nonzero position. No SDK implementation uses wait-all. The priority sweep, timer and heap checks passed in v3;
 the corrected baseline, affected negatives, full SDK and remaining port acceptance still need their console runs.
+
+## Done (2026-10-21)
+
+Diagnostics v4's [full run](../../results/2026-10-21-milestone-55-acceptance/README.md#full-v4-run) passed:
+m55_check 68 of 68; xsdk_test with only its controller checks failing; each of the 48 breaks failing the checks
+`tests/breaks/m55/cases.tsv` lists; vulkan4xenon_test twice and vkbench unchanged. sdl_check passed but for its
+gamepad check. Dusklight's title scene ran 2.5% slower in its heaviest windows with priorities honoured, from SDL's
+audio thread at 16; as decision 5 has it, the fix is on the title's side, not xsdk's: SDL-xenon's xsdk driver asks for
+NORMAL (`d16871365`), and the scene runs as fast as before
+([runs](../../results/2026-10-21-milestone-55-acceptance/README.md#dusklight-and-sdl_check)). CLAUDE.md says which
+of m55_check's checks Xenia can't pass. GCC's clear-cache patch stays in [TODO.md](../../TODO.md).

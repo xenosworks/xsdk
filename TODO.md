@@ -5,17 +5,6 @@ work begins.
 
 ## Runtime and display
 
-- **Windows-style threading and memory, milestone 55:** the local M55 branch contains SDK APIs and checks;
-  diagnostics v3 passed 67 checks and failed only its zero-only wait-all assertion. The gated wait returned
-  index 3, with semaphore consumption and mutant ownership confirmed. V4 requires exactly that result.
-  Timer, heap and measured priority checks passed; the corrected baseline, full-suite and affected negative
-  runs remain in [the acceptance results](results/2026-10-21-milestone-55-acceptance/).
-  Port acceptance is incomplete (docs/scope/55-windows-threads-and-memory.md).
-  - **Executable image memory:** xsdk's own `probe_exec_spike.log` in results/2026-10-20-milestone-55 records a
-    function written into `.jit` returning 42 after flushing, then 99 after rewriting and flushing again.
-  - **Toolchain cache flush:** implement `__builtin___clear_cache` and libgcc's `__clear_cache` for this target,
-    then rebuild GCC and its libraries. Both currently do nothing. Use `xsdk_code_flush` explicitly until then.
-    This SDK change does not alter GCC or rebuild the toolchain.
 - **A stack overflow hangs the console,** with a fault handler or without, until it's restarted (docs/HARDWARE.md, "How
   the kernel hands a title its faults, milestone 40's probe"). The kernel puts the exception record and context on the
   faulting thread's own stack, so an overflowed one leaves it nowhere to. What could stop it, such as room kept at
@@ -66,6 +55,9 @@ work begins.
 
 ## Toolchain
 
+- **`__builtin___clear_cache` and libgcc's `__clear_cache` do nothing for this target,** so code a title writes into
+  `.jit` must call `xsdk_code_flush` (docs/scope/55-windows-threads-and-memory.md, decision 4). The fix is a
+  gcc-xsdk.patch change and a rebuild of the toolchain and everything on it.
 - **A bare scalar uniform on xost's OpenGL path is read as its whole register,** as scalar inputs were until milestone
   46 step 6 (docs/HARDWARE.md, "Samples in a loop's pass, milestone 46 step 6"). It's right where the runtime fills
   the register's four components alike; whether every runtime does, and so whether any program reads one wrongly,

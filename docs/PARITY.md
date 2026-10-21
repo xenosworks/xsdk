@@ -3,15 +3,15 @@
 xsdk's goal is to let anyone make homebrew and port games to the Xbox 360 without Microsoft's SDK. This page is the
 map: for each area, what a title gets from xsdk today, how to use it, which test proves it on the console, and what's
 missing. It was drawn up on 2026-10-15, at xsdk `3e889a7`, brought up to date on 2026-10-20, at `e43c0e1`, after
-milestones 41 and 44 to 52, and again for milestone 54's files, drives, settings and Xbox Home. SCOPE.md has the
-milestones and TODO.md the open items; where they and this page disagree, they win, and this page is out of date.
+milestones 41 and 44 to 52, and again for milestone 54's files, drives, settings and Xbox Home and milestone 55's
+threads, waits and memory. SCOPE.md has the milestones and TODO.md the open items; where they and this page disagree,
+they win, and this page is out of date.
 
 **Status:**
 - **Yes:** works, and a test proves it on the console.
 - **Partial:** some of it works, or only through raw kernel calls.
 - **No:** not there yet.
 - **Out:** won't be in xsdk (end of the page).
-- **Pending:** implemented and built, with console verification still required.
 
 **What retail titles call** is judged from Xenia (xenia-project/xenia `95a5c3e`, in `xenos-toolchain/reference/xenia`),
 which implements what the games it runs need:
@@ -44,8 +44,8 @@ which implements what the games it runs need:
 |---|---|---|---|---|
 | A heap of all the title's free memory | Yes | `sbrk` (`src/sbrk.c`) | `tests/test_memory.c` | |
 | GPU memory, write-combined and physical | Yes | `xsdk_gpu_alloc` (`gpu.h`) | xsdk_test | Small allocations: each takes a 64 KiB page, and only shaders share (TODO.md) |
-| Returning the heap top; anonymous mappings and page protection | Pending | `sbrk` decommits 64 KB chunks; `mmap`, partial `munmap`, `mprotect` | M55 raw allocation/protection probe; diagnostics v2 passed mapping checks and returned 8,200 pages after freeing the touched 32 MB buffer; full acceptance pending | File/shared/fixed mappings, runtime execute protection |
-| Executable image pool and explicit cache flush | Pending | `.jit`, `xsdk_jit_pool`, `xsdk_code_flush` | `probe_exec` returned 42 then 99; SDK API and range checks passed in the M55 baseline | Builtin/libgcc clear-cache patch and rebuild: [TODO.md](../TODO.md) |
+| Returning the heap top; anonymous mappings and page protection | Yes | `sbrk` decommits 64 KB chunks; `mmap`, partial `munmap`, `mprotect` | `tests/test_pages.c`; freeing a touched 32 MB buffer returned 8,200 pages | File/shared/fixed mappings, runtime execute protection |
+| Executable image pool and explicit cache flush | Yes | `.jit`, `xsdk_jit_pool`, `xsdk_code_flush` | `probe_exec` returned 42 then 99; m55_check's written-code checks | Builtin/libgcc clear-cache patch and rebuild: [TODO.md](../TODO.md) |
 | Virtual region queries | Yes | `NtQueryVirtualMemory(address, information, 0)` for `NtAllocateVirtualMemory`/`mmap` regions | [Console query log](../results/2026-10-20-milestone-55/probe_query_memory.log): committed, reserved, free | Image pages return C000000D; use `MmQueryAddressProtect` for image protection |
 | Physical page protection | Yes | `MmSetAddressProtect`, `MmQueryAddressProtect` | M55 probe | |
 | Memory statistics | Partial | `MmQueryStatistics` (`kernel.h`), raw | `tests/test_memory.c` | Xenia's statistics are estimates |
@@ -55,12 +55,12 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Threads, joins, detached threads, stack sizes | Yes | pthreads (`src/pthread.c`), `std::thread` | `tests/test_pthread.c`, `test_threads.c` | |
-| Placing threads on the 6 hardware threads | Partial | `xsdk_thread_create_on`, `xsdk_thread_move`; new `xsdk_thread_place` and `xsdk_pthread_handle` | `test_placement.c`; raw remote placement M55 probe; new wrappers and C++ handle checks passed in the M55 baseline | An unplaced thread runs on its creator's hardware thread |
+| Placing threads on the 6 hardware threads | Yes | `xsdk_thread_create_on`, `xsdk_thread_move`, `xsdk_thread_place`, `xsdk_pthread_handle` (`thread.h`) | `test_placement.c`, `test_thread_control.c` | An unplaced thread runs on its creator's hardware thread |
 | Mutexes, condition variables, read-write locks, once, keys | Yes | pthreads | `tests/test_pthread.c` | A mutex holds a pointer to a critical section `malloc`ed on first lock: locking one after its memory is freed corrupts the heap (TODO.md) |
-| Priorities | Pending | `xsdk_thread_set_priority`, pthread scheduling calls; requests -16..16, default 0 | Diagnostics v3 passed exact read-back with ordinary clamping to -3..4, distinct -16/+16, restoration and +2 share; full acceptance pending | POSIX scheduling policies are not separate kernel policies |
-| Semaphores | Pending | Raw kernel calls and unnamed process-local POSIX `sem_*` | `test_semaphore.c` baseline and concurrent host mocks pass; full milestone acceptance pending | Named/shared semaphores |
-| Waiting on several objects; clearing and pulsing events | Partial | Raw waits on up to 64 objects, signal-and-wait, `NtClearEvent`, `NtPulseEvent` | Diagnostics v3: ready mixed wait-all returned 0; gated wait returned index 3, consumed the semaphore and owned the mutant | V4 asserts exactly index 3; full acceptance pending |
-| Owned mutexes, waitable timers, lock-free lists | Yes | Raw mutant, timer and SLIST exports in `kernel.h` | M55 mutant/list checks passed; revised periodic timing and cancellation passed in diagnostics v2 | Timer APC routines |
+| Priorities | Yes | `xsdk_thread_set_priority`, pthread scheduling calls; requests -16..16, default 0; the kernel keeps -3..4, and -16 and 16 | `test_thread_control.c` | POSIX scheduling policies are not separate kernel policies |
+| Semaphores | Yes | Raw kernel calls and unnamed process-local POSIX `sem_*` | `test_semaphore.c` | Named/shared semaphores |
+| Waiting on several objects; clearing and pulsing events | Yes | Raw waits on up to 64 objects, signal-and-wait, `NtClearEvent`, `NtPulseEvent`; a wait-all can return a nonzero index, as a wait-any does | `test_objects.c` | |
+| Owned mutexes, waitable timers, lock-free lists | Yes | Raw mutant, timer and SLIST exports in `kernel.h` | `test_objects.c` | Timer APC routines |
 | APCs, alertable waits, I/O completion ports | No | | | Left out of M55 |
 
 ## Time

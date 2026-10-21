@@ -1,0 +1,130 @@
+log: game:\m55_mutant_abandon.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m55\m55_mutant_abandon.xex
+log: no net_log.txt beside the .xex, so not over the network
+milestone 55 diagnostics v4: objects, threads, semaphores, pages and written code
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 32585 us
+m55 splash: status=0x00000000
+PASS: splash: the vulkan4xenon logo shown
+pthread: a thread's stack is 1048576 bytes by default, 393216 when 393216 are asked for
+PASS: pthread: a thread gets the stack size its attributes ask for
+PASS: pthread: a thread made detached retains its kernel handle
+PASS: pthread: a bad detach state and a one-byte stack are refused
+objects: M55 acceptance diagnostics v4
+PASS: objects: wait-any returns the signalled index
+PASS: objects: wait-all needs all three objects
+PASS: objects: 64 waits succeed and 65 are refused
+PASS: objects: clear leaves an event unsignalled
+PASS: objects: signal-and-wait signals ready and wakes on the pulse
+PASS: objects: manual pulse wakes both waiters and leaves clear
+PASS: objects: a non-owner cannot release a mutant
+PASS: objects: recursive ownership blocks another thread until both releases
+FAIL: objects: waiting for an abandoned mutant reports abandonment
+objects: 5 ms one-shot set=0x00000000 wait=0x00000000 elapsed=5671920 ns
+PASS: objects: a 5 ms one-shot fires once within a 2 ms tick
+objects: periodic set=0x00000000 last_wait=0x00000000 fires=20 elapsed=119038196 ns intervals=5070998..5999358 ns
+PASS: objects: 20 periodic firings allow 2 ms lateness per period
+objects: cancel=0x00000000 state=0 drain=0x00000102 after=0x00000102
+PASS: objects: a cancelled timer stops firing
+PASS: objects: concurrent list pushes pop 2000 unique entries
+PASS: objects: list flush returns the chain and empties the list
+objects: mixed event create=0x00000000 handle=F80000F8
+objects: mixed semaphore create=0x00000000 handle=F8000104
+objects: mixed mutant create=0x00000000 handle=F8000100
+objects: mixed thread create=0x00000000 handle=F80000F4
+objects: mixed completed thread status=0x00000000
+PASS: objects: mixed ready control starts with a completed thread
+objects: mixed wait-all status=0x00000000 elapsed=2747 ns
+PASS: objects: wait-all accepts an event, semaphore, mutant and thread
+objects: mixed mutant release=0x00000000
+PASS: objects: mixed wait releases acquired mutant
+PASS: objects: mixed handle closes
+PASS: objects: mixed handle closes
+PASS: objects: mixed handle closes
+objects: pending ready target=0x00000000 waiter=0x00000000 signal=0x00000000 held=0x00000102 target=0x00000102
+objects: pending gate=0x00000000 target wait=0x00000000 mixed=0x00000003 elapsed=20450526 ns release=0x00000000 token=0x00000102
+PASS: objects: mixed wait-all stays pending while the target thread is gated
+PASS: objects: pending mixed wait-all completes after the target thread ends
+PASS: objects: pending mixed wait takes the semaphore and owns the mutant
+PASS: objects: pending mixed handle closes
+PASS: objects: pending mixed handle closes
+PASS: objects: pending mixed handle closes
+PASS: objects: pending gate handles close
+thread control: original query=0 policy=0 priority=0
+thread control: range=-16..16 restore set=0 get=0 requested=0 actual=0
+thread control: priority requested=-16 set=0 get=0 actual=-16 expected=-16 policy=0
+thread control: priority requested=-15 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-14 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-13 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-12 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-11 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-10 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-9 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-8 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-7 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-6 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-5 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-4 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-3 set=0 get=0 actual=-3 expected=-3 policy=0
+thread control: priority requested=-2 set=0 get=0 actual=-2 expected=-2 policy=0
+thread control: priority requested=-1 set=0 get=0 actual=-1 expected=-1 policy=0
+thread control: priority requested=0 set=0 get=0 actual=0 expected=0 policy=0
+thread control: priority requested=1 set=0 get=0 actual=1 expected=1 policy=0
+thread control: priority requested=2 set=0 get=0 actual=2 expected=2 policy=0
+thread control: priority requested=3 set=0 get=0 actual=3 expected=3 policy=0
+thread control: priority requested=4 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=5 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=6 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=7 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=8 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=9 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=10 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=11 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=12 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=13 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=14 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=15 set=0 get=0 actual=4 expected=4 policy=0
+thread control: priority requested=16 set=0 get=0 actual=16 expected=16 policy=0
+PASS: thread control: priorities match kernel limits and restore
+PASS: thread control: invalid priority and hardware thread are refused
+PASS: thread control: pseudo handle sets priority and reports the previous value
+thread control: same-HT passes normal=0 raised=3319013
+PASS: thread control: a raised busy thread gets at least 95 percent on one hardware thread
+PASS: thread control: another busy thread moves from hardware thread 2 to 3
+PASS: thread control: a waiting thread wakes on its new hardware thread
+PASS: thread control: the pseudo handle places the caller
+PASS: semaphore: post wakes a worker in sem_wait
+PASS: semaphore: trywait at zero returns EAGAIN
+PASS: semaphore: realtime timedwait expires at its deadline
+PASS: semaphore: monotonic clockwait expires at its deadline
+PASS: semaphore: invalid clock and nanoseconds are refused
+PASS: semaphore: getvalue counts posts and successful takes
+PASS: semaphore: an available token succeeds even past its deadline
+PASS: semaphore: destroy releases its handle
+PASS: semaphore: shared and excessive initial counts are refused
+PASS: semaphore: post at the limit returns EOVERFLOW without changing count
+PASS: pages: anonymous pages are zeroed and accept writes
+PASS: pages: read-only protection reads back and restores writable
+PASS: pages: no-access protection restores to writable
+PASS: pages: executable protection is refused
+mprotect: NtProtectVirtualMemory failed: 0xC000002D
+PASS: pages: partial unmap preserves neighbours and leaves a hole
+pages: unmap free pages 121010 -> 121075
+PASS: pages: unmap returns committed pages to the kernel
+PASS: pages: a repeated unmap of released memory succeeds
+PASS: pages: files, fixed and shared mappings are refused
+PASS: pages: zero length, overflow and unaligned ranges are refused
+PASS: pages: executable mappings are refused
+PASS: pages: physical protection changes and restores
+pages: heap breaks before=00075000 allocated=02076000 freed=00074000; pages=121075 -> 112875 -> 121075
+PASS: pages: heap buffer stores data on all 8192 pages
+PASS: pages: freeing 32 MB at the heap top returns its pages
+PASS: jit: written code returns 42
+PASS: jit: rewritten code returns 99
+PASS: jit: unaligned range crossing a line returns 42
+PASS: jit: 129-byte range publishes both lines and returns 99
+PASS: jthreads share a mutex and condition variable
+PASS: thread_local differs per thread
+PASS: thread control: a std::thread moves through its borrowed kernel handle
+milestone 55: 67 passed, 1 failed
+exit: status 1

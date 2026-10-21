@@ -4831,3 +4831,14 @@ The [unchanged console log](../results/2026-10-21-milestone-55-acceptance/m55_ch
   firings, and freeing the touched 32 MB heap allocation again returned 8,200 pages (112875 to 121075).
 
 The retained log remains a v3 run with its original failure; it is not a run of the corrected v4 assertion.
+
+## M55 acceptance (2026-10-21)
+
+Diagnostics v4 passed on the console, with each break failing its listed checks
+([results](../results/2026-10-21-milestone-55-acceptance/README.md#full-v4-run)).
+
+**A thread at 16 that polls costs the threads it shares a hardware thread with.** Once priorities reached the kernel,
+Dusklight's title scene lost about 2.5% in its heaviest windows. SDL's audio thread asks for TIME_CRITICAL, which SDL
+turns into 16, and its xsdk driver polls with `SDL_Delay(1)`. Ignoring requests for 16 alone, or the driver asking for
+NORMAL (SDL-xenon `d16871365`), brought the frame rate back; Aurora's own requests and the heap's decommit didn't
+([runs](../results/2026-10-21-milestone-55-acceptance/README.md#dusklight-and-sdl_check)).

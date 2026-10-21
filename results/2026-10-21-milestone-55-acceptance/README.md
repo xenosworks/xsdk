@@ -1,10 +1,56 @@
 # M55 acceptance results (2026-10-21)
 
-M55 acceptance remains **incomplete**. Diagnostics v3 has 67 passes and one incorrect zero-only wait expectation;
-see the follow-up below. The original 52 unchanged logs were copied from
-`Z:\Xbox-360-SDK\local\m55\logs_set`; [SHA256SUMS](SHA256SUMS) records their hashes.
+M55 acceptance **passed** with diagnostics v4: see [the full v4 run](#full-v4-run). The sections after it are how
+it got there. The first, failing set's 52 unchanged logs were copied from
+`Z:\Xbox-360-SDK\local\m55\logs_set`; [SHA256SUMS](SHA256SUMS) records their hashes and every later log's.
 They contain the focused baseline, the full SDK run, all 47 negative titles, two Vulkan runs and vkbench.
 The separate [query v2 log](probe_query_memory_v2.log), from `local/m55/logs/query2/`, passed 22 checks with none failed.
+
+## Full v4 run
+
+[logs_v4](logs_v4/) holds the 53 unchanged logs from `Z:\Xbox-360-SDK\local\m55\logs_set2`, built at `744daec`: the
+v4 baseline, the full SDK run, all 48 negative titles, two Vulkan runs and vkbench.
+
+- [m55_check](logs_v4/m55_check/m55_check.log): 68 passed, none failed.
+- [xsdk_test](logs_v4/xsdk_test/xsdk_test.log): 609 passed; the 2 failures are the controller's state and rumble,
+  with no one at the controller. It's a rerun: the set's first xsdk_test failed only its network check, as
+  `hdd:\xsdk\m55` had no `net_host.txt` (`NtCreateFile` 0xC0000034), and the rerun with one replaced its log.
+- vulkan4xenon_test passed 517 of 517 [twice](logs_v4/v1/v4x_test.log) ([second](logs_v4/v2/v4x_test.log)), and
+  [vkbench](logs_v4/bench/vkbench.log) 17 of 17.
+- Each of the 48 negative titles failed the checks [cases.tsv](../../tests/breaks/m55/cases.tsv) lists for it and no
+  others, and the console answered after each. `mixed_wait`, `timer_period` and `heap_trim` now fail their own checks
+  against a passing baseline. `jit_noflush` and `jit_range_end` pass on the console, as listed; the host checks
+  `build.py` ran on them failed, as required.
+- `pages_mprotect_execute` ran as `m55_pages_mprotect_execu.xex`: the console agent refuses a 30-character file name
+  (error 123).
+
+## Dusklight and sdl_check
+
+[dusklight/](dusklight/) holds each run's log, unchanged. Dusklight was built plain at 1 sample from vulkan4xenon
+milestone 30's measurement sources and SDL (`local/m30`), changing only what each row names
+(`local/m55/dusk_build.sh`, `dusk_variant.sh`, `dusk_xsdk_variant.sh`, `dusk_sdl.sh`). The title scene logs its frame
+rate every 10 s for 32 windows, most at 30 or 60 fps, so the comparison is its five heaviest windows (9, 13–16).
+
+| Build | Runs | Frames a second, summed over 32 windows | The heaviest five | Windows 14 and 15 |
+|---|---|---|---|---|
+| main's xsdk | [main](dusklight/main.log), [2](dusklight/main_2.log) | 1151.8, 1150.3 | 145.6, 144.8 | 28.7–29.1 |
+| M55's xsdk | [m55](dusklight/m55.log), [2](dusklight/m55_2.log) | 1148.6, 1148.7 | 143.0, 142.9 | 28.0–28.5 |
+| M55, Aurora's texture workers at NORMAL | [preconv](dusklight/preconv.log), [2](dusklight/preconv_2.log) | 1148.9, 1148.5 | 143.3, 144.1 | 28.1–28.7 |
+| M55, Aurora's GPU waiter at NORMAL | [waiter](dusklight/waiter.log), [2](dusklight/waiter_2.log) | 1148.8, 1147.8 | 143.5, 143.6 | 28.2–28.6 |
+| M55, the heap's top never decommitted | [notrim](dusklight/notrim.log), [2](dusklight/notrim_2.log) | 1149.2, 1150.2 | 143.3, 144.2 | 28.3–28.7 |
+| M55, no priority reaching the kernel | [noprio](dusklight/noprio.log), [2](dusklight/noprio_2.log) | 1150.1, 1149.3 | 144.8, 144.6 | 28.6–29.0 |
+| M55, requests for 16 ignored | [no16](dusklight/no16.log), [2](dusklight/no16_2.log) | 1149.5, 1150.1 | 144.7, 145.3 | 28.8–28.9 |
+| M55, with SDL-xenon `d16871365` | [sdl](dusklight/sdl.log), [2](dusklight/sdl_2.log) | 1150.1, 1150.6 | 144.9, 145.5 | 28.8–28.9 |
+
+With priorities honoured, the title scene lost about 2.5% in its heaviest windows. Only SDL asks for 16: its playback
+thread asks for TIME_CRITICAL (SDL-xenon:src/audio/SDL_audio.c:848-851), which SDL turns into
+`sched_get_priority_max`. Its xsdk driver polls with `SDL_Delay(1)` while its ring is full
+(SDL-xenon:src/audio/xsdk/SDL_xsdkaudio.c), so at 16 it ran ahead of the title's threads every millisecond or two.
+Aurora's own requests weren't the cause. SDL-xenon `d16871365` gives the driver a `ThreadInit` that asks for NORMAL
+instead of SDL's default, and the scene runs as fast as on main.
+
+[sdl_check](dusklight/sdl_check.log) on M55's xsdk, and [again](dusklight/sdl_check_fix.log) with that SDL, passed 11
+of 12; the one failure both times is "a gamepad is connected", with no controller in use. Its audio checks passed.
 
 ## Original baseline failures
 
@@ -73,14 +119,6 @@ now says WAIT_ALL can return a nonzero position too. No SDK implementation uses 
 
 The revised priority sweep passed, as did timer and heap-return checks. This retained log still records the
 original v3 failure; it is not a passing v4 run. The wait-any negative must also fail the exact index-3 check.
-
-## Next console run
-
-Run the rebuilt **diagnostics v4** `build/m55_check.xex` first and retain the complete log. It now requires
-exactly index 3 from the gated wait-all, with the other checks unchanged.
-Do not rerun the negative titles yet. A repeat focused run, the full SDK run and affected negatives follow once this
-baseline passes. The supplied Vulkan and vkbench logs are preserved; no comparative performance claim or completed
-port acceptance is made here.
 
 ## Diagnostics v2 local validation (historical)
 

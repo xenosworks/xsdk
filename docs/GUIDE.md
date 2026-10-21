@@ -247,7 +247,9 @@ start a thread on its creator's hardware thread, so every thread a title starts 
   `pthread_setschedparam` accepts any policy; the kernel
   supplies relative base priorities rather than POSIX scheduling policies, so `pthread_getschedparam` reports
   `SCHED_OTHER`. A raised busy thread can starve the others on its hardware thread: the probe's +2 worker did 99%
-  of the work. Keep audio and render workers bounded and let them block when idle.
+  of the work. Keep audio and render workers bounded and let them block when idle. SDL's audio thread asks for
+  TIME_CRITICAL, 16, and polled at that level cost Dusklight 2.5% of its frame rate where it's heaviest, so SDL-xenon's
+  driver asks for NORMAL instead (docs/HARDWARE.md, "M55 acceptance").
 - **Borrowed handles:** `xsdk_pthread_handle(thread)` also takes a `std::thread::native_handle()`. Do not close the
   returned handle. It lasts until join or, for a detached thread, until that thread ends; coordinate with its owner.
   Threads not created by pthreads get an owned duplicate on their first `pthread_self()`.
@@ -262,9 +264,6 @@ start a thread on its creator's hardware thread, so every thread a title starts 
   ([console log](../results/2026-10-21-milestone-55-acceptance/m55_check_diagnostics_v3.log)).
   Abandoned mutants return `STATUS_ABANDONED_WAIT_0`. `NT_SUCCESS` alone does not distinguish a successful wait
   from `STATUS_TIMEOUT`. Zero-initialize an 8-byte-aligned `SLIST_HEADER`.
-- M55 acceptance is incomplete. Diagnostics v3 passed the timer, heap and measured priority checks; its only
-  failure was expecting zero from the gated wait-all. V4 requires exactly `STATUS_WAIT_0 + 3` there.
-  See the [acceptance results](../results/2026-10-21-milestone-55-acceptance/) for remaining runs.
 - **Mutexes, condition variables, read-write locks, `once` and keys** are pthreads', and `std::mutex` and the rest on
   them. Free a mutex only once no thread can lock it again (docs/PITFALLS.md).
 - **Atomics** cost by their order: a relaxed `__atomic_fetch_add` 55 ns, acquire or release 70, seq_cst 125, against

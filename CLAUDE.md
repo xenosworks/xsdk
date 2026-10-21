@@ -33,6 +33,12 @@ layer that drives Xenos directly. Scope, sources and milestones are in SCOPE.md.
   (xenia:src/xenia/gpu/graphics_system.cc:181-205), so the performance counter that times fence waits never counts,
   and the check that a wait returns soon after its fence fails there, as do the checks that the GPU's clock counts and that leaving a hardware loop early costs nothing. Its `NetDll_XNetDnsLookup` is a stub
   (xenia:src/xenia/kernel/xam/xam_net.cc:542-560), so the check that `getaddrinfo` looks a name up fails there too.
+  In m55_check it fails the manual pulse, which pulses a host event (xenia:src/xenia/kernel/xevent.cc:65-68), the
+  non-owner's mutant release, which it doesn't check against the guest owner (xenia:src/xenia/kernel/xmutant.cc:41-54),
+  and the pending wait-all, as it returns 0 from every wait-all (xenia:src/xenia/kernel/xobject.cc:290-298). Its
+  `KeQueryBasePriorityThread` returns the host thread's priority, which `KeSetBasePriorityThread` picks from five bands
+  (xenia:src/xenia/kernel/xthread.cc:717-736), so the priority sweep fails and, its restore failing too, m55_check ends
+  there, before the semaphore, page and written-code checks.
   Its shaders run their control flow as one loop on the address (xenia:src/xenia/gpu/spirv_shader_translator.cc:567-614)
   and leave a hardware loop pixel by pixel (spirv_shader_translator.cc:986-1002), so a quad's pixels that leave a loop
   at different passes run what follows apart, and the raster check of samples in loops' passes, whose second loop takes
