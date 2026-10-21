@@ -1,6 +1,6 @@
 --- a/src/audio.c
 +++ b/src/audio.c
-@@ -156,7 +156,7 @@
+@@ -119,7 +119,7 @@
  	const NTSTATUS status = create_once();
  	if (!NT_SUCCESS(status))
  		return status;

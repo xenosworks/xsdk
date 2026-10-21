@@ -18,26 +18,7 @@ enum {
 	TICKS_PER_MS = 49875,
 	// At +1 a feeder beside a busy thread woke in 3 us, at 0 up to 20 ms late (docs/HARDWARE.md, milestone 58).
 	FEEDER_PRIORITY = 1,
-	// The processor control region's hardware thread (xenia:src/xenia/kernel/xthread.h:81-83).
-	PCR_CURRENT_PROCESSOR = 0x10C,
 };
-
-// Diagnostic for milestone 58's console run, removed once read: the kernel's calls, those before the driver was stored,
-// failed submits, the last failure, the last call's hardware thread, the feeder's waits, the last wait's status, and
-// where the callback is: 0 out of it, 1 in, 2 submitting, 3 setting the event.
-enum {
-	CALLS,
-	EARLY,
-	SUBMIT_FAILURES,
-	SUBMIT_RESULT,
-	CALL_HARDWARE_THREAD,
-	WAITS,
-	WAIT_STATUS,
-	CALLBACK_STEP,
-	AUDIO_DIAGNOSTICS,
-};
-
-void xsdk_audio_diagnostics(uint32_t diagnostics[AUDIO_DIAGNOSTICS]);
 
 typedef struct {
 	// Kept to the end: a callback can still run after unregistering (xenia:src/xenia/apu/audio_system.cc:120-130).
@@ -57,8 +38,6 @@ typedef struct {
 	uint32_t fewest_queued;
 	// When the count of frames taken reached n, at n % slots.
 	uint32_t freed_tick[XSDK_AUDIO_FRAMES_AHEAD_MAX + 1];
-	// Diagnostic for milestone 58's console run, removed once read: see xsdk_audio_diagnostics.
-	uint32_t diagnostics[AUDIO_DIAGNOSTICS];
 } Audio;
 
 static Audio audio;
@@ -79,19 +58,10 @@ static float *slot_frame(uint32_t slot)
 static void callback(const uint32_t *context)
 {
 	(void)context;
-	uint32_t region;
-	__asm__ volatile("mr %0, 13" : "=r"(region));
-	__atomic_store_n(&audio.diagnostics[CALL_HARDWARE_THREAD],
-		*(volatile const uint8_t *)(uintptr_t)(region + PCR_CURRENT_PROCESSOR), __ATOMIC_RELAXED);
-	__atomic_fetch_add(&audio.diagnostics[CALLS], 1, __ATOMIC_RELAXED);
-	__atomic_store_n(&audio.diagnostics[CALLBACK_STEP], 1, __ATOMIC_RELAXED);
 	const uint32_t driver = __atomic_load_n(&audio.driver, __ATOMIC_ACQUIRE);
 	// Closed, or not yet stored: Xenia calls back as a client registers (xenia:src/xenia/apu/audio_system.cc:179).
-	if (!driver) {
-		__atomic_fetch_add(&audio.diagnostics[EARLY], 1, __ATOMIC_RELAXED);
-		__atomic_store_n(&audio.diagnostics[CALLBACK_STEP], 0, __ATOMIC_RELAXED);
+	if (!driver)
 		return;
-	}
 	const uint32_t taken = audio.taken;
 	const uint32_t queued = __atomic_load_n(&audio.queued, __ATOMIC_ACQUIRE);
 	const uint32_t waiting = queued - taken;
@@ -105,16 +75,9 @@ static void callback(const uint32_t *context)
 	}
 	if (queued && waiting < audio.fewest_queued)
 		__atomic_store_n(&audio.fewest_queued, waiting, __ATOMIC_RELAXED);
-	__atomic_store_n(&audio.diagnostics[CALLBACK_STEP], 2, __ATOMIC_RELAXED);
-	const uint32_t submitted = XAudioSubmitRenderDriverFrame(driver, frame);
-	if (submitted != ERROR_SUCCESS) {
-		__atomic_fetch_add(&audio.diagnostics[SUBMIT_FAILURES], 1, __ATOMIC_RELAXED);
-		__atomic_store_n(&audio.diagnostics[SUBMIT_RESULT], submitted, __ATOMIC_RELAXED);
-	}
-	__atomic_store_n(&audio.diagnostics[CALLBACK_STEP], 3, __ATOMIC_RELAXED);
+	(void)XAudioSubmitRenderDriverFrame(driver, frame);
 	if (waiting)
 		(void)KeSetEvent((void *)(uintptr_t)audio.event_object, 0, 0);
-	__atomic_store_n(&audio.diagnostics[CALLBACK_STEP], 0, __ATOMIC_RELAXED);
 }
 
 static NTSTATUS create_once(void)
@@ -164,8 +127,6 @@ NTSTATUS xsdk_audio_open(uint32_t frames_ahead)
 	audio.taken = 0;
 	audio.silent = 0;
 	audio.fewest_queued = audio.frames_ahead;
-	for (uint32_t i = 0; i < AUDIO_DIAGNOSTICS; i++)
-		__atomic_store_n(&audio.diagnostics[i], 0, __ATOMIC_RELAXED);
 	const XAUDIO_RENDER_DRIVER_CLIENT client = { .callback = callback, .context = 0 };
 	uint32_t driver = 0;
 	const uint32_t result = XAudioRegisterRenderDriverClient(&client, &driver);
@@ -215,8 +176,6 @@ NTSTATUS xsdk_audio_next_frame(uint32_t timeout_ms, float **frame)
 		// The callback sets the event as it takes a frame, and closing sets it too.
 		const int64_t wait = -(int64_t)(limit - elapsed);
 		const NTSTATUS status = NtWaitForSingleObjectEx(audio.event, USER_MODE, 0, &wait);
-		__atomic_fetch_add(&audio.diagnostics[WAITS], 1, __ATOMIC_RELAXED);
-		__atomic_store_n(&audio.diagnostics[WAIT_STATUS], (uint32_t)status, __ATOMIC_RELAXED);
 		if (!NT_SUCCESS(status)) {
 			xsdk_log_write("xsdk_audio_next_frame: NtWaitForSingleObjectEx failed: 0x%08X", (unsigned)status);
 			return status;
@@ -247,12 +206,6 @@ void xsdk_audio_stats(XsdkAudioStats *stats)
 		.fewest_queued = __atomic_load_n(&audio.fewest_queued, __ATOMIC_RELAXED),
 		.longest_wait_us = (uint32_t)((uint64_t)wait_ticks * 1000 / TICKS_PER_MS),
 	};
-}
-
-void xsdk_audio_diagnostics(uint32_t diagnostics[AUDIO_DIAGNOSTICS])
-{
-	for (uint32_t i = 0; i < AUDIO_DIAGNOSTICS; i++)
-		diagnostics[i] = __atomic_load_n(&audio.diagnostics[i], __ATOMIC_RELAXED);
 }
 
 NTSTATUS xsdk_audio_close(void)
