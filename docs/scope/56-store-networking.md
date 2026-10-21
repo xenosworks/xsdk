@@ -1,6 +1,6 @@
 # Milestone 56: a homebrew store's networking
 
-Proposed on 2026-10-20, not yet agreed.
+Agreed on 2026-10-20, with every recommendation taken (Decided, below).
 
 ## Why
 
@@ -109,8 +109,8 @@ first where Xenia can't answer.
    - `argv` from `ExLoadedCommandLine`, split in src/start.c as the probe shows it laid out. If the loader leaves only
      the image's name, launch data is how a title gets arguments, and docs/GUIDE.md says so.
 
-   A launched title comes back by launching the store again, with a path the store gives it (decision 3).
-6. **curl-xenon** (decision 1): curl's latest release, built through cmake/xsdk.cmake on mbedtls-xenon
+   A launched title comes back by launching the store again, with a path the store gives it (Decided, 3).
+6. **curl-xenon** (Decided, 1): curl's latest release, built through cmake/xsdk.cmake on mbedtls-xenon
    (`CURL_USE_MBEDTLS`), static, without the curl tool:
    - HTTP and HTTPS only: every other protocol off (`CURL_DISABLE_*`), and proxies, cookies, netrc, Alt-Svc and HSTS;
      no IPv6, zlib, brotli, zstd, nghttp2, libpsl, libssh2 or libidn2;
@@ -123,7 +123,7 @@ first where Xenia can't answer.
      mbedtls-xenon's.
 
    Its check title, `curl_check` (tests/xsdk/ there), walks a store's path against tools/net_http.py.
-7. **JSON:** cJSON 1.7.19 (decision 2), as upstream ships it. It's plain C89 over `malloc` and the C library, so it
+7. **JSON:** cJSON 1.7.19 (Decided, 2), as upstream ships it. It's plain C89 over `malloc` and the C library, so it
    should build through cmake/xsdk.cmake unchanged; this step is that build. `curl_check` reads its catalogue with it,
    and docs/GUIDE.md says how a title adds it.
 8. **A download written safely:** a pattern in docs/GUIDE.md and `curl_check`, not a new call.
@@ -133,7 +133,7 @@ first where Xenia can't answer.
    - A dropped download resumes from the part's length with a `Range` request.
 9. **The download rate,** measured by `curl_check` and recorded in HARDWARE.md:
    - HTTP and HTTPS from the PC, 8 MB each, into memory and onto `hdd:`, with XAM's buffers and with raised ones;
-   - HTTPS from a public host (decision 5), with the cipher suite.
+   - HTTPS from a public host (Decided, 5), with the cipher suite.
 
    The link's 100 Mbit/s is 12.5 MB/s at most. The numbers say which holds a download back: the link, the window, TLS
    or the disk.
@@ -163,7 +163,7 @@ Left out:
   own.
 - **Downloads that outlive the title, and power lost during one.** The part file keeps the old file through a dropped
   connection; FATX through a power cut isn't tried.
-- **A store with a screen** (decision 4).
+- **A store with a screen** (Decided, 4).
 - **A wireless adapter's link bits:** the console is wired; they're logged if seen.
 - **`getnameinfo` and `gethostbyname`,** which curl doesn't call.
 
@@ -184,7 +184,7 @@ and each is broken on purpose once.
     Broken: the limits not passed.
   - Launched by the agent, `xsdk_launch_data` finds what the probe found such a title gets: none, if XAM clears it.
     Broken: it reports data whatever XAM says.
-- **launch_check and launch_target** (decision 3): two titles, each with a title ID of its own, unattended. launch_check
+- **launch_check and launch_target** (Decided, 3): two titles, each with a title ID of its own, unattended. launch_check
   launches launch_target with data and launch_check's own path. launch_target logs its `argv` and data, reverses the
   data and launches launch_check back, which checks it.
   - The round trip comes back reversed. Broken: launch_target sending the data back as it came.
@@ -226,29 +226,21 @@ most of this is stubs there, and it launches a title only after launch data is s
   failing.
 - docs/GUIDE.md and docs/PARITY.md say what's there.
 
-## For you to decide
+## Decided
 
-1. **A curl-xenon repository** under xenosworks, as mbedtls-xenon and SDL-xenon are: curl's latest release on a
-   `xenon` branch, built for HTTP and HTTPS only. Creating it is yours. Recommended: yes. The other way is a small
-   HTTP/1.1 client in xsdk. It's less to carry, but every store would meet chunked bodies, redirects, kept-alive
-   connections, resuming and timeouts again, all of which curl handles.
-2. **The JSON library.** Recommended: cJSON. It's MIT-licensed ANSI C, one `.c` and one `.h`; it reads and writes, and
-   its `malloc` is swappable through `cJSON_InitHooks`. If it builds unchanged, as step 7 checks, it needs no fork: a
-   title adds its two files. The others:
-   - jsmn: MIT, tokens only and no allocation, so a title converts numbers and strings itself;
-   - yyjson: MIT, faster and much larger.
-
-   C++ ports may bring their own.
-3. **How launching is tested,** since a launch ends the title. Recommended:
-   - launch_check and launch_target: a round trip that starts and ends in launch_check, its log the verdict, run by
-     the agent with nobody there;
-   - `curl_check` ending on the same round trip, with what it downloaded.
-
-   The other way is xsdk_test's last check launching the target, which ends the run in another title. Either way,
-   returning stays the launched title's own call, `xsdk_launch` back to the path the store gave it, with no format of
-   xsdk's in the launch data. A title not built with xsdk goes to the dashboard when it exits, whatever xsdk does.
-4. **A sample store title.** Recommended: not in this milestone. `curl_check` walks a store's path without a screen. A
-   store with one, its catalogue and its downloads, would be its own repository and scope after this one.
-5. **Public hosts in the checks.** Recommended: yes. example.com and badssl.com, as mbedtls-xenon's checks use, and
-   one public download for the internet's rate, such as speed.cloudflare.com's. That rate is logged, not judged, as it
-   depends on your line.
+On 2026-10-20:
+1. **curl-xenon,** a repository of its own under xenosworks, as mbedtls-xenon and SDL-xenon are: curl's latest
+   release on a `xenon` branch, built for HTTP and HTTPS only. You created xenosworks/curl-xenon; it's pushed to only
+   when you ask, after the work has passed on the console. A small HTTP/1.1 client in xsdk was the other way, left
+   because every store would meet chunked bodies, redirects, kept-alive connections, resuming and timeouts again.
+2. **JSON:** cJSON, MIT-licensed ANSI C, one `.c` and one `.h`, which reads and writes, its `malloc` swappable through
+   `cJSON_InitHooks`. If it builds unchanged, as step 7 checks, it needs no fork: a title adds its two files. jsmn
+   (tokens only) and yyjson (faster, much larger) were the others.
+3. **Launching is tested** by launch_check and launch_target's round trip, run by the agent with nobody there, and by
+   `curl_check` ending on the same round trip with what it downloaded. Returning is the launched title's own call,
+   `xsdk_launch` back to the path the store gave it, with no format of xsdk's in the launch data. A title not built
+   with xsdk goes to the dashboard when it exits, whatever xsdk does.
+4. **No sample store title** in this milestone: `curl_check` walks a store's path without a screen. A store with one
+   would be its own repository and scope after this one.
+5. **Public hosts in the checks:** example.com and badssl.com, as mbedtls-xenon's checks use, and one public download
+   for the internet's rate, such as speed.cloudflare.com's, its rate logged, not judged, as it depends on your line.
