@@ -117,3 +117,20 @@ the allocation remains in compiled code.
 - Rebuilt `build/m55_check.xex` SHA-256: `a4d94366e1179f5c407780b16de3c0896f9a2a071b2bed38981cab49452db866`.
 - Build/check logs: `local/m55/diagnostics-v4-clean-build.log`, `diagnostics-v4-checks.log` and
   `diagnostics-v4-breaks.log`. V4 still needs its console run; the v3 log is retained with its original failure.
+
+## Targeted v4 negative results
+
+Two unchanged logs from `Z:\Xbox-360-SDK\local\m55\logs_set2` establish the corrected `cases.tsv` entries:
+
+- [signal_wait](m55_signal_wait_v4.log): 65 passes and three failures: signal-and-wait readiness/wake, staying
+  pending while the target is gated, and completion at thread index 3. Manual pulse passes. The same mutated
+  `signal_wait` function runs the pulse workers and the gated target; it waits on its already-signalled ready event.
+- [sem_wait](m55_sem_wait_v4.log): 66 passes and two failures: waking the blocked worker and trywait returning EAGAIN
+  at zero. The broken wait polls before the post and leaves the posted token for trywait to consume.
+
+The two manifest entries now list exactly these failures. This is a targeted check of those two supplied logs;
+other logs in `logs_set2` are not assessed here. No console rerun is needed for this manifest-only correction.
+
+The required clean full rebuild and both affected negative builds completed without warnings or errors. The
+baseline XEX hash remains the v4 hash above. Local build logs are `local/m55/case-manifest-clean-build.log` and
+`case-manifest-breaks.log`; all 57 retained evidence hashes match.

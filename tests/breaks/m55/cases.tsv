@@ -3,7 +3,7 @@ wait_all	wait-all needs all three objects
 wait_limit	64 waits succeed and 65 are refused
 clear	clear leaves an event unsignalled
 pulse	manual pulse wakes both waiters and leaves clear
-signal_wait	signal-and-wait signals ready and wakes on the pulse; manual pulse (the ready event satisfies the wrong wait)
+signal_wait	signal-and-wait signals ready and wakes on the pulse; mixed wait-all stays pending while the target thread is gated; pending mixed wait-all completes after the target thread ends
 mutant_recursive	recursive ownership blocks another thread until both releases
 mutant_owner	a non-owner cannot release a mutant
 mutant_abandon	waiting for an abandoned mutant reports abandonment
@@ -37,7 +37,7 @@ heap_trim	freeing 32 MB at the heap top returns its pages
 jit_first	written code returns 42
 jit_rewrite	rewritten code returns 99
 jit_noflush	HOST sequence check must fail; console return checks may still pass
-sem_wait	post wakes a worker in sem_wait (broken wait polls instead of blocking)
+sem_wait	post wakes a worker in sem_wait; trywait at zero returns EAGAIN
 sem_available	an available token succeeds even past its deadline
 thread_arguments	invalid priority and hardware thread are refused
 pages_physical	physical protection changes and restores
