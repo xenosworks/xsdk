@@ -4,8 +4,9 @@ xsdk's goal is to let anyone make homebrew and port games to the Xbox 360 withou
 map: for each area, what a title gets from xsdk today, how to use it, which test proves it on the console, and what's
 missing. It was drawn up on 2026-10-15, at xsdk `3e889a7`, brought up to date on 2026-10-20, at `e43c0e1`, after
 milestones 41 and 44 to 52, and again for milestone 54's files, drives, settings and Xbox Home and milestone 55's
-threads, waits and memory, and on 2026-10-21 for milestone 57's text and Dear ImGui. SCOPE.md has the milestones and
-TODO.md the open items; where they and this page disagree, they win, and this page is out of date.
+threads, waits and memory, and on 2026-10-21 for milestone 57's text and Dear ImGui and milestone 58's audio.
+SCOPE.md has the milestones and TODO.md the open items; where they and this page disagree, they win, and this page is
+out of date.
 
 **Status:**
 - **Yes:** works, and a test proves it on the console.
@@ -16,7 +17,7 @@ TODO.md the open items; where they and this page disagree, they win, and this pa
 **What retail titles call** is judged from Xenia (xenia-project/xenia `95a5c3e`, in `xenos-toolchain/reference/xenia`),
 which implements what the games it runs need:
 - **The kernel:** its table lists 922 xboxkrnl exports. 239 have code in Xenia, 200 of them more than a stub. xsdk
-  imports 86 (`imports/imports.txt`).
+  imports 88 (`imports/imports.txt`).
 - **XAM:** its table lists 1,735 exports. 169 have code in Xenia, 106 of them more than a stub. xsdk imports 59, 27 of
   them for sockets.
 
@@ -115,9 +116,10 @@ which implements what the games it runs need:
 
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
-| Playing PCM: 6 channels of float at 48 kHz | Partial | the kernel's render driver (`XAudioRegisterRenderDriverClient`, `kernel.h`), raw; SDL3's audio | `tests/test_audio.c`; `tests/audio_check.c`, by ear | An xsdk call; a mixer; recording |
-| XMA decoding in hardware | No | | | `XMACreateContext` and the rest of xboxkrnl_audio_xma.cc |
-| Speaker configuration; the dashboard's volumes | No | | | `XAudioGetSpeakerConfig`, `XAudioGetVoiceCategoryVolume` (xboxkrnl_audio.cc) |
+| Playing PCM: 6 channels of float at 48 kHz | Yes | `xsdk_audio_*` (`audio.h`): the title's feeder thread waits until the kernel's render driver takes a frame, 8 frames ahead, and the frames it misses are counted; SDL3's audio on it | `tests/test_audio.c`; SDL-xenon's `test/xsdk/sdl_check.c`; `tests/audio_check.c`, by ear | A mixer; recording |
+| XMA decoding in hardware | No | | | `XMACreateContext` and the rest of xboxkrnl_audio_xma.cc, a milestone of its own that starts with making XMA data without Microsoft's tools (docs/scope/58-audio.md, Decided 4) |
+| Speaker configuration | Partial | `xsdk_audio_speakers` (`audio.h`), from `XAudioGetSpeakerConfig` | `tests/test_audio.c` | Which of the word's bits mean 5.1: a read with the dashboard set the other way |
+| The dashboard's volumes | No | | | `XAudioGetVoiceCategoryVolume`, whose first argument Xenia doesn't name (xboxkrnl_audio.cc:28-50) |
 
 ## Video output
 
@@ -245,7 +247,8 @@ What a porter would hit first, as proposed on 2026-10-15, each a milestone agree
 8. **The GPU's missing features.** Float and 64-bit targets, MRT, predicated tiling, multisampling with alpha to
    coverage, cube and 3D textures, instancing, and queries whether draws rasterized done, milestones 44 and 47 among
    them. Open: sample counts in queries, memory export, and the formats and textures in the GPU table's Missing column.
-9. **Audio:** XMA decoding, speaker configuration. Open.
+9. **Audio:** XMA decoding, speaker configuration. Feeding the render driver, `xsdk_audio_*`, milestone 58. Open: XMA,
+   the speaker configuration's bits, the dashboard's volumes and recording.
 10. **Input and the system:** keyboards, controller types, language and region, launching titles, the SMC. Language,
     country and the time zone, milestone 54; launching titles, milestone 56. Open: the rest.
 

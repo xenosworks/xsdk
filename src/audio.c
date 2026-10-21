@@ -54,7 +54,7 @@ static float *slot_frame(uint32_t slot)
 	return audio.frames + slot * XSDK_AUDIO_FRAME_FLOATS;
 }
 
-// On the kernel's audio thread, every 5.33 ms; integers only (docs/GUIDE.md, "Audio").
+// On the kernel's audio thread, every 5.33 ms; integers only (docs/GUIDE.md, "Input and audio through the kernel").
 static void callback(const uint32_t *context)
 {
 	(void)context;

@@ -293,8 +293,9 @@ start a thread on its creator's hardware thread, so every thread a title starts 
   supplies relative base priorities rather than POSIX scheduling policies, so `pthread_getschedparam` reports
   `SCHED_OTHER`. A raised busy thread can starve the others on its hardware thread: the probe's +2 worker did 99%
   of the work. Keep audio and render workers bounded and let them block when idle. SDL's audio thread asks for
-  TIME_CRITICAL, 16, and polled at that level cost Dusklight 2.5% of its frame rate where it's heaviest, so SDL-xenon's
-  driver asks for NORMAL instead (docs/HARDWARE.md, "M55 acceptance").
+  TIME_CRITICAL, 16, and polled at that level cost Dusklight 2.5% of its frame rate where it's heaviest
+  (docs/HARDWARE.md, "M55 acceptance"); SDL-xenon's driver keeps that request off, and the thread now blocks at +1
+  (Audio, below).
 - **Borrowed handles:** `xsdk_pthread_handle(thread)` also takes a `std::thread::native_handle()`. Do not close the
   returned handle. It lasts until join or, for a detached thread, until that thread ends; coordinate with its owner.
   Threads not created by pthreads get an owned duplicate on their first `pthread_self()`.
@@ -484,7 +485,7 @@ console").
 
 ## Input and audio through the kernel
 
-[samples/hello](../samples/hello/main.c), [samples/sound](../samples/sound/main.c), and SDL3's for both in
+[samples/hello](../samples/hello/main.c), [tests/audio_check.c](../tests/audio_check.c), and SDL3's for both in
 [samples/sdl3](../samples/sdl3/main.c)
 
 | Call | Leaves set | Undone by | Threads |
@@ -496,18 +497,67 @@ console").
 
 - **Controllers:** 0 to 3 are controllers 1 to 4. Sticks are signed 16 bits and read a little off centre at rest,
   triggers 0 to 255, buttons `INPUT_GAMEPAD_*` bits (docs/HARDWARE.md, "Runtime, milestone 2").
-- **Audio:** a frame is 256 samples of each of 6 channels at 48 kHz, big-endian floats a channel after another, in
-  5.1's order, front left first (docs/HARDWARE.md, "Runtime, milestone 2"), in memory from
-  `MmAllocatePhysicalMemoryEx(0, bytes, PAGE_READWRITE, 0, UINT32_MAX, 0)`. That memory is cached, and frames written
-  into it with plain stores play as written, with no flush (docs/HARDWARE.md, "Runtime, milestone 2"). The driver
-  reads the frame it took last until it asks for the next, so a callback fills another. samples/sound keeps its frames
-  to the end, as a call can outlast unregistering.
-- **Submit a frame in every call,** a silent one when there's nothing to play, as SDL-xenon's driver does: what the
-  driver plays after a call that submits none hasn't been measured.
+- **Audio** is fed through `audio.h` (Audio, below), which counts the frames it misses. The render driver's calls are
+  here for a title that runs the callback itself, as audio_check does; the frames are as Audio says.
+- **Submit a frame in every call,** a silent one when there's nothing to play, as `audio.c` does: what the driver
+  plays after a call that submits none hasn't been measured.
 - **Work samples out away from the callback.** No callback xsdk has run does floating point, and whether the kernel's
-  audio thread may hasn't been checked. samples/sound copies a wave table's float bits as words, and SDL-xenon mixes on
-  a thread of its own and hands the callback a finished frame.
+  audio thread may hasn't been checked; `audio.c`'s callback hands over frames its feeder filled.
 - **SDL3** has both, as gamepads and audio streams, through SDL-xenon (docs/PARITY.md, "Libraries ported to xsdk").
+
+## Audio
+
+[samples/sound](../samples/sound/main.c), [tests/test_audio.c](../tests/test_audio.c)
+
+`audio.h` feeds the kernel's render driver from a thread of the title's own, the feeder, which waits until the kernel
+has taken a frame and then fills the next. xsdk starts no thread for it, and nothing polls.
+
+| Call | Leaves set | Undone by | Threads |
+|---|---|---|---|
+| `xsdk_audio_open(frames_ahead)` | the title's one client of the render driver, playing silence until a frame is queued; up to `frames_ahead` frames queued ahead of the one playing, 0 for 8 (43 ms), at most 16 | `xsdk_audio_close` | any |
+| `xsdk_audio_next_frame(timeout_ms, &frame)` | the frame to fill once a slot is free, the same one until it's queued; the calling thread raised to +1 the first time after opening; `STATUS_IO_TIMEOUT` if no slot came free in time, `STATUS_INVALID_HANDLE` once closed | `xsdk_audio_queue_frame` | the feeder |
+| `xsdk_audio_queue_frame()` | the frame queued, after those queued before it | | the feeder |
+| `xsdk_audio_stats(&stats)` | nothing: the counts since opening | | any |
+| `xsdk_audio_close()` | the client unregistered, and a feeder waiting in `xsdk_audio_next_frame` returned | `xsdk_audio_open` | any |
+| `xsdk_audio_speakers(&speakers)` | nothing: the dashboard's audio output, stereo or 5.1 | | any |
+
+- **A frame** is 256 samples of each of 6 channels at 48 kHz, floats in the CPU's own byte order, big-endian, a
+  channel after another: `XSDK_AUDIO_FRONT_LEFT`, front right, centre, low frequency, back left, back right
+  (docs/HARDWARE.md, "Runtime, milestone 2"). Write all six each time, silence included, as slots are reused. The
+  frames are cached memory, where plain stores play as written, with no flush (docs/HARDWARE.md, "Runtime, milestone
+  2").
+- **What happens each 5.33 ms:** the kernel calls xsdk back on a thread of its own, on hardware thread 4. xsdk hands
+  it the oldest queued frame, or silence if none is queued, and wakes the feeder by `KeSetEvent` on its event's
+  object, the only way that thread can (docs/HARDWARE.md, "Audio's feeding, milestone 58").
+- **The feeder's priority:** its first `xsdk_audio_next_frame` after opening raises it to +1, unless the title set it
+  higher. At +1, beside a busy thread on its hardware thread, a feeder woke within 3 us of each frame the kernel took,
+  and the busy thread lost nothing measurable; at the default it waited up to 20 ms, as two threads at one priority
+  take turns of 20 ms (docs/HARDWARE.md, "Audio's feeding, milestone 58"). Its fills run ahead of the default threads
+  on its hardware thread, so keep them short, or give the feeder a hardware thread of its own; a title can lower it
+  after that first call.
+- **The stats,** from `xsdk_audio_open`:
+  - `played`: frames the kernel took from the queue, about 188 a second.
+  - `silent`: frames the kernel got as silence because none was queued, from the first frame queued on. Each is a gap
+    you'd hear; log them, and a title's log shows underruns with nobody listening.
+  - `fewest_queued`: the fewest frames queued as the kernel came for one, how close the feeder came to an underrun;
+    0 once one happened.
+  - `longest_wait_us`: the longest a slot the kernel freed waited for the feeder's next frame, its lateness and its
+    fill together. A feeder that stops on purpose counts here too.
+- **Frames ahead:** 8, 43 ms, by default, as stability comes before latency. The queue must hold the longest the
+  feeder can be held up: Dusklight's renders took up to 27.7 ms and its waits for its own audio lock up to 7.8 ms
+  (docs/HARDWARE.md, "Audio's feeding, milestone 58"). Ask for fewer to cut latency.
+- **Closing** wakes a feeder waiting in `xsdk_audio_next_frame`, which returns `STATUS_INVALID_HANDLE`. The frames
+  and the event stay allocated to the end, as a callback can still run after unregistering returns, and the next
+  `xsdk_audio_open` reuses them. One client a title: close before opening again.
+- **The speakers:** `XAudioGetSpeakerConfig` gave the word `0x00010001` on the console with the dashboard as it was,
+  as Xenia always does (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_audio.cc:22-26). Which bits mean 5.1 is unverified
+  until a read with the dashboard set the other way; until then `xsdk_audio_speakers` says 5.1 when the word's high
+  half is set. The driver takes 6 channels either way, and on a stereo set the centre and back channels sound as a
+  downmix allows (docs/HARDWARE.md, "Runtime, milestone 2"). A title that offers a stereo and a surround mix picks
+  its default from it.
+- **SDL3** feeds through it: SDL-xenon's device thread is the feeder, and its default device reports this format,
+  so SDL, and FAudio's mastering voice by default, mix at 48 kHz in 5.1 without converting (SDL-xenon's
+  docs/README-xsdk.md).
 
 ## Saves, the user and XAM's dialogs
 
