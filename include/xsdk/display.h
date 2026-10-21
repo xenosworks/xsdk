@@ -22,8 +22,8 @@ typedef enum {
 
 // Takes the display and returns the front buffer's size; STATUS_NOT_SUPPORTED where there is none, as in Xenia.
 NTSTATUS xsdk_display_open(XsdkDisplayMode mode, uint32_t *width, uint32_t *height);
-// Has xsdk_present letterbox 1280x720 from the next open on any screen, as on a 4:3 one, to try it on a widescreen
-// console.
+// A test hook: has xsdk_present letterbox 1280x720 from the next open on any screen, as on a 4:3 one; on a
+// widescreen screen the picture shows squashed.
 void xsdk_display_force_letterbox(bool force);
 // Shows the front buffer at this GPU address, in the tiled k_8_8_8_8 layout xsdk_gpu_resolve writes.
 NTSTATUS xsdk_display_show(uint32_t address, uint32_t pitch_pixels);

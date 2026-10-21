@@ -20,17 +20,10 @@ enum {
 	MINUTES_PER_HOUR = 60,
 	// POSIX's TZ takes offsets up to 24 hours.
 	MAX_OFFSET_MINUTES = 24 * MINUTES_PER_HOUR,
-	// Room past Win32's 172 bytes, in case XAM's structure is longer, which the console has yet to rule out.
-	TIME_ZONE_ROOM_BYTES = 512,
 	// What XamGetLocale asks of XamGetLocaleEx (xenia:src/xenia/kernel/xam/xam_locale.cc:225).
 	MAX_COUNTRY = 111,
 	MAX_LOCALE = 43,
 };
-
-typedef union {
-	TIME_ZONE_INFORMATION info;
-	uint8_t room[TIME_ZONE_ROOM_BYTES];
-} TimeZoneRoom;
 
 // Whether a date makes a POSIX rule, Mmonth.week.day/time: one that recurs, which counts as POSIX's rules do.
 static bool date_fits(const SYSTEMTIME *date)
@@ -67,9 +60,9 @@ static int append_rule(char *tz, size_t tz_bytes, const SYSTEMTIME *date)
 
 void xsdk_system_set_time_zone(void)
 {
-	static TimeZoneRoom zone;
-	const uint32_t id = GetTimeZoneInformation(&zone.info);
-	const TIME_ZONE_INFORMATION *const info = &zone.info;
+	static TIME_ZONE_INFORMATION zone;
+	const uint32_t id = GetTimeZoneInformation(&zone);
+	const TIME_ZONE_INFORMATION *const info = &zone;
 	if (id == TIME_ZONE_ID_INVALID) {
 		xsdk_log_write("time zone: GetTimeZoneInformation failed; UTC kept");
 		return;

@@ -1,7 +1,6 @@
 #include "xsdk/terminate.h"
 
 #include <stdbool.h>
-#include <stddef.h>
 
 #include "terminate_private.h"
 #include "xsdk/kernel.h"

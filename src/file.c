@@ -61,6 +61,8 @@ int xsdk_file_errno(NTSTATUS status)
 		return EBUSY;
 	case STATUS_NO_MEMORY:
 		return ENOMEM;
+	case STATUS_DISK_FULL:
+		return ENOSPC;
 	case STATUS_INVALID_HANDLE:
 		return EBADF;
 	case STATUS_FILE_IS_A_DIRECTORY:
@@ -113,12 +115,18 @@ static bool is_console(int fd)
 	return fd >= 0 && fd < FIRST_FILE_FD;
 }
 
-// A file's slot; the console's descriptors and sockets have none, which is EINVAL, as POSIX allows.
+// The console's descriptors and sockets, which have no file, so no position or size.
+static bool is_stream(int fd)
+{
+	return is_console(fd) || xsdk_socket_fd(fd);
+}
+
+// A file's slot; a stream has none, which is EINVAL, as POSIX allows.
 static FileSlot *find_file(int fd)
 {
 	FileSlot *file = find_slot(fd);
 	if (!file)
-		errno = is_console(fd) || xsdk_socket_fd(fd) ? EINVAL : EBADF;
+		errno = is_stream(fd) ? EINVAL : EBADF;
 	return file;
 }
 
@@ -160,23 +168,42 @@ static NTSTATUS query_size(HANDLE handle, uint64_t *size_bytes)
 	return status;
 }
 
+static NTSTATUS set_end(HANDLE handle, uint64_t end_bytes)
+{
+	const FILE_END_OF_FILE_INFORMATION end = { .end_of_file = end_bytes };
+	IO_STATUS_BLOCK io_status;
+	return NtSetInformationFile(handle, &io_status, &end, sizeof(end), FILE_END_OF_FILE_INFORMATION_CLASS);
+}
+
+static NTSTATUS write_zeros(HANDLE handle, uint64_t from_bytes, uint64_t to_bytes)
+{
+	static const uint8_t zeros[ZERO_CHUNK_BYTES];
+	NTSTATUS status = STATUS_SUCCESS;
+	for (uint64_t position = from_bytes; NT_SUCCESS(status) && position < to_bytes;) {
+		const uint32_t chunk_bytes =
+			to_bytes - position < sizeof(zeros) ? (uint32_t)(to_bytes - position) : sizeof(zeros);
+		IO_STATUS_BLOCK io_status;
+		status = NtWriteFile(handle, 0, NULL, NULL, &io_status, zeros, chunk_bytes, &position);
+		position += chunk_bytes;
+	}
+	return status;
+}
+
 NTSTATUS xsdk_file_set_size(HANDLE handle, uint64_t size_bytes)
 {
 	uint64_t old_size;
 	NTSTATUS status = query_size(handle, &old_size);
 	if (!NT_SUCCESS(status))
 		return status;
-	const FILE_END_OF_FILE_INFORMATION end = { .end_of_file = size_bytes };
-	IO_STATUS_BLOCK io_status;
-	status = NtSetInformationFile(handle, &io_status, &end, sizeof(end), FILE_END_OF_FILE_INFORMATION_CLASS);
-	// A file grown again reads back its old bytes, not zeros (results/2026-10-20-milestone-54/step2_xsdk_test.log).
-	static const uint8_t zeros[ZERO_CHUNK_BYTES];
-	for (uint64_t position = old_size; NT_SUCCESS(status) && position < size_bytes;) {
-		const uint32_t chunk_bytes =
-			size_bytes - position < sizeof(zeros) ? (uint32_t)(size_bytes - position) : sizeof(zeros);
-		status = NtWriteFile(handle, 0, NULL, NULL, &io_status, zeros, chunk_bytes, &position);
-		position += chunk_bytes;
-	}
+	status = set_end(handle, size_bytes);
+	if (!NT_SUCCESS(status) || size_bytes <= old_size)
+		return status;
+	// A file grown again reads back its old bytes, not zeros (results/2026-10-20-milestone-54/step2_xsdk_test.log);
+	// set, then zeroed, it reads back zeros (step3_xsdk_test_ftruncate_zeros.log).
+	status = write_zeros(handle, old_size, size_bytes);
+	// A call that fails leaves the file as it was.
+	if (!NT_SUCCESS(status))
+		(void)set_end(handle, old_size);
 	return status;
 }
 
@@ -302,7 +329,7 @@ ssize_t pread(int fd, void *buffer, size_t length_bytes, off_t offset)
 {
 	const FileSlot *file = find_slot(fd);
 	if (!file) {
-		errno = is_console(fd) ? ESPIPE : EBADF;
+		errno = is_stream(fd) ? ESPIPE : EBADF;
 		return -1;
 	}
 	if (offset < 0) {
@@ -352,7 +379,7 @@ ssize_t pwrite(int fd, const void *buffer, size_t length_bytes, off_t offset)
 {
 	const FileSlot *file = find_slot(fd);
 	if (!file) {
-		errno = is_console(fd) ? ESPIPE : EBADF;
+		errno = is_stream(fd) ? ESPIPE : EBADF;
 		return -1;
 	}
 	if (offset < 0) {
@@ -395,7 +422,7 @@ off_t lseek(int fd, off_t offset, int whence)
 {
 	FileSlot *file = find_slot(fd);
 	if (!file) {
-		errno = is_console(fd) ? ESPIPE : EBADF;
+		errno = is_stream(fd) ? ESPIPE : EBADF;
 		return -1;
 	}
 	uint64_t base = 0;

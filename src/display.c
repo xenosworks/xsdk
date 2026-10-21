@@ -274,7 +274,7 @@ static uint32_t elapsed_us(const struct timespec *start)
 	return (uint32_t)((now.tv_sec - start->tv_sec) * MICROSECONDS_PER_SECOND + (now.tv_nsec - start->tv_nsec) / 1000);
 }
 
-// The counter runs in viewport lines, under 500 on the kernel's 480, so passing 720 shows the new size has taken.
+// The counter runs in viewport lines, under 500 on the kernel's 480, so passing height shows the new size has taken.
 static void wait_for_scaler(uint32_t height)
 {
 	struct timespec start;

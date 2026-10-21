@@ -220,6 +220,7 @@ enum {
 // File statuses Xenia doesn't list; the values are NT's.
 enum {
 	STATUS_NO_MEDIA_IN_DEVICE = (int32_t)0xC0000013,
+	STATUS_DISK_FULL = (int32_t)0xC000007F,
 	STATUS_OBJECT_PATH_NOT_FOUND = (int32_t)0xC000003A,
 	STATUS_SHARING_VIOLATION = (int32_t)0xC0000043,
 	STATUS_DIRECTORY_NOT_EMPTY = (int32_t)0xC0000101,
@@ -295,8 +296,7 @@ enum {
 };
 
 // ExGetXConfigSetting's user category, its language and its country, one byte
-// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc:66-96). xsdk takes the time zone from GetTimeZoneInformation
-// instead; on the console both gave all zeros (results/2026-10-20-milestone-54/).
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_xconfig.cc:66-96). xsdk reads the time zone with GetTimeZoneInformation.
 enum {
 	XCONFIG_USER_CATEGORY = 3,
 	XCONFIG_USER_LANGUAGE = 9,
@@ -304,8 +304,10 @@ enum {
 };
 
 // Win32's, which XAM's GetTimeZoneInformation fills in; Xenia has no code for it, so the layout is Wine's
-// (wine:include/minwinbase.h:58-67, wine:include/timezoneapi.h:39-53, at 840a939). A date with year 0 recurs: day is
-// the week in the month, 5 the last, and day_of_week 0 Sunday (wine:dlls/kernelbase/locale.c:4300-4328).
+// (wine:include/minwinbase.h:58-67, wine:include/timezoneapi.h:39-53, at 840a939), as XAM filled its 172 bytes on the
+// console. A date with year 0 recurs: day is the week in the month, 5 the last, and day_of_week 0 Sunday
+// (wine:dlls/kernelbase/locale.c:4300-4328), as US Eastern's read on the console
+// (results/2026-10-20-milestone-54/step3_xsdk_test_eastern.log).
 typedef struct {
 	uint16_t year;
 	uint16_t month;
@@ -331,9 +333,8 @@ typedef struct {
 	int32_t daylight_bias;
 } TIME_ZONE_INFORMATION;
 
-// GetTimeZoneInformation's answers (wine:include/timezoneapi.h:50-53).
+// GetTimeZoneInformation's answers, 0 where there's no daylight saving (wine:include/timezoneapi.h:50-53).
 enum {
-	TIME_ZONE_ID_UNKNOWN = 0,
 	TIME_ZONE_ID_STANDARD = 1,
 	TIME_ZONE_ID_DAYLIGHT = 2,
 };
@@ -586,8 +587,9 @@ uint32_t XamContentGetDeviceState(uint32_t device_id, XAM_OVERLAPPED *overlapped
 // xam_enum.cc:30-84).
 uint32_t XamEnumerate(HANDLE enumerator, uint32_t flags, void *buffer, uint32_t buffer_bytes, uint32_t *items,
 	XAM_OVERLAPPED *overlapped);
-// A number in XAM's list of locales, a country each: 35 Britain, 36 the US (xenia:src/xenia/kernel/xam/xam_locale.cc:
-// 110-119). XamGetLocale asks for countries up to 111 and locales up to 43 (xam_locale.cc:203-225).
+// A number in XAM's list of locales, a country each: 35 Britain, 36 the US
+// (xenia:src/xenia/kernel/xam/xam_locale.cc:110-119). XamGetLocale asks for countries up to 111 and locales up to 43
+// (xam_locale.cc:203-225).
 uint32_t XamGetLocaleEx(uint32_t max_country, uint32_t max_locale);
 uint32_t XamGetOverlappedResult(XAM_OVERLAPPED *overlapped, uint32_t *length, uint32_t wait);
 uint32_t XamInputGetState(uint32_t user_index, uint32_t flags, INPUT_STATE *state);

@@ -28,6 +28,18 @@
 #   registered last". It takes nothing out, as a registration left in place freezes the console.
 # - letterbox_row0: a letterboxed frame resolves at the front buffer's row 0, its bars all below it; fails "scale:
 #   letterboxed, the front buffer is black above row 128 and from row 848, the frame between" alone.
+# - ftruncate_nozeros: a file's size is set with no zeros written over what it adds; fails "ftruncate and truncate:
+#   shorten a file, then lengthen it with zeros" alone.
+# - fsync_socket: fsync of a socket returns 0; fails "fsync: flushes a file and fails on a socket" alone.
+# - statvfs_sector: statvfs's block is the sector, not the allocation unit; fails "statvfs: a written file takes its
+#   allocation units from the free ones, fstatvfs agreeing on the unit" alone.
+# - language_zero: xsdk_system_language gives 0; fails "settings: the console's language and country read" alone.
+# - letterbox_720: the 1280x960 front buffer's display and scaler planned for 720 rows; fails "scale: letterboxed, the
+#   display shows a 1280x960 front buffer, the scaler planned for it" alone.
+# - letterbox_kept: letterboxing's scaler isn't taken back as the present closes; fails "scale: letterboxing's scaler is
+#   taken back as the present closes" alone. The scaler stays letterboxed until the dashboard sets its own.
+# - usb_mass1: usb: names \Device\Mass1\; with a stick in the first port, fails "drives: usb: lists its root as
+#   \Device\Mass0\ does, or fails with ENOENT where it does" alone.
 set -eu
 cd "$(dirname "$0")/../.."
 build_break()
@@ -42,7 +54,7 @@ build_break()
 	cp "build/breaks/$name/$title.xex" "build/breaks/${title}_$name.xex"
 }
 for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0 \
-	pwrite_position tz_sign hdd_device letterbox_row0; do
+	pwrite_position tz_sign hdd_device letterbox_row0 ftruncate_nozeros fsync_socket statvfs_sector language_zero \n	letterbox_720 letterbox_kept usb_mass1; do
 	build_break "$name" xsdk_test
 done
 build_break terminate_noregister terminate_check

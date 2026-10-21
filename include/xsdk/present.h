@@ -35,14 +35,17 @@ typedef struct {
 
 // Opens the display in this mode with buffer_count front buffers, 2 or 3; each frame shows for swap_interval vblanks.
 // A 720p display the splash holds (xsdk_splash_begin) is taken over, and its logo shows until the first frame. Where
-// the screen is 4:3, the 720p mode's front buffers are 1280x960, each frame between black bars above and below it.
+// the screen is 4:3, the 720p mode's front buffers are 1280x960, black but for each 1280x720 frame on rows 128 to 847,
+// which the scaler fills the screen with; width and height still give the frame's size.
 NTSTATUS xsdk_present_open(
 	XsdkDisplayMode mode, uint32_t buffer_count, uint32_t swap_interval, uint32_t *width, uint32_t *height);
-// Waits up to timeout_ms for the next front buffer to come off screen, then gives its address to resolve into.
+// Waits up to timeout_ms for the next front buffer to come off screen, then gives the address to resolve the frame
+// into: the buffer's, or 128 rows into it where letterboxed.
 NTSTATUS xsdk_present_begin(uint32_t *address, uint32_t timeout_ms);
-// The GPU address of front buffer index, 0 to buffer_count - 1, in the order frames use them.
+// The address of the frame in front buffer index, 0 to buffer_count - 1, in the order frames use them, as
+// xsdk_present_begin gives it.
 uint32_t xsdk_present_buffer_address(uint32_t index);
-// The CPU's view of the front buffer at an address xsdk_present_begin gave.
+// The CPU's view of the frame at an address xsdk_present_begin gave.
 volatile uint32_t *xsdk_present_pixels(uint32_t address);
 // Queues the frame resolved into that buffer; the vblank callback shows it once the GPU has finished it. The frame goes
 // through the kernel's swap, so while the Guide is open XAM draws it under the Guide in a surface of XAM's, which shows
