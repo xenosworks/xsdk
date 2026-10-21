@@ -55,6 +55,14 @@ SECTIONS
 		*(.sbss .sbss.* .bss .bss.* COMMON)
 	}
 
+	/* Executable memory for a recompiler: its own 64 KB-aligned pages, which elf2xex marks Code (milestone 55,
+	   docs/scope/55-windows-threads-and-memory.md). A title defines a .jit input section of the size it wants; without
+	   one this is empty and costs nothing. */
+	. = ALIGN(0x10000);
+	.jit : {
+		KEEP(*(.jit .jit.*))
+	}
+
 	.xsdk.imports 0 : {
 		KEEP(*(.xsdk.imports))
 	}

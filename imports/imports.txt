@@ -63,6 +63,29 @@ xboxkrnl.exe  0x1F3  XAudioRegisterRenderDriverClient
 xboxkrnl.exe  0x1F4  XAudioUnregisterRenderDriverClient
 xboxkrnl.exe  0x1F5  XAudioSubmitRenderDriverFrame
 xboxkrnl.exe  0x25B  VdSwap
+# Milestone 55: Windows-style threading and memory.
+xboxkrnl.exe  0x01B  ExThreadObjectType                  variable
+xboxkrnl.exe  0x02B  InterlockedFlushSList
+xboxkrnl.exe  0x02C  InterlockedPopEntrySList
+xboxkrnl.exe  0x02D  InterlockedPushEntrySList
+xboxkrnl.exe  0x081  KeQueryBasePriorityThread
+xboxkrnl.exe  0x099  KeSetBasePriorityThread
+xboxkrnl.exe  0x0C4  MmQueryAddressProtect
+xboxkrnl.exe  0x0C7  MmSetAddressProtect
+xboxkrnl.exe  0x0CD  NtCancelTimer
+xboxkrnl.exe  0x0CE  NtClearEvent
+xboxkrnl.exe  0x0D4  NtCreateMutant
+xboxkrnl.exe  0x0D7  NtCreateTimer
+xboxkrnl.exe  0x0DC  NtFreeVirtualMemory
+xboxkrnl.exe  0x0E1  NtProtectVirtualMemory
+xboxkrnl.exe  0x0E2  NtPulseEvent
+xboxkrnl.exe  0x0EE  NtQueryVirtualMemory
+xboxkrnl.exe  0x0F2  NtReleaseMutant
+xboxkrnl.exe  0x0FA  NtSetTimerEx
+xboxkrnl.exe  0x0FB  NtSignalAndWaitForSingleObjectEx
+xboxkrnl.exe  0x0FE  NtWaitForMultipleObjectsEx
+xboxkrnl.exe  0x105  ObDereferenceObject
+xboxkrnl.exe  0x110  ObReferenceObjectByHandle
 xam.xex       0x001  NetDll_WSAStartup
 xam.xex       0x003  NetDll_socket
 xam.xex       0x004  NetDll_closesocket

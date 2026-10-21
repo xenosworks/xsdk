@@ -469,6 +469,97 @@ uint32_t XexGetModuleHandle(const char *module_name, HANDLE *module);
 NTSTATUS XexGetModuleSection(HANDLE module, const char *name, const void **data, uint32_t *size);
 NTSTATUS XexGetProcedureAddress(HANDLE module, uint32_t ordinal, void **address);
 
+// Milestone 55: Windows-style threading and memory (docs/scope/55-windows-threads-and-memory.md).
+
+// Wait types and timer types (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:829, 698-708); the values are NT's.
+enum {
+	WAIT_ALL = 0,
+	WAIT_ANY = 1,
+	NOTIFICATION_TIMER = 0,
+	SYNCHRONIZATION_TIMER = 1,
+};
+
+// More MEM_ and PAGE_ flags (xenia:src/xenia/xbox.h:126-152); the values are NT's.
+enum {
+	MEM_DECOMMIT = 0x00004000,
+	MEM_RELEASE = 0x00008000,
+	PAGE_NOACCESS = 0x00000001,
+	PAGE_READONLY = 0x00000002,
+};
+
+// Wait and mutant statuses (xenia:src/xenia/xbox.h:36-63); a wait-any returns STATUS_WAIT_0 plus the index.
+enum {
+	STATUS_WAIT_0 = 0x00000000,
+	STATUS_ABANDONED_WAIT_0 = 0x00000080,
+	STATUS_USER_APC = 0x000000C0,
+	STATUS_ALERTED = 0x00000101,
+	STATUS_MUTANT_NOT_OWNED = (int32_t)0xC0000046,
+};
+
+// NtQueryVirtualMemory's answer (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc:288-296).
+typedef struct {
+	uint32_t base_address;
+	uint32_t allocation_base;
+	uint32_t allocation_protect;
+	uint32_t region_size;
+	uint32_t state;
+	uint32_t protect;
+	uint32_t type;
+} MEMORY_BASIC_INFORMATION;
+
+// A singly-linked list entry and its 8-byte header, swapped whole by a double-width compare-and-swap, so the header
+// must be 8-byte aligned (xenia:src/xenia/xbox.h:278-289). next holds a guest address.
+typedef struct {
+	uint32_t next;
+} SINGLE_LIST_ENTRY;
+
+typedef struct {
+	uint32_t next;
+	uint16_t depth;
+	uint16_t sequence;
+} __attribute__((aligned(8))) SLIST_HEADER;
+
+// The thread object type, which ObReferenceObjectByHandle checks; its address is passed as object_type.
+extern void *const ExThreadObjectType;
+// Waits on several objects at once: wait_type WAIT_ALL or WAIT_ANY, which returns STATUS_WAIT_0 plus the signalled
+// object's index (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:878-887).
+NTSTATUS NtWaitForMultipleObjectsEx(uint32_t count, const HANDLE *handles, uint32_t wait_type, uint32_t wait_mode,
+	uint32_t alertable, const int64_t *timeout);
+// Sets one object and waits on another atomically (xboxkrnl_threading.cc:889-912).
+NTSTATUS NtSignalAndWaitForSingleObjectEx(
+	HANDLE signal_object, HANDLE wait_object, uint32_t alertable, uint32_t unused, const int64_t *timeout);
+NTSTATUS NtClearEvent(HANDLE event);
+NTSTATUS NtPulseEvent(HANDLE event, int32_t *previous_state);
+NTSTATUS NtCreateMutant(HANDLE *mutant, const OBJECT_ATTRIBUTES *attributes, uint32_t initial_owner);
+// Xenia asserts the second argument 0 and ignores it (xboxkrnl_threading.cc:672-696).
+NTSTATUS NtReleaseMutant(HANDLE mutant, uint32_t unused);
+NTSTATUS NtCreateTimer(HANDLE *timer, const OBJECT_ATTRIBUTES *attributes, uint32_t timer_type);
+// due_time negative is relative, in 100 ns units; routine NULL for no APC, then unk_one 1, resume 0, unk_zero 0
+// (xboxkrnl_threading.cc:734-758).
+NTSTATUS NtSetTimerEx(HANDLE timer, const int64_t *due_time, void *routine, uint32_t unk_one, void *routine_arg,
+	uint32_t resume, uint32_t period_ms, uint32_t unk_zero);
+NTSTATUS NtCancelTimer(HANDLE timer, uint32_t *current_state);
+// Take the native thread object pointer, as ObReferenceObjectByHandle gives it, not a handle; the increment maps onto
+// the kernel's levels (xboxkrnl_threading.cc:260-284). The set returns the previous priority.
+int32_t KeQueryBasePriorityThread(void *thread);
+int32_t KeSetBasePriorityThread(void *thread, int32_t increment);
+NTSTATUS NtFreeVirtualMemory(void **base, uint32_t *size_bytes, uint32_t free_type, uint32_t debug_memory);
+NTSTATUS NtProtectVirtualMemory(
+	void **base, uint32_t *size_bytes, uint32_t protect, uint32_t *old_protect, uint32_t debug_memory);
+NTSTATUS NtQueryVirtualMemory(uint32_t base_address, MEMORY_BASIC_INFORMATION *information);
+// Returns the pages' protection, 0 if none (xboxkrnl_memory.cc:413-423).
+uint32_t MmQueryAddressProtect(uint32_t base_address);
+void MmSetAddressProtect(void *base_address, uint32_t region_size, uint32_t protect);
+// The singly-linked list operations return a guest address: the old head, the popped entry, or the first flushed
+// (xboxkrnl_threading.cc:1320-1392). Commonly inlined, so a title may use lwarx/stwcx. instead.
+uint32_t InterlockedPushEntrySList(SLIST_HEADER *list, SINGLE_LIST_ENTRY *entry);
+uint32_t InterlockedPopEntrySList(SLIST_HEADER *list);
+uint32_t InterlockedFlushSList(SLIST_HEADER *list);
+// The native object pointer for a handle, into out_object; object_type is ExThreadObjectType's address, or 0 to skip
+// the check (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:84-116). ObDereferenceObject releases it.
+NTSTATUS ObReferenceObjectByHandle(HANDLE handle, uint32_t object_type, uint32_t *out_object);
+NTSTATUS ObDereferenceObject(uint32_t object);
+
 // XAM's sockets are Winsock's calls with the caller's type first, a title's XNCALLER_TITLE
 // (xenia:src/xenia/kernel/xam/xam_net.cc:42-47); their sockets are XAM's handles, and their errors Winsock's.
 enum {
