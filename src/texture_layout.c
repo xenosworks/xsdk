@@ -120,7 +120,8 @@ void xsdk_texture_place(const TextureLayout *layout, uint32_t level, TextureLeve
 		.face_bytes = layout->mip_offset_bytes / layout->faces,
 		.x = 0,
 		.y = 0 };
-	if (level >= packed_level) {
+	// Packed mips off, the console reads a base at the corner (docs/HARDWARE.md, "A small base with packed mips off").
+	if (layout->packed && level >= packed_level) {
 		uint32_t x;
 		uint32_t y;
 		packed_offset(layout->width, layout->height, level, &x, &y);

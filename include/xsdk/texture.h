@@ -200,6 +200,9 @@ void xsdk_texture_download_slice_rows(const XsdkTexture *texture, uint32_t level
 // Has the texture return, as red, green, blue and alpha, the XSDK_CHANNEL_* each names; xsdk_texture_init returns
 // the format's own channels.
 void xsdk_texture_swizzle(XsdkTexture *texture, const uint32_t channels[4]);
+// Turns packed mips off for a tiled 2D texture of one level whose base would sit in the packed tail, and leaves any
+// other as it is: the base then sits at the corner, where a resolve writes and the console reads it (docs/HARDWARE.md).
+void xsdk_texture_base_at_corner(XsdkTexture *texture);
 // Has the GPU read the format's red, green, blue and alpha, as the format list reads them, as the XSDK_SIGN_* each
 // names; xsdk_texture_init reads them unsigned. Swizzles pick among the channels as read.
 void xsdk_texture_signs(XsdkTexture *texture, const uint32_t signs[4]);

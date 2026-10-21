@@ -51,6 +51,7 @@ enum {
 	GROUP_FILTERS,
 	GROUP_ADDRESSING,
 	GROUP_BORDERS,
+	GROUP_CORNER,
 	GROUPS,
 };
 
@@ -67,6 +68,8 @@ enum {
 	TEXTURE_CHECKER_LARGE,
 	TEXTURE_SOLID_LEVELS,
 	TEXTURE_BLOCKS,
+	TEXTURE_CORNER_WIDE,
+	TEXTURE_CORNER_TALL,
 	TEXTURES,
 };
 
@@ -88,6 +91,8 @@ typedef struct {
 	uint32_t levels;
 	bool tiled;
 	uint32_t pattern;
+	// One level whose base would sit in the packed tail, put at the corner with packed mips off.
+	bool corner;
 } TextureSpec;
 
 // The mip rows cover a square, sides not a power of two each way, and bases inside the packed tail with their mips.
@@ -105,6 +110,9 @@ static const TextureSpec specs[TEXTURES] = {
 	[TEXTURE_CHECKER_LARGE] = { "256x256 checker", 256, 256, 1, true, PATTERN_CHECKER },
 	[TEXTURE_SOLID_LEVELS] = { "256x256 levels", 256, 256, 9, true, PATTERN_SOLID },
 	[TEXTURE_BLOCKS] = { "32x32 blocks", 32, 32, 1, true, PATTERN_BLOCKS },
+	// Wide as Dusklight's bloom's smallest copy, and tall (vulkan4xenon:docs/ROADMAP.md, milestone 31).
+	[TEXTURE_CORNER_WIDE] = { "20x11 at the corner", 20, 11, 1, true, PATTERN_LEVELS, true },
+	[TEXTURE_CORNER_TALL] = { "11x20 at the corner", 11, 20, 1, true, PATTERN_LEVELS, true },
 };
 
 // Low five bits clear, so a texel's place fits under them.
@@ -183,6 +191,8 @@ static bool make_texture(XsdkTexture *texture, uint32_t which)
 		xsdk_log_write("sampling: %s: xsdk_texture_create failed: 0x%08X", spec->name, (unsigned)status);
 		return false;
 	}
+	if (spec->corner)
+		xsdk_texture_base_at_corner(texture);
 	for (uint32_t level = 0; level < spec->levels; level++) {
 		const uint32_t width = level_size(spec->width, level);
 		const uint32_t height = level_size(spec->height, level);
@@ -202,8 +212,8 @@ static uint32_t add_mip_row(Cell *cells, uint32_t count, uint32_t texture, uint3
 	for (uint32_t level = 0; level < spec->levels; level++) {
 		const uint32_t width = level_size(spec->width, level);
 		const uint32_t height = level_size(spec->height, level);
-		cells[count++] = (Cell){ spec->name, GROUP_MIPS, texture, level, x, y, width, height, 0.0f, 0.0f, 1.0f, 1.0f,
-			point_clamped };
+		cells[count++] = (Cell){ spec->name, spec->corner ? GROUP_CORNER : GROUP_MIPS, texture, level, x, y, width,
+			height, 0.0f, 0.0f, 1.0f, 1.0f, point_clamped };
 		x += width + LEVEL_GAP;
 	}
 	return count;
@@ -284,6 +294,8 @@ static uint32_t make_cells(Cell *cells)
 	count = add_mip_row(cells, count, TEXTURE_SMALL_WIDE, 40, 500);
 	count = add_mip_row(cells, count, TEXTURE_TAIL_32, 40, 530);
 	count = add_mip_row(cells, count, TEXTURE_TAIL_24, 200, 530);
+	count = add_mip_row(cells, count, TEXTURE_CORNER_WIDE, 320, 470);
+	count = add_mip_row(cells, count, TEXTURE_CORNER_TALL, 360, 470);
 	return add_grid(cells, count);
 }
 
@@ -564,6 +576,8 @@ static const char *const group_checks[GROUPS] = {
 	"sampling: magnification, minification and mip filters as worked out",
 	"sampling: wrap, mirror and clamp as worked out",
 	"sampling: mirror once, halfway, and black and white borders as worked out",
+	"sampling: 20x11 and 11x20 textures of one level with their bases at the corner, packed mips off, one texel to a "
+	"pixel",
 };
 
 // Each frame draws every cell into eDRAM, resolves into the buffer not on screen, and shows it.

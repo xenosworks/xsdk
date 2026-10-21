@@ -211,7 +211,8 @@ static TextureLayout layout_of(const XsdkTexture *texture)
 		.block_bytes_log2 = info->block_bytes_log2,
 		.base_pitch_blocks = texture->pitch >> info->block_log2,
 		.mip_offset_bytes = texture->mip_offset_bytes,
-		.faces = texture->dimension == XSDK_TEXTURE_CUBE ? XSDK_CUBE_FACES : 1 };
+		.faces = texture->dimension == XSDK_TEXTURE_CUBE ? XSDK_CUBE_FACES : 1,
+		.packed = (texture->fetch[5] & PACKED_MIPS) != 0 };
 }
 
 // Whole tiles of blocks; linear rows also start every 256 bytes.
@@ -256,7 +257,8 @@ static NTSTATUS init_texture(XsdkTexture *texture, uint32_t dimension, uint32_t 
 		.block_bytes_log2 = info->block_bytes_log2,
 		.base_pitch_blocks = pitch_blocks,
 		.mip_offset_bytes = mip_offset_bytes,
-		.faces = faces };
+		.faces = faces,
+		.packed = true };
 	const uint32_t size_bytes = mip_offset_bytes + xsdk_texture_mip_bytes(&layout);
 	const uint32_t pitch = pitch_blocks << info->block_log2;
 	*texture = (XsdkTexture){
@@ -642,6 +644,18 @@ void xsdk_texture_swizzle(XsdkTexture *texture, const uint32_t channels[4])
 		swizzle |= channel_source(own, channels[i]) << i * SWIZZLE_BITS;
 	}
 	texture->fetch[3] = (texture->fetch[3] & ~((uint32_t)SWIZZLE_MASK << SWIZZLE_SHIFT)) | swizzle << SWIZZLE_SHIFT;
+}
+
+void xsdk_texture_base_at_corner(XsdkTexture *texture)
+{
+	assert(texture->levels == 1 && texture->dimension == XSDK_TEXTURE_2D && texture->tiled);
+	if (xsdk_texture_packed_level(texture->width, texture->height) == 0)
+		texture->fetch[5] &= ~(uint32_t)PACKED_MIPS;
+}
+
+bool xsdk_texture_base_in_tail(const XsdkTexture *texture)
+{
+	return (texture->fetch[5] & PACKED_MIPS) && xsdk_texture_packed_level(texture->width, texture->height) == 0;
 }
 
 // Xenos's TextureSign for each XSDK_SIGN_*.

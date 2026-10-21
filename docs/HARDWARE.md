@@ -4978,3 +4978,26 @@ xsdk's audio API, SDL-xenon on it and FAudio-xenon passed their checks, each bre
   frames, none silent.
 - **FAudio** mixed 32 voices from 44.1 kHz into 5.1 in 1.37 ms of each 10 ms tick on average, 1.37 ms at most, its
   levels and its resampling exact (0.5000, 375.00 Hz), 413 frames with none silent.
+
+## A small base with packed mips off, vulkan4xenon milestone 31 (2026-10-21)
+
+Dusklight's bloom copies into a 20x11 texture, whose base xsdk lays out in the packed tail at (0, 16), where a resolve,
+which writes from the corner, can't reach (vulkan4xenon:docs/ROADMAP.md, milestone 31). In Xenia a texture with the
+fetch constant's packed mips off has no tail, its base at the corner whatever its size
+(xenia:src/xenia/gpu/xenos.h:1281; texture_util.cc:251-253). xsdk and libxenon always set the bit, and Xenia was wrong
+about small textures' tails twice before ("A small texture's mips share its base's tail", "A 2x1 texture's tail").
+
+probe_mip_tail ran a third setup on the console: packed mips cleared in the fetch constant of tiled one-level textures
+of 20x11, 11x20, 16x16, 32x16, 2x1, 4x1 and 1x1, a shape for each place the tail puts a base, each drawn one texel to a
+pixel from four pages whose every texel names its page and place (log:
+`results/2026-10-21-vulkan4xenon-milestone-31/probe_mip_tail.log`).
+- **Every one read one rectangle of the base's page from its corner:** 20x11 from (0, 0) to (19, 10), 11x20 to
+  (10, 19), 16x16 to (15, 15), 32x16 to (31, 15), 2x1 to (1, 0), 4x1 to (3, 0), and 1x1 at (0, 0). With packed mips
+  on, the same shapes' bases sit at (0, 16) or (16, 0).
+- **The two setups with packed mips on,** the control, read as on 2026-10-13, line for line
+  (`results/2026-10-13-milestone-29/probe_mip_tail.log`).
+
+So with packed mips off the console reads a small base at the corner, as Xenia does. `xsdk_texture_base_at_corner`
+turns the bit off for a tiled 2D texture of one level whose base would sit in the tail; xsdk's layout then puts that
+base at the corner for uploads and downloads (src/texture_layout.c), and the resolves take such a texture.
+vulkan4xenon calls it for every colour attachment. Only tiled textures were probed, so a linear one isn't taken.

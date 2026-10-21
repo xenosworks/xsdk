@@ -454,7 +454,7 @@ void xsdk_gpu_resolve_texture_rect(
 	// Xenia lays out a resolve's destination only as tiled (xenia:src/xenia/gpu/draw_util.cc:1035-1061).
 	assert(texture->tiled);
 	// A resolve writes from the corner, so the base can't sit inside the packed tail.
-	assert(xsdk_texture_packed_level(texture->width, texture->height) > 0);
+	assert(!xsdk_texture_base_in_tail(texture));
 	assert(xsdk_gpu_color_target_format(0) == XSDK_TARGET_8_8_8_8);
 	assert(on_grid(x, width, texture->width) && on_grid(y, height, texture->height));
 	// The pitch is whole tiles of 32 texels, as a resolve's width must be; a rectangle at the edge reaches it.
@@ -491,7 +491,7 @@ static uint32_t target_dest_info(uint32_t target_format, uint32_t texture_format
 void xsdk_gpu_resolve_target(uint32_t target, const XsdkTexture *texture, const float clear_rgba[4])
 {
 	assert(texture->tiled);
-	assert(xsdk_texture_packed_level(texture->width, texture->height) > 0);
+	assert(!xsdk_texture_base_in_tail(texture));
 	const uint32_t format = xsdk_gpu_color_target_format(target);
 	uint32_t clear[2];
 	clear_words(format, clear_rgba, clear);
@@ -507,7 +507,7 @@ enum { DEPTH_DEST_INFO = COPY_DEST_INFO_8888 | COPY_DEST_ENDIAN_8IN32 };
 void xsdk_gpu_resolve_depth_texture(const XsdkTexture *texture)
 {
 	assert(texture->tiled && texture->format == XSDK_FORMAT_D24S8);
-	assert(xsdk_texture_packed_level(texture->width, texture->height) > 0);
+	assert(!xsdk_texture_base_in_tail(texture));
 	const Area area = whole_area(texture->pitch, texture->height);
 	const uint32_t clear[2] = { 0, 0 };
 	resolve(COPY_SOURCE_DEPTH, 0, texture->address, &area, texture->pitch, texture->height, texture->pitch,

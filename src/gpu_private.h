@@ -362,6 +362,8 @@ typedef struct {
 	uint32_t mip_offset_bytes;
 	// A cube's 6, each level holding every face in turn; 1 otherwise.
 	uint32_t faces;
+	// The fetch constant's packed mips: off, no level sits in a tail.
+	bool packed;
 } TextureLayout;
 
 // Where a texture level's block (0, 0) is stored.
@@ -385,5 +387,7 @@ uint32_t xsdk_texture_blocks(uint32_t texels, uint32_t block_log2);
 // The bytes levels 1 on take at the mip address, for a tiled texture.
 uint32_t xsdk_texture_mip_bytes(const TextureLayout *layout);
 void xsdk_texture_place(const TextureLayout *layout, uint32_t level, TextureLevelPlace *place);
+// Whether the texture's base sits in the packed tail, where a resolve, which writes from the corner, can't reach.
+bool xsdk_texture_base_in_tail(const XsdkTexture *texture);
 
 #endif
