@@ -1,0 +1,58 @@
+log: game:\probe_query_memory.log
+log: named after \Device\Harddisk0\Partition1\xsdk\probe\probe_query_memory.xex
+log: also over UDP to 192.168.0.125:7371
+probe_query_memory v2: NtQueryVirtualMemory(address, information, 0)
+Allocated regions are queryable; image pages require MmQueryAddressProtect; only third=0 is tested
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 28537 us
+query: splash status=00000000
+PASS: splash: the vulkan4xenon logo shown
+query: allocate status=00000000 base=1DAD0000 bytes=00010000
+PASS: query: allocate controlled pages
+BEGIN query: query: committed read-write page address=1DAD0000 output=7010FD60 third=00000000 expected state=00001000 protect=00000004
+END query: query: committed read-write page status=0x00000000 expected=0x00000000
+PASS: query: output guards intact
+query: base=1DAD0000 allocation=1DAD0000 allocation_protect=00000004 size=00010000 state=00001000 protect=00000004 type=00020000
+PASS: query: committed read-write page
+BEGIN query: query: interior address address=1DAD0011 output=7010FD60 third=00000000 expected state=00001000 protect=00000004
+END query: query: interior address status=0x00000000 expected=0x00000000
+PASS: query: output guards intact
+query: base=1DAD0000 allocation=1DAD0000 allocation_protect=00000004 size=00010000 state=00001000 protect=00000004 type=00020000
+PASS: query: interior address
+query: protect status=00000000 old=00000004
+PASS: query: protect first page read-only without changing its neighbour
+BEGIN query: query: read-only page address=1DAD0000 output=7010FD60 third=00000000 expected state=00001000 protect=00001002
+END query: query: read-only page status=0x00000000 expected=0x00000000
+PASS: query: output guards intact
+query: base=1DAD0000 allocation=1DAD0000 allocation_protect=00000004 size=00001000 state=00001000 protect=00001002 type=00020000
+PASS: query: read-only page
+BEGIN query: query: neighbouring read-write page address=1DAD1000 output=7010FD60 third=00000000 expected state=00001000 protect=00000004
+END query: query: neighbouring read-write page status=0x00000000 expected=0x00000000
+PASS: query: output guards intact
+query: base=1DAD1000 allocation=1DAD0000 allocation_protect=00000004 size=0000F000 state=00001000 protect=00000004 type=00020000
+PASS: query: neighbouring read-write page
+query: decommit status=00000000
+PASS: query: decommit first page
+BEGIN query: query: reserved page after decommit address=1DAD0000 output=7010FD60 third=00000000 expected state=00002000 protect=00000000
+END query: query: reserved page after decommit status=0x00000000 expected=0x00000000
+PASS: query: output guards intact
+query: base=1DAD0000 allocation=1DAD0000 allocation_protect=00000004 size=00001000 state=00002000 protect=00000000 type=00020000
+PASS: query: reserved page after decommit
+BEGIN release and free query: address=1DAD0000 third=00000000
+END query: query: free range after release status=0x00000000 expected=0x00000000
+PASS: query: output guards intact
+query: base=1DAD0000 allocation=00000000 allocation_protect=00000000 size=12520000 state=00010000 protect=00000001 type=00000000
+PASS: query: free range after release
+query: release status=00000000
+PASS: query: release allocation
+BEGIN query: query: title code refused address=820307B8 output=7010FD60 third=00000000 expected state=00000000 protect=00000000
+END query: query: title code refused status=0xC000000D expected=0xC000000D
+PASS: query: output guards intact
+PASS: query: title code refused
+PASS: query: executable image pool present
+BEGIN query: query: jit image pool refused address=82090000 output=7010FD60 third=00000000 expected state=00000000 protect=00000000
+END query: query: jit image pool refused status=0xC000000D expected=0xC000000D
+PASS: query: output guards intact
+PASS: query: jit image pool refused
+query: 22 passed, 0 failed
+exit: status 0

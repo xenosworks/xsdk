@@ -1,6 +1,7 @@
 #include "tests.h"
 
 #include <errno.h>
+#include <limits.h>
 #include <pthread.h>
 #include <sched.h>
 #include <stdlib.h>
@@ -30,22 +31,51 @@ static void finish(HANDLE thread)
 
 static void priorities(void)
 {
-	int policy;
-	struct sched_param original;
+	int policy = -1;
+	struct sched_param original = { .sched_priority = INT_MIN };
 	const pthread_t self = pthread_self();
-	if (!self || pthread_getschedparam(self, &policy, &original)) {
+	const int queried = self ? pthread_getschedparam(self, &policy, &original) : ESRCH;
+	xsdk_log_write("thread control: original query=%d policy=%d priority=%d", queried, policy, original.sched_priority);
+	if (queried) {
 		check("thread control: priority query", false);
 		return;
 	}
-	bool passed = sched_get_priority_min(SCHED_OTHER) == -16 && sched_get_priority_max(SCHED_OTHER) == 16;
-	for (int level = -16; level <= 16; level++) {
+	enum { LEVELS = XSDK_PRIORITY_MAX - XSDK_PRIORITY_MIN + 1 };
+	struct {
+		int set;
+		int get;
+		int actual;
+		int policy;
+	} samples[LEVELS];
+	const int minimum = sched_get_priority_min(SCHED_OTHER);
+	const int maximum = sched_get_priority_max(SCHED_OTHER);
+	bool passed = minimum == XSDK_PRIORITY_MIN && maximum == XSDK_PRIORITY_MAX;
+	for (int level = XSDK_PRIORITY_MIN; level <= XSDK_PRIORITY_MAX; level++) {
 		const struct sched_param desired = { .sched_priority = level };
-		struct sched_param actual;
-		passed &= pthread_setschedparam(self, SCHED_OTHER, &desired) == 0 &&
-			pthread_getschedparam(self, &policy, &actual) == 0 && actual.sched_priority == level;
+		struct sched_param actual = { .sched_priority = INT_MIN };
+		const unsigned index = level - XSDK_PRIORITY_MIN;
+		policy = -1;
+		samples[index].set = pthread_setschedparam(self, SCHED_OTHER, &desired);
+		samples[index].get = pthread_getschedparam(self, &policy, &actual);
+		samples[index].actual = actual.sched_priority;
+		samples[index].policy = policy;
+		passed &= samples[index].set == 0 && samples[index].get == 0 && actual.sched_priority == level &&
+			policy == SCHED_OTHER;
 	}
-	passed &= pthread_setschedparam(self, SCHED_OTHER, &original) == 0;
+	const int restore_set = pthread_setschedparam(self, SCHED_OTHER, &original);
+	struct sched_param restored_value = { .sched_priority = INT_MIN };
+	const int restore_get = pthread_getschedparam(self, &policy, &restored_value);
+	const bool restore_ok = !restore_set && !restore_get && restored_value.sched_priority == original.sched_priority;
+	passed &= restore_ok;
+	// Log after restoring the priority so logging does not affect the sweep.
+	xsdk_log_write("thread control: range=%d..%d restore set=%d get=%d requested=%d actual=%d", minimum, maximum,
+		restore_set, restore_get, original.sched_priority, restored_value.sched_priority);
+	for (unsigned i = 0; i < LEVELS; i++)
+		xsdk_log_write("thread control: priority requested=%d set=%d get=%d actual=%d policy=%d",
+			(int)i + XSDK_PRIORITY_MIN, samples[i].set, samples[i].get, samples[i].actual, samples[i].policy);
 	check("thread control: all priorities -16 through 16 read back and restore", passed);
+	if (!restore_ok)
+		exit(1);
 	const struct sched_param invalid = { .sched_priority = 17 };
 	check("thread control: invalid priority and hardware thread are refused",
 		pthread_setschedparam(self, SCHED_OTHER, &invalid) == EINVAL &&

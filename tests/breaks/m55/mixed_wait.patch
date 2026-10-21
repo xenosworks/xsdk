@@ -1,11 +1,11 @@
 --- a/tests/test_objects.c
 +++ b/tests/test_objects.c
-@@ -267,7 +267,7 @@
- static void mixed_wait(void)
- {
- 	HANDLE handles[4];
--	if (!event(&handles[0], 1) || !NT_SUCCESS(NtCreateSemaphore(&handles[1], NULL, 1, 1)) ||
-+	if (!event(&handles[0], 1) || !NT_SUCCESS(NtCreateSemaphore(&handles[1], NULL, 0, 1)) ||
- 		!NT_SUCCESS(NtCreateMutant(&handles[2], NULL, 0)) ||
- 		!NT_SUCCESS(xsdk_thread_create(&handles[3], WORKER_STACK, return_zero, NULL))) {
- 		check("objects: mixed wait setup", false);
+@@ -305,7 +305,7 @@
+ 	HANDLE handles[4] = { 0 };
+ 	const NTSTATUS created[] = {
+ 		NtCreateEvent(&handles[0], NULL, NOTIFICATION_EVENT, 1),
+-		NtCreateSemaphore(&handles[1], NULL, 1, 1),
++		NtCreateSemaphore(&handles[1], NULL, 0, 1),
+ 		NtCreateMutant(&handles[2], NULL, 0),
+ 		xsdk_thread_create(&handles[3], WORKER_STACK, return_zero, NULL),
+ 	};

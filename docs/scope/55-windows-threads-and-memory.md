@@ -193,8 +193,8 @@ On the console, each check its own line in xsdk_test, each broken on purpose onc
 - **Mutants:** the owner takes one twice, and another thread waits until it's released twice; another thread's release
   fails with `STATUS_MUTANT_NOT_OWNED`; a wait on one whose owner ended holding it returns abandoned, if step 1 showed
   that safe.
-- **Timers:** a one-shot timer signals once, at its time to within a tick; a periodic one fires the expected count in
-  100 ms; a cancelled one doesn't fire.
+- **Timers:** a one-shot timer signals once, at its time to within a tick; 20 periodic firings allow 2 ms per
+  requested 5 ms period (60–140 ms total), matching the one-shot tolerance; a cancelled one doesn't fire.
 - **Lock-free lists:** two threads push 1,000 entries each, and pops give back all 2,000, each once; a flush empties
   the list.
 - **Semaphores:** `sem_post` on one thread wakes `sem_wait` on another; `sem_trywait` at zero fails with `EAGAIN`;
@@ -271,3 +271,13 @@ refer to the new caller instead. Created pthreads retain ExCreateThread's handle
 
 See the results README for builds, expected negative checks and the remaining hardware acceptance runs. Nothing
 here marks the milestone done before those runs.
+
+
+## Acceptance failures (2026-10-21)
+
+The [first complete acceptance set](../../results/2026-10-21-milestone-55-acceptance/) is not a passing milestone.
+The focused and full titles both fail periodic timing, mixed wait-all, all-level priority read-back and heap return.
+The timer check now budgets lateness per expiration; the heap test now prevents GCC deleting its allocation and
+checks that compiled malloc/free calls remain. Mixed-wait and priority assertions remain strict, with diagnostics
+for the missing statuses and actual levels. All four need the revised focused console run before negative-test
+acceptance can be claimed. The restored three-argument query's separate v2 run passed 22 of 22 checks.

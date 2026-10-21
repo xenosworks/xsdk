@@ -4,6 +4,7 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 #include "xsdk/gpu.h"
 #include "xsdk/jit.h"
@@ -106,16 +107,31 @@ static void heap_return(void)
 		check("pages: set malloc trim padding", false);
 		return;
 	}
-	void *block = malloc(HEAP_BYTES);
+	const uintptr_t original_break = (uintptr_t)sbrk(0);
+	const uint32_t original_pages = available();
+	volatile uint32_t *block = malloc(HEAP_BYTES);
 	if (!block) {
 		check("pages: allocate heap buffer", false);
 		return;
 	}
+	// Volatile page writes keep GCC from deleting the unused malloc/free pair.
+	for (uint32_t offset = 0; offset < HEAP_BYTES / sizeof(*block); offset += PAGE_BYTES / sizeof(*block))
+		block[offset] = offset + 1;
+	bool contents = true;
+	for (uint32_t offset = 0; offset < HEAP_BYTES / sizeof(*block); offset += PAGE_BYTES / sizeof(*block))
+		contents &= block[offset] == offset + 1;
+	const uintptr_t allocated_break = (uintptr_t)sbrk(0);
 	const uint32_t before = available();
-	free(block);
+	free((void *)block);
+	const uintptr_t freed_break = (uintptr_t)sbrk(0);
 	const uint32_t after = available();
-	xsdk_log_write("pages: free heap top pages %u -> %u", (unsigned)before, (unsigned)after);
-	check("pages: freeing 32 MB at the heap top returns its pages", after >= before + HEAP_BYTES / PAGE_BYTES);
+	xsdk_log_write("pages: heap breaks before=%08X allocated=%08X freed=%08X; pages=%u -> %u -> %u",
+		(unsigned)original_break, (unsigned)allocated_break, (unsigned)freed_break, (unsigned)original_pages,
+		(unsigned)before, (unsigned)after);
+	check("pages: heap buffer stores data on all 8192 pages", contents);
+	check("pages: freeing 32 MB at the heap top returns its pages",
+		allocated_break != UINTPTR_MAX && freed_break != UINTPTR_MAX && allocated_break >= freed_break &&
+			allocated_break - freed_break >= HEAP_BYTES && after >= before + HEAP_BYTES / PAGE_BYTES);
 }
 
 static void written_code(void)

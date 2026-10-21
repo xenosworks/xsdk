@@ -1,5 +1,8 @@
 # Milestone 55
 
+Update (2026-10-21): the [acceptance set](../2026-10-21-milestone-55-acceptance/) has four baseline failures.
+M55 is not console-ready. Run the revised diagnostic baseline before repeating the negative titles.
+
 The logs here are xsdk console results from steps 1 and 2 and the memory-query follow-up.
 [probe_exec_spike.log](probe_exec_spike.log) establishes the `.jit` method;
 [probe_query_memory.log](probe_query_memory.log) establishes the three-argument virtual-memory query and its
@@ -12,7 +15,7 @@ Build in WSL Debian from this worktree:
 
 ```sh
 make clean && make -j32
-make m55_host_check m55_flush_check
+make m55_host_check m55_flush_check m55_heap_check
 sh tests/breaks/m55/build.sh
 ```
 
@@ -40,8 +43,8 @@ SDK bookkeeping, not the console ABI, cache behaviour, scheduling, protection or
 
 ## Remaining acceptance
 
-- Run the clean `m55_check` and `xsdk_test`, then the intended negative builds and retain their logs here. No such
-  console runs were performed during implementation.
+- The first `m55_check`, `xsdk_test` and negative runs are in the newer acceptance folder linked above.
+  The revised focused baseline must pass before the affected negatives and full SDK run are accepted.
 - Run vulkan4xenon_test twice, vkbench unchanged, SDL-xenon's sdl_check, and Dusklight's title scene once. Compare
   Dusklight performance with its previous result now that requested priorities reach the kernel. Those projects
   were not modified by this work.
@@ -114,3 +117,5 @@ Logs are `local/m55/followup-*.log`. The later v1 console query and its splash a
 - The copied console log matches its source byte for byte and has the SHA-256 recorded above.
 - These build and host checks do not establish a new console result for v2. Logs and disassembly are in
   `local/m55/query-restored-*`.
+
+The later [query v2 log](../2026-10-21-milestone-55-acceptance/probe_query_memory_v2.log) passed all 22 checks.

@@ -1,6 +1,6 @@
 --- a/tests/test_objects.c
 +++ b/tests/test_objects.c
-@@ -177,7 +177,7 @@
+@@ -186,7 +186,7 @@
  		check("objects: create timer", false);
  		return;
  	}

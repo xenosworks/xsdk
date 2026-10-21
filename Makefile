@@ -433,6 +433,10 @@ m55_flush_check: $(BUILD)/sdk/jit.o
 	$(PYTHON) tests/check_jit_flush.py $(OBJDUMP) $<
 	$(PYTHON) tests/check_jit_ranges.py $(HOST_CC) src/jit.c
 
+.PHONY: m55_heap_check
+m55_heap_check: $(BUILD)/tests/test_pages.o
+	$(PYTHON) tests/check_heap_calls.py $(OBJDUMP) $<
+
 # Milestone 54's terminate check and bring-up probes.
 $(BUILD)/terminate_check.elf: $(BUILD)/tests/terminate_check.o $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/terminate_check.o $(LIBS)

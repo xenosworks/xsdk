@@ -4758,3 +4758,29 @@ The SDK restores the three-argument declaration and import for regions from `NtA
 `mmap`'s backing allocations (`src/mman.c`); this log did not separately exercise the `mmap` wrapper. Image
 protection uses `MmQueryAddressProtect`. Pass zero as the third argument: its meaning and nonzero values remain
 unverified. The earlier two-argument logs are retained as historical results.
+
+
+## M55 acceptance failures (2026-10-21)
+
+The [retained acceptance logs](../results/2026-10-21-milestone-55-acceptance/) include `m55_check` (51 passed,
+four failed), the full SDK run and all 47 negative titles. M55 is not ready: the four baseline failures recur
+in the full run. The full run also lacks network configuration and a connected controller for unrelated checks.
+
+- A requested 5 ms periodic timer produced 16 firings once, 17 nineteen times and 18 twenty-eight times in the old
+  100 ms loop, excluding the intentional 20 ms period. The one-shot baselines measured 5.67 and 5.99 ms.
+  This is consistent with accumulated timer/scheduling lateness; it does not isolate the kernel's tick interval.
+  The revised check measures 20 expirations with a 2 ms allowance per period and logs interval extremes and statuses.
+- The event/semaphore/mutant/thread wait-all failed in all 49 M55 runs. Its old check omitted the returned status,
+  so no kernel limit or API correction is established. Diagnostics now log setup, the combined wait, and each
+  individual object after failure; the success assertion remains unchanged.
+- Exact priority read-back from -16 through 16 failed in all 49 runs. The old check omitted the failing levels.
+  The new sweep records each set/query result and read-back, and verifies restoration before continuing. It does
+  not fake requested values or assume a clamping rule. The console must still establish the cause.
+- Heap free-page counts were unchanged: 121074 in `m55_check`, 118946 in `xsdk_test`. Inspection of the compiled
+  local baseline `test_pages.o` found no `malloc` or `free` call: GCC deleted the unused allocation. The old
+  page counts cannot establish failed decommit. The revised test touches and verifies a volatile word on every
+  4 KB page, records heap breaks and page counts, and still requires a full 32 MB return. Its compiled calls are checked separately; actual page
+  return remains unverified until the next console run.
+
+The separate [query v2 run](../results/2026-10-21-milestone-55-acceptance/probe_query_memory_v2.log) passed all 22
+checks, including both image refusals and the splash. It does not settle the four acceptance failures above.

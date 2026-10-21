@@ -240,7 +240,8 @@ start a thread on its creator's hardware thread, so every thread a title starts 
 | `xsdk_thread_sleep(ms)`, `nanosleep` | the thread asleep, about a millisecond longer than asked | | any |
 
 - **Two busy threads on one core's two hardware threads** each get about half of it; on two cores, nearly all.
-- **Priorities** range from -16 to 16, with 0 the default. `pthread_setschedparam` accepts any policy; the kernel
+- **Priority requests** accept -16 to 16, with 0 the default; exact read-back across that range is not yet
+  established. `pthread_setschedparam` accepts any policy; the kernel
   supplies relative base priorities rather than POSIX scheduling policies, so `pthread_getschedparam` reports
   `SCHED_OTHER`. A raised busy thread can starve the others on its hardware thread: the probe's +2 worker did 99%
   of the work. Keep audio and render workers bounded and let them block when idle.
@@ -255,7 +256,8 @@ start a thread on its creator's hardware thread, so every thread a title starts 
   and pulse events, recursive mutants, waitable timers without APCs, and interlocked singly linked lists. Wait-any
   returns `STATUS_WAIT_0 + index`; abandoned mutants return `STATUS_ABANDONED_WAIT_0`. `NT_SUCCESS` alone does not
   distinguish a successful wait from `STATUS_TIMEOUT`. Zero-initialize an 8-byte-aligned `SLIST_HEADER`.
-- M55's new wrappers and expanded tests still need their console verification; see the milestone's results README.
+- M55 is not console-ready: mixed wait-all and the full priority read-back sweep fail, while corrected timer
+  and heap-return checks await another run. See the [acceptance results](../results/2026-10-21-milestone-55-acceptance/).
 - **Mutexes, condition variables, read-write locks, `once` and keys** are pthreads', and `std::mutex` and the rest on
   them. Free a mutex only once no thread can lock it again (docs/PITFALLS.md).
 - **Atomics** cost by their order: a relaxed `__atomic_fetch_add` 55 ns, acquire or release 70, seq_cst 125, against

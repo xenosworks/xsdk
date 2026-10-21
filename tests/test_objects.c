@@ -8,7 +8,15 @@
 #include "xsdk/log.h"
 #include "xsdk/thread.h"
 
-enum { WORKER_STACK = 64 * 1024, ENTRIES = 1000 };
+enum {
+	WORKER_STACK = 64 * 1024,
+	ENTRIES = 1000,
+	TIMER_PERIOD_MS = 5,
+	TIMER_FIRES = 20,
+	TIMER_WAIT_MS = 50,
+	// The console adds roughly one millisecond per expiration (docs/HARDWARE.md, M55 acceptance failures).
+	TIMER_TICK_NS = 2000000,
+};
 
 static NTSTATUS wait_for(HANDLE handle, uint32_t ms)
 {
@@ -183,23 +191,49 @@ static void timers(void)
 	const NTSTATUS set = NtSetTimerEx(timer, &due, NULL, 1, NULL, 0, 0, 0);
 	const NTSTATUS fired = wait_for(timer, 1000);
 	const int64_t elapsed = now_ns() - start;
-	xsdk_log_write("objects: 5 ms one-shot elapsed %lld ns", (long long)elapsed);
+	xsdk_log_write("objects: 5 ms one-shot set=0x%08X wait=0x%08X elapsed=%lld ns", (unsigned)set, (unsigned)fired,
+		(long long)elapsed);
 	check("objects: a 5 ms one-shot fires once within a 2 ms tick",
 		NT_SUCCESS(set) && fired == STATUS_SUCCESS && elapsed >= 3000000 && elapsed <= 7000000 &&
 			wait_for(timer, 0) == STATUS_TIMEOUT);
 	const int64_t period_start = now_ns();
-	const NTSTATUS periodic = NtSetTimerEx(timer, &due, NULL, 1, NULL, 0, 5, 0);
+	const NTSTATUS periodic = NtSetTimerEx(timer, &due, NULL, 1, NULL, 0, TIMER_PERIOD_MS, 0);
 	uint32_t fires = 0;
-	while (now_ns() - period_start < 100000000 && wait_for(timer, 20) == STATUS_SUCCESS)
+	NTSTATUS last_wait = periodic;
+	int64_t previous = period_start;
+	int64_t minimum = INT64_MAX;
+	int64_t maximum = 0;
+	while (NT_SUCCESS(periodic) && fires < TIMER_FIRES) {
+		last_wait = wait_for(timer, TIMER_WAIT_MS);
+		if (last_wait != STATUS_SUCCESS)
+			break;
+		const int64_t now = now_ns();
+		const int64_t interval = now - previous;
+		if (interval < minimum)
+			minimum = interval;
+		if (interval > maximum)
+			maximum = interval;
+		previous = now;
 		fires++;
-	uint32_t state;
+	}
+	const int64_t period_elapsed = now_ns() - period_start;
+	uint32_t state = 0;
 	const NTSTATUS cancelled = NtCancelTimer(timer, &state);
 	// Consume a signal that raced with cancellation before checking that no new one arrives.
-	(void)wait_for(timer, 0);
-	xsdk_log_write("objects: 5 ms periodic timer fired %u times in 100 ms", (unsigned)fires);
-	check(
-		"objects: a periodic timer fires about 20 times in 100 ms", NT_SUCCESS(periodic) && fires >= 18 && fires <= 22);
-	check("objects: a cancelled timer stops firing", NT_SUCCESS(cancelled) && wait_for(timer, 20) == STATUS_TIMEOUT);
+	const NTSTATUS drained = wait_for(timer, 0);
+	const NTSTATUS stopped = wait_for(timer, TIMER_WAIT_MS);
+	xsdk_log_write("objects: periodic set=0x%08X last_wait=0x%08X fires=%u elapsed=%lld ns intervals=%lld..%lld ns",
+		(unsigned)periodic, (unsigned)last_wait, (unsigned)fires, (long long)period_elapsed,
+		(long long)(fires ? minimum : 0), (long long)maximum);
+	const int64_t period_ns = TIMER_PERIOD_MS * 1000000;
+	check("objects: 20 periodic firings allow 2 ms lateness per period",
+		NT_SUCCESS(periodic) && last_wait == STATUS_SUCCESS && fires == TIMER_FIRES &&
+			period_elapsed >= TIMER_FIRES * (period_ns - TIMER_TICK_NS) &&
+			period_elapsed <= TIMER_FIRES * (period_ns + TIMER_TICK_NS));
+	xsdk_log_write("objects: cancel=0x%08X state=%u drain=0x%08X after=0x%08X", (unsigned)cancelled, (unsigned)state,
+		(unsigned)drained, (unsigned)stopped);
+	check("objects: a cancelled timer stops firing",
+		NT_SUCCESS(cancelled) && (drained == STATUS_SUCCESS || drained == STATUS_TIMEOUT) && stopped == STATUS_TIMEOUT);
 	(void)NtClose(timer);
 }
 
@@ -268,25 +302,56 @@ static uint32_t return_zero(void *context)
 
 static void mixed_wait(void)
 {
-	HANDLE handles[4];
-	if (!event(&handles[0], 1) || !NT_SUCCESS(NtCreateSemaphore(&handles[1], NULL, 1, 1)) ||
-		!NT_SUCCESS(NtCreateMutant(&handles[2], NULL, 0)) ||
-		!NT_SUCCESS(xsdk_thread_create(&handles[3], WORKER_STACK, return_zero, NULL))) {
-		check("objects: mixed wait setup", false);
-		return;
+	HANDLE handles[4] = { 0 };
+	const NTSTATUS created[] = {
+		NtCreateEvent(&handles[0], NULL, NOTIFICATION_EVENT, 1),
+		NtCreateSemaphore(&handles[1], NULL, 1, 1),
+		NtCreateMutant(&handles[2], NULL, 0),
+		xsdk_thread_create(&handles[3], WORKER_STACK, return_zero, NULL),
+	};
+	const char *const names[] = { "event", "semaphore", "mutant", "thread" };
+	for (unsigned i = 0; i < 4; i++) {
+		xsdk_log_write(
+			"objects: mixed %s create=0x%08X handle=%08X", names[i], (unsigned)created[i], (unsigned)handles[i]);
+		if (!NT_SUCCESS(created[i])) {
+			check("objects: mixed wait setup", false);
+			exit(1);
+		}
 	}
 	const int64_t timeout = -10000000;
+	const int64_t start = now_ns();
 	const NTSTATUS status = NtWaitForMultipleObjectsEx(4, handles, WAIT_ALL, USER_MODE, 0, &timeout);
+	xsdk_log_write(
+		"objects: mixed wait-all status=0x%08X elapsed=%lld ns", (unsigned)status, (long long)(now_ns() - start));
 	check("objects: wait-all accepts an event, semaphore, mutant and thread", status == STATUS_SUCCESS);
-	if (status == STATUS_SUCCESS)
-		(void)NtReleaseMutant(handles[2], 0);
+	if (status == STATUS_SUCCESS || (status >= STATUS_ABANDONED_WAIT_0 && status < STATUS_ABANDONED_WAIT_0 + 4)) {
+		const NTSTATUS released = NtReleaseMutant(handles[2], 0);
+		xsdk_log_write("objects: mixed mutant release=0x%08X", (unsigned)released);
+		check("objects: mixed wait releases acquired mutant", NT_SUCCESS(released));
+	}
+	if (status != STATUS_SUCCESS) {
+		for (unsigned i = 0; i < 4; i++) {
+			const NTSTATUS single = wait_for(handles[i], 0);
+			xsdk_log_write("objects: mixed diagnostic single %s=0x%08X", names[i], (unsigned)single);
+			if (i == 2 && (single == STATUS_SUCCESS || single == STATUS_ABANDONED_WAIT_0)) {
+				const NTSTATUS released = NtReleaseMutant(handles[i], 0);
+				xsdk_log_write("objects: mixed diagnostic mutant release=0x%08X", (unsigned)released);
+				check("objects: diagnostic releases acquired mutant", NT_SUCCESS(released));
+			}
+		}
+	}
 	finish(handles[3]);
-	for (uint32_t i = 0; i < 3; i++)
-		(void)NtClose(handles[i]);
+	for (uint32_t i = 0; i < 3; i++) {
+		const NTSTATUS closed = NtClose(handles[i]);
+		if (!NT_SUCCESS(closed))
+			xsdk_log_write("objects: mixed close %s=0x%08X", names[i], (unsigned)closed);
+		check("objects: mixed handle closes", NT_SUCCESS(closed));
+	}
 }
 
 void test_objects(void)
 {
+	xsdk_log_write("objects: M55 acceptance diagnostics v2");
 	waits();
 	pulses();
 	mutants();

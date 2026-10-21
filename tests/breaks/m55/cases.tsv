@@ -8,7 +8,7 @@ mutant_recursive	recursive ownership blocks another thread until both releases
 mutant_owner	a non-owner cannot release a mutant
 mutant_abandon	waiting for an abandoned mutant reports abandonment
 timer_due	a 5 ms one-shot fires once within a 2 ms tick
-timer_period	a periodic timer fires about 20 times in 100 ms
+timer_period	20 periodic firings allow 2 ms lateness per period
 timer_cancel	a cancelled timer stops firing
 list_push	concurrent list pushes pop 2000 unique entries
 list_flush	list flush returns the chain and empties the list

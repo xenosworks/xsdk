@@ -5,7 +5,7 @@
  	}
  	const uintptr_t kept_end = (new_break + HEAP_COMMIT_BYTES - 1) & ~(uintptr_t)(HEAP_COMMIT_BYTES - 1);
 -	if (kept_end < heap_committed) {
-+	if (kept_end < heap_committed && increment >= 0) {
++	if (kept_end < heap_committed && 0) {
  		void *base = (void *)kept_end;
  		uint32_t bytes = heap_committed - kept_end;
  		const NTSTATUS status = NtFreeVirtualMemory(&base, &bytes, MEM_DECOMMIT, 0);
