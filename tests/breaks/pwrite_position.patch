@@ -1,6 +1,6 @@
 --- a/src/file.c
 +++ b/src/file.c
-@@ -359,7 +359,8 @@
+@@ -386,7 +386,8 @@
  		errno = EINVAL;
  		return -1;
  	}

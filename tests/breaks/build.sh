@@ -54,7 +54,8 @@ build_break()
 	cp "build/breaks/$name/$title.xex" "build/breaks/${title}_$name.xex"
 }
 for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0 \
-	pwrite_position tz_sign hdd_device letterbox_row0 ftruncate_nozeros fsync_socket statvfs_sector language_zero \n	letterbox_720 letterbox_kept usb_mass1; do
+	pwrite_position tz_sign hdd_device letterbox_row0 ftruncate_nozeros fsync_socket statvfs_sector language_zero \
+	letterbox_720 letterbox_kept usb_mass1; do
 	build_break "$name" xsdk_test
 done
 build_break terminate_noregister terminate_check

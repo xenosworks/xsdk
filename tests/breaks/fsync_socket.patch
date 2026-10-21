@@ -1,0 +1,12 @@
+--- a/src/file.c
++++ b/src/file.c
+@@ -404,6 +404,9 @@
+ 
+ int fsync(int fd)
+ {
++	// Broken on purpose: a socket "flushed".
++	if (xsdk_socket_fd(fd))
++		return 0;
+ 	const FileSlot *file = find_file(fd);
+ 	if (!file)
+ 		return -1;

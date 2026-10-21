@@ -1,6 +1,6 @@
 --- a/src/terminate.c
 +++ b/src/terminate.c
-@@ -41,9 +41,7 @@
+@@ -40,9 +40,7 @@
  		return;
  	registration.notification_routine = on_terminate;
  	registration.priority = NOTIFY_PRIORITY;

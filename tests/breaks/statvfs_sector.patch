@@ -1,0 +1,12 @@
+--- a/src/file.c
++++ b/src/file.c
+@@ -455,7 +455,8 @@
+ 		return status;
+ 	// The size class has no counts of files or length of names, so those stay 0.
+ 	memset(info, 0, sizeof(*info));
+-	info->f_bsize = size.sectors_per_allocation_unit * size.bytes_per_sector;
++	// Broken on purpose: the sector for the block, not the allocation unit.
++	info->f_bsize = size.bytes_per_sector;
+ 	info->f_frsize = info->f_bsize;
+ 	info->f_blocks = size.total_allocation_units;
+ 	info->f_bfree = size.available_allocation_units;

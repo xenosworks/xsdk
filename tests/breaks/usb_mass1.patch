@@ -1,0 +1,12 @@
+--- a/src/path.c
++++ b/src/path.c
+@@ -36,7 +36,8 @@
+ // (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54"). The kernel knows the rest, such as game:.
+ static const DriveName drive_names[] = {
+ 	{ "hdd", "\\Device\\Harddisk0\\Partition1\\" },
+-	{ "usb", "\\Device\\Mass0\\" },
++	// Broken on purpose: usb: names the second USB port.
++	{ "usb", "\\Device\\Mass1\\" },
+ 	{ "usb0", "\\Device\\Mass0\\" },
+ 	{ "usb1", "\\Device\\Mass1\\" },
+ 	{ "usb2", "\\Device\\Mass2\\" },

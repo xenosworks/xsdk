@@ -1,0 +1,12 @@
+--- a/src/present.c
++++ b/src/present.c
+@@ -191,7 +191,8 @@
+ 		// The splash's logo shows at 1280x720, so the first flip changes the scale, as after XAM's surface.
+ 		.showed_system = splash_held && letterbox };
+ 	// XAM is told of the whole front buffer, bars and all, as VdSwap hands it over.
+-	present.sized = xsdk_display_plan(present.width, present.height, present.width, &present.own_size);
++	// Broken on purpose: the display and the scaler planned for 720 rows of the 960.
++	present.sized = xsdk_display_plan(present.width, *height, present.width, &present.own_size);
+ 	describe_display(present.width, present.height);
+ 	const uint32_t pixels = xsdk_gpu_resolve_bytes(present.width, present.height) / 4;
+ 	for (uint32_t i = 0; i < buffer_count; i++) {

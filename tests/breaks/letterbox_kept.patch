@@ -1,0 +1,12 @@
+--- a/src/display.c
++++ b/src/display.c
+@@ -349,7 +349,8 @@
+ {
+ 	if (!is_open)
+ 		return;
+-	if (scaler_applied)
++	// Broken on purpose: letterboxing's scaler left in place.
++	if (scaler_applied && !letterboxed)
+ 		write_scaler(old_scaler);
+ 	(void)apply(&old_surface);
+ 	is_open = false;

@@ -1,0 +1,12 @@
+--- a/src/system.c
++++ b/src/system.c
+@@ -99,7 +99,8 @@
+ 
+ uint32_t xsdk_system_language(void)
+ {
+-	return XGetLanguage();
++	// Broken on purpose: no language.
++	return 0;
+ }
+ 
+ uint32_t xsdk_system_country(void)

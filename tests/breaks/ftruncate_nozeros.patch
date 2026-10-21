@@ -1,0 +1,12 @@
+--- a/src/file.c
++++ b/src/file.c
+@@ -200,7 +200,8 @@
+ 		return status;
+ 	// A file grown again reads back its old bytes, not zeros (results/2026-10-20-milestone-54/step2_xsdk_test.log);
+ 	// set, then zeroed, it reads back zeros (step3_xsdk_test_ftruncate_zeros.log).
+-	status = write_zeros(handle, old_size, size_bytes);
++	// Broken on purpose: no zeros written, so the old bytes come back.
++	status = write_zeros(handle, size_bytes, size_bytes);
+ 	// A call that fails leaves the file as it was.
+ 	if (!NT_SUCCESS(status))
+ 		(void)set_end(handle, old_size);
