@@ -13,8 +13,8 @@ extern "C" {
 // The display controller, which scans a front buffer out to the screen. Take the GPU first (docs/HARDWARE.md).
 
 typedef enum {
-	// 1280x720, which the display scales to the console's output, letterboxed between black bars where the screen is
-	// 4:3; on an interlaced output, the kernel's mode instead.
+	// 1280x720, which the display scales to the console's output, through xsdk_present between black bars where the
+	// screen is 4:3; on an interlaced output, the kernel's mode instead.
 	XSDK_DISPLAY_720P,
 	// The kernel's own front buffer and scaling, 640x480 on the console tested.
 	XSDK_DISPLAY_KERNEL,
@@ -22,7 +22,8 @@ typedef enum {
 
 // Takes the display and returns the front buffer's size; STATUS_NOT_SUPPORTED where there is none, as in Xenia.
 NTSTATUS xsdk_display_open(XsdkDisplayMode mode, uint32_t *width, uint32_t *height);
-// Letterboxes 1280x720 from the next open on any screen, as on a 4:3 one, to try letterboxing on a widescreen console.
+// Has xsdk_present letterbox 1280x720 from the next open on any screen, as on a 4:3 one, to try it on a widescreen
+// console.
 void xsdk_display_force_letterbox(bool force);
 // Shows the front buffer at this GPU address, in the tiled k_8_8_8_8 layout xsdk_gpu_resolve writes.
 NTSTATUS xsdk_display_show(uint32_t address, uint32_t pitch_pixels);

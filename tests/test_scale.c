@@ -11,8 +11,8 @@
 #include "xsdk/present.h"
 #include "xsdk/thread.h"
 
-// Shows a 1280x720 image on the SDK's scaling long enough for a capture, and checks the scaler's settings, then those
-// of letterboxing, forced, through the present.
+// Shows a 1280x720 image on the SDK's scaling long enough for a capture, and checks the scaler's settings, then
+// letterboxing's, forced, through the present.
 
 enum {
 	WIDTH = 1280,
@@ -35,20 +35,22 @@ enum {
 	PHASE_KEPT = ~0x1FFu,
 	TWO_TAPS = 0x101,
 	BUILT_IN_FILTER = 0x100,
-	BUFFERS = 2,
+	// Letterboxed, a front buffer is 1280x960 with the frame from row 128 (src/present.c).
+	LETTERBOX_HEIGHT = 960,
+	LETTERBOX_TOP = 128,
+	LETTERBOX_BUFFERS = 2,
 	LETTERBOX_FRAMES = 10,
 	BEGIN_TIMEOUT_MS = 1000,
+	// Opaque black as present fills its buffers, and the columns read on each row.
+	STORED_BLACK = 0x000000FF,
+	COLUMNS = 3,
+	MAX_WRONG_LOGGED = 4,
 };
 
 // Display registers by index: libxenon's names (libxenon:drivers/xenos/xenos.h:11-60), else Xenia's style.
 enum {
 	AVIVO_D1MODE_DESKTOP_HEIGHT = 0x194B,
-	// radeonhd's D1MODE_EXT_OVERSCAN_LEFT_RIGHT and _TOP_BOTTOM, and its guess D1MODE_CENTER
-	// (xf86-video-radeonhd:src/rhd_regs.h:200-201, 207).
-	UNKNOWN_1962 = 0x1962,
-	UNKNOWN_1963 = 0x1963,
 	AVIVO_D1SCL_SCALER_TAP_CONTROL = 0x1965,
-	UNKNOWN_1967 = 0x1967,
 	UNKNOWN_196C = 0x196C,
 	UNKNOWN_196D = 0x196D,
 	UNKNOWN_196E = 0x196E,
@@ -69,15 +71,12 @@ enum {
 	VERTICAL_FILTER,
 	VERTICAL_SCALE,
 	VERTICAL_PHASE,
-	OVERSCAN_LEFT_RIGHT,
-	OVERSCAN_TOP_BOTTOM,
-	CENTER,
 	SCALER_REGISTERS,
 };
 
 static const uint32_t scaler_registers[SCALER_REGISTERS] = { AVIVO_D1SCL_SCALER_ENABLE, AVIVO_D1SCL_SCALER_TAP_CONTROL,
 	AVIVO_D1MODE_VIEWPORT_SIZE, UNKNOWN_197A, UNKNOWN_196C, UNKNOWN_196D, UNKNOWN_196E, UNKNOWN_1970, UNKNOWN_1971,
-	UNKNOWN_1972, UNKNOWN_1962, UNKNOWN_1963, UNKNOWN_1967 };
+	UNKNOWN_1972 };
 
 // The display reads a word's bytes as B, G, R, A (docs/HARDWARE.md, "A title's buffer on screen").
 static void put(volatile uint32_t *pixels, uint32_t x, uint32_t y, uint32_t argb)
@@ -119,18 +118,15 @@ static void read_scaler(uint32_t *values)
 		values[i] = probe_gpu_registers[scaler_registers[i]];
 }
 
-// What the scaler should read back for 1280x720 on this output, worked out apart from src/display.c: filling it, or
-// letterboxed as on a 4:3 screen, across its width and 3/4 of its height to a multiple of 4, bars shared evenly.
-static void expect_scaler(const VIDEO_MODE *video, bool letterboxed, const uint32_t *start, uint32_t *expected)
+// What the scaler should read back for a 1280-wide surface this high on this output, worked out apart from
+// src/display.c.
+static void expect_scaler(const VIDEO_MODE *video, uint32_t height, const uint32_t *start, uint32_t *expected)
 {
-	const uint32_t output_height = video->display_height;
-	const uint32_t picture_height = letterboxed ? (output_height * 3 / 4) & ~3u : output_height;
-	const uint32_t top = (output_height - picture_height) / 2;
 	const uint32_t horizontal = (uint32_t)(((uint64_t)WIDTH << SCALE_ONE_LOG2) / video->display_width);
-	const uint32_t vertical = (uint32_t)(((uint64_t)HEIGHT << SCALE_ONE_LOG2) / picture_height);
-	expected[SCALER_ENABLE] = video->display_width != WIDTH || picture_height != HEIGHT;
+	const uint32_t vertical = (uint32_t)(((uint64_t)height << SCALE_ONE_LOG2) / video->display_height);
+	expected[SCALER_ENABLE] = video->display_width != WIDTH || video->display_height != height;
 	expected[SCALER_TAP_CONTROL] = TWO_TAPS;
-	expected[VIEWPORT_SIZE] = WIDTH << 16 | HEIGHT;
+	expected[VIEWPORT_SIZE] = WIDTH << 16 | height;
 	expected[VIEWPORT_WIDTH_QUARTER] = WIDTH / 4 - 1;
 	expected[HORIZONTAL_FILTER] = start[HORIZONTAL_FILTER] | BUILT_IN_FILTER;
 	expected[HORIZONTAL_SCALE] = horizontal & SCALE_KEPT;
@@ -139,11 +135,6 @@ static void expect_scaler(const VIDEO_MODE *video, bool letterboxed, const uint3
 	expected[VERTICAL_FILTER] = start[VERTICAL_FILTER] | BUILT_IN_FILTER;
 	expected[VERTICAL_SCALE] = vertical & SCALE_KEPT;
 	expected[VERTICAL_PHASE] = ((3u << 15) + (vertical >> 9)) & PHASE_KEPT;
-	// Filling the output, the overscan and 0x659C stay as the kernel left them.
-	expected[OVERSCAN_LEFT_RIGHT] = letterboxed ? 0 : start[OVERSCAN_LEFT_RIGHT];
-	expected[OVERSCAN_TOP_BOTTOM] =
-		letterboxed ? top << 16 | (output_height - picture_height - top) : start[OVERSCAN_TOP_BOTTOM];
-	expected[CENTER] = letterboxed ? 1 : start[CENTER];
 }
 
 // Compares each register, logging the ones that differ when asked to.
@@ -187,40 +178,74 @@ static void check_kernel_mode(const uint32_t *start)
 	xsdk_gpu_free(pixels);
 }
 
-// Letterboxing forced, as on a 4:3 screen, through the present as a title shows its frames: the display holds the bars
-// and the scale into what's between them, and gives them back as the present closes.
+// The front buffer on screen, from its start: black above the frame and below it, the frame's colour between, at the
+// left edge, the middle and the right edge of every row.
+static bool letterbox_holds(uint32_t frame_address)
+{
+	const uint32_t shown = xsdk_display_shown_address();
+	if (shown > frame_address)
+		return false;
+	volatile const uint32_t *const buffer = xsdk_present_pixels(frame_address) - (frame_address - shown) / 4;
+	const uint32_t columns[COLUMNS] = { 0, WIDTH / 2, WIDTH - 1 };
+	uint32_t wrong = 0;
+	for (uint32_t y = 0; y < LETTERBOX_HEIGHT; y++) {
+		const bool in_frame = y >= LETTERBOX_TOP && y < LETTERBOX_TOP + HEIGHT;
+		const uint32_t expected = in_frame ? __builtin_bswap32(BACKGROUND) : STORED_BLACK;
+		for (uint32_t i = 0; i < COLUMNS; i++) {
+			const uint32_t held = buffer[tiled_index(columns[i], y, WIDTH)];
+			if (held == expected)
+				continue;
+			if (wrong < MAX_WRONG_LOGGED)
+				xsdk_log_write("scale: letterboxed: row %u, column %u held %08X, not %08X", (unsigned)y,
+					(unsigned)columns[i], (unsigned)held, (unsigned)expected);
+			wrong++;
+		}
+	}
+	return wrong == 0;
+}
+
+// Letterboxing forced, as on a 4:3 screen, through the present as a title shows its frames: the display shows the
+// 1280x960 front buffer with the scaler planned for it, the frame resolved between black bars, and the scaler goes
+// back as the present closes.
 static void check_letterbox(const VIDEO_MODE *video, const uint32_t *start)
 {
 	xsdk_display_force_letterbox(true);
 	uint32_t width = 0;
 	uint32_t height = 0;
-	const NTSTATUS status = xsdk_present_open(XSDK_DISPLAY_720P, BUFFERS, 1, &width, &height);
+	const NTSTATUS status = xsdk_present_open(XSDK_DISPLAY_720P, LETTERBOX_BUFFERS, 1, &width, &height);
 	xsdk_display_force_letterbox(false);
 	uint32_t presented = 0;
+	uint32_t address = 0;
 	if (NT_SUCCESS(status) && width == WIDTH && height == HEIGHT) {
-		uint32_t address;
 		for (; presented < LETTERBOX_FRAMES && NT_SUCCESS(xsdk_present_begin(&address, BEGIN_TIMEOUT_MS));
 			presented++) {
+			// Each frame holds the colour the resolve before it cleared to.
 			xsdk_gpu_resolve(address, WIDTH, HEIGHT, BACKGROUND);
 			xsdk_present_end();
 		}
 	}
 	XsdkPresentStats stats;
 	test_present_stats_at_last_flip(presented, &stats);
+	const bool shown = presented == LETTERBOX_FRAMES && stats.flips == LETTERBOX_FRAMES;
 	uint32_t values[SCALER_REGISTERS];
 	read_scaler(values);
 	uint32_t expected[SCALER_REGISTERS];
-	expect_scaler(video, true, start, expected);
-	check(
-		"scale: letterboxed through the present, the display holds the bars above and below and the scale into "
-		"what's between",
-		presented == LETTERBOX_FRAMES && stats.flips == LETTERBOX_FRAMES &&
-			scaler_matches(values, expected, "letterboxed", true));
+	expect_scaler(video, LETTERBOX_HEIGHT, start, expected);
+	const bool surface = probe_gpu_registers[D1GRPH_PITCH] == WIDTH && probe_gpu_registers[D1GRPH_X_END] == WIDTH &&
+		probe_gpu_registers[D1GRPH_Y_END] == LETTERBOX_HEIGHT;
+	if (shown && !surface)
+		xsdk_log_write("scale: letterboxed: the surface's pitch, width and height read %u, %u and %u",
+			(unsigned)probe_gpu_registers[D1GRPH_PITCH], (unsigned)probe_gpu_registers[D1GRPH_X_END],
+			(unsigned)probe_gpu_registers[D1GRPH_Y_END]);
+	check("scale: letterboxed, the display shows a 1280x960 front buffer, the scaler planned for it",
+		shown && surface && scaler_matches(values, expected, "letterboxed", true));
+	check("scale: letterboxed, the front buffer is black above row 128 and from row 848, the frame between",
+		shown && letterbox_holds(address));
 	if (NT_SUCCESS(status))
 		xsdk_present_close();
 	(void)xsdk_thread_sleep(SETTLE_MS);
 	read_scaler(values);
-	check("scale: letterboxing's bars and scale are taken back as the present closes",
+	check("scale: letterboxing's scaler is taken back as the present closes",
 		scaler_matches(values, start, "letterbox closed", true));
 }
 
@@ -241,7 +266,7 @@ void test_scale(void)
 	uint32_t start[SCALER_REGISTERS];
 	read_scaler(start);
 	uint32_t expected[SCALER_REGISTERS];
-	expect_scaler(&video, !video.is_widescreen, start, expected);
+	expect_scaler(&video, HEIGHT, start, expected);
 	// The kernel's own 640x480 scaling must fail the comparison, or it would pass anything.
 	check("scale: the kernel's own scaler settings fail the check", !scaler_matches(start, expected, "", false));
 	uint32_t width = 0;

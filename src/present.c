@@ -24,6 +24,11 @@ enum {
 	CLOSE_TIMEOUT_MS = 1000,
 	// Opaque black, as the display reads a word (docs/HARDWARE.md, "A title's buffer on screen").
 	BLACK = 0x000000FF,
+	// Letterboxed, a front buffer is 1280x960, 4:3, the frame resolved into it from row 128: a resolve's destination
+	// starts on a 32-row band of the tiled layout (xenia:src/xenia/gpu/xenos.h:1170-1173), and 128 is the band nearest
+	// the middle's 120.
+	LETTERBOX_HEIGHT = 960,
+	LETTERBOX_TOP = 128,
 	MICROSECONDS_PER_SECOND = 1000000,
 };
 
@@ -41,8 +46,10 @@ typedef struct {
 	uint32_t addresses[XSDK_PRESENT_MAX_BUFFERS];
 	uint32_t buffer_count;
 	uint32_t swap_interval;
+	// The front buffers' size, and where in them each frame starts.
 	uint32_t width;
 	uint32_t height;
+	uint32_t frame_offset_bytes;
 	// The front buffers' own size, where the display can also show XAM's surface in their place.
 	DisplaySize own_size;
 	bool sized;
@@ -174,14 +181,19 @@ NTSTATUS xsdk_present_open(
 	const NTSTATUS status = splash_held ? STATUS_SUCCESS : xsdk_display_open(mode, width, height);
 	if (!NT_SUCCESS(status))
 		return status;
+	const bool letterbox = xsdk_display_letterboxed();
 	present = (Present){ .buffer_count = buffer_count,
 		.swap_interval = swap_interval,
 		.width = *width,
-		.height = *height,
-		.splash_held = splash_held };
-	present.sized = xsdk_display_plan(*width, *height, *width, &present.own_size);
-	describe_display(*width, *height);
-	const uint32_t pixels = xsdk_gpu_resolve_bytes(*width, *height) / 4;
+		.height = letterbox ? LETTERBOX_HEIGHT : *height,
+		.frame_offset_bytes = letterbox ? *width * LETTERBOX_TOP * 4 : 0,
+		.splash_held = splash_held,
+		// The splash's logo shows at 1280x720, so the first flip changes the scale, as after XAM's surface.
+		.showed_system = splash_held && letterbox };
+	// XAM is told of the whole front buffer, bars and all, as VdSwap hands it over.
+	present.sized = xsdk_display_plan(present.width, present.height, present.width, &present.own_size);
+	describe_display(present.width, present.height);
+	const uint32_t pixels = xsdk_gpu_resolve_bytes(present.width, present.height) / 4;
 	for (uint32_t i = 0; i < buffer_count; i++) {
 		present.buffers[i] = xsdk_gpu_alloc(pixels * 4);
 		if (!present.buffers[i]) {
@@ -198,7 +210,9 @@ NTSTATUS xsdk_present_open(
 	}
 	__asm__ volatile("sync" ::: "memory");
 	// The last buffer stands for frame -1, so frame 0 resolves into the first; the splash's logo stands in for it.
-	if (!splash_held)
+	if (!splash_held && letterbox)
+		(void)xsdk_display_show_sized(present.addresses[buffer_count - 1], &present.own_size);
+	else if (!splash_held)
 		(void)xsdk_display_show(present.addresses[buffer_count - 1], *width);
 	present.open = true;
 	VdSetGraphicsInterruptCallback(on_interrupt, NULL);
@@ -233,21 +247,21 @@ NTSTATUS xsdk_present_begin(uint32_t *address, uint32_t timeout_ms)
 	}
 	const uint32_t waited_us = elapsed_us(&start);
 	present.longest_wait_us = waited_us > present.longest_wait_us ? waited_us : present.longest_wait_us;
-	*address = present.addresses[frame % present.buffer_count];
+	*address = present.addresses[frame % present.buffer_count] + present.frame_offset_bytes;
 	return STATUS_SUCCESS;
 }
 
 uint32_t xsdk_present_buffer_address(uint32_t index)
 {
 	assert(present.open && index < present.buffer_count);
-	return present.addresses[index];
+	return present.addresses[index] + present.frame_offset_bytes;
 }
 
 volatile uint32_t *xsdk_present_pixels(uint32_t address)
 {
 	for (uint32_t i = 0; i < present.buffer_count; i++) {
-		if (present.addresses[i] == address)
-			return present.buffers[i];
+		if (present.addresses[i] + present.frame_offset_bytes == address)
+			return present.buffers[i] + present.frame_offset_bytes / 4;
 	}
 	assert(false);
 	return NULL;

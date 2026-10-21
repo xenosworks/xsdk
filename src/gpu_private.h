@@ -299,10 +299,10 @@ void xsdk_gpu_resolve_band(uint32_t target, const XsdkTexture *texture, const fl
 void xsdk_display_flip(uint32_t address);
 
 enum {
-	DISPLAY_SCALER_REGISTERS = 13,
+	DISPLAY_SCALER_REGISTERS = 10,
 };
 
-// A surface's size and the scaler that shows it on the output, planned outside the vblank callback.
+// A surface's size and the scaler that fills the output with it, planned outside the vblank callback.
 typedef struct {
 	uint32_t pitch;
 	uint32_t width;
@@ -310,11 +310,15 @@ typedef struct {
 	uint32_t scaler[DISPLAY_SCALER_REGISTERS];
 } DisplaySize;
 
-// Plans a surface of this size on the output as the 720p mode's front buffer is, filling it or letterboxed; false where
-// the display isn't on that mode's scaling (the kernel's mode, an interlaced output).
+// Plans a surface of this size filling the output, as the 720p mode's front buffer does; false where the display isn't
+// on that mode's scaling (the kernel's mode, an interlaced output).
 bool xsdk_display_plan(uint32_t width, uint32_t height, uint32_t pitch, DisplaySize *size);
 // The output the display's scaling fills; false where the display isn't on the 720p mode's scaling.
 bool xsdk_display_output(uint32_t *width, uint32_t *height);
+// Whether the 720p mode's frames are to be letterboxed: the screen is 4:3, or the title forced it.
+bool xsdk_display_letterboxed(void);
+// As xsdk_display_show, a surface of a planned size.
+NTSTATUS xsdk_display_show_sized(uint32_t address, const DisplaySize *size);
 // As xsdk_display_flip, to a surface of a planned size: the scaler and the surface's size change first when they
 // differ from the shown surface's. For the vblank callback.
 void xsdk_display_flip_sized(uint32_t address, const DisplaySize *size);

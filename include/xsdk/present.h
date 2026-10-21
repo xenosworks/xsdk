@@ -34,7 +34,8 @@ typedef struct {
 } XsdkPresentStats;
 
 // Opens the display in this mode with buffer_count front buffers, 2 or 3; each frame shows for swap_interval vblanks.
-// A 720p display the splash holds (xsdk_splash_begin) is taken over, and its logo shows until the first frame.
+// A 720p display the splash holds (xsdk_splash_begin) is taken over, and its logo shows until the first frame. Where
+// the screen is 4:3, the 720p mode's front buffers are 1280x960, each frame between black bars above and below it.
 NTSTATUS xsdk_present_open(
 	XsdkDisplayMode mode, uint32_t buffer_count, uint32_t swap_interval, uint32_t *width, uint32_t *height);
 // Waits up to timeout_ms for the next front buffer to come off screen, then gives its address to resolve into.

@@ -1,0 +1,12 @@
+--- a/src/present.c
++++ b/src/present.c
+@@ -186,7 +186,8 @@
+ 		.swap_interval = swap_interval,
+ 		.width = *width,
+ 		.height = letterbox ? LETTERBOX_HEIGHT : *height,
+-		.frame_offset_bytes = letterbox ? *width * LETTERBOX_TOP * 4 : 0,
++		// Broken on purpose: the frame resolved at row 0, the bars all below it.
++		.frame_offset_bytes = 0,
+ 		.splash_held = splash_held,
+ 		// The splash's logo shows at 1280x720, so the first flip changes the scale, as after XAM's surface.
+ 		.showed_system = splash_held && letterbox };
