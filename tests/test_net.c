@@ -10,11 +10,14 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/time.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "tests.h"
 #include "xsdk/log.h"
 #include "xsdk/net.h"
+#include "xsdk/thread.h"
 
 // Sockets against tools/net_echo.py on the PC, whose address and port net_host.txt beside the .xex holds, as
 // "192.168.0.125 7370" (docs/scope/networking.md, step 2).
@@ -32,6 +35,20 @@ enum {
 	DEFAULT_STREAM_SOCKETS = 32,
 	RAISED_BUFFER_KB = 63,
 	BYTES_PER_KB = 1024,
+	// How long net_echo.py holds each connection, and the timeouts, well inside the holds.
+	RECEIVE_HOLD_MS = 1000,
+	SEND_HOLD_MS = 1500,
+	LINGER_HOLD_MS = 500,
+	SOCKET_TIMEOUT_MS = 200,
+	TIMED_OUT_WITHIN_MS = 300,
+	// Time for net_echo.py to read "hold" before the connection closes.
+	SETTLE_MS = 200,
+	CHUNK_BYTES = 16384,
+	// Far more than the PC's window and the console's buffer hold.
+	MAX_SEND_BYTES = 8 * 1024 * 1024,
+	MILLISECONDS_PER_SECOND = 1000,
+	MICROSECONDS_PER_MILLISECOND = 1000,
+	NANOSECONDS_PER_MILLISECOND = 1000000,
 };
 
 // xsdk_test raises XAM's limits, as a title that wants more does (docs/GUIDE.md, "Sockets").
@@ -41,6 +58,8 @@ const XsdkNetworkLimits xsdk_network_limits = {
 	.receive_kb = RAISED_BUFFER_KB,
 	.send_kb = RAISED_BUFFER_KB,
 };
+
+static char chunk[CHUNK_BYTES];
 
 typedef struct {
 	struct sockaddr_in address;
@@ -112,13 +131,13 @@ static int connect_to(const Host *pc)
 	return fd;
 }
 
-// The console's own address, as the PC sees it: getsockname gives 0.0.0.0 for a connected socket on the console.
-static bool ask_address(const Host *pc, in_addr_t *address)
+// Sends net_echo.py a line on a connection of its own and takes its one-line answer.
+static bool ask_pc(const Host *pc, const char *line, char reply[LINE_BYTES])
 {
 	const int fd = connect_to(pc);
-	char reply[LINE_BYTES];
-	const ssize_t received = fd >= 0 && send(fd, "addr\n", 5, 0) == 5 && wait_for(fd, POLLIN, TIMEOUT_MS)
-		? recv(fd, reply, sizeof(reply) - 1, 0)
+	const ssize_t length = (ssize_t)strlen(line);
+	const ssize_t received = fd >= 0 && send(fd, line, (size_t)length, 0) == length && wait_for(fd, POLLIN, TIMEOUT_MS)
+		? recv(fd, reply, LINE_BYTES - 1, 0)
 		: -1;
 	if (fd >= 0)
 		close(fd);
@@ -126,7 +145,14 @@ static bool ask_address(const Host *pc, in_addr_t *address)
 		return false;
 	reply[received] = 0;
 	reply[strcspn(reply, "\r\n")] = 0;
-	return inet_pton(AF_INET, reply, address) == 1;
+	return true;
+}
+
+// The console's own address, as the PC sees it: getsockname gives 0.0.0.0 for a connected socket on the console.
+static bool ask_address(const Host *pc, in_addr_t *address)
+{
+	char reply[LINE_BYTES];
+	return ask_pc(pc, "addr\n", reply) && inet_pton(AF_INET, reply, address) == 1;
 }
 
 static void test_tcp(const Host *pc, struct sockaddr_in *console)
@@ -305,6 +331,111 @@ static void test_link_address(const struct sockaddr_in *console)
 			address.s_addr == console->sin_addr.s_addr);
 }
 
+static int64_t now_ms(void)
+{
+	struct timespec now;
+	(void)clock_gettime(CLOCK_MONOTONIC, &now);
+	return (int64_t)now.tv_sec * MILLISECONDS_PER_SECOND + now.tv_nsec / NANOSECONDS_PER_MILLISECOND;
+}
+
+// A connection net_echo.py keeps hold_ms, reading and sending nothing, then closes; -1 if it couldn't be made.
+static int held_connection(const Host *pc, int hold_ms)
+{
+	const int fd = connect_to(pc);
+	char line[LINE_BYTES];
+	snprintf(line, sizeof(line), "hold %d\n", hold_ms);
+	if (fd >= 0 && send(fd, line, strlen(line), 0) != (ssize_t)strlen(line)) {
+		xsdk_log_write("net: send failed: %d", errno);
+		close(fd);
+		return -1;
+	}
+	return fd;
+}
+
+static bool set_timeout(int fd, int name, int timeout_ms)
+{
+	const struct timeval timeout = { .tv_sec = timeout_ms / MILLISECONDS_PER_SECOND,
+		.tv_usec = timeout_ms % MILLISECONDS_PER_SECOND * MICROSECONDS_PER_MILLISECOND };
+	return setsockopt(fd, SOL_SOCKET, name, &timeout, sizeof(timeout)) == 0;
+}
+
+// Nothing comes, so only the timeout ends the recv.
+static void test_receive_timeout(const Host *pc)
+{
+	const int fd = held_connection(pc, RECEIVE_HOLD_MS);
+	char byte;
+	const int64_t start = now_ms();
+	const ssize_t received = fd >= 0 && set_timeout(fd, SO_RCVTIMEO, SOCKET_TIMEOUT_MS) ? recv(fd, &byte, 1, 0) : 0;
+	const int error = errno;
+	const int64_t took_ms = now_ms() - start;
+	if (fd >= 0)
+		close(fd);
+	xsdk_log_write("net: recv with a %d ms SO_RCVTIMEO returned %d, errno %d, after %d ms", SOCKET_TIMEOUT_MS,
+		(int)received, error, (int)took_ms);
+	check("net: a blocking recv with a 200 ms SO_RCVTIMEO fails with EAGAIN within 300 ms",
+		received < 0 && error == EAGAIN && took_ms >= SOCKET_TIMEOUT_MS / 2 && took_ms < TIMED_OUT_WITHIN_MS);
+}
+
+// The PC reads nothing, so sends fill its window and the console's buffer, then one waits out the timeout.
+static void test_send_timeout(const Host *pc)
+{
+	const int fd = held_connection(pc, SEND_HOLD_MS);
+	const bool set = fd >= 0 && set_timeout(fd, SO_SNDTIMEO, SOCKET_TIMEOUT_MS);
+	size_t total = 0;
+	ssize_t sent = 0;
+	int64_t took_ms = 0;
+	while (set && total < MAX_SEND_BYTES) {
+		const int64_t start = now_ms();
+		sent = send(fd, chunk, sizeof(chunk), 0);
+		took_ms = now_ms() - start;
+		if (sent < 0)
+			break;
+		total += (size_t)sent;
+	}
+	const int error = errno;
+	if (fd >= 0)
+		close(fd);
+	xsdk_log_write("net: sends with a %d ms SO_SNDTIMEO: %u bytes went, then %d, errno %d, after %d ms",
+		SOCKET_TIMEOUT_MS, (unsigned)total, (int)sent, error, (int)took_ms);
+	check("net: a blocking send with SO_SNDTIMEO fails with EAGAIN once the PC's window fills",
+		sent < 0 && error == EAGAIN && total > 0 && took_ms < TIMED_OUT_WITHIN_MS);
+}
+
+// The options read back as set, and linger {1, 0} makes the close a reset, which net_echo.py's "last" reports.
+static void test_options(const Host *pc)
+{
+	const int fd = held_connection(pc, LINGER_HOLD_MS);
+	(void)xsdk_thread_sleep(SETTLE_MS);
+	const struct timeval receive = { .tv_sec = 1, .tv_usec = 500000 };
+	const struct timeval sending = { .tv_sec = 0, .tv_usec = 250000 };
+	const struct linger abortive = { .l_onoff = 1, .l_linger = 0 };
+	const bool set = fd >= 0 && setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &receive, sizeof(receive)) == 0 &&
+		setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &sending, sizeof(sending)) == 0 &&
+		setsockopt(fd, SOL_SOCKET, SO_LINGER, &abortive, sizeof(abortive)) == 0;
+	struct timeval receive_read = { 0 };
+	struct timeval sending_read = { 0 };
+	struct linger linger_read = { -1, -1 };
+	socklen_t receive_length = sizeof(receive_read);
+	socklen_t sending_length = sizeof(sending_read);
+	socklen_t linger_length = sizeof(linger_read);
+	const bool read = set && getsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &receive_read, &receive_length) == 0 &&
+		getsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, &sending_read, &sending_length) == 0 &&
+		getsockopt(fd, SOL_SOCKET, SO_LINGER, &linger_read, &linger_length) == 0;
+	xsdk_log_write("net: options set %d, read %d: SO_RCVTIMEO %d.%06d s, SO_SNDTIMEO %d.%06d s, SO_LINGER {%d, %d}",
+		set, read, (int)receive_read.tv_sec, (int)receive_read.tv_usec, (int)sending_read.tv_sec,
+		(int)sending_read.tv_usec, linger_read.l_onoff, linger_read.l_linger);
+	check("net: getsockopt reads SO_RCVTIMEO, SO_SNDTIMEO and SO_LINGER back as set",
+		read && receive_read.tv_sec == 1 && receive_read.tv_usec == 500000 && sending_read.tv_sec == 0 &&
+			sending_read.tv_usec == 250000 && linger_read.l_onoff == 1 && linger_read.l_linger == 0);
+	if (fd >= 0)
+		close(fd);
+	char ending[LINE_BYTES] = "";
+	const bool asked = ask_pc(pc, "last\n", ending);
+	xsdk_log_write("net: closed with SO_LINGER {1, 0}, the PC saw %s", asked ? ending : "nothing");
+	check("net: closed with SO_LINGER {1, 0}, the connection is reset as the PC sees it",
+		set && asked && strcmp(ending, "reset") == 0);
+}
+
 // One more connection than XAM's own limit allows, which only xsdk_network_limits raised gives; the last is numbered
 // past what select takes.
 static void test_limits(const Host *pc)
@@ -358,6 +489,9 @@ void test_net(void)
 	test_names();
 	test_refused(&console);
 	test_non_blocking(&pc);
+	test_receive_timeout(&pc);
+	test_send_timeout(&pc);
+	test_options(&pc);
 	test_limits(&pc);
 	test_many();
 }

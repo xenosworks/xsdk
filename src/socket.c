@@ -41,6 +41,7 @@ enum {
 	WSADATA_BYTES = 400,
 	MILLISECONDS_PER_SECOND = 1000,
 	MICROSECONDS_PER_MILLISECOND = 1000,
+	MICROSECONDS_PER_SECOND = 1000000,
 };
 
 // Winsock's FIONBIO, which XAM takes (docs/HARDWARE.md).
@@ -96,6 +97,13 @@ typedef struct {
 	int32_t handle;
 	bool non_blocking;
 } SocketSlot;
+
+// Winsock's linger: two 16-bit fields, on/off first, which XAM keeps (docs/HARDWARE.md, "XAM's sockets and loader,
+// milestone 56").
+typedef struct {
+	uint16_t on;
+	uint16_t seconds;
+} WinsockLinger;
 
 static SocketSlot sockets[SOCKET_SLOTS];
 static pthread_once_t network_once = PTHREAD_ONCE_INIT;
@@ -208,6 +216,15 @@ static int errno_from_winsock(int32_t error)
 static int fail_from_xam(void)
 {
 	errno = errno_from_winsock(NetDll_WSAGetLastError());
+	return -1;
+}
+
+// As fail_from_xam, for a send or a receive, whose SO_SNDTIMEO or SO_RCVTIMEO running out is Winsock's WSAETIMEDOUT
+// and POSIX's EAGAIN.
+static int fail_transfer(void)
+{
+	const int32_t error = NetDll_WSAGetLastError();
+	errno = error == WSAETIMEDOUT ? EAGAIN : errno_from_winsock(error);
 	return -1;
 }
 
@@ -364,7 +381,7 @@ ssize_t send(int fd, const void *buffer, size_t length_bytes, int flags)
 	if (!slot)
 		return -1;
 	const int32_t sent = NetDll_send(XNCALLER_TITLE, slot->handle, buffer, clamp_length(length_bytes), flags);
-	return sent >= 0 ? sent : fail_from_xam();
+	return sent >= 0 ? sent : fail_transfer();
 }
 
 ssize_t recv(int fd, void *buffer, size_t length_bytes, int flags)
@@ -373,7 +390,7 @@ ssize_t recv(int fd, void *buffer, size_t length_bytes, int flags)
 	if (!slot)
 		return -1;
 	const int32_t received = NetDll_recv(XNCALLER_TITLE, slot->handle, buffer, clamp_length(length_bytes), flags);
-	return received >= 0 ? received : fail_from_xam();
+	return received >= 0 ? received : fail_transfer();
 }
 
 ssize_t sendto(
@@ -384,7 +401,7 @@ ssize_t sendto(
 		return -1;
 	const int32_t sent =
 		NetDll_sendto(XNCALLER_TITLE, slot->handle, buffer, clamp_length(length_bytes), flags, to, (int32_t)to_length);
-	return sent >= 0 ? sent : fail_from_xam();
+	return sent >= 0 ? sent : fail_transfer();
 }
 
 ssize_t recvfrom(int fd, void *buffer, size_t length_bytes, int flags, struct sockaddr *from, socklen_t *from_length)
@@ -396,7 +413,7 @@ ssize_t recvfrom(int fd, void *buffer, size_t length_bytes, int flags, struct so
 	const int32_t received = NetDll_recvfrom(
 		XNCALLER_TITLE, slot->handle, buffer, clamp_length(length_bytes), flags, from, from_length ? &length : NULL);
 	if (received < 0)
-		return fail_from_xam();
+		return fail_transfer();
 	if (from_length)
 		*from_length = (socklen_t)length;
 	return received;
@@ -420,13 +437,94 @@ int shutdown(int fd, int how)
 	return NetDll_shutdown(XNCALLER_TITLE, slot->handle, how) == 0 ? 0 : fail_from_xam();
 }
 
+static int set_option(const SocketSlot *slot, int level, int name, const void *value, socklen_t length)
+{
+	return NetDll_setsockopt(XNCALLER_TITLE, slot->handle, level, name, value, (int32_t)length) == 0 ? 0
+																									 : fail_from_xam();
+}
+
+static int get_option(const SocketSlot *slot, int name, void *value, int32_t length)
+{
+	int32_t got_length = length;
+	return NetDll_getsockopt(XNCALLER_TITLE, slot->handle, SOL_SOCKET, name, value, &got_length) == 0 ? 0
+																									  : fail_from_xam();
+}
+
+// POSIX's timeval as Winsock's milliseconds, which XAM honours (docs/HARDWARE.md, "XAM's sockets and loader, milestone
+// 56").
+static int set_timeout(const SocketSlot *slot, int name, const void *value, socklen_t length)
+{
+	if (length < sizeof(struct timeval)) {
+		errno = EINVAL;
+		return -1;
+	}
+	const struct timeval *const timeout = value;
+	if (timeout->tv_sec < 0 || timeout->tv_usec < 0 || timeout->tv_usec >= MICROSECONDS_PER_SECOND) {
+		errno = EDOM;
+		return -1;
+	}
+	// Rounded up, as 0 waits forever.
+	const uint64_t milliseconds = (uint64_t)timeout->tv_sec * MILLISECONDS_PER_SECOND +
+		((uint64_t)timeout->tv_usec + MICROSECONDS_PER_MILLISECOND - 1) / MICROSECONDS_PER_MILLISECOND;
+	const uint32_t timeout_ms = milliseconds > INT32_MAX ? INT32_MAX : (uint32_t)milliseconds;
+	return set_option(slot, SOL_SOCKET, name, &timeout_ms, sizeof(timeout_ms));
+}
+
+static int get_timeout(const SocketSlot *slot, int name, void *value, socklen_t *length)
+{
+	if (*length < sizeof(struct timeval)) {
+		errno = EINVAL;
+		return -1;
+	}
+	uint32_t timeout_ms = 0;
+	if (get_option(slot, name, &timeout_ms, sizeof(timeout_ms)) != 0)
+		return -1;
+	*(struct timeval *)value = (struct timeval){ .tv_sec = timeout_ms / MILLISECONDS_PER_SECOND,
+		.tv_usec = (suseconds_t)(timeout_ms % MILLISECONDS_PER_SECOND * MICROSECONDS_PER_MILLISECOND) };
+	*length = sizeof(struct timeval);
+	return 0;
+}
+
+static int set_linger(const SocketSlot *slot, const void *value, socklen_t length)
+{
+	if (length < sizeof(struct linger)) {
+		errno = EINVAL;
+		return -1;
+	}
+	const struct linger *const linger = value;
+	if (linger->l_linger < 0) {
+		errno = EINVAL;
+		return -1;
+	}
+	const WinsockLinger winsock = { .on = linger->l_onoff != 0,
+		.seconds = linger->l_linger > UINT16_MAX ? UINT16_MAX : (uint16_t)linger->l_linger };
+	return set_option(slot, SOL_SOCKET, SO_LINGER, &winsock, sizeof(winsock));
+}
+
+static int get_linger(const SocketSlot *slot, void *value, socklen_t *length)
+{
+	if (*length < sizeof(struct linger)) {
+		errno = EINVAL;
+		return -1;
+	}
+	WinsockLinger winsock = { 0 };
+	if (get_option(slot, SO_LINGER, &winsock, sizeof(winsock)) != 0)
+		return -1;
+	*(struct linger *)value = (struct linger){ .l_onoff = winsock.on, .l_linger = winsock.seconds };
+	*length = sizeof(struct linger);
+	return 0;
+}
+
 int setsockopt(int fd, int level, int name, const void *value, socklen_t length)
 {
 	const SocketSlot *slot = find_socket(fd);
 	if (!slot)
 		return -1;
-	return NetDll_setsockopt(XNCALLER_TITLE, slot->handle, level, name, value, (int32_t)length) == 0 ? 0
-																									 : fail_from_xam();
+	if (level == SOL_SOCKET && (name == SO_RCVTIMEO || name == SO_SNDTIMEO))
+		return set_timeout(slot, name, value, length);
+	if (level == SOL_SOCKET && name == SO_LINGER)
+		return set_linger(slot, value, length);
+	return set_option(slot, level, name, value, length);
 }
 
 // XAM refuses SO_ERROR, and none of the options it gives says why a connection failed; its select says only that it
@@ -454,6 +552,10 @@ int getsockopt(int fd, int level, int name, void *value, socklen_t *length)
 		return -1;
 	if (level == SOL_SOCKET && name == SO_ERROR)
 		return connection_error(slot, value, length);
+	if (level == SOL_SOCKET && (name == SO_RCVTIMEO || name == SO_SNDTIMEO))
+		return get_timeout(slot, name, value, length);
+	if (level == SOL_SOCKET && name == SO_LINGER)
+		return get_linger(slot, value, length);
 	int32_t got_length = (int32_t)*length;
 	if (NetDll_getsockopt(XNCALLER_TITLE, slot->handle, level, name, value, &got_length) != 0)
 		return fail_from_xam();

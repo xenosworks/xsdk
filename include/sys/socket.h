@@ -19,6 +19,12 @@ struct sockaddr {
 	char sa_data[14];
 };
 
+// POSIX's, which xsdk turns into Winsock's two 16-bit fields and back (src/socket.c).
+struct linger {
+	int l_onoff;
+	int l_linger;
+};
+
 // Room for any address, aligned for any of them.
 struct sockaddr_storage {
 	sa_family_t ss_family;
@@ -38,8 +44,13 @@ enum {
 	SO_REUSEADDR = 0x0004,
 	SO_KEEPALIVE = 0x0008,
 	SO_BROADCAST = 0x0020,
+	// A struct linger, in seconds.
+	SO_LINGER = 0x0080,
 	SO_SNDBUF = 0x1001,
 	SO_RCVBUF = 0x1002,
+	// A struct timeval each, which xsdk gives XAM in milliseconds; a send or receive that runs out fails with EAGAIN.
+	SO_SNDTIMEO = 0x1005,
+	SO_RCVTIMEO = 0x1006,
 	// An errno value, as POSIX has it; xsdk works it out, as XAM refuses it (src/socket.c).
 	SO_ERROR = 0x1007,
 	SO_TYPE = 0x1008,
