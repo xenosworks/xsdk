@@ -13,3 +13,7 @@ found.
 - [step2_callback_wake_kesetevent.log](step2_callback_wake_kesetevent.log): callback_wake at `dc127c7`, the callback
   calling `KeSetEvent` on the event's object. Its "registering" line still names the choice by the DPC flag, which
   `dc127c7` took out of the code but not out of the line.
+- [xsdk_test_hw1.log](xsdk_test_hw1.log): xsdk_test at `f7d3a9f`, its audio checks' feeders started on hardware
+  thread 1. None ended within its 5 s join, the kernel took a frame or a few from each and then no more, and the
+  breaks' runs, the polling one among them, failed the same; sdl_check and faudio_check, feeding the same `audio.c` from
+  hardware thread 0, passed in the same session.

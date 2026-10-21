@@ -8,8 +8,9 @@
 #include "xsdk/log.h"
 #include "xsdk/thread.h"
 
-// Milestone 58's checks of xsdk_audio_* (docs/scope/58-audio.md, "Verification"). Each feeds from a thread of its own,
-// as the call that waits raises its thread.
+// Milestone 58's checks of xsdk_audio_* (docs/scope/58-audio.md). Each feeds from a thread of its own, as the call
+// that waits raises its thread, on the main thread's hardware thread, as SDL-xenon's feeder ran on the console: on
+// hardware thread 1, xsdk_test's feeders never ran (results/2026-10-21-milestone-58/xsdk_test_hw1.log).
 
 enum {
 	TONE_HZ = 375,
@@ -17,7 +18,6 @@ enum {
 	TICKS_PER_MS = 49875,
 	// 10 us between two reads of the time base counts as time the busy thread didn't run.
 	OFF_TICKS = TICKS_PER_MS / 100,
-	FEEDER_HARDWARE_THREAD = 1,
 	STACK_BYTES = 64 * 1024,
 	FEED_MS = 500,
 	// 500 ms of 256-sample frames at 48 kHz.
@@ -137,9 +137,9 @@ static bool close_audio(void)
 static HANDLE start(XsdkThreadEntry entry)
 {
 	HANDLE thread = 0;
-	const NTSTATUS status = xsdk_thread_create_on(&thread, STACK_BYTES, entry, NULL, FEEDER_HARDWARE_THREAD);
+	const NTSTATUS status = xsdk_thread_create(&thread, STACK_BYTES, entry, NULL);
 	if (!NT_SUCCESS(status)) {
-		xsdk_log_write("audio: xsdk_thread_create_on failed: 0x%08X", (unsigned)status);
+		xsdk_log_write("audio: xsdk_thread_create failed: 0x%08X", (unsigned)status);
 		return 0;
 	}
 	return thread;
@@ -276,12 +276,12 @@ static void check_beside_busy_thread(void)
 	}
 	const uint32_t loss_permille = busy.run_ticks ? (uint32_t)((uint64_t)busy.off_ticks * 1000 / busy.run_ticks) : 0;
 	xsdk_log_write(
-		"audio: beside a busy thread on hardware thread %d: %u frames played, %u silent, a freed slot "
+		"audio: beside a busy thread on hardware thread %u: %u frames played, %u silent, a freed slot "
 		"filled %u us after at most; the busy thread off %u us in %u ms",
-		FEEDER_HARDWARE_THREAD, (unsigned)stats.played, (unsigned)stats.silent, (unsigned)stats.longest_wait_us,
-		(unsigned)to_us(busy.off_ticks), (unsigned)to_us(busy.run_ticks) / 1000);
+		(unsigned)xsdk_thread_hardware_thread(), (unsigned)stats.played, (unsigned)stats.silent,
+		(unsigned)stats.longest_wait_us, (unsigned)to_us(busy.off_ticks), (unsigned)to_us(busy.run_ticks) / 1000);
 	check(
-		"audio: the feeder beside a busy thread on hardware thread 1 for 500 ms: no frame silent, each freed slot "
+		"audio: the feeder beside a busy thread on its hardware thread for 500 ms: no frame silent, each freed slot "
 		"filled within 1 ms, the busy thread losing under 1%",
 		ran && feeder.status == STATUS_SUCCESS && stats.played > 0 && stats.silent == 0 &&
 			stats.longest_wait_us < WAIT_LIMIT_US && loss_permille < BUSY_LOSS_LIMIT_PERMILLE);
