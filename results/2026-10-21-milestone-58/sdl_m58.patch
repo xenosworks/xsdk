@@ -1,0 +1,156 @@
+diff -ruN a/src/audio/xsdk/SDL_xsdkaudio.c b/src/audio/xsdk/SDL_xsdkaudio.c
+--- a/src/audio/xsdk/SDL_xsdkaudio.c	2026-10-21 10:27:22.339854400 -0400
++++ b/src/audio/xsdk/SDL_xsdkaudio.c	2026-10-21 10:27:57.342225600 -0400
+@@ -31,6 +31,8 @@
+    the one device once at a time. */
+ 
+ #include "xsdk/kernel.h"
++#include "xsdk/log.h"
++#include "xsdk/thread.h"
+ 
+ #include "../SDL_sysaudio.h"
+ 
+@@ -54,6 +56,86 @@
+ 
+ static struct SDL_PrivateAudioData XSDKAUD_hidden;
+ 
++// m58: xsdk milestone 58 step 1's counters (xsdk:docs/scope/58-audio.md), from the first frame SDL queues, for a
++// window at a time: XSDKAUD_M58Log logs them and starts them again.
++// The time base's 49.875 MHz (xsdk:docs/HARDWARE.md, "The time base runs at 49.875 MHz").
++#define XSDKAUD_M58_TICKS_PER_MS 49875
++
++static struct
++{
++    Uint32 callbacks;
++    Uint32 silent;
++    Uint32 fewest_queued;
++    // When the kernel took frame n, at n % XSDKAUD_RING.
++    Uint32 taken_tick[XSDKAUD_RING];
++    Uint32 refills;
++    Uint32 refill_ticks;
++    Uint32 refill_max;
++    Uint32 delays;
++    Uint32 delay_ticks;
++    Uint32 delay_max;
++    Uint32 clipped;
++    Uint32 hardware_threads;
++} XSDKAUD_m58 = { .fewest_queued = 0xFFFFFFFF };
++
++void XSDKAUD_M58Log(void);
++
++static Uint32 XSDKAUD_M58Ticks(void)
++{
++    Uint32 ticks;
++    __asm__ volatile("mftb %0" : "=r"(ticks));
++    return ticks;
++}
++
++static void XSDKAUD_M58Max(Uint32 *max, Uint32 value)
++{
++    Uint32 old = __atomic_load_n(max, __ATOMIC_RELAXED);
++    while (value > old && !__atomic_compare_exchange_n(max, &old, value, true, __ATOMIC_RELAXED, __ATOMIC_RELAXED)) {
++    }
++}
++
++static void XSDKAUD_M58Min(Uint32 *min, Uint32 value)
++{
++    Uint32 old = __atomic_load_n(min, __ATOMIC_RELAXED);
++    while (value < old && !__atomic_compare_exchange_n(min, &old, value, true, __ATOMIC_RELAXED, __ATOMIC_RELAXED)) {
++    }
++}
++
++static void XSDKAUD_M58Time(Uint32 *count, Uint32 *ticks, Uint32 *max, Uint32 took)
++{
++    __atomic_fetch_add(count, 1, __ATOMIC_RELAXED);
++    __atomic_fetch_add(ticks, took, __ATOMIC_RELAXED);
++    XSDKAUD_M58Max(max, took);
++}
++
++static unsigned XSDKAUD_M58Us(Uint32 ticks)
++{
++    return (unsigned)((Uint64)ticks * 1000 / XSDKAUD_M58_TICKS_PER_MS);
++}
++
++// Dusklight calls it once a window, right after its frame rate.
++void XSDKAUD_M58Log(void)
++{
++    const Uint32 callbacks = __atomic_exchange_n(&XSDKAUD_m58.callbacks, 0, __ATOMIC_RELAXED);
++    const Uint32 silent = __atomic_exchange_n(&XSDKAUD_m58.silent, 0, __ATOMIC_RELAXED);
++    const Uint32 fewest = __atomic_exchange_n(&XSDKAUD_m58.fewest_queued, 0xFFFFFFFF, __ATOMIC_RELAXED);
++    const Uint32 refills = __atomic_exchange_n(&XSDKAUD_m58.refills, 0, __ATOMIC_RELAXED);
++    const Uint32 refill_ticks = __atomic_exchange_n(&XSDKAUD_m58.refill_ticks, 0, __ATOMIC_RELAXED);
++    const Uint32 refill_max = __atomic_exchange_n(&XSDKAUD_m58.refill_max, 0, __ATOMIC_RELAXED);
++    const Uint32 delays = __atomic_exchange_n(&XSDKAUD_m58.delays, 0, __ATOMIC_RELAXED);
++    const Uint32 delay_ticks = __atomic_exchange_n(&XSDKAUD_m58.delay_ticks, 0, __ATOMIC_RELAXED);
++    const Uint32 delay_max = __atomic_exchange_n(&XSDKAUD_m58.delay_max, 0, __ATOMIC_RELAXED);
++    const Uint32 clipped = __atomic_exchange_n(&XSDKAUD_m58.clipped, 0, __ATOMIC_RELAXED);
++    const Uint32 hardware_threads = __atomic_exchange_n(&XSDKAUD_m58.hardware_threads, 0, __ATOMIC_RELAXED);
++    xsdk_log_write("audio sdl: %u callbacks, %u silent, %u queued at the fewest; %u refills, %u us after the slot "
++                   "freed on average, %u at most; %u 1 ms delays, %u us on average, %u at most; %u samples past 1.0; "
++                   "the device thread on hardware threads %02X",
++                   (unsigned)callbacks, (unsigned)silent, callbacks ? (unsigned)fewest : 0, (unsigned)refills,
++                   refills ? XSDKAUD_M58Us(refill_ticks / refills) : 0, XSDKAUD_M58Us(refill_max), (unsigned)delays,
++                   delays ? XSDKAUD_M58Us(delay_ticks / delays) : 0, XSDKAUD_M58Us(delay_max), (unsigned)clipped,
++                   (unsigned)hardware_threads);
++}
++
+ // Runs on the kernel's audio thread each time the driver wants a frame.
+ static void XSDKAUD_KernelCallback(const Uint32 *context)
+ {
+@@ -64,11 +146,20 @@
+         return;
+     }
+     const int played = SDL_GetAtomicInt(&hidden->played);
++    const int written = SDL_GetAtomicInt(&hidden->written);
+     const float *frame = hidden->frames + XSDKAUD_RING * XSDKAUD_FLOATS;
+-    if (SDL_GetAtomicInt(&hidden->written) != played) {
++    if (written != played) {
+         frame = hidden->frames + (played % XSDKAUD_RING) * XSDKAUD_FLOATS;
++        // m58: before played tells PlayDevice the slot is free.
++        XSDKAUD_m58.taken_tick[played % XSDKAUD_RING] = XSDKAUD_M58Ticks();
+         SDL_SetAtomicInt(&hidden->played, played + 1);
+     }
++    // m58
++    if (written) {
++        __atomic_fetch_add(&XSDKAUD_m58.callbacks, 1, __ATOMIC_RELAXED);
++        __atomic_fetch_add(&XSDKAUD_m58.silent, written == played, __ATOMIC_RELAXED);
++        XSDKAUD_M58Min(&XSDKAUD_m58.fewest_queued, (Uint32)(written - played));
++    }
+     (void)XAudioSubmitRenderDriverFrame(driver, frame);
+ }
+ 
+@@ -113,7 +204,10 @@
+     struct SDL_PrivateAudioData *hidden = device->hidden;
+     while (!SDL_GetAtomicInt(&device->shutdown) &&
+            SDL_GetAtomicInt(&hidden->written) - SDL_GetAtomicInt(&hidden->played) >= XSDKAUD_RING - 1) {
++        const Uint32 start = XSDKAUD_M58Ticks(); // m58
+         SDL_Delay(1);
++        XSDKAUD_M58Time(&XSDKAUD_m58.delays, &XSDKAUD_m58.delay_ticks, &XSDKAUD_m58.delay_max,
++                        XSDKAUD_M58Ticks() - start); // m58
+     }
+     return true;
+ }
+@@ -129,11 +223,22 @@
+     const int written = SDL_GetAtomicInt(&hidden->written);
+     float *frame = hidden->frames + (written % XSDKAUD_RING) * XSDKAUD_FLOATS;
+     const float *mix = (const float *)buffer;
++    Uint32 clipped = 0; // m58
+     for (int sample = 0; sample < XSDKAUD_SAMPLES; sample++) {
+         for (int channel = 0; channel < XSDKAUD_CHANNELS; channel++) {
+-            frame[channel * XSDKAUD_SAMPLES + sample] = mix[sample * XSDKAUD_CHANNELS + channel];
++            const float value = mix[sample * XSDKAUD_CHANNELS + channel];
++            clipped += value > 1.0f || value < -1.0f; // m58
++            frame[channel * XSDKAUD_SAMPLES + sample] = value;
+         }
+     }
++    // m58: this slot came free when the kernel took frame written - (XSDKAUD_RING - 1).
++    if (written >= XSDKAUD_RING - 1) {
++        const Uint32 freed = XSDKAUD_m58.taken_tick[(written - (XSDKAUD_RING - 1)) % XSDKAUD_RING];
++        XSDKAUD_M58Time(&XSDKAUD_m58.refills, &XSDKAUD_m58.refill_ticks, &XSDKAUD_m58.refill_max,
++                        XSDKAUD_M58Ticks() - freed);
++    }
++    __atomic_fetch_add(&XSDKAUD_m58.clipped, clipped, __ATOMIC_RELAXED);
++    __atomic_fetch_or(&XSDKAUD_m58.hardware_threads, 1u << (xsdk_thread_hardware_thread() & 31), __ATOMIC_RELAXED);
+     SDL_SetAtomicInt(&hidden->written, written + 1);
+     return true;
+ }

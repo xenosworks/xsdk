@@ -1,0 +1,45 @@
+log: game:\probe_audio.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m58\probe_audio.xex
+log: no net_log.txt beside the .xex, so not over the network
+open: NtCreateFile(game:\probe_audio_start.txt) failed: 0xC0000034
+open: NtCreateFile(game:\net_log.txt) failed: 0xC0000034
+audio probe: 6 cases, net_log.txt not beside. None should hang.
+audio probe: case where
+audio: XAudioRegisterRenderDriverClient: 00000000, driver 80195F78, in 1 us, 0 callbacks by then
+audio: where: 38 callbacks, on hardware threads 10; the first on thread object 3A0B6020, 0 on another; the DPC flag set in 0, last 00000000. The main thread: hardware thread 0, thread object 300001A0, DPC flag 00000000
+audio: XAudioUnregisterRenderDriverClient(80195F78): 00000000
+audio probe: case where done in 222 ms
+audio probe: case ahead
+audio: XAudioRegisterRenderDriverClient: 00000000, driver 80195F78, in 0 us, 0 callbacks by then
+audio: ahead: 10 callbacks in the first 50 ms, 0 before registering returned; the first at 1178 6509 11841 17174 22505 27837 33169 38500 us; then 187 in 1000 ms, 4362 to 6301 us apart
+audio: XAudioUnregisterRenderDriverClient(80195F78): 00000000
+audio probe: case ahead done in 1107 ms
+audio probe: case second_client
+audio: XAudioRegisterRenderDriverClient: 00000000, driver 80195F78, in 0 us, 0 callbacks by then
+audio: XAudioRegisterRenderDriverClient: 00000000, driver 80195F98, in 0 us, 0 callbacks by then
+audio: second_client: registered yes; in the next 500 ms the first was called 94 times, the second 94
+audio: XAudioUnregisterRenderDriverClient(80195F98): 00000000
+audio: XAudioUnregisterRenderDriverClient(80195F78): 00000000
+audio probe: case second_client done in 619 ms
+audio probe: case time_slice
+audio: time_slice: busy thread 1 of 2 at the default priority on hardware thread 1: 49% of the passes, off 25 times, 493911 us in all, 19997 us at most
+audio: time_slice: busy thread 2 of 2 at the default priority on hardware thread 1: 50% of the passes, off 25 times, 489232 us in all, 19997 us at most
+audio probe: case time_slice done in 1019 ms
+audio probe: case feeder
+audio: XAudioRegisterRenderDriverClient: 00000000, driver 80195F78, in 0 us, 0 callbacks by then
+audio: feeder: a busy thread alone on hardware thread 1: 58580898 passes in 1000 ms, off 0 times, 0 us at most
+audio: feeder: a 1 ms sleep at +0: 50 wakes, 184 frames seen, the latest 19504 us after the kernel took it, 19996 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.0% of its passes, off 0 us at most
+audio: feeder: a 1 ms sleep at +1: 500 wakes, 187 frames seen, the latest 1918 us after the kernel took it, 2002 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.1% of its passes, off 0 us at most
+audio: feeder: a 1 ms sleep at +2: 500 wakes, 188 frames seen, the latest 1845 us after the kernel took it, 2002 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.1% of its passes, off 0 us at most
+audio: feeder: a 1 ms sleep at +16: 500 wakes, 187 frames seen, the latest 1976 us after the kernel took it, 2003 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.1% of its passes, off 0 us at most
+audio: feeder: a 5 ms periodic timer at +0: 98 wakes, 185 frames seen, the latest 19889 us after the kernel took it, 19995 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.0% of its passes, off 0 us at most
+audio: feeder: a 5 ms periodic timer at +1: 170 wakes, 188 frames seen, the latest 5915 us after the kernel took it, 6000 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.1% of its passes, off 0 us at most
+audio: feeder: a 5 ms periodic timer at +2: 170 wakes, 188 frames seen, the latest 5916 us after the kernel took it, 6001 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.1% of its passes, off 0 us at most
+audio: feeder: a 5 ms periodic timer at +16: 171 wakes, 189 frames seen, the latest 5916 us after the kernel took it, 6001 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.1% of its passes, off 0 us at most
+audio: XAudioUnregisterRenderDriverClient(80195F78): 00000000
+audio probe: case feeder done in 9124 ms
+audio probe: case speakers
+audio: speakers: XAudioGetSpeakerConfig returned 00000000, the word 00010001 (A5A5A5A5 if unwritten)
+audio probe: case speakers done in 0 ms
+audio probe: done
+exit: status 0

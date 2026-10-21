@@ -309,3 +309,14 @@ About milestone 54's.
 
 XMA as a milestone of its own is bigger than this one: its encoder or hand-built stream alone is more work than all of
 the above.
+
+## Steps 1 and 2 on the console (2026-10-21)
+
+docs/HARDWARE.md, "Audio's feeding, milestone 58", has the numbers. What they settle for the steps after:
+- **The cause** is the second and third of step 1's: refills late, the device thread waiting behind the game's main
+  thread on its hardware thread, and renders and mutex waits longer than the 16 ms ring. No clipping.
+- **Step 3's feeder** waits on an event the callback sets by `KeSetEvent` on its object, and runs at +1: there it woke
+  within 3 us of each frame, where at the default priority it waited up to 20 ms behind a busy thread. No periodic
+  timer, and no polling.
+- **Decided, 6's ring:** 8 frames ahead, 43 ms, by default, five times Dusklight's longest mutex wait; step 5's run says
+  whether that holds with the feeder at +1.

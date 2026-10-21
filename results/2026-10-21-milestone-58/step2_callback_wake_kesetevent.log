@@ -1,0 +1,19 @@
+log: game:\probe_audio.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m58\probe_audio.xex
+log: also over UDP to 192.168.0.125:7371
+audio probe: 1 cases, net_log.txt beside. callback_wake: the kernel may stop the console if its audio callback sets an event.
+audio probe: case callback_wake
+audio: callback_wake: ObReferenceObjectByHandle(event): 0x00000000, object 30011698
+audio: callback_wake: registering a client whose callback sets an event, by KeSetEvent where the DPC flag is set and NtSetEvent where it isn't; if the kernel won't take that, the console may stop here
+audio: XAudioRegisterRenderDriverClient: 00000000, driver 80195F78, in 1 us, 0 callbacks by then
+audio: callback_wake: registered 100 ms, 19 callbacks: 19 set the event by KeSetEvent, the last returning 1; 0 by NtSetEvent, the last 0x00000000
+audio: feeder: a busy thread alone on hardware thread 1: 58332505 passes in 1000 ms, off 0 times, 0 us at most
+audio: feeder: the callback's event at +0: 100 wakes, 185 frames seen, the latest 19909 us after the kernel took it, 19994 us between wakes at most, first failed call 0x00000000; the busy thread lost -0.0% of its passes, off 0 us at most
+audio: feeder: the callback's event at +1: 189 wakes, 188 frames seen, the latest 3 us after the kernel took it, 6317 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.0% of its passes, off 0 us at most
+audio: feeder: the callback's event at +2: 188 wakes, 188 frames seen, the latest 3 us after the kernel took it, 6284 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.0% of its passes, off 0 us at most
+audio: feeder: the callback's event at +16: 189 wakes, 188 frames seen, the latest 3 us after the kernel took it, 6355 us between wakes at most, first failed call 0x00000000; the busy thread lost 0.0% of its passes, off 0 us at most
+audio: callback_wake: after the feeders, 973 callbacks: 973 set the event by KeSetEvent, the last returning 0; 0 by NtSetEvent, the last 0x00000000
+audio: XAudioUnregisterRenderDriverClient(80195F78): 00000000
+audio probe: case callback_wake done in 5205 ms
+audio probe: done
+exit: status 0

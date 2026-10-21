@@ -4920,3 +4920,28 @@ xsdk's text and imgui-xenon's checks passed, each break failing its own
   1/64 to 1/32 of the way toward the texel above or to the left, the same in two runs
   ([log](../results/2026-10-21-milestone-57/imgui/imgui_check_linear.log)). Point sampling gives the texels exactly, so
   the font check now samples point; ImGui titles keep linear filtering, as D3D9 titles on this GPU do.
+
+## Audio's feeding, milestone 58 (2026-10-21)
+
+Steps 1 and 2 of docs/scope/58-audio.md ([results](../results/2026-10-21-milestone-58/README.md)).
+
+**Dusklight's crackling is late refills.** Over its title scene's 320 s, SDL-xenon's driver handed the kernel 634 silent
+frames and clipped no sample. 599 came in three windows, 13 to 15, where Dusklight's `GetNewAudio` took up to 27.7 ms
+and an `SDL_Delay(1)` up to 22 ms, against a ring of 3 frames, 16 ms, ahead; the device thread waited up to 7.8 ms for
+Dusklight's JAS mutex there. The device thread ran on hardware thread 0, beside the game's main thread.
+
+**The render driver,** from probe_audio:
+- Its callback runs on hardware thread 4, in a kernel thread of its own, with the processor control region's DPC flag
+  clear (0x150, xenia:src/xenia/kernel/xthread.h:73-86).
+- It asks for a frame every 5.33 ms, 4.4 to 6.3 ms apart, and none before registering returns: 10 in the first 50 ms,
+  the first after 1.2 ms. A second client registers too, and the two are called alike.
+- `XAudioGetSpeakerConfig` returned 0 and the word `00010001`.
+
+**Waking a feeder beside a busy thread** on hardware thread 1:
+- Two busy threads at one priority share it in turns of 20 ms: each went up to 19,997 us without running.
+- A feeder at the default priority woke up to 19.5 ms late after a 1 ms sleep, and 19.9 ms after a 5 ms periodic
+  timer. At +1, +2 or 16, a 1 ms sleep woke within 1.9 ms and the timer within 5.9 ms, the busy thread losing 0.1%.
+- **Set from the callback:** `NtSetEvent` on the title's handle returns 0xC0000008 there, as the callback's thread is
+  outside the title's handles. `KeSetEvent` on the event's object, from `ObReferenceObjectByHandle`, works: a feeder at
+  +1 or above woke within 3 us of each frame the kernel took, once a frame, the busy thread losing nothing measurable.
+  At the default priority it still waited up to 19.9 ms.

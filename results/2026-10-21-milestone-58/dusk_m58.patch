@@ -1,0 +1,137 @@
+diff -ruN a/src/dusk/audio/DuskAudioSystem.cpp b/src/dusk/audio/DuskAudioSystem.cpp
+--- a/src/dusk/audio/DuskAudioSystem.cpp	2026-10-21 10:28:12.484067300 -0400
++++ b/src/dusk/audio/DuskAudioSystem.cpp	2026-10-21 10:29:29.692918800 -0400
+@@ -12,13 +12,80 @@
+ 
+ #include <SDL3/SDL_init.h>
+ #include <tracy/Tracy.hpp>
++#include <xsdk/log.h>
+ 
+ #include <array>
++#include <atomic>
+ #include <cassert>
++#include <cstdint>
++#include <cstdio>
+ #include <span>
+ 
+ using namespace dusk::audio;
+ 
++// m58: xsdk milestone 58 step 1's timings (xsdk:docs/scope/58-audio.md), a window at a time, logged after the frame
++// rate with SDL-xenon's driver's counters.
++extern "C" void XSDKAUD_M58Log(void);
++
++namespace {
++
++// The time base's 49.875 MHz (xsdk:docs/HARDWARE.md, "The time base runs at 49.875 MHz").
++constexpr u32 M58TicksPerMs = 49875;
++
++u32 M58Ticks() {
++    u32 ticks;
++    __asm__ volatile("mftb %0" : "=r"(ticks));
++    return ticks;
++}
++
++struct M58Timing {
++    std::atomic<u32> count{0};
++    std::atomic<u32> ticks{0};
++    std::atomic<u32> max{0};
++
++    void add(u32 took) {
++        count.fetch_add(1, std::memory_order_relaxed);
++        ticks.fetch_add(took, std::memory_order_relaxed);
++        u32 old = max.load(std::memory_order_relaxed);
++        while (took > old && !max.compare_exchange_weak(old, took, std::memory_order_relaxed)) {
++        }
++    }
++
++    // count, average us, most us, and starts again.
++    void take(unsigned out[3]) {
++        const u32 n = count.exchange(0, std::memory_order_relaxed);
++        const u32 total = ticks.exchange(0, std::memory_order_relaxed);
++        const u32 most = max.exchange(0, std::memory_order_relaxed);
++        out[0] = n;
++        out[1] = n ? static_cast<unsigned>(static_cast<uint64_t>(total / n) * 1000 / M58TicksPerMs) : 0;
++        out[2] = static_cast<unsigned>(static_cast<uint64_t>(most) * 1000 / M58TicksPerMs);
++    }
++};
++
++M58Timing M58Calls;
++M58Timing M58Subframes;
++M58Timing M58MutexWaits;
++
++}  // namespace
++
++namespace dusk::audio {
++// Called by dusk::xenon_run once a window.
++void LogM58Window();
++}  // namespace dusk::audio
++
++void dusk::audio::LogM58Window() {
++    // borealis writes the frame rate through stdio; this keeps these lines after it.
++    std::fflush(stdout);
++    XSDKAUD_M58Log();
++    unsigned calls[3], subframes[3], waits[3];
++    M58Calls.take(calls);
++    M58Subframes.take(subframes);
++    M58MutexWaits.take(waits);
++    xsdk_log_write("audio dusk: %u GetNewAudio, %u us on average, %u at most; %u subframes, %u us on average, %u at "
++                   "most; %u JAS mutex waits, %u us on average, %u at most",
++        calls[0], calls[1], calls[2], subframes[0], subframes[1], subframes[2], waits[0], waits[1], waits[2]);
++}
++
+ static OutputSubframe OutBuffer;
+ static std::array<f32, DSP_SUBFRAME_SIZE * OutputSubframe::NUM_CHANNELS> OutInterleaveBufferFull;
+ 
+@@ -156,23 +223,29 @@
+     int needed,
+     int) {
+     FrameMarkStart(FrameName);
++    const u32 start = M58Ticks();  // m58
+     while (needed > 0) {
+         const int rendered = RenderNewAudioFrame();
+         needed -= rendered;
+     }
++    M58Calls.add(M58Ticks() - start);  // m58
+     FrameMarkEnd(FrameName);
+ }
+ 
+ int RenderNewAudioFrame() {
+     ZoneScoped;
++    const u32 waitStart = M58Ticks();  // m58
+     JASCriticalSection section;
++    M58MutexWaits.add(M58Ticks() - waitStart);  // m58
+     const u32 countSubframes = JASDriver::getSubFrames();
+     int bytesWritten = 0;
+ 
+     JASAudioThread::setDSPSyncCount(countSubframes);
+ 
+     for (u32 i = 0; i < countSubframes; i++) {
++        const u32 subframeStart = M58Ticks();  // m58
+         bytesWritten += RenderAudioSubframe();
++        M58Subframes.add(M58Ticks() - subframeStart);  // m58
+ 
+         JASAudioThread::snIntCount -= 1;
+     }
+diff -ruN a/src/dusk/xenon_run.cpp b/src/dusk/xenon_run.cpp
+--- a/src/dusk/xenon_run.cpp	2026-10-21 10:28:12.494587300 -0400
++++ b/src/dusk/xenon_run.cpp	2026-10-21 10:29:29.690916500 -0400
+@@ -18,6 +18,11 @@
+ #include <chrono>
+ #include <string>
+ 
++namespace dusk::audio {
++// m58: DuskAudioSystem.cpp's and SDL-xenon's audio numbers for the window.
++void LogM58Window();
++}  // namespace dusk::audio
++
+ namespace dusk::xenon_run {
+ namespace {
+ 
+@@ -152,6 +157,7 @@
+         const double seconds = std::chrono::duration<double>(now - periodStart).count();
+         DuskLog.info(
+             "{} frames in {:.1f} s, {:.1f} fps", periodFrames, seconds, periodFrames / seconds);
++        dusk::audio::LogM58Window();  // m58
+         log_memory();
+         periodStart = now;
+         periodFrames = 0;
