@@ -1,0 +1,11 @@
+log: game:\terminate_check.log
+log: named after \Device\Harddisk0\Partition1\xsdk\term\terminate_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 19065 us
+terminate check: case read
+open: NtCreateFile(\Device\Harddisk0\Partition1\terminate_check.txt) failed: 0xC0000034
+terminate check: \Device\Harddisk0\Partition1\terminate_check.txt: isn't there, so ""
+FAIL: terminate check: the routine ran as the title was ended from outside
+FAIL: terminate check: the routine that ran is the one registered last
+exit: status 0
