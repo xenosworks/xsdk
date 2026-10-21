@@ -13,7 +13,7 @@ timer_cancel	a cancelled timer stops firing
 list_push	concurrent list pushes pop 2000 unique entries
 list_flush	list flush returns the chain and empties the list
 mixed_wait	wait-all accepts an event, semaphore, mutant and thread
-mixed_pending	mixed wait-all stays pending while the target thread is gated; pending mixed wait takes the semaphore and owns the mutant
+mixed_pending	mixed wait-all stays pending while the target thread is gated; pending mixed wait-all completes after the target thread ends; pending mixed wait takes the semaphore and owns the mutant
 priority	priorities match kernel limits and restore; raised busy thread share; pseudo-handle previous priority
 priority_previous	pseudo handle sets priority and reports the previous value
 placement	busy, sleeping, std::thread and pseudo-handle placement

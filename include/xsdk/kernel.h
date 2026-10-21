@@ -524,8 +524,7 @@ typedef struct {
 
 // The loader puts the thread object type address in this import slot; pass its value as object_type.
 extern void *const ExThreadObjectType;
-// Waits on several objects at once: wait_type WAIT_ALL or WAIT_ANY, which returns STATUS_WAIT_0 plus the signalled
-// object's index (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:878-887).
+// WAIT_ANY and WAIT_ALL can return STATUS_WAIT_0 + an object index (docs/HARDWARE.md, M55 diagnostics v3).
 NTSTATUS NtWaitForMultipleObjectsEx(uint32_t count, const HANDLE *handles, uint32_t wait_type, uint32_t wait_mode,
 	uint32_t alertable, const int64_t *timeout);
 // Sets one object and waits on another atomically (xboxkrnl_threading.cc:889-912).

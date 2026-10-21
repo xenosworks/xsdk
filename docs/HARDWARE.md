@@ -4812,5 +4812,22 @@ from `local/m55/logs_check2/m55_check.log`, records 59 passes and one failure.
   explanation of the earlier failures. V3 explicitly separates completed-thread and gated pending-thread cases,
   logs after the pending interval, and releases the mutant on its acquiring thread. The wait result remains strict.
 
-Diagnostics v3 and its new wait-any negative have not run on hardware. This log clears the timer/heap questions
-for this focused run, not the remaining baseline, full-suite, negative and port acceptance requirements.
+At this stage diagnostics v3 and its new wait-any negative had not run on hardware. This log cleared the
+timer/heap questions for this focused run; the v3 hardware result follows below.
+
+## M55 diagnostics v3 (2026-10-21)
+
+The [unchanged console log](../results/2026-10-21-milestone-55-acceptance/m55_check_diagnostics_v3.log), from
+`local/m55/logs_check3/m55_check.log`, records 67 passes and one failure caused by a zero-only wait-all assertion.
+
+- With its thread already completed, mixed wait-all returned 0 in 2.887 microseconds.
+- With the target behind a gate, both target and waiter polls returned `STATUS_TIMEOUT` before the gate opened.
+  The combined wait returned `0x00000003` after 20.991 ms: `STATUS_WAIT_0 + 3`, the thread's position in the array.
+  Its semaphore token was consumed and releasing the mutant on the waiter succeeded, confirming acquisition.
+- WAIT_ALL can therefore return a nonzero object position too. V4 requires exactly `STATUS_WAIT_0 + 3` for this
+  gated case, retaining the zero requirement for the ready control. No `src/` call uses wait-all; the change is
+  to the test and public documentation, not an SDK status conversion.
+- All 33 measured priority read-backs and restoration passed. The periodic timer passed at 118.394 ms for 20
+  firings, and freeing the touched 32 MB heap allocation again returned 8,200 pages (112875 to 121075).
+
+The retained log remains a v3 run with its original failure; it is not a run of the corrected v4 assertion.

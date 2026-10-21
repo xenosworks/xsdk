@@ -422,7 +422,7 @@ static void mixed_pending(void)
 		target_ready == STATUS_SUCCESS && waiter_ready == STATUS_SUCCESS && NT_SUCCESS(worker.signalled) &&
 			held == STATUS_TIMEOUT && target_held == STATUS_TIMEOUT);
 	check("objects: pending mixed wait-all completes after the target thread ends",
-		NT_SUCCESS(opened) && target.result == STATUS_SUCCESS && worker.waited == STATUS_SUCCESS);
+		NT_SUCCESS(opened) && target.result == STATUS_SUCCESS && worker.waited == STATUS_WAIT_0 + 3);
 	check("objects: pending mixed wait takes the semaphore and owns the mutant",
 		token == STATUS_TIMEOUT && NT_SUCCESS(worker.released));
 	for (unsigned i = 0; i < 3; i++)
@@ -433,7 +433,7 @@ static void mixed_pending(void)
 
 void test_objects(void)
 {
-	xsdk_log_write("objects: M55 acceptance diagnostics v3");
+	xsdk_log_write("objects: M55 acceptance diagnostics v4");
 	waits();
 	pulses();
 	mutants();

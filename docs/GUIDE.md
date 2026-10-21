@@ -257,11 +257,14 @@ start a thread on its creator's hardware thread, so every thread a title starts 
   not a reservation. Stop all users before destroying the semaphore.
 - **Windows-style objects:** `kernel.h` declares waits on up to `MAXIMUM_WAIT_OBJECTS` (64), signal-and-wait, clear
   and pulse events, recursive mutants, waitable timers without APCs, and interlocked singly linked lists. Wait-any
-  returns `STATUS_WAIT_0 + index`; abandoned mutants return `STATUS_ABANDONED_WAIT_0`. `NT_SUCCESS` alone does not
-  distinguish a successful wait from `STATUS_TIMEOUT`. Zero-initialize an 8-byte-aligned `SLIST_HEADER`.
-- M55 acceptance is incomplete. Diagnostics v2 passed the revised timer and heap checks and established the
-  priority limits above. Its mixed wait returned immediately; diagnostics v3 separately tests an unfinished
-  thread behind a gate. See the [acceptance results](../results/2026-10-21-milestone-55-acceptance/) for remaining runs.
+  returns `STATUS_WAIT_0 + index`; wait-all can also return a nonzero position. The gated mixed wait returned
+  `STATUS_WAIT_0 + 3` when its thread at index 3 ended, while the ready control returned zero
+  ([console log](../results/2026-10-21-milestone-55-acceptance/m55_check_diagnostics_v3.log)).
+  Abandoned mutants return `STATUS_ABANDONED_WAIT_0`. `NT_SUCCESS` alone does not distinguish a successful wait
+  from `STATUS_TIMEOUT`. Zero-initialize an 8-byte-aligned `SLIST_HEADER`.
+- M55 acceptance is incomplete. Diagnostics v3 passed the timer, heap and measured priority checks; its only
+  failure was expecting zero from the gated wait-all. V4 requires exactly `STATUS_WAIT_0 + 3` there.
+  See the [acceptance results](../results/2026-10-21-milestone-55-acceptance/) for remaining runs.
 - **Mutexes, condition variables, read-write locks, `once` and keys** are pthreads', and `std::mutex` and the rest on
   them. Free a mutex only once no thread can lock it again (docs/PITFALLS.md).
 - **Atomics** cost by their order: a relaxed `__atomic_fetch_add` 55 ns, acquire or release 70, seq_cst 125, against

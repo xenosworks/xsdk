@@ -1,6 +1,6 @@
 # M55 acceptance results (2026-10-21)
 
-M55 acceptance remains **incomplete**. Diagnostics v2 has 59 passes and one incorrect priority expectation;
+M55 acceptance remains **incomplete**. Diagnostics v3 has 67 passes and one incorrect zero-only wait expectation;
 see the follow-up below. The original 52 unchanged logs were copied from
 `Z:\Xbox-360-SDK\local\m55\logs_set`; [SHA256SUMS](SHA256SUMS) records their hashes.
 They contain the focused baseline, the full SDK run, all 47 negative titles, two Vulkan runs and vkbench.
@@ -60,10 +60,24 @@ increments would let the new diagnostic `sbrk(0)` perform the delayed decommit a
 The new `mixed_pending` negative uses wait-any, which must finish before the gate opens and fail the pending check.
 There are now 48 negative titles; the retained 47 logs above remain historical evidence, not results for v3.
 
+## Diagnostics v3
+
+[m55_check_diagnostics_v3.log](m55_check_diagnostics_v3.log) is copied byte-for-byte from
+`Z:\Xbox-360-SDK\local\m55\logs_check3\m55_check.log`: **67 passed, one failed**.
+
+The ready mixed wait returned 0 in 2.887 microseconds. The gated target and waiter stayed unfinished until the
+gate opened; the combined wait then returned `0x00000003` after 20.991 ms. The semaphore was consumed and mutant
+release succeeded on the waiter. The assertion incorrectly required zero: diagnostics v4 requires exactly
+`STATUS_WAIT_0 + 3`, identifying the thread at index 3, rather than accepting a range of values. The public comment
+now says WAIT_ALL can return a nonzero position too. No SDK implementation uses wait-all.
+
+The revised priority sweep passed, as did timer and heap-return checks. This retained log still records the
+original v3 failure; it is not a passing v4 run. The wait-any negative must also fail the exact index-3 check.
+
 ## Next console run
 
-Run the rebuilt **diagnostics v3** `build/m55_check.xex` first and retain the complete log. Its priority lines now
-include expected values, and the pending mixed-wait lines include readiness, gate, wait, release and token statuses.
+Run the rebuilt **diagnostics v4** `build/m55_check.xex` first and retain the complete log. It now requires
+exactly index 3 from the gated wait-all, with the other checks unchanged.
 Do not rerun the negative titles yet. A repeat focused run, the full SDK run and affected negatives follow once this
 baseline passes. The supplied Vulkan and vkbench logs are preserved; no comparative performance claim or completed
 port acceptance is made here.
@@ -83,7 +97,7 @@ the allocation remains in compiled code.
 - Build and check logs are in `local/m55/acceptance-*.log`. The v2 hardware result is recorded above;
   these build checks alone did not clear its baseline failures.
 
-## Diagnostics v3 local validation
+## Diagnostics v3 local validation (historical)
 
 - Clean full rebuild: zero compiler/linker warnings or errors.
 - All seven host/build checks passed; all 48 negative titles built without diagnostics.
@@ -92,4 +106,14 @@ the allocation remains in compiled code.
 - All 54 retained log hashes match, including the unchanged diagnostics v2 source log.
 - Rebuilt `build/m55_check.xex` SHA-256: `e8a1506afcc0e0dbada5f9ff73359f78898027f2ffdb3df89edefb7b6b11e17c`.
 - Local build/check logs: `local/m55/diagnostics-v3-clean-build.log`, `diagnostics-v3-checks.log` and
-  `diagnostics-v3-breaks.log`. V3 has not run on hardware; no hardware acceptance is inferred from these builds.
+  `diagnostics-v3-breaks.log`. The v3 console result is recorded above; builds alone do not establish acceptance.
+
+## Diagnostics v4 local validation
+
+- Clean full rebuild: zero compiler/linker warnings or errors; all seven host/build checks passed.
+- The affected `wait_all`, `mixed_wait` and `mixed_pending` negative titles rebuilt without diagnostics.
+  Their console outcomes remain unmeasured for this build.
+- All 55 retained log hashes match, including the unchanged diagnostics v3 source log.
+- Rebuilt `build/m55_check.xex` SHA-256: `a4d94366e1179f5c407780b16de3c0896f9a2a071b2bed38981cab49452db866`.
+- Build/check logs: `local/m55/diagnostics-v4-clean-build.log`, `diagnostics-v4-checks.log` and
+  `diagnostics-v4-breaks.log`. V4 still needs its console run; the v3 log is retained with its original failure.

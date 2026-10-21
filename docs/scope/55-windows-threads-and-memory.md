@@ -188,7 +188,8 @@ On the console, each check its own line in xsdk_test, each broken on purpose onc
 - **Waits:** a wait on three events returns the index of the one set; a wait for all three times out with two set and
   returns once the third is; a wait on the most objects works and one more is refused, as step 1 found; a
   signal-and-wait sets one event and wakes on another. Mixed event/semaphore/mutant/thread wait-all is checked
-  both with a completed thread and with a thread held behind a gate until the waiter has had time to block.
+  both with a completed thread (result 0) and with a thread held behind a gate until the waiter has had time
+  to block (exactly `STATUS_WAIT_0 + 3`, the finishing thread position, as diagnostics v3 measured).
 - **Events:** a cleared event stays clear; a pulse wakes the threads waiting on a manual-reset event and leaves it
   clear.
 - **Mutants:** the owner takes one twice, and another thread waits until it's released twice; another thread's release
@@ -297,3 +298,12 @@ Mixed wait-all passed in 2.646 microseconds. Logging before the wait may have le
 not explain the earlier failures. V3 explicitly waits for a completed thread in the ready control and adds a
 separate target held behind a gate, with no logging during the pending wait. A wait-any mutation must fail that
 pending check. These changes still require a focused console run, then the full suite and affected negative runs.
+
+## Diagnostics v3 follow-up (2026-10-21)
+
+The [v3 log](../../results/2026-10-21-milestone-55-acceptance/m55_check_diagnostics_v3.log) has 67 passes and one
+failure from expecting zero after the gated wait-all. Both waiter and target stayed pending before the gate opened;
+the combined wait returned `STATUS_WAIT_0 + 3` after 20.991 ms, consumed the semaphore and owned the mutant. The
+ready control returned zero. V4 requires exactly index 3 for the gated case and documents that wait-all can return
+a nonzero position. No SDK implementation uses wait-all. The priority sweep, timer and heap checks passed in v3;
+the corrected baseline, affected negatives, full SDK and remaining port acceptance still need their console runs.
