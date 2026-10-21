@@ -507,15 +507,15 @@ against `libxsdk.a`, newlib and libstdc++ on 2026-10-19:
 - **Has:** stdio, strings, math, `malloc` and `aligned_alloc`, `time`, `clock`, `strftime` and the rest of `time.h`, in
   the console's time zone, `setjmp`, `getenv` and `setenv`; `open`, `openat`, `close`, `read`, `pread`, `write`,
   `pwrite`, `lseek`, `fstat`, `fsync`, `fdatasync`, `ftruncate`, `fstatvfs`, `isatty`, `stat`, `statvfs`, `chdir`,
-  `getcwd`, `mkdir`, `unlink`, `unlinkat`, `rename`, `truncate`, `readlink`, `pathconf`, `opendir`, `fdopendir`,
-  `readdir`, `rewinddir`, `closedir`; `pthread_create`, `join`, `detach`, attributes and stack sizes, mutexes, condition
-  variables, read-write locks, `once` and keys, scheduling priorities, `sched_yield`;
+  `getcwd`, `mkdir`, `unlink`, `unlinkat`, `rename`, `truncate`, `readlink`, `pathconf`, `basename`, `dirname`,
+  `opendir`, `fdopendir`, `readdir`, `rewinddir`, `closedir`; `pthread_create`, `join`, `detach`, attributes and stack
+  sizes, mutexes, condition variables, read-write locks, `once` and keys, scheduling priorities, `sched_yield`;
   unnamed `sem_*`; anonymous `mmap`, `munmap`, `mprotect`; `clock_gettime`, `gettimeofday`, `nanosleep`; `sysconf`,
   `getentropy`, `getpid`, `kill`, `raise`, `signal`, `abort`, `exit`, `atexit`; the sockets above, `getaddrinfo`,
   `inet_pton` and `inet_ntop`; C++23's threads, atomics, exceptions, `chrono`, `filesystem` and `format`
   (docs/PARITY.md).
-- **Refuses at run time:** file-backed/shared/fixed mappings and `PROT_EXEC`, `ENOTSUP`; `pthread_cancel`, `link` and `symlink`, `ENOSYS`;
-  `fchmod` and `fchmodat` changing a file's permissions, `ENOTSUP`; `fcntl` on a file, `ENOSYS`.
+- **Refuses at run time:** file-backed/shared/fixed mappings and `PROT_EXEC`, `ENOTSUP`; `pthread_cancel`, `link` and
+  `symlink`, `ENOSYS`; `fchmod` and `fchmodat` changing a file's permissions, `ENOTSUP`; `fcntl` on a file, `ENOSYS`.
 - **Doesn't link:** processes, `fork`, `vfork`, `execve`, `wait`, `waitpid`;
   `dlopen`; `dup`, `dup2`, `pipe`, `socketpair`; `rmdir` (`remove` and `unlink` remove an empty folder), `readv`,
   `writev`, `lstat`, `fstatat`, `access`, `faccessat`, `realpath`, `chmod`, `chown`, `fchown`, `umask`, `utime`,
