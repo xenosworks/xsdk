@@ -14,26 +14,44 @@ console to a title of your own running on it. Then [docs/GUIDE.md](docs/GUIDE.md
 [docs/PITFALLS.md](docs/PITFALLS.md) what breaks a title on the console and not on a PC, and `samples/` titles to
 start from.
 
-**Status:** milestones 1 to 39 (SCOPE.md, section 4) passed on the console as of 2026-10-15. docs/HARDWARE.md records
+**Status:** every milestone in SCOPE.md, section 4, up to 58 has passed on the console as of 2026-10-21, but for 40,
+catching faults, paused after its probe, and 42, whose render target formats came with vulkan4xenon's milestone 25
+instead. [docs/PARITY.md](docs/PARITY.md) maps what a title gets today and what's missing, docs/HARDWARE.md records
 each fact the console settled, and TODO.md what's still open.
 
 ## What's in it
 
-- **Titles:** `tools/elf2xex.py` packs an ELF into a XEX2 the retail loader accepts, with imports by ordinal. A C17
-  runtime on newlib gives threads, files, time, controller input and audio, and the C++23 runtime exceptions, threads,
-  atomics, chrono, filesystem and format.
+- **Titles:** `tools/elf2xex.py` packs an ELF into a XEX2 the retail loader accepts, with imports by ordinal and a
+  title ID and name of its own. The C17 runtime is on newlib, and the C++23 runtime has exceptions, threads, atomics,
+  chrono, filesystem and format.
+- **The system:** threads placed on the six hardware threads, with priorities; the kernel's waits on several objects,
+  events, owned mutexes, timers and lock-free lists; files on `game:`, the hard disk, USB, memory units and the DVD;
+  `mmap` and `mprotect`; the console's time zone and language; controllers; saves, profiles, the on-screen keyboard
+  and message boxes through XAM; the Guide over the title and Xbox Home; launching another `.xex` with data
+  (`thread.h`, `kernel.h`, `system.h`, `xam.h`, `terminate.h`).
+- **Audio:** `xsdk_audio_*` feeds the kernel's render driver 6 channels at 48 kHz from a thread of the title's own
+  (`audio.h`).
+- **Networking:** sockets, DNS, the link and the console's address (`net.h`).
 - **The GPU layer** (`include/xsdk/gpu.h`):
   - commands recorded into a stream the ring runs as indirect buffers, so the GPU works while the CPU records;
-  - colour and depth targets placed in eDRAM, and resolves to memory and to textures;
-  - shaders from xost, loaded with `IM_LOAD`, and their vertex layouts;
-  - textures in linear and tiled layouts, mipmaps, samplers and the formats titles need;
-  - indexed draws of points, lines, triangle lists, strips and fans, several vertex streams, depth and stencil,
-    blending, culling and viewports;
+  - colour and depth targets in eDRAM at 1, 2 or 4 samples, up to four at once, in float, 10-bit and 64-bit formats
+    too, and past eDRAM in tiled passes; hierarchical depth; resolves to memory and to textures;
+  - shaders from xost, GLSL and Shader Model 3 HLSL compiled on the PC or SPIR-V on the console (`xsc.h`), with
+    branches and loops, loaded with `IM_LOAD`, and their vertex layouts;
+  - textures in linear and tiled layouts, 24 formats with DXT among them, mipmaps, cube and 3D textures, anisotropy
+    and swizzles;
+  - indexed and instanced draws of points, lines, triangle lists, strips and fans, up to 16 vertex streams, depth and
+    two-sided stencil, blending, culling, clip planes and viewports;
   - shader constants set from the CPU or loaded by the GPU straight from memory;
-  - command buffers recorded once and run many times;
-  - presenting paced to vblank at 720p, and the vulkan4xenon boot logo (`xsdk_splash_*`).
-- **Speed, on the console:** a cube with its own transform and tint takes 0.63 us to draw and submit, and `memcpy`
-  copies 5.6 GB/s into write-combined memory (vulkan4xenon's vkbench, docs/HARDWARE.md).
+  - command buffers recorded once and run many times, queries of whether draws rasterized anything, and GPU time
+    stamps;
+  - presenting paced to vblank at 720p, scaled to the output and letterboxed on 4:3, text in a bitmap font
+    (`xsdk_text_*`), and the vulkan4xenon boot logo (`xsdk_splash_*`).
+- **Debugging:** a log per title, readable while the title runs, and sent over the network to `tools/net_log.py` on
+  the PC when a `net_log.txt` is beside the `.xex`.
+- **Speed, on the console:** a cube with its own transform and tint takes 0.29 us to draw and submit, and `memcpy`
+  copies 5.6 GB/s into write-combined memory (vulkan4xenon's vkbench; docs/HARDWARE.md, "The cost of a draw,
+  milestone 38").
 
 ## Building
 
@@ -54,8 +72,8 @@ with `tools/elf2xex.py`; vulkan4xenon's Makefile does it that way. CMake project
 ## Testing
 
 `build/xsdk_test.xex` runs every test in one title and writes a pass or fail line for each to `game:\xsdk_test.log`:
-each title's log is named after its `.xex`. Copy it to the console, launch it from the dashboard, and read the log. Xenia Canary serves for quick crash and smoke
-checks, but the console decides; CLAUDE.md lists where Xenia differs.
+each title's log is named after its `.xex`. Copy it to the console, launch it from the dashboard, and read the log.
+Xenia Canary serves for quick crash and smoke checks, but the console decides; CLAUDE.md lists where Xenia differs.
 
 ## Layout
 
@@ -69,10 +87,20 @@ checks, but the console decides; CLAUDE.md lists where Xenia differs.
 
 ## Related
 
-- [vulkan4xenon](https://github.com/xenosworks/vulkan4xenon), a Vulkan 1.0 subset built on xsdk's GPU layer, on the
-  way to running Dusklight.
-- [xost](https://github.com/xenosworks/xenos-toolchain), the shader toolchain, checked out in `xenos-toolchain/`.
-- [SDL-xenon](https://github.com/xenosworks/SDL-xenon), SDL 3 with an Xbox 360 platform built on xsdk.
+- [vulkan4xenon](https://github.com/xenosworks/vulkan4xenon), a Vulkan 1.0 subset built on xsdk's GPU layer, which
+  Dusklight draws through.
+- xost, the shader toolchain, is in `xenos-toolchain/`. The archived
+  [xenos-toolchain](https://github.com/xenosworks/xenos-toolchain) repository holds it as it was before it joined xsdk
+  on 2026-10-14.
+- Libraries ported to xsdk, each a fork whose notes are in its `docs/README-xsdk.md`:
+  [SDL-xenon](https://github.com/xenosworks/SDL-xenon) (SDL 3),
+  [FAudio-xenon](https://github.com/xenosworks/FAudio-xenon) (XAudio2's API through FAudio),
+  [imgui-xenon](https://github.com/xenosworks/imgui-xenon) (Dear ImGui),
+  [curl-xenon](https://github.com/xenosworks/curl-xenon) (libcurl, HTTP and HTTPS),
+  [mbedtls-xenon](https://github.com/xenosworks/mbedtls-xenon) (Mbed TLS, TLS 1.2) and
+  [glslang-xenon](https://github.com/xenosworks/glslang-xenon) (glslang, its notes in `README-xsdk.md`).
+- [aurora-xenon](https://github.com/xenosworks/aurora-xenon), encounter's Aurora with a vulkan4xenon backend, and
+  [dusklight-xenon](https://github.com/xenosworks/dusklight-xenon), Dusklight on the Xbox 360 through it.
 
 ## Licence
 
