@@ -28,7 +28,8 @@ pages_zero	anonymous pages are zeroed and accept writes
 pages_readonly	read-only protection reads back and restores writable
 pages_noaccess	no-access protection restores to writable
 pages_decommit	partial unmap preserves neighbours and leaves a hole; host bookkeeping checks
-pages_execute	executable protection and mappings are refused with ENOTSUP
+pages_mmap_execute	executable mappings are refused
+pages_mprotect_execute	executable protection is refused
 pages_arguments	files, fixed and shared mappings are refused
 pages_length	zero length, overflow and unaligned ranges are refused
 heap_trim	freeing 32 MB at the heap top returns its pages
@@ -41,3 +42,6 @@ thread_arguments	invalid priority and hardware thread are refused
 pages_physical	physical protection changes and restores
 pages_return	unmap returns committed pages to the kernel; partial unmap hole
 pages_repeat	a repeated unmap of released memory succeeds
+jit_range_end	HOST exact range trace must fail; console return checks may pass
+jit_crossing	unaligned range crossing a line returns 42
+jit_129	129-byte range publishes both lines and returns 99

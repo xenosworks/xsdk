@@ -295,8 +295,13 @@ it or publishing it to another thread. This handles every intersecting 128-byte 
 start; zero bytes does nothing. Use cached image memory, not GPU write-combined memory. The linker and packer give
 `.jit` its own executable image pages. No runtime executable protection or hypervisor call is involved.
 
+Keep other threads out of a block while rewriting it. After flushing, publish readiness through a release/acquire
+handoff (or a lock). Each consumer must execute `__asm__ volatile("isync" : : : "memory")` after observing readiness
+and before calling that block, including after a rewrite. The producer's `isync` only synchronizes its own thread;
+a C/C++ acquire operation alone is not a portable substitute. See [PowerPC Book II, section 1.8](https://www.ece.lsu.edu/ee4720/doc/ppc_isa_book2.pdf#page=19).
+
 GCC's `__builtin___clear_cache` and libgcc's `__clear_cache` remain ineffective in the installed toolchain until the
-user's separate toolchain change. Use `xsdk_code_flush` explicitly in the meantime.
+cache-flush patch and rebuild tracked in [TODO.md](../TODO.md). Use `xsdk_code_flush` explicitly in the meantime.
 
 ## Files and paths
 

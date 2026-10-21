@@ -1,0 +1,11 @@
+--- a/src/mman.c
++++ b/src/mman.c
+@@ -186,6 +186,8 @@
+ int mprotect(void *address, size_t length, int protection)
+ {
+ 	const int protect = protection_bits(protection);
++	if (protection & PROT_EXEC)
++		errno = EINVAL;
+ 	uintptr_t end;
+ 	if (protect < 0 || !page_range(address, length, &end))
+ 		return -1;

@@ -4,12 +4,12 @@ Agreed on 2026-10-20, with every recommendation the proposal made (Decided, belo
 
 The gap docs/PARITY.md ranks sixth, "Threading for Windows-style code", with the Memory rows beside it: what code
 written for Windows, and emulators, expect of threads and pages. Every piece is a kernel export Xenia implements, but
-running code a title wrote, which only the console can answer. It can run beside milestone 54: both add to
-imports/imports.txt and include/xsdk/kernel.h, and touch nothing else in common.
+running code a title wrote, which only the console can answer. M55 is rebased onto milestone 54; their build,
+header, import and guide additions are retained together.
 
 ## Why
 
-What porters and emulators hit today:
+The gaps when this milestone was proposed:
 - **Waits on one object at a time.** xsdk imports `NtWaitForSingleObjectEx` alone (imports/imports.txt). Windows code
   waits on several handles at once, resets and pulses events, takes owned mutexes and sets waitable timers; none of
   that links, so each port writes its own stand-ins on events and critical sections.
@@ -25,24 +25,17 @@ What porters and emulators hit today:
   hands the top of its heap back through `sbrk` with a negative size once 128 KB is free there
   (newlib:newlib/libc/stdlib/_mallocr.c:765), but xsdk's `sbrk` only moves the break (src/sbrk.c). A title's peak stays
   committed until it exits, and `xsdk_gpu_alloc` can't have those pages.
-- **Running written code.** A dynamic recompiler writes PowerPC code and runs it. On RGH a title's own code pages can
-  be: the user's PlayStation emulator pcsx360, run on this console, holds its recompiler's 4 MB code pool in a `.jit`
-  image section, writes blocks there and runs them. Its log reads `[rec] code cache @82404200 (4 MB, .jit image
-  section)` then `[rec] recompiler installed as psxCpu`
-  (local/m55/pcsx360/p1log.txt:36-37, the user's title run on this console), and XexTool's section list shows those
-  pages, 0x82400000 up, marked Code (local/m55/pcsx360/xextool_l.txt). Its codegen self-test, "dynarec codegen spike v8
-  (RGH: RWX image section)", writes a function returning 42 into that section and calls it, then regenerates one
-  returning 99 and calls again, and reports exec found. So executable memory on RGH is a `.jit` section in the title's
-  image, its pages marked Code by the packer, not a page the title protects at run time. A retail console runs no
-  unsigned title at all, so this is RGH and JTAG behaviour, like everything xsdk builds.
+- **Running written code.** xsdk's own `probe_exec` wrote a function into its `.jit` image section, flushed it,
+  and called it on this RGH console: 42, then 99 after rewriting and flushing again
+  ([probe_exec_spike.log](../../results/2026-10-20-milestone-55/probe_exec_spike.log)). The linker aligns the section
+  to 64 KB and the packer marks its pages Code. This establishes the image-section method on the tested console.
   - The way not taken: `NtProtectVirtualMemory` to an execute protection. Xenia drops the execute bits and refuses
     them there (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc:96-99, 207-210); with the image-section route
     proven, a run-time protection change isn't needed, and `XexReserveCodeBuffer`/`XexCommitCodeBuffer` (0x36B, 0x36C,
     no code in Xenia: xboxkrnl_table.inc:889-890) stay unused.
   - The toolchain: `__builtin___clear_cache` compiles to nothing on xsdk's target, and libgcc's `__clear_cache` is a
     bare `blr` (checked with ~/xsdk-gcc on 2026-10-20). A JIT's cache flush would silently do nothing, so a title
-    flushes its own, as pcsx360 and mupen64-360 do (mupen64-360:source/r4300/Recomp-Cache.c:301,
-    libxenon:drivers/ppc/cache.S:55-70).
+    uses `xsdk_code_flush` explicitly until the cache-flush work in [TODO.md](../../TODO.md) is complete.
 
 What Xenia has, under xenia:src/xenia/kernel/ (ordinals from xboxkrnl/xboxkrnl_table.inc):
 
@@ -92,29 +85,26 @@ Each step rests on the console where Xenia can't answer. Steps 1 and 2 are the p
    Last, each logged before it runs, as a kernel that takes either as fatal would stop the console there: a wait on
    one object more than the most, and a wait on a mutant whose owner ended holding it.
 
-2. **A probe of running written code,** `tests/probe_exec.c`, pcsx360's method. It writes a function into a `.jit`
-   image section, flushes the caches, calls it, rewrites it and calls again, as the user's emulator does on this
-   console. No run-time protection change, and no fault handler: the `.jit` pages are already executable, so a correct
-   build doesn't fault.
+2. **A probe of running written code,** `tests/probe_exec.c`. It writes a function into a `.jit`
+   image section, flushes the caches, calls it, rewrites it and calls again. It uses no run-time protection change
+   or fault handler; the spike log records successful execution from the image section.
    - **The `.jit` section.** src/xsdk.ld gives `.jit` its own 64 KB-aligned region, filled from a `.jit` input section
      the title defines with alloc and execinstr flags; its size is the title's own (the probe's 64 KB). elf2xex marks
-     an execinstr section's pages Code already (tools/elf2xex.py:143-144), so those pages come up executable, as
-     pcsx360's do in the section list. elf2xex needs no change.
-   - **The cache flush,** `xsdk_code_flush(start, bytes)` the probe carries, over 128-byte lines (the Xenon cache line,
-     libxenon:drivers/ppc/cache.S:1): `dcbst` each line, `sync`, `icbi` each line, `sync`, `isync`. That is the
-     self-modifying-code sequence the PowerPC architecture requires, data pushed from the data cache and the stale
-     instructions dropped before the fetch (PowerPC Virtual Environment Architecture, Book II, the self-modifying-code
-     programming note; PowerPC Microprocessor Family: The Programming Environments, instruction-cache management).
-     mupen64-360 and libxenon do the same ops (mupen64-360:source/r4300/Recomp-Cache.c:301, libxenon:cache.S:55-70).
-   - **Each step logs before it runs,** and the run has `net_log.txt`, so a line reaches the PC even if a step hangs
-     (docs/HARDWARE.md, "The log over the network, milestone 53"). A build that runs on this console won't, as pcsx360
-     shows, but the logging costs nothing and guards a console that differs.
+     an execinstr section's pages Code already (tools/elf2xex.py, `section_type`). elf2xex needs no change.
+   - **The cache flush:** the probe's `code_flush` becomes the SDK's `xsdk_code_flush(start, bytes)`, over 128-byte
+     lines (libxenon:drivers/ppc/cache.S:1): `dcbst` each line, `sync`, `icbi` each line, `sync`, `isync`. The
+     cache ordering comes from [PowerPC Book II v2.01, section 1.8, p. 11](https://www.ece.lsu.edu/ee4720/doc/ppc_isa_book2.pdf#page=19).
+     The second `sync` orders invalidation before publication; `isync` synchronizes the executing thread.
+     A different consumer must observe publication and then execute its own `isync` before calling the code.
+   - **Each step logs before it runs,** and `net_log.txt` can send the last line to the PC if a step hangs
+     (docs/HARDWARE.md, "The log over the network, milestone 53").
    - **One case a run,** named in `game:\probe_exec.txt` beside the `.xex`, as tests/probe_fault.c takes its mode; with
      no file, the default is the whole spike. The cases:
      1. `query`: `NtQueryVirtualMemory` and `MmQueryAddressProtect` on the `.jit` section, the title's code, its data
         and the heap, logged. Nothing runs.
      2. `spike`, the default: write `li r3, 42; blr` into the `.jit` section, flush, call, check 42; rewrite to
-        `li r3, 99; blr`, flush, call, check 99; and a call without the flush between, to show the flush is needed.
+        `li r3, 99; blr`, flush, call, check 99; and an unflushed rewrite as a diagnostic. Logging may evict the
+        previous code, so this does not isolate cache effects.
 
    Cached memory only; the `.jit` section is in the image, not GPU memory. `XexReserveCodeBuffer` and
    `XexCommitCodeBuffer` aren't called, and nothing reaches the hypervisor (CODE_GUIDELINES.md 1.2).
@@ -155,12 +145,12 @@ Each step rests on the console where Xenia can't answer. Steps 1 and 2 are the p
 
 7. **Executable memory, a `.jit` section,** as step 2's probe runs it:
    - src/xsdk.ld gives `.jit` its own 64 KB-aligned region; a title defines a `.jit` input section of the size it wants,
-     alloc and execinstr, so elf2xex marks its pages Code and the console maps them executable, as pcsx360's are.
+     alloc and execinstr, so elf2xex marks its pages Code and the console maps them executable, as the spike log records.
    - `xsdk/jit.h`: `xsdk_jit_pool(&base, &bytes)`, the section's extent, and `xsdk_code_flush(start, bytes)`, the
      cache sequence step 2 proved. A title lays its recompiler's code cache over the pool and flushes each block before
      it runs it.
    - `__builtin___clear_cache` and libgcc's `__clear_cache` are made to flush too (Decided, 4), so library code that
-     calls the builtin works; `gcc-xsdk.patch`, the toolchain rebuilt, waits for me (CLAUDE.md, the toolchain note).
+     calls the builtin works; the patch and rebuild remain tracked in [TODO.md](../../TODO.md).
    - `mmap` and `mprotect` don't make memory executable; `PROT_EXEC` is `ENOTSUP` (step 6).
 
    docs/HARDWARE.md records the probe's result.
@@ -221,7 +211,9 @@ On the console, each check its own line in xsdk_test, each broken on purpose onc
   - a file mapping and `MAP_FIXED` are refused;
   - 32 MB freed at the heap's top raises the free pages by as much.
 - **Written code:** a function written into the `.jit` section, flushed with `xsdk_code_flush`, runs and returns 42;
-  rewritten and flushed, it returns 99. The break leaves the flush out, so the stale 42 runs and the 99 check fails.
+  rewritten and flushed, it returns 99. Cross-line and 129-byte cases check execution after flushing wider ranges.
+  Host traces of the production C loops check exactly which lines and barriers execute, including zero bytes.
+  The no-flush and end-off-by-one breaks must fail host checks; wrong-code breaks test console return checks.
 
 Also vulkan4xenon_test twice and vkbench, unchanged; and SDL-xenon's sdl_check and Dusklight's title scene once each,
 as SDL's priority requests now reach the kernel: the scene's frame rate no lower than before.
@@ -246,28 +238,28 @@ guesses; CLAUDE.md will say so.
    `xsdk_thread_set_priority` and `xsdk_pthread_handle`. Thin xsdk calls for the waits, or a `windows.h`, can come
    when a port asks.
 2. **Timers in,** without APC routines; APCs and completion ports out.
-3. **Executable memory is a `.jit` image section,** its pages marked Code by the packer, as the user's pcsx360 proves
-   on this console (local/m55/pcsx360). The probe confirms it in xsdk's own build, writing a function there, flushing
-   and calling; no run-time protection change, no fault handler, no code-buffer or hypervisor route.
+3. **Executable memory is a `.jit` image section,** its pages marked Code by the packer. xsdk's own
+   [spike log](../../results/2026-10-20-milestone-55/probe_exec_spike.log) records generated code returning 42 and 99.
+   No run-time protection change, fault handler, code-buffer or hypervisor route is used.
 4. **The cache flush:** the probe and the feature carry `xsdk_code_flush`, the PowerPC self-modifying-code sequence;
    and gcc-xsdk.patch makes `__builtin___clear_cache` and libgcc's `__clear_cache` flush too, the toolchain and
-   everything on it rebuilt. The toolchain change waits for me, after the probe (CLAUDE.md, the toolchain note).
+   everything on it rebuilt. The toolchain work remains in [TODO.md](../../TODO.md).
 5. **Priorities on by default,** with Dusklight's title scene and SDL-xenon's sdl_check run once; if Dusklight is
    slower, Aurora's requests change, not xsdk.
 6. **The heap:** `sbrk` gives back the heap's top, and `mmap` serves big buffers freed in the middle; no new `malloc`.
 
 ## Implementation follow-up (2026-10-20)
 
-Steps 1 and 2 are recorded in `results/2026-10-20-milestone-55/`. Steps 3–8 now have SDK code, console checks and
-usage documentation; console acceptance remains pending. The user explicitly retained GCC's patch and rebuild.
+Steps 1 and 2 are recorded in `results/2026-10-20-milestone-55/`. Steps 3â€“8 now have SDK code, console checks and
+usage documentation; console acceptance remains pending. GCC's patch and rebuild remain in [TODO.md](../../TODO.md).
 Two changes follow the actual probe evidence:
 
 - `NtQueryVirtualMemory` failed with C000000D. `mmap` tracks its reservations and committed-page bits; `munmap`
   decommits live subranges and releases after the last page. Protection checks use `MmQueryAddressProtect`.
   The raw query stays declared with its console limitation documented; its signature is not guessed or silently
   treated as successful. The resolved query and broader raw query coverage remain an open hardware investigation.
-- An unflushed rewrite was visible on this console. A no-flush build remains diagnostic, with a compiled-instruction
-  check that must reject it. Wrong-code variants deterministically exercise the hardware return-value checks.
+- The unflushed rewrite returned the new value, with logging between the earlier call and rewrite. Incidental
+  eviction was not excluded. Host checks reject missing cache maintenance; console wrong-code variants check returns.
 
 `NtDuplicateObject` (Xenia xboxkrnl_ob.cc) is also imported: pthread_self on the main thread or a foreign thread
 needs a real owned handle, so its pthread identity can safely be used by another thread. A pseudo handle would

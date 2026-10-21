@@ -4729,9 +4729,10 @@ The unchanged logs are in [results/2026-10-20-milestone-55](../results/2026-10-2
   pushes are covered by the new checks, not this probe.
 - The 64 KB `.jit` pool at `82080000` reported protection `00000020`. Written code returned 42 after a flush;
   rewritten code returned 99 after a flush. Rewriting to 42 **without** a flush also returned 42 on this run.
-  Omitting a flush is consequently not a deterministic hardware failure test. The assembly sequence has a build
-  check and a no-flush negative variant; deterministic wrong-code variants test the console's return-value checks.
+  Logging occurred between the previous call and that rewrite and may have evicted the cached instructions.
+  The observation does not isolate cache effects or establish that a flush is unnecessary. Host checks trace the
+  C flush's exact line ranges and barriers; wrong-code variants test the console's return-value checks.
 
 Steps 3–8 add SDK APIs and console checks on top of these results. Their new console checks, deliberate failures,
 SDL, Dusklight and Vulkan regressions have not yet been run here. No new hardware result is claimed by a successful
-cross-build or host mock test. GCC's builtin/libgcc cache flush and toolchain rebuild remain the user's work.
+cross-build or host mock test. GCC's builtin/libgcc cache flush and rebuild remain tracked in [TODO.md](../TODO.md).

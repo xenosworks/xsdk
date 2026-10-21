@@ -1,11 +1,28 @@
---- a/src/jit_flush.S
-+++ b/src/jit_flush.S
-@@ -6,7 +6,7 @@
- xsdk_jit_flush_lines:
- 	mr r5, r3
- 1:
--	dcbst 0, r5
-+	nop
- 	cmpw r5, r4
- 	beq 2f
- 	addi r5, r5, 128
+--- a/src/jit.c
++++ b/src/jit.c
+@@ -18,23 +18,6 @@
+ 
+ void xsdk_code_flush(const void *start, size_t bytes)
+ {
+-	if (!bytes)
+-		return;
+-	assert(bytes - 1 <= UINTPTR_MAX - (uintptr_t)start);
+-	const uintptr_t first = (uintptr_t)start & ~(uintptr_t)(CACHE_LINE_BYTES - 1);
+-	const uintptr_t last = ((uintptr_t)start + bytes - 1) & ~(uintptr_t)(CACHE_LINE_BYTES - 1);
+-	// PowerPC Book II v2.01, section 1.8, p. 11; tests/probe_exec.c passed this sequence on the console.
+-	for (uintptr_t line = first;; line += CACHE_LINE_BYTES) {
+-		__asm__ volatile("dcbst 0, %0" : : "r"(line) : "memory");
+-		if (line == last)
+-			break;
+-	}
+-	__asm__ volatile("sync" : : : "memory");
+-	for (uintptr_t line = first;; line += CACHE_LINE_BYTES) {
+-		__asm__ volatile("icbi 0, %0" : : "r"(line) : "memory");
+-		if (line == last)
+-			break;
+-	}
+-	__asm__ volatile("sync" : : : "memory");
+-	__asm__ volatile("isync" : : : "memory");
++	(void)start;
++	(void)bytes;
+ }

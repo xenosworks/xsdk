@@ -56,9 +56,11 @@ layer that drives Xenos directly. Scope, sources and milestones are in SCOPE.md.
 - Milestone 55's Xenia run cannot establish priority share, hardware-thread placement, or physical pages returned:
   it schedules host threads and estimates memory statistics. Use the console checks in `m55_check.xex`/`xsdk_test`.
   `NtQueryVirtualMemory` returned C000000D on the console; do not treat its Xenia implementation as hardware proof.
-  A no-flush JIT rewrite was visible in the probe, so missing a flush does not deterministically fail on hardware.
-  The compiled sequence check detects that break. GCC's builtin/libgcc clear-cache changes and rebuild are reserved
-  for the user (confirmed 2026-10-20); use `xsdk_code_flush` until then.
+  Xenia's `InstrEmit_icbi` emits a no-op (xenia:src/xenia/cpu/ppc/ppc_emit_memory.cc:1132-1135), so a rewritten
+  function may keep its translated old code and the JIT rewrite checks may fail there; this is not console evidence.
+  The probe's no-flush observation had intervening logging that may have evicted code. Use host cache-operation
+  traces to reject missing flushes and wrong-code variants for deterministic console return checks.
+  GCC's builtin/libgcc cache-flush work is in TODO.md, retained by the user; do not patch or rebuild GCC here.
 
 ## Build
 

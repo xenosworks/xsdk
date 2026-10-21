@@ -1,0 +1,11 @@
+--- a/src/jit.c
++++ b/src/jit.c
+@@ -22,7 +22,7 @@
+ 		return;
+ 	assert(bytes - 1 <= UINTPTR_MAX - (uintptr_t)start);
+ 	const uintptr_t first = (uintptr_t)start & ~(uintptr_t)(CACHE_LINE_BYTES - 1);
+-	const uintptr_t last = ((uintptr_t)start + bytes - 1) & ~(uintptr_t)(CACHE_LINE_BYTES - 1);
++	const uintptr_t last = ((uintptr_t)start + bytes) & ~(uintptr_t)(CACHE_LINE_BYTES - 1);
+ 	// PowerPC Book II v2.01, section 1.8, p. 11; tests/probe_exec.c passed this sequence on the console.
+ 	for (uintptr_t line = first;; line += CACHE_LINE_BYTES) {
+ 		__asm__ volatile("dcbst 0, %0" : : "r"(line) : "memory");

@@ -5,22 +5,15 @@ work begins.
 
 ## Runtime and display
 
-- **Windows-style threading and memory, milestone 55, parked on 2026-10-20** at the user's decision. Its scope was
-  agreed and its two probes built and run; they and their logs are on the local branch M55, not merged. What the
-  console settled:
-  - **Executable memory works as the user's pcsx360 does it:** a function written into a `.jit` section of the title's
-    image, whose pages the packer marks Code, ran after the caches were flushed (`dcbst`, `sync`, `icbi`, `isync`),
-    returning 42, and again after a rewrite, returning 99. pcsx360's recompiler runs from a 4 MB section the same way
-    on this RGH console.
-  - **The kernel's objects:** event clear and pulse, waits on up to 64 objects (65 is refused with 0xC000000D),
-    signal-and-wait, mutants (an abandoned one's wait gives 0x80), one-shot and periodic timers, base priorities,
-    moving another thread by its handle, protecting and freeing pages, and lock-free lists all behaved as Windows'
-    do. `NtQueryVirtualMemory` answered 0xC000000D, so its declaration needs checking against
-    xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc.
-  - **Left to build:** the objects as raw kernel calls, priorities and placing any thread, POSIX `sem_*`, anonymous
-    `mmap`/`munmap`/`mprotect` with the heap trimmed at its top, the `.jit` API, and a working
-    `__builtin___clear_cache`, which compiles to nothing on xsdk's toolchain today, so code relying on it to flush runs
-    stale instructions.
+- **Windows-style threading and memory, milestone 55:** the local M55 branch contains SDK APIs and checks;
+  console acceptance and port regressions are pending (docs/scope/55-windows-threads-and-memory.md).
+  - **Executable image memory:** xsdk's own `probe_exec_spike.log` in results/2026-10-20-milestone-55 records a
+    function written into `.jit` returning 42 after flushing, then 99 after rewriting and flushing again.
+  - **Toolchain cache flush:** implement `__builtin___clear_cache` and libgcc's `__clear_cache` for this target,
+    then rebuild GCC and its libraries. Both currently do nothing. Use `xsdk_code_flush` explicitly until then.
+    This SDK change does not alter GCC or rebuild the toolchain.
+  - **Raw memory query:** `NtQueryVirtualMemory` returned C000000D in the probe; its ABI needs further investigation.
+    SDK mappings track their own reservations and committed pages.
 - **A stack overflow hangs the console,** with a fault handler or without, until it's restarted (docs/HARDWARE.md, "How
   the kernel hands a title its faults, milestone 40's probe"). The kernel puts the exception record and context on the
   faulting thread's own stack, so an overflowed one leaves it nowhere to. What could stop it, such as room kept at

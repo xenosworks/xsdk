@@ -1,0 +1,11 @@
+--- a/src/mman.c
++++ b/src/mman.c
+@@ -68,6 +68,8 @@
+ 		return MAP_FAILED;
+ 	}
+ 	const int protect = protection_bits(protection);
++	if (protection & PROT_EXEC)
++		errno = EINVAL;
+ 	uint32_t bytes;
+ 	if (protect < 0 || !rounded_length(length, &bytes))
+ 		return MAP_FAILED;

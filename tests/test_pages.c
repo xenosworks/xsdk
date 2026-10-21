@@ -9,7 +9,7 @@
 #include "xsdk/jit.h"
 #include "xsdk/log.h"
 
-enum { PAGE_BYTES = 4096, MAP_BYTES = 256 * 1024, HEAP_BYTES = 32 * 1024 * 1024 };
+enum { PAGE_BYTES = 4096, MAP_BYTES = 256 * 1024, HEAP_BYTES = 32 * 1024 * 1024, CACHE_LINE_BYTES = 128 };
 
 static uint32_t available(void)
 {
@@ -123,7 +123,7 @@ static void written_code(void)
 	void *pool;
 	size_t bytes;
 	xsdk_jit_pool(&pool, &bytes);
-	if (bytes < 128 || (uintptr_t)pool % 65536) {
+	if (bytes < 2 * CACHE_LINE_BYTES || (uintptr_t)pool % 65536) {
 		check("jit: the executable pool is 64 KB aligned", false);
 		return;
 	}
@@ -139,6 +139,26 @@ static void written_code(void)
 	xsdk_code_flush(NULL, 0);
 }
 
+static void written_ranges(void)
+{
+	void *pool;
+	size_t bytes;
+	xsdk_jit_pool(&pool, &bytes);
+	if (bytes < 2 * CACHE_LINE_BYTES)
+		return;
+	uint32_t *code = (uint32_t *)((unsigned char *)pool + CACHE_LINE_BYTES - sizeof(uint32_t));
+	uint32_t (*function)(void) = (uint32_t (*)(void))code;
+	code[0] = 0x38600029; // li r3,41
+	code[1] = 0x38630001; // addi r3,r3,1
+	code[2] = 0x4E800020; // blr
+	xsdk_code_flush((unsigned char *)code + 1, 3 * sizeof(*code) - 1);
+	check("jit: unaligned range crossing a line returns 42", function() == 42);
+	code[0] = 0x38600061; // li r3,97
+	code[1] = 0x38630002; // addi r3,r3,2
+	xsdk_code_flush(pool, CACHE_LINE_BYTES + 1);
+	check("jit: 129-byte range publishes both lines and returns 99", function() == 99);
+}
+
 void test_pages(void)
 {
 	mappings();
@@ -146,4 +166,5 @@ void test_pages(void)
 	physical_protection();
 	heap_return();
 	written_code();
+	written_ranges();
 }

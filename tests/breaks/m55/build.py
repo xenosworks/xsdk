@@ -58,6 +58,12 @@ def build_case(name):
             diagnostic = (OUTPUT / "noflush-check.log").read_text()
             if result.returncode != 1 or "FAIL: cache flush" not in diagnostic:
                 raise RuntimeError("no-flush mutation did not fail the compiled-sequence check as expected")
+        if name == "jit_range_end":
+            result = subprocess.run([sys.executable, "tests/check_jit_ranges.py", "gcc", str(source)],
+                                    cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            (OUTPUT / "range-end-check.log").write_text(result.stdout)
+            if result.returncode != 1 or "FAIL: cache range aligned line" not in result.stdout:
+                raise RuntimeError("end-off-by-one mutation did not fail the exact range check")
     if re.search(r"(?:warning|error):", log_path.read_text()):
         raise RuntimeError(f"{name}: build diagnostic; see {log_path}")
     return name

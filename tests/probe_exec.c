@@ -6,17 +6,10 @@
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
 
-// Milestone 55 step 2 (docs/scope/55-windows-threads-and-memory.md): whether a title can run code it wrote, pcsx360's
-// way. A .jit section in the image, its pages marked Code by elf2xex, holds the code; the title writes a function
-// there, flushes the caches, and calls it. game:\probe_exec.txt names the case: "query" logs the section's protection
-// and runs nothing; "spike", the default, writes and runs code. The user's pcsx360 does this on this RGH console
-// (local/m55/pcsx360: "code cache @82404200 (4 MB, .jit image section)"), so a correct build doesn't fault; every step
-// is logged before it runs, and net_log.txt streams the log, so a console that differs still leaves its last line on
-// the PC.
+// Milestone 55 step 2; modes and console evidence: docs/scope/55-windows-threads-and-memory.md.
 
 enum {
-	// The .jit pool: 64 KB, one page, the size this probe chooses. awx so the intent is RWX; elf2xex marks an
-	// execinstr section's pages Code (tools/elf2xex.py:143-144), as pcsx360's section list shows.
+	// elf2xex marks execinstr pages Code (tools/elf2xex.py, page_descriptors).
 	JIT_BYTES = 0x10000,
 	// The Xenon's cache line (libxenon:drivers/ppc/cache.S:1).
 	CACHE_LINE_BYTES = 128,
@@ -49,10 +42,7 @@ static void check(const char *name, bool passed)
 	failed_count += !passed;
 }
 
-// The PowerPC self-modifying-code sequence: push each line from the data cache, then drop the stale instructions
-// before the fetch (PowerPC Virtual Environment Architecture, Book II, the self-modifying-code programming note;
-// PowerPC Microprocessor Family: The Programming Environments, instruction-cache management). The same ops libxenon's
-// memicbi and mupen64-360 use (libxenon:drivers/ppc/cache.S:55-70, mupen64-360:source/r4300/Recomp-Cache.c:301).
+// PowerPC Book II v2.01, section 1.8, p. 11 (link in docs/scope/55-windows-threads-and-memory.md).
 static void code_flush(const void *start, uint32_t bytes)
 {
 	const uintptr_t first = (uintptr_t)start & ~(uintptr_t)(CACHE_LINE_BYTES - 1);
@@ -123,8 +113,7 @@ static void spike_case(void)
 	xsdk_log_write("exec: T2: returned %u, want %u", (unsigned)t2, (unsigned)T2_VALUE);
 	check("exec: the rewritten function runs and returns 99", t2 == T2_VALUE);
 
-	// Show the flush is needed: rewrite without flushing, then call. The stale instruction may still be cached, so the
-	// old value can come back; this only logs what happens, it isn't a pass/fail.
+	// Logging above may have evicted the old code; this observation cannot establish whether a flush is needed.
 	xsdk_log_write("exec: rewriting li r3, %u; blr WITHOUT a flush", (unsigned)T1_VALUE);
 	write_return(T1_VALUE);
 	const uint32_t stale = fn();
