@@ -30,6 +30,7 @@ If a rule gets in the way of correct code, change the rule in this file first, i
 - Host tools are Python 3.11 or later, standard library only, and run both on Windows and in WSL. The exception is
   xost's compiler, which is the SDK's own C (`src/xsc_*.c`) built for the PC in WSL too: the tools that compile shaders
   call it through `ctypes` and run in WSL.
+- M55 exception, agreed 2026-10-20: C host tests may exercise SDK C directly with kernel mocks or cache-operation traces.
 - Zero warnings: our C builds with `-Wall -Wextra -Werror`.
 - Dependencies are the xenon toolchain (GCC, binutils, newlib) only. No libxenon in titles: it drives bare metal, not
   the retail kernel. Adding a library needs a reason in the commit message.
@@ -158,6 +159,8 @@ static NTSTATUS open_log(HANDLE *handle, const char *path)
   at a high level.
 - Each feature has a small test under `tests/` that exercises it and writes a pass/fail line to the test log. Tests
   share one title, so a hardware check is one upload and one launch.
+- M55 exception, agreed 2026-10-20: `m55_check` may run the same checks with a splash, with Python-built negative
+  variants; uncertain kernel ABIs stay in separate probes until the console validates them.
 - Keep hardware results under `results/<date>-<description>/`.
 
 ## 13. Commits
