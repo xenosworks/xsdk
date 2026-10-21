@@ -131,6 +131,9 @@ static NTSTATUS open_log(HANDLE *handle, const char *path)
 - Physical memory goes through one module. Every allocation has a matching free.
 - One exception: while the GPU is wedged, `xsdk_gpu_close` keeps the ring and its write-back page, since the GPU may
   still use them.
+- Another: audio's frames, which the kernel's render driver reads cached, are allocated in `audio.c`. They, and the
+  event its callback sets, are made once and never freed, as a callback can still run after unregistering returns
+  (docs/scope/58-audio.md, step 3).
 - Every object that owns memory has a destroy function that releases it in reverse creation order.
 - Fixed limits are named constants. If a number's origin isn't obvious, give it in one line.
 
