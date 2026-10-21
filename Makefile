@@ -26,7 +26,8 @@ SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/thread.c src/file.c src/path
 	src/pthread.c src/lock.c src/reent.c src/time.c src/sysconf.c src/entropy.c src/exit.c src/gpu.c \
 	src/gpu_setup.c src/gpu_resolve.c src/gpu_draw.c src/gpu_constants.c src/gpu_tiles.c src/display.c src/shader.c \
 	src/microcode.c src/texture.c src/texture_layout.c src/tiled.c src/present.c src/splash.c src/copy.c src/socket.c \
-	src/netdb.c src/xam.c src/save.c src/system_ui.c src/semaphore.c src/mman.c src/jit.c src/system.c src/terminate.c
+	src/netdb.c src/net.c src/xam.c src/save.c src/system_ui.c src/semaphore.c src/mman.c src/jit.c \
+	src/system.c src/terminate.c
 # xost's compiler, in the SDK for titles and built for the PC as libxsc.so for the shader tools.
 XSC_SOURCES := src/xsc_memory.c src/xsc_spirv.c src/xsc_resolve.c src/xsc_unroll.c src/xsc_encode.c src/xsc_container.c \
 	src/xsc_program.c src/xsc_optimize.c src/xsc_lower.c src/xsc_lower_block.c src/xsc_lower_matrix.c \

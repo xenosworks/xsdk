@@ -14,6 +14,7 @@
 #include "file_private.h"
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
+#include "xsdk/net.h"
 #include "xsdk/thread.h"
 
 // POSIX sockets on XAM's (xenia:src/xenia/kernel/xam/xam_net.cc). Each is marked insecure as it's made: on the console
@@ -21,15 +22,21 @@
 // marked insecure").
 
 enum {
-	SOCKET_SLOTS = FD_SETSIZE - XSDK_FIRST_SOCKET_FD,
+	// The most sockets of a kind XNetStartup takes (docs/HARDWARE.md, "XAM's sockets and loader, milestone 56"). Those
+	// numbered from FD_SETSIZE up work with poll, not select.
+	SOCKET_SLOTS = 232,
 	CONSOLE_FDS = 3,
 	INVALID_SOCKET = -1,
 	// Xenia takes it as disabling a socket's encryption (xenia:src/xenia/kernel/xsocket.cc:78-82).
 	OPTION_MARK_INSECURE = 0x5801,
 	WINSOCK_VERSION = 0x0202,
-	// XNetStartupParams: its size first, its settings 0 (xenia:src/xenia/kernel/xam/xam_net.cc:154-168). The flags
-	// changed nothing on the console (docs/HARDWARE.md).
+	// XNetStartupParams: its size, flags, then datagram and stream sockets and receive and send KB, the rest 0
+	// (xenia:src/xenia/kernel/xam/xam_net.cc:154-168). The flags changed nothing on the console (docs/HARDWARE.md).
 	STARTUP_PARAMS_BYTES = 13,
+	STARTUP_DATAGRAM_SOCKETS = 2,
+	STARTUP_STREAM_SOCKETS = 3,
+	STARTUP_RECEIVE_KB = 4,
+	STARTUP_SEND_KB = 5,
 	// WSADATA is 400 bytes as Xenia lays it out (xam_net.cc:90-98).
 	WSADATA_BYTES = 400,
 	MILLISECONDS_PER_SECOND = 1000,
@@ -96,7 +103,12 @@ static int network_error;
 
 static void start_network(void)
 {
-	const uint8_t params[STARTUP_PARAMS_BYTES] = { STARTUP_PARAMS_BYTES };
+	const XsdkNetworkLimits limits = xsdk_network_limits;
+	const uint8_t params[STARTUP_PARAMS_BYTES] = { [0] = STARTUP_PARAMS_BYTES,
+		[STARTUP_DATAGRAM_SOCKETS] = limits.datagram_sockets,
+		[STARTUP_STREAM_SOCKETS] = limits.stream_sockets,
+		[STARTUP_RECEIVE_KB] = limits.receive_kb,
+		[STARTUP_SEND_KB] = limits.send_kb };
 	const int32_t started = NetDll_XNetStartup(XNCALLER_TITLE, params);
 	if (started != 0) {
 		xsdk_log_write("socket: XNetStartup failed: %d", (int)started);

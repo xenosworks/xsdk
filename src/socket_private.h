@@ -6,7 +6,7 @@
 #include <sys/types.h>
 
 enum {
-	// Past src/file.c's descriptors, so sockets stay under FD_SETSIZE for select.
+	// Past src/file.c's descriptors; select takes those under FD_SETSIZE, the first 29.
 	XSDK_FIRST_SOCKET_FD = 35,
 };
 

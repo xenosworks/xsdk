@@ -7,12 +7,14 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include "tests.h"
 #include "xsdk/log.h"
+#include "xsdk/net.h"
 
 // Sockets against tools/net_echo.py on the PC, whose address and port net_host.txt beside the .xex holds, as
 // "192.168.0.125 7370" (docs/scope/networking.md, step 2).
@@ -26,6 +28,18 @@ enum {
 	CLOSED_PORT = 7379,
 	// Far more than XAM holds at once, opened and closed in turn.
 	SOCKETS_IN_TURN = 1000,
+	// XAM's own, and the most buffer it takes (docs/HARDWARE.md, "XAM's sockets and loader, milestone 56").
+	DEFAULT_STREAM_SOCKETS = 32,
+	RAISED_BUFFER_KB = 63,
+	BYTES_PER_KB = 1024,
+};
+
+// xsdk_test raises XAM's limits, as a title that wants more does (docs/GUIDE.md, "Sockets").
+const XsdkNetworkLimits xsdk_network_limits = {
+	.stream_sockets = 64,
+	.datagram_sockets = 16,
+	.receive_kb = RAISED_BUFFER_KB,
+	.send_kb = RAISED_BUFFER_KB,
 };
 
 typedef struct {
@@ -277,6 +291,44 @@ static void test_non_blocking(const Host *pc)
 		close(fd);
 }
 
+static void test_link_address(const struct sockaddr_in *console)
+{
+	uint32_t link = 0;
+	struct in_addr address = { 0 };
+	const int link_error = xsdk_net_link(&link);
+	const int address_error = xsdk_net_address(&address);
+	char text[INET_ADDRSTRLEN] = "";
+	inet_ntop(AF_INET, &address, text, sizeof(text));
+	xsdk_log_write("net: link %02X, error %d; address %s, error %d", (unsigned)link, link_error, text, address_error);
+	check("net: the link is active, and xsdk_net_address gives the address the PC sees",
+		link_error == 0 && (link & XSDK_NET_LINK_ACTIVE) && address_error == 0 && address.s_addr != 0 &&
+			address.s_addr == console->sin_addr.s_addr);
+}
+
+// One more connection than XAM's own limit allows, which only xsdk_network_limits raised gives; the last is numbered
+// past what select takes.
+static void test_limits(const Host *pc)
+{
+	int fds[DEFAULT_STREAM_SOCKETS + 1];
+	int opened = 0;
+	while (opened < DEFAULT_STREAM_SOCKETS + 1 && (fds[opened] = connect_to(pc)) >= 0)
+		opened++;
+	const bool all = opened == DEFAULT_STREAM_SOCKETS + 1;
+	const int last = all ? fds[DEFAULT_STREAM_SOCKETS] : -1;
+	const bool echoed = all && echoes(last, "tcp past XAM's own limit\n");
+	int buffer_bytes = 0;
+	socklen_t length = sizeof(buffer_bytes);
+	const bool read = all && getsockopt(fds[0], SOL_SOCKET, SO_RCVBUF, &buffer_bytes, &length) == 0;
+	for (int i = 0; i < opened; i++)
+		close(fds[i]);
+	xsdk_log_write(
+		"net: %d TCP connections open at once, the last descriptor %d; SO_RCVBUF %d", opened, last, buffer_bytes);
+	check(
+		"net: 33 TCP connections open at once, the last numbered past select's and echoing through poll; SO_RCVBUF "
+		"the raised 63 KB",
+		all && last >= FD_SETSIZE && echoed && read && buffer_bytes == RAISED_BUFFER_KB * BYTES_PER_KB);
+}
+
 static void test_many(void)
 {
 	int opened = 0;
@@ -300,10 +352,12 @@ void test_net(void)
 		return;
 	struct sockaddr_in console = { 0 };
 	test_tcp(&pc, &console);
+	test_link_address(&console);
 	test_udp(&pc);
 	test_accept(&pc);
 	test_names();
 	test_refused(&console);
 	test_non_blocking(&pc);
+	test_limits(&pc);
 	test_many();
 }
