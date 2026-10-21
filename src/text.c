@@ -1,10 +1,10 @@
 #include "xsdk/text.h"
 
+#include <altivec.h>
 #include <assert.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "gpu_private.h"
 #include "text_font.h"
@@ -40,7 +40,10 @@ enum {
 	WAIT_TIMEOUT_MS = 1000,
 	// What a malformed byte reads as, the replacement character, which the font's set lacks.
 	REPLACEMENT = 0xFFFD,
+	ASCII_POINTS = 0x80,
 };
+
+typedef __vector float Quad;
 
 _Static_assert(TEXT_FONT_GLYPHS <= ATLAS_COLUMNS * (ATLAS_HEIGHT / XSDK_TEXT_CELL_HEIGHT), "the atlas's cells");
 
@@ -58,7 +61,7 @@ typedef struct {
 	XsdkSamplerState sampler;
 	XsdkShader vertex;
 	XsdkShader pixel;
-	// The ring, then the index list, written with volatile stores.
+	// The ring, written with VMX stores, then the index list, written with volatile ones.
 	volatile uint32_t *ring;
 	uint32_t ring_address;
 	XsdkRepeatedIndices indices;
@@ -69,16 +72,16 @@ typedef struct {
 	uint32_t block;
 	uint32_t block_glyphs;
 	uint32_t fences[RING_BLOCKS];
+	// Each ASCII code point's glyph, looked up once.
+	uint16_t ascii_glyphs[ASCII_POINTS];
+	// Each glyph's cell's top left in the atlas, worked out once: an integer made a float goes through memory and
+	// stalls on this CPU.
+	float cell_uv[TEXT_FONT_GLYPHS][2];
 } Text;
 
 static Text text;
 
-static uint32_t float_bits(float value)
-{
-	uint32_t bits;
-	memcpy(&bits, &value, sizeof bits);
-	return bits;
-}
+static uint32_t find_glyph(uint32_t point);
 
 // Glyph i's cell: column i % ATLAS_COLUMNS, row i / ATLAS_COLUMNS.
 static void put_cell(uint8_t *texels, uint32_t glyph)
@@ -170,6 +173,12 @@ NTSTATUS xsdk_text_open(void)
 		release();
 		return status;
 	}
+	for (uint32_t point = 0; point < ASCII_POINTS; point++)
+		text.ascii_glyphs[point] = (uint16_t)find_glyph(point);
+	for (uint32_t glyph = 0; glyph < TEXT_FONT_GLYPHS; glyph++) {
+		text.cell_uv[glyph][0] = (float)(glyph % ATLAS_COLUMNS * XSDK_TEXT_CELL_WIDTH) / ATLAS_WIDTH;
+		text.cell_uv[glyph][1] = (float)(glyph / ATLAS_COLUMNS * XSDK_TEXT_CELL_HEIGHT) / ATLAS_HEIGHT;
+	}
 	// Over what's drawn by the colour's alpha.
 	const XsdkBlend blend = { .color_source = XSDK_BLEND_SRC_ALPHA,
 		.color_dest = XSDK_BLEND_ONE_MINUS_SRC_ALPHA,
@@ -229,8 +238,8 @@ static bool is_control(uint32_t point)
 	return point < 0x20 || (point >= 0x7F && point < 0xA0);
 }
 
-// The glyph for a code point, or the default, glyph 0.
-static uint32_t glyph_of(uint32_t point)
+// The glyph for a code point, or the default, glyph 0, searched for.
+static uint32_t find_glyph(uint32_t point)
 {
 	uint32_t low = 0;
 	uint32_t high = TEXT_FONT_GLYPHS;
@@ -242,6 +251,12 @@ static uint32_t glyph_of(uint32_t point)
 			high = middle;
 	}
 	return low < TEXT_FONT_GLYPHS && text_font_code_points[low] == point ? low : 0;
+}
+
+// The glyph for a code point: ASCII's from the table xsdk_text_open made.
+static uint32_t glyph_of(uint32_t point)
+{
+	return point < ASCII_POINTS ? text.ascii_glyphs[point] : find_glyph(point);
 }
 
 static float channel(uint32_t value)
@@ -271,17 +286,20 @@ static void set_state(uint32_t argb)
 // Writes the glyph's quad into the block, its atlas coordinates on its cell's edges.
 static void put_glyph(uint32_t glyph, float left, float top, float width, float height)
 {
-	const float u = (float)(glyph % ATLAS_COLUMNS * XSDK_TEXT_CELL_WIDTH) / ATLAS_WIDTH;
-	const float v = (float)(glyph / ATLAS_COLUMNS * XSDK_TEXT_CELL_HEIGHT) / ATLAS_HEIGHT;
+	const float u = text.cell_uv[glyph][0];
+	const float v = text.cell_uv[glyph][1];
 	const float u_right = u + (float)XSDK_TEXT_CELL_WIDTH / ATLAS_WIDTH;
 	const float v_bottom = v + (float)XSDK_TEXT_CELL_HEIGHT / ATLAS_HEIGHT;
 	const float right = left + width;
 	const float bottom = top + height;
-	const float corners[GLYPH_FLOATS] = { left, top, u, v, right, top, u_right, v, left, bottom, u, v_bottom, right,
-		bottom, u_right, v_bottom };
-	volatile uint32_t *const slot = &text.ring[(text.block * BLOCK_GLYPHS + text.block_glyphs) * GLYPH_FLOATS];
-	for (uint32_t i = 0; i < GLYPH_FLOATS; i++)
-		slot[i] = float_bits(corners[i]);
+	// A corner a 16-byte VMX store, the one wider store write-combined memory takes (CLAUDE.md): a glyph's 64 bytes
+	// start on 16, as the ring does.
+	float *const slot = (float *)(uintptr_t)&text.ring[(text.block * BLOCK_GLYPHS + text.block_glyphs) * GLYPH_FLOATS];
+	assert(((uintptr_t)slot & 15) == 0);
+	vec_st((Quad){ left, top, u, v }, 0, slot);
+	vec_st((Quad){ right, top, u_right, v }, 16, slot);
+	vec_st((Quad){ left, bottom, u, v_bottom }, 32, slot);
+	vec_st((Quad){ right, bottom, u_right, v_bottom }, 48, slot);
 	text.block_glyphs++;
 }
 
