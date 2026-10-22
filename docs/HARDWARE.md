@@ -5131,7 +5131,16 @@ back (`results/2026-10-22-milestone-61/xsdk_test.log`):
 - **User clip planes do nothing while clipping is off:** a plane set after `clip_disable` cut nothing, and the same
   plane set with clipping on cut as before.
 
-So `XsdkRaster`'s `depth_clamp` is depth clamp, as OpenGL's and Vulkan's are, and a title can't have it and user clip
-planes at once. With `clip_disable` never set (`tests/breaks/depth_clamp_off.patch`), the three checks with depth
-clamp on failed and no other (`results/2026-10-22-milestone-61/xsdk_test_break_depth_clamp.log`). Both runs failed
-only the controller's two checks besides, its pad off.
+So `XsdkRaster`'s `depth_clamp` clamps depth as OpenGL's and Vulkan's do, and a title can't have it and user clip
+planes at once. With `clip_disable` never set (`tests/breaks/depth_clamp_off.patch`), the three checks with depth clamp
+on failed and no other (`results/2026-10-22-milestone-61/xsdk_test_break_depth_clamp.log`). Both runs failed only the
+controller's two checks besides, its pad off.
+
+**It isn't their depth clamp, though: `clip_disable` stops all clipping,** where theirs stops only the near and far
+planes. Starship drew through libultraship's Fast3D with it on, as Fast3D's OpenGL backend turns on `GL_DEPTH_CLAMP`
+(lus:src/graphic/Fast3D/backends/gfx_opengl.cpp:668), and the console's captures of its intro showed triangles with a
+vertex behind the camera drawn wrongly: in the corridor cutscene only the corridor's far end, in a box, its near walls
+missing, and a flat triangle across the Arwing passing Corneria
+(`results/2026-10-22-milestone-61/starship_clip_disable.png`). With clipping on and z clamped into 0 to w in the vertex
+shader where w is positive, the same frames drew the corridor whole (`starship_clipping_on.png`). A title that wants
+OpenGL's depth clamp does that; `depth_clamp` suits geometry that stays in front of the camera.

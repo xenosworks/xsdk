@@ -493,8 +493,9 @@ typedef struct {
 	float depth_bias_slope;
 	uint32_t fill;
 	// Depth clamp: clipping off, PA_CL_CLIP_CNTL's clip_disable (xenia:src/xenia/gpu/registers.h:547). Draws go past
-	// the near and far planes, their depth clamped to 0 and 1, and user clip planes do nothing while it's on
-	// (docs/HARDWARE.md, "Depth clamp, milestone 61").
+	// the near and far planes, their depth clamped to 0 and 1, and user clip planes do nothing while it's on. Unlike
+	// OpenGL's, it stops all clipping, so a triangle with a vertex behind the camera draws wrongly: clamp z in the
+	// vertex shader instead for that (docs/HARDWARE.md, "Depth clamp, milestone 61").
 	bool depth_clamp;
 } XsdkRaster;
 
