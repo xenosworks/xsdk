@@ -132,6 +132,9 @@ void test_hiz(void);
 // Raster and blend state (milestone 14).
 void test_raster(void);
 
+// Depth clamp (milestone 61).
+void test_depth_clamp(void);
+
 // Sampling and mipmaps (milestone 15).
 void test_sampling(void);
 

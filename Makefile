@@ -49,7 +49,8 @@ TEST_SOURCES := tests/main.c tests/test_image.c tests/test_memory.c tests/test_t
 	tests/test_cpp_chrono.cpp tests/test_cpp_filesystem.cpp \
 	tests/test_cpp_format.cpp tests/test_gpu.c tests/test_present.c tests/test_triangle.c tests/test_texture.c \
 	tests/test_render.c tests/test_pacing.c tests/bar_scene.c tests/test_scale.c tests/test_constants.c \
-	tests/test_indexed.c tests/test_depth.c tests/test_raster.c tests/test_sampling.c tests/test_anisotropy.c \
+	tests/test_indexed.c tests/test_depth.c tests/test_depth_clamp.c tests/test_raster.c tests/test_sampling.c \
+	tests/test_anisotropy.c \
 	tests/test_formats.c tests/test_upload.c tests/test_vertex.c tests/test_replay.c tests/test_registers.c \
 	tests/test_copy.c tests/test_microcode.c tests/test_multisample.c tests/test_hiz.c tests/test_net.c \
 	tests/test_interrupts.c tests/test_xsc.c tests/test_cube_volume.c tests/test_targets.c tests/test_resolve_rect.c \

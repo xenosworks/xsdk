@@ -79,6 +79,7 @@ int main(int argc, char **argv)
 	test_depth();
 	test_hiz();
 	test_raster();
+	test_depth_clamp();
 	test_sampling();
 	test_cube_volume();
 	test_anisotropy();
