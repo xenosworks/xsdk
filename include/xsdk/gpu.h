@@ -492,16 +492,22 @@ typedef struct {
 	float depth_bias;
 	float depth_bias_slope;
 	uint32_t fill;
+	// Clipping off, PA_CL_CLIP_CNTL's clip_disable (xenia:src/xenia/gpu/registers.h:547), which Xenia takes as depth
+	// clamp (xenia:src/xenia/gpu/d3d12/pipeline_cache.cc:1508) and as user clip planes off (885-886). What the console
+	// draws and writes past the near and far planes is unverified: xsdk_test's depth clamp checks settle it.
+	bool depth_clamp;
 } XsdkRaster;
 
 typedef struct {
 	uint32_t mode_control;
 	// Front scale and offset, then back.
 	uint32_t polygon_offset[4];
+	// PA_CL_CLIP_CNTL's clip_disable, or 0.
+	uint32_t clip_control;
 } XsdkRasterState;
 
 void xsdk_gpu_raster_state(XsdkRasterState *state, const XsdkRaster *setting);
-// Applies to the draws after; xsdk_gpu_set_target culls nothing and biases nothing.
+// Applies to the draws after; xsdk_gpu_set_target culls nothing, biases nothing and clamps no depth.
 void xsdk_gpu_set_raster(const XsdkRasterState *state);
 // Draws only to pixels x to x + width - 1 and y to y + height - 1; xsdk_gpu_set_target opens it to the whole target.
 void xsdk_gpu_set_scissor(uint32_t x, uint32_t y, uint32_t width, uint32_t height);
@@ -515,7 +521,8 @@ enum {
 
 // Clips the draws after to where dot(the vertex's clip-space position, plane n) >= 0, for each bit n of mask, plane n
 // planes[n]'s x, y, z and w, as Xenia applies them (xenia:src/xenia/gpu/dxbc_shader_translator.cc:1033-1053); planes
-// may be NULL for a mask of 0. xsdk_gpu_set_target and resolves turn every plane off.
+// may be NULL for a mask of 0; depth clamp keeps as the raster state set it. xsdk_gpu_set_target and resolves turn
+// every plane off.
 void xsdk_gpu_set_clip_planes(uint32_t mask, const float planes[][4]);
 
 // Shader constants for the draws after, written from a copy: float constants in whole groups of 4, the boolean and

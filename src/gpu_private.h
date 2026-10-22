@@ -202,6 +202,8 @@ void xsdk_gpu_write(const GpuPackets *packets);
 // Forgets which shaders the GPU holds, so the next xsdk_gpu_set_shaders loads both: after anything that loads microcode
 // or runs packets xsdk_gpu_set_shaders didn't see, or changes a loaded shader's.
 void xsdk_gpu_forget_shaders(void);
+// Forgets PA_CL_CLIP_CNTL, so the next xsdk_gpu_set_raster writes it: where a recording begins, ends or runs.
+void xsdk_gpu_forget_clip_control(void);
 
 // Where packets go next and where the room there ends: the stream, up to its segment's or block's end, or the
 // recording, up to its capacity; empty while packets go straight into the ring (src/gpu.c).

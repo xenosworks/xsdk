@@ -53,6 +53,8 @@ enum {
 	BLEND_DWORDS = 1 + 2 + 2,
 	BLEND_CONSTANT_DWORDS = 1 + 4,
 	RASTER_DWORDS = 2 + 1 + 4,
+	// PA_CL_CLIP_CNTL, put ahead of PA_SU_SC_MODE_CNTL in its packet.
+	RASTER_CLIP_DWORDS = 1,
 	SCISSOR_DWORDS = 1 + 2,
 	VIEWPORT_DWORDS = 1 + 6,
 	CLIP_CONTROL_DWORDS = 2,
@@ -86,6 +88,8 @@ enum {
 	// libxenon's control state from RB_DEPTHCONTROL on, less depth and culling (xe.c:1403-1416).
 	BLEND_ONE_ZERO = 0x00010001,
 	CLIP_D3D_SPACE = 0x00080000,
+	// PA_CL_CLIP_CNTL's clip_disable (xenia:src/xenia/gpu/registers.h:547).
+	CLIP_DISABLE = 1 << 16,
 	SC_MODE_WINDOW_OFFSET_NO_CULL = 0x00010000,
 	VTE_VIEWPORT_AND_W0 = 0x0000043F,
 	STENCIL_MASKS = 0x00FFFF00,
@@ -221,6 +225,9 @@ static Surface hiz_surface;
 // The pixel shader set writes depth, and the depth setting set: the buffer's control follows both.
 static bool pixel_writes_depth;
 static uint32_t depth_control_set;
+// PA_CL_CLIP_CNTL as the clip planes and raster state last set it, and whether the GPU may hold another.
+static uint32_t clip_control = CLIP_D3D_SPACE;
+static bool clip_control_stale;
 
 #ifdef XSDK_MSAA_PROBE
 // Milestone 44 step 3's probe (tests/probe_msaa.c) of what xsdk refuses or never sends at 2 and 4 samples: a resolve's
@@ -408,6 +415,8 @@ static void put_target(uint32_t width, uint32_t height, uint32_t rows)
 	gpu_put_register(&packets, RB_COLOR_MASK, depth_only ? 0 : (1u << COLOR_MASK_BITS * color_target_count) - 1);
 	gpu_put_registers(&packets, RB_STENCILREFMASK_BF, viewport, 9);
 	xsdk_gpu_write(&packets);
+	clip_control = CLIP_D3D_SPACE;
+	clip_control_stale = false;
 	viewport_width = (float)width;
 	viewport_height = (float)height;
 	xsdk_gpu_tiles_forget();
@@ -506,6 +515,8 @@ void xsdk_gpu_set_band_targets(uint32_t width, uint32_t height, uint32_t rows, u
 	const XsdkColorTarget *targets, uint32_t count, uint32_t depth_tile, bool queued)
 {
 	hold_targets(targets, count, depth_tile, samples);
+	// Each band's target, set as it runs, turns the planes and depth clamp off before the pass's draws.
+	clip_control = CLIP_D3D_SPACE;
 	if (queued)
 		put_target(width, height, rows);
 }
@@ -764,14 +775,30 @@ void xsdk_gpu_raster_state(XsdkRasterState *state, const XsdkRaster *setting)
 	state->polygon_offset[1] = offset;
 	state->polygon_offset[2] = scale;
 	state->polygon_offset[3] = offset;
+	state->clip_control = setting->depth_clamp ? CLIP_DISABLE : 0;
 }
 
+void xsdk_gpu_forget_clip_control(void)
+{
+	clip_control_stale = true;
+}
+
+// PA_CL_CLIP_CNTL, the register before PA_SU_SC_MODE_CNTL, goes in its packet only when it changes, costing nothing
+// more otherwise.
 void xsdk_gpu_set_raster(const XsdkRasterState *state)
 {
-	GpuPackets packets = gpu_reserve_packets(RASTER_DWORDS);
-	gpu_put_register(&packets, PA_SU_SC_MODE_CNTL, state->mode_control | msaa_enable());
+	const uint32_t clip = (clip_control & ~(uint32_t)CLIP_DISABLE) | state->clip_control;
+	const bool put_clip = clip != clip_control || clip_control_stale;
+	const uint32_t clip_and_mode[] = { clip, state->mode_control | msaa_enable() };
+	GpuPackets packets = gpu_reserve_packets(RASTER_DWORDS + (put_clip ? RASTER_CLIP_DWORDS : 0));
+	if (put_clip)
+		gpu_put_registers(&packets, PA_CL_CLIP_CNTL, clip_and_mode, 2);
+	else
+		gpu_put_register(&packets, PA_SU_SC_MODE_CNTL, clip_and_mode[1]);
 	gpu_put_registers(&packets, PA_SU_POLY_OFFSET_FRONT_SCALE, state->polygon_offset, 4);
 	gpu_packets_done(&packets);
+	clip_control = clip;
+	clip_control_stale = false;
 }
 
 // The window offset stays 0: target pixels, bottom right exclusive (xenia:src/xenia/gpu/draw_util.cc:559-607).
@@ -801,7 +828,7 @@ void xsdk_gpu_viewport_size(float *width, float *height)
 	*height = viewport_height;
 }
 
-// PA_CL_CLIP_CNTL's ucp_ena bits beside the clip space xsdk_gpu_set_target sets
+// PA_CL_CLIP_CNTL's ucp_ena bits beside the clip space xsdk_gpu_set_target sets and the raster state's clip_disable
 // (xenia:src/xenia/gpu/registers.h:534-562).
 void xsdk_gpu_set_clip_planes(uint32_t mask, const float planes[][4])
 {
@@ -809,8 +836,10 @@ void xsdk_gpu_set_clip_planes(uint32_t mask, const float planes[][4])
 	uint32_t values[XSDK_CLIP_PLANES * 4] = { 0 };
 	for (uint32_t i = 0; mask && i < XSDK_CLIP_PLANES * 4; i++)
 		values[i] = mask & 1u << i / 4 ? float_bits(planes[i / 4][i % 4]) : 0;
+	clip_control = (clip_control & CLIP_DISABLE) | CLIP_D3D_SPACE | mask;
+	clip_control_stale = false;
 	GpuPackets packets = gpu_reserve_packets(CLIP_CONTROL_DWORDS + (mask ? CLIP_PLANE_DWORDS : 0));
-	gpu_put_register(&packets, PA_CL_CLIP_CNTL, CLIP_D3D_SPACE | mask);
+	gpu_put_register(&packets, PA_CL_CLIP_CNTL, clip_control);
 	if (mask)
 		gpu_put_registers(&packets, PA_CL_UCP_0_X, values, XSDK_CLIP_PLANES * 4);
 	gpu_packets_done(&packets);
