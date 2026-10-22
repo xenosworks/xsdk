@@ -1041,6 +1041,11 @@ gap that something running on xsdk meets becomes a milestone; the rest wait (aft
     milestone of its own, later, as no public encoder makes the data to test it without Microsoft's tools
     (results/2026-10-21-milestone-58/acceptance/; HARDWARE.md, "Milestone 58 on the console").
 
+61. **Fast3D on the GPU layer.** Agreed on 2026-10-22: docs/scope/61-fast3d.md. A Fast3D backend for libultraship on
+    xsdk's GPU layer, in xenosworks/libultraship-xenon, brought up on Starship in xenosworks/starship-xenon, so a
+    libultraship game pays the GPU layer's cost for a draw rather than vulkan4xenon's; and a depth clamp setting in
+    xsdk's raster state, which Fast3D turns on.
+
 **Networking**, a scope of its own rather than a numbered milestone: sockets, and TLS 1.2 in the title's own code.
 Agreed and done on 2026-10-14: docs/scope/networking.md.
 
