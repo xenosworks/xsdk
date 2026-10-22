@@ -190,6 +190,14 @@ All taken by the user on 2026-10-22, the last four as recommended:
    GitHub forks with default branch `xenon`, made by me at the user's word on 2026-10-22; xenosworks/sdl2-compat-xenon
    only if step 1 patches sdl2-compat.
 
+Taken by the user later on 2026-10-22, after steps 1 and 2 ran on the console:
+
+8. **Step 3 takes the interpreter's vertex work to the console's hardware without a profiling pass first:** first VMX
+   in Fast3D's per-vertex transform, lighting, texgen and fog, then the vertex shader doing that math on the GPU. Step
+   1 had found Fast3D's interpreter, not the cost of a draw, holding the attract demo to 41 fps at the interpolated 60
+   (`local/m61/runs/step1`, about 100 draws and 13 to 14 ms of interpreter a frame), so this widens step 3 from the
+   backend to the interpreter. The 10 s log lines give each change's before and after.
+
 ## Size
 
 Large. Step 1 is most of it: about eight libraries and sdl2-compat to build for xsdk, Starship's start-up, and the
