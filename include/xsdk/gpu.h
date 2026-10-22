@@ -492,9 +492,9 @@ typedef struct {
 	float depth_bias;
 	float depth_bias_slope;
 	uint32_t fill;
-	// Clipping off, PA_CL_CLIP_CNTL's clip_disable (xenia:src/xenia/gpu/registers.h:547), which Xenia takes as depth
-	// clamp (xenia:src/xenia/gpu/d3d12/pipeline_cache.cc:1508) and as user clip planes off (885-886). What the console
-	// draws and writes past the near and far planes is unverified: xsdk_test's depth clamp checks settle it.
+	// Depth clamp: clipping off, PA_CL_CLIP_CNTL's clip_disable (xenia:src/xenia/gpu/registers.h:547). Draws go past
+	// the near and far planes, their depth clamped to 0 and 1, and user clip planes do nothing while it's on
+	// (docs/HARDWARE.md, "Depth clamp, milestone 61").
 	bool depth_clamp;
 } XsdkRaster;
 

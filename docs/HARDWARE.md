@@ -5116,3 +5116,22 @@ Step 6 of docs/scope/63-homebrew-store.md: store_check from `hdd:\XSDK\m63s`, th
   0.2.0.0, its page then saying Running. Step 1 had shown the rename over a running .xex.
 - store_check passed 23 of 23 over its three starts, each of the seventeen breaks of the store's tests/breaks.py
   failing the checks it names.
+
+## Depth clamp, milestone 61 (2026-10-22)
+
+Fast3D turns on `GL_DEPTH_CLAMP` (docs/scope/61-fast3d.md, "Depth clamp"). Xenos turns clipping off with
+`PA_CL_CLIP_CNTL`'s `clip_disable`, bit 16 (xenia:src/xenia/gpu/registers.h:547), which Xenia takes as depth clamp
+and as user clip planes off (xenia:src/xenia/gpu/d3d12/pipeline_cache.cc:885-886, 1508). xsdk_test's depth clamp
+checks drew a rectangle at w = 1 across the near plane, z from -0.5 to 0.5, and one across the far plane, z from 0.5
+to 1.5, depth cleared to 0.5 and compared ALWAYS, each with clipping on and off, then resolved its depth and read it
+back (`results/2026-10-22-milestone-61/xsdk_test.log`):
+- **With clipping on,** nothing beyond either plane is drawn, and the depth there stays 0.5.
+- **With `clip_disable`,** the rectangles draw beyond both planes, their depth clamped: 0 (`000000`) where z is
+  -0.2475, and 1 (`FFFFFF`) where it's 1.2525. Inside the planes depth is z, as with clipping on (0.2525, 0.7525).
+- **User clip planes do nothing while clipping is off:** a plane set after `clip_disable` cut nothing, and the same
+  plane set with clipping on cut as before.
+
+So `XsdkRaster`'s `depth_clamp` is depth clamp, as OpenGL's and Vulkan's are, and a title can't have it and user clip
+planes at once. With `clip_disable` never set (`tests/breaks/depth_clamp_off.patch`), the three checks with depth
+clamp on failed and no other (`results/2026-10-22-milestone-61/xsdk_test_break_depth_clamp.log`). Both runs failed
+only the controller's two checks besides, its pad off.
