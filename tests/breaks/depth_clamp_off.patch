@@ -1,0 +1,12 @@
+--- a/src/gpu_draw.c
++++ b/src/gpu_draw.c
+@@ -775,7 +775,8 @@ void xsdk_gpu_raster_state(XsdkRasterState *state, const XsdkRaster *setting)
+ 	state->polygon_offset[1] = offset;
+ 	state->polygon_offset[2] = scale;
+ 	state->polygon_offset[3] = offset;
+-	state->clip_control = setting->depth_clamp ? CLIP_DISABLE : 0;
++	// Broken on purpose: depth clamp kept in the setting, clip_disable never set.
++	state->clip_control = 0;
+ }
+ 
+ void xsdk_gpu_forget_clip_control(void)

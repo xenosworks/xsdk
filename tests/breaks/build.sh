@@ -42,6 +42,10 @@
 #   \Device\Mass0\ does, or fails with ENOENT where it does" alone.
 # - write_gap: a write starting past a file's end leaves the gap unfilled; fails "pwrite: past the end, the gap before
 #   it reads zeros" alone.
+# Milestone 61's:
+# - depth_clamp_off: XsdkRaster's depth_clamp kept but clip_disable never set; fails "depth clamp: on, a rectangle
+#   across the near plane draws beyond it too", "depth clamp: on, a rectangle across the far plane draws past it too"
+#   and "depth clamp: kept on by a clip plane set after it" alone.
 set -eu
 cd "$(dirname "$0")/../.."
 build_break()
@@ -57,7 +61,7 @@ build_break()
 }
 for name in noflush nowait msaa_sample0 msaa_onesample msaa_tiles64 msaa_bands2 atoc_noenable atoc_offsets0 \
 	pwrite_position tz_sign hdd_device letterbox_row0 ftruncate_nozeros fsync_socket statvfs_sector language_zero \
-	letterbox_720 letterbox_kept usb_mass1 write_gap; do
+	letterbox_720 letterbox_kept usb_mass1 write_gap depth_clamp_off; do
 	build_break "$name" xsdk_test
 done
 build_break terminate_noregister terminate_check
