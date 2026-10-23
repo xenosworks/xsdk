@@ -446,7 +446,10 @@ subexpression elimination yet, so `normalize(v)` + `length(v)` recomputes
   near `[-π,π]`; arbitrary arguments need a `frac`-based range-reduction
   prologue (math in `docs/builtin-lowering.md`). `tan = sin·rcp(cos)`.
 - **`asin`/`acos`** — Abramowitz-Stegun sqrt form, max error ~7e-5 over
-  `[-1,1]`. `acos = π/2 − asin`.
+  `[-1,1]`. `acos = π/2 − asin`. A vector's lanes each take their own value
+  and square root, the scalar unit's sqrt one lane at a time; until milestone
+  61 every lane took the first lane's (`tests/test_inverse_trig.py`), and
+  `atan` likewise.
 - **`atan`** — odd polynomial, accurate on `[-1,1]` (no range reduction for
   `|x|>1` yet; `atan2`/wide-range is a refinement).
 

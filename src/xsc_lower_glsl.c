@@ -108,6 +108,18 @@ static int64_t broadcast(XscLower *l, uint32_t ssa)
 	return done(xsc_emit2(l, XSC_VECTOR_MAX, src, src, r, false, 0xF), r);
 }
 
+// A vector in its own lanes, a scalar in all four, in a fresh register as broadcast gives one.
+static int64_t lanes(XscLower *l, uint32_t ssa)
+{
+	if (xsdk_xsc_vec_size(l, ssa) < 2)
+		return broadcast(l, ssa);
+	const XscOperand o = xsdk_xsc_lower_operand(l, ssa);
+	if (xsc_failed(l))
+		return XSC_NONE;
+	const int64_t r = xsdk_xsc_fresh(l);
+	return done(xsc_emit2(l, XSC_VECTOR_MAX, xsc_plain(o), xsc_plain(o), r, false, 0xF), r);
+}
+
 static int64_t horner(XscLower *l, int64_t x_reg, const double *coeffs, size_t count)
 {
 	XscOperand first;
@@ -125,11 +137,14 @@ static int64_t horner(XscLower *l, int64_t x_reg, const double *coeffs, size_t c
 	return p.value;
 }
 
-// sign(x) * (pi/2 - sqrt(1 - |x|) * p(|x|)).
+static int64_t each_lane(XscLower *l, int64_t sop, XscOperand src, int64_t n, int64_t dst, bool export_);
+
+// sign(x) * (pi/2 - sqrt(1 - |x|) * p(|x|)), the square root a lane at a time for a vector, as the scalar unit reads
+// one component.
 static int64_t asin_reg(XscLower *l, uint32_t ssa)
 {
 	static const double coeffs[] = { -0.0187293, 0.0742610, -0.2121144, 1.5707288 };
-	const int64_t xr = broadcast(l, ssa);
+	const int64_t xr = lanes(l, ssa);
 	if (xr == XSC_NONE)
 		return XSC_NONE;
 	const int64_t ax = xsdk_xsc_fresh(l);
@@ -142,7 +157,9 @@ static int64_t asin_reg(XscLower *l, uint32_t ssa)
 	const int64_t om = xsdk_xsc_fresh(l);
 	if (!xsc_emit2(l, XSC_VECTOR_ADD, xsc_plain(one), xsc_negated(xsc_reg(ax)), om, false, 0xF))
 		return XSC_NONE;
-	const int64_t s = xsdk_xsc_emit_scalar(l, XSC_SCALAR_SQRT, xsdk_xsc_fresh(l), xsc_reg(om), 3, 0xF);
+	const int64_t n = xsdk_xsc_vec_size(l, ssa);
+	const int64_t s = n > 1 ? each_lane(l, XSC_SCALAR_SQRT, xsc_reg(om), n, xsdk_xsc_fresh(l), false)
+							: xsdk_xsc_emit_scalar(l, XSC_SCALAR_SQRT, xsdk_xsc_fresh(l), xsc_reg(om), 3, 0xF);
 	XscOperand half_pi;
 	if (s == XSC_NONE || !splat(l, HALF_PI, &half_pi))
 		return XSC_NONE;
@@ -166,7 +183,7 @@ static int64_t asin_reg(XscLower *l, uint32_t ssa)
 static int64_t atan_reg(XscLower *l, uint32_t ssa)
 {
 	static const double coeffs[] = { 0.0208351, -0.0851330, 0.1801410, -0.3302995, 0.9998660 };
-	const int64_t xr = broadcast(l, ssa);
+	const int64_t xr = lanes(l, ssa);
 	if (xr == XSC_NONE)
 		return XSC_NONE;
 	const int64_t x2 = xsdk_xsc_fresh(l);
