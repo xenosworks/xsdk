@@ -1,0 +1,74 @@
+log: game:\snd.log
+log: named after \Device\Harddisk0\Partition1\starship\snd.xex
+log: no net_log.txt beside the .xex, so not over the network
+open: NtCreateFile(game:\cvars.cfg) failed: 0xC0000034
+[2026-10-23 01:06:06.076] [info] [ArchiveManager.cpp:232] Reading archive: game:/./sf64.o2r
+[2026-10-23 01:06:06.337] [info] [ArchiveManager.cpp:264] Adding Archive game:/./sf64.o2r to Archive Manager
+[2026-10-23 01:06:06.394] [info] [ArchiveManager.cpp:232] Reading archive: game:/./starship.o2r
+[2026-10-23 01:06:06.410] [info] [ArchiveManager.cpp:264] Adding Archive game:/./starship.o2r to Archive Manager
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 22142 us
+open: NtCreateFile(game:\capture.txt) failed: 0xC0000034
+gfx_xsdk: programs are kept in game:/shaders/fast3d/23301E9B7CB9C8D7
+SDLAudioPlayer: driver xsdk, device 2: want 32000 Hz, format 0x9010, 2 channels, 1024 samples; have 32000 Hz, format 0x9010, 2 channels, 1024 samples
+[01:06:07.221] [DisplayListPatch.cpp:11] [info] Applying display list patches
+[01:06:07.235] [GenericArrayFactory.cpp:17] [info] GenericArray Type Num: 0
+open: NtCreateFile(game:\gamecontrollerdb.txt) failed: 0xC0000034
+[01:06:07.235] [GenericArrayFactory.cpp:21] [info] GenericArray Count: 283
+[01:06:07.236] [os.cpp:23] [error] Failed add SDL game controller mappings from "./gamecontrollerdb.txt" (Couldn't open ./gamecontrollerdb.txt: No such file or directory)
+Scene Changed!
+Scene Changed!
+audio diag: 108 buffers of 528 samples x 2 channels x 2 frames, peak 9438, 1781 queued before this one; 7 notes at most, 3 players on, seq ids 23000001
+gfx_xsdk: 509 frames in 10.0 s (50.9 fps); a frame: 5.8 draws (0.0 skipped), 779 triangles, 16395 floats, 0.115 ms in the backend (0.015 copying vertices), 3.566 ms from StartFrame to EndFrame, 6.027 ms of GPU time over 508 frames
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 4 read), 1084 loaded, 3 kept; 3 textures created, 3 uploads of 51 KB; 1530 framebuffer calls
+audio diag: 149 buffers of 560 samples x 2 channels x 2 frames, peak 8746, 1653 queued before this one; 7 notes at most, 3 players on, seq ids 23000001
+audio diag: 150 buffers of 528 samples x 2 channels x 2 frames, peak 9491, 1760 queued before this one; 11 notes at most, 3 players on, seq ids 23000001
+gfx_xsdk: 598 frames in 10.0 s (59.7 fps); a frame: 14.8 draws (0.0 skipped), 900 triangles, 19086 floats, 0.079 ms in the backend (0.019 copying vertices), 4.099 ms from StartFrame to EndFrame, 4.783 ms of GPU time over 598 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 1592 loaded, 3 kept; 4 textures created, 4 uploads of 56 KB; 1794 framebuffer calls
+audio diag: 149 buffers of 528 samples x 2 channels x 2 frames, peak 4110, 1834 queued before this one; 16 notes at most, 3 players on, seq ids 23000001
+[01:06:31.262] [AnimFactory.cpp:20] [info] JointSize: 23
+[01:06:31.263] [AnimFactory.cpp:20] [info] JointSize: 23
+[01:06:31.263] [AnimFactory.cpp:20] [info] JointSize: 23
+[01:06:31.264] [AnimFactory.cpp:20] [info] JointSize: 21
+[01:06:31.297] [AnimFactory.cpp:20] [info] JointSize: 19
+audio diag: 134 buffers of 560 samples x 2 channels x 2 frames, peak 10255, 0 queued before this one; 17 notes at most, 3 players on, seq ids 22000001
+Scene Changed!
+Scene Changed!
+gfx_xsdk: 538 frames in 10.0 s (53.7 fps); a frame: 32.9 draws (0.0 skipped), 1117 triangles, 24757 floats, 0.324 ms in the backend (0.028 copying vertices), 5.403 ms from StartFrame to EndFrame, 3.820 ms of GPU time over 538 frames
+gfx_xsdk: in the window: 6 shaders created (0 compiled, 6 read), 1687 loaded, 9 kept; 72 textures created, 347 uploads of 1435 KB; 1614 framebuffer calls
+audio diag: 135 buffers of 560 samples x 2 channels x 2 frames, peak 10900, 0 queued before this one; 21 notes at most, 0 players on, seq ids 24000001
+audio diag: 105 buffers of 560 samples x 2 channels x 2 frames, peak 4849, 0 queued before this one; 13 notes at most, 3 players on, seq ids 3C000001
+gfx_xsdk: 463 frames in 10.0 s (46.2 fps); a frame: 191.7 draws (0.0 skipped), 1041 triangles, 26322 floats, 1.514 ms in the backend (0.058 copying vertices), 10.396 ms from StartFrame to EndFrame, 10.933 ms of GPU time over 462 frames
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read), 5306 loaded, 10 kept; 62 textures created, 45320 uploads of 185352 KB; 1389 framebuffer calls
+audio diag: 128 buffers of 528 samples x 2 channels x 2 frames, peak 6187, 1770 queued before this one; 22 notes at most, 3 players on, seq ids 3C000001
+audio diag: 149 buffers of 528 samples x 2 channels x 2 frames, peak 22962, 1781 queued before this one; 19 notes at most, 2 players on, seq ids 3C000001
+gfx_xsdk: 598 frames in 10.0 s (59.7 fps); a frame: 76.4 draws (0.0 skipped), 158 triangles, 4918 floats, 0.728 ms in the backend (0.019 copying vertices), 3.686 ms from StartFrame to EndFrame, 14.659 ms of GPU time over 598 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 3456 loaded, 10 kept; 0 textures created, 33022 uploads of 142675 KB; 1794 framebuffer calls
+audio diag: 150 buffers of 528 samples x 2 channels x 2 frames, peak 14168, 1717 queued before this one; 2 notes at most, 2 players on, seq ids 3C000001
+audio diag: 150 buffers of 528 samples x 2 channels x 2 frames, peak 22849, 1824 queued before this one; 2 notes at most, 2 players on, seq ids 3C000001
+Scene Changed!
+velocity_diff: 1038.987793
+ at_dist: 600.000000
+ eye_dist: 489.383057
+CAMERA 1 SKIPED: 0
+velocity_diff: 866.692383
+ at_dist: 6064.157715
+ eye_dist: 6526.850586
+CAMERA 1 SKIPED: 1
+gfx_xsdk: 593 frames in 10.0 s (59.3 fps); a frame: 92.8 draws (0.0 skipped), 319 triangles, 12793 floats, 0.629 ms in the backend (0.029 copying vertices), 4.649 ms from StartFrame to EndFrame, 14.451 ms of GPU time over 594 frames
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 3 read), 6433 loaded, 13 kept; 0 textures created, 20560 uploads of 93549 KB; 1779 framebuffer calls
+audio diag: 147 buffers of 528 samples x 2 channels x 2 frames, peak 9958, 1728 queued before this one; 22 notes at most, 3 players on, seq ids 25000001
+audio diag: 150 buffers of 528 samples x 2 channels x 2 frames, peak 18205, 1770 queued before this one; 22 notes at most, 3 players on, seq ids 25000001
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 92.0 draws (0.0 skipped), 429 triangles, 18882 floats, 0.225 ms in the backend (0.035 copying vertices), 6.144 ms from StartFrame to EndFrame, 12.130 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 7252 loaded, 13 kept; 0 textures created, 620 uploads of 4845 KB; 1800 framebuffer calls
+audio diag: 150 buffers of 528 samples x 2 channels x 2 frames, peak 29667, 1813 queued before this one; 22 notes at most, 3 players on, seq ids 25000001
+[01:07:18.893] [AnimFactory.cpp:20] [info] JointSize: 19
+audio diag: 150 buffers of 528 samples x 2 channels x 2 frames, peak 28839, 1749 queued before this one; 22 notes at most, 3 players on, seq ids 25000001
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 41.8 draws (0.0 skipped), 205 triangles, 8926 floats, 0.136 ms in the backend (0.017 copying vertices), 5.393 ms from StartFrame to EndFrame, 12.714 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 5020 loaded, 13 kept; 0 textures created, 659 uploads of 5036 KB; 1800 framebuffer calls
+audio diag: 150 buffers of 560 samples x 2 channels x 2 frames, peak 12278, 1621 queued before this one; 22 notes at most, 3 players on, seq ids 25000001
+audio diag: 150 buffers of 528 samples x 2 channels x 2 frames, peak 30192, 1728 queued before this one; 22 notes at most, 3 players on, seq ids 25000001
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 59.7 draws (0.0 skipped), 300 triangles, 12912 floats, 0.182 ms in the backend (0.024 copying vertices), 5.996 ms from StartFrame to EndFrame, 11.764 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 5888 loaded, 13 kept; 0 textures created, 1226 uploads of 7232 KB; 1800 framebuffer calls
+audio diag: 150 buffers of 528 samples x 2 channels x 2 frames, peak 29853, 1834 queued before this one; 22 notes at most, 3 players on, seq ids 25000001
+audio diag: 150 buffers of 528 samples x 2 channels x 2 frames, peak 26879, 1770 queued before this one; 22 notes at most, 3 players on, seq ids 25000001
