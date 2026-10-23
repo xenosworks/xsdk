@@ -1,0 +1,55 @@
+Starship's intro on the console, frames 2950, 3025, 3100 and 3175 captured and each one's G_VTX_OTR_HASH lookups dumped
+by a diagnostic build of libultraship-xenon (not committed): for each, the resource's address and size then, and the
+pointer or offset the command held, counted per frame below. Captures compared pixel for pixel with a clean run's.
+
+Before: a cached pointer is told from an offset by being above 0xFFFFF (upstream). Runs vm1 to vm4, frame 3100:
+vm1/vbo_3100.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 1 cached outside
+vm2/vbo_3100.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+vm3/vbo_3100.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 1 cached outside
+vm4/vbo_3100.bin: 156 lookups, 4 resources below 1 MB, 156 cached, 4 cached outside
+vm1, vm3 and vm4 drew stray polygons from the team's limbs; vm2 drew as the game does. The stray pointers:
+  vm1: ast_title/ast_title_seg6_vtx_45320 at 0x00071B78, cached 0x00155268, three times its address
+  vm3: ast_title/ast_title_seg6_vtx_41C70 at 0x0008AA90, cached 0x00115520, twice its address
+  vm4: ast_title/ast_title_seg6_vtx_410C8 at 0x0008E738, cached 0x0011CE70, twice its address
+
+After: the cached pointer is marked by bit 0 of the command's w0. Runs fx1 to fx6, all four frames:
+fx1/vbo_2950.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx1/vbo_3025.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx1/vbo_3100.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx1/vbo_3175.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx2/vbo_2950.bin: 156 lookups, 2 resources below 1 MB, 156 cached, 0 cached outside
+fx2/vbo_3025.bin: 156 lookups, 2 resources below 1 MB, 156 cached, 0 cached outside
+fx2/vbo_3100.bin: 156 lookups, 2 resources below 1 MB, 156 cached, 0 cached outside
+fx2/vbo_3175.bin: 156 lookups, 2 resources below 1 MB, 156 cached, 0 cached outside
+fx3/vbo_2950.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 0 cached outside
+fx3/vbo_3025.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 0 cached outside
+fx3/vbo_3100.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 0 cached outside
+fx3/vbo_3175.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 0 cached outside
+fx4/vbo_2950.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx4/vbo_3025.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx4/vbo_3100.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx4/vbo_3175.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx5/vbo_2950.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx5/vbo_3025.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx5/vbo_3100.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx5/vbo_3175.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+fx6/vbo_2950.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 0 cached outside
+fx6/vbo_3025.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 0 cached outside
+fx6/vbo_3100.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 0 cached outside
+fx6/vbo_3175.bin: 156 lookups, 1 resources below 1 MB, 156 cached, 0 cached outside
+All 24 captures equal the clean run's.
+
+The once-per-segment vertex invalidate (libultraship-xenon 68ca9ad3) with the mark, runs si1 to si4, frames 3100 and
+4800 (the hangar):
+si1/vbo_3100.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+si2/vbo_3100.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+si3/vbo_3100.bin: 156 lookups, 0 resources below 1 MB, 156 cached, 0 cached outside
+si4/vbo_3100.bin: 156 lookups, 4 resources below 1 MB, 156 cached, 0 cached outside
+si1/vbo_4800.bin: 252 lookups, 0 resources below 1 MB, 252 cached, 0 cached outside
+si2/vbo_4800.bin: 252 lookups, 0 resources below 1 MB, 252 cached, 0 cached outside
+si3/vbo_4800.bin: 252 lookups, 2 resources below 1 MB, 252 cached, 0 cached outside
+si4/vbo_4800.bin: 252 lookups, 0 resources below 1 MB, 252 cached, 0 cached outside
+All 20 captures, frames 2950 to 3175 and 4800, equal those of the per-draw invalidate.
+
+The committed build (libultraship-xenon 7a00b302, starship-xenon 569e08db), no diagnostics, runs mk1 to mk4: all 20
+captures, frames 2950 to 3175 and 4800, equal those of the clean runs above.

@@ -5151,12 +5151,36 @@ Fast3D on xsdk writes each batch's vertices into a ring of write-combined memory
 (lus:src/graphic/Fast3D/backends/gfx_xsdk.cpp). A segment of the ring is written again only once the fence after its
 last use has passed. To save a cache invalidate a draw, one version invalidated a 512 KB segment's whole range once,
 before the first draw that used it, and started each draw's vertices on a 4 KB page of its own; the CPU went on writing
-later draws' pages while the GPU drew earlier ones. On the console, in Starship's intro, a large flat polygon that
-isn't in the game drew across the hangar shot (`results/2026-10-22-milestone-61/starship_ring_invalidate_once.png`);
-with `xsdk_gpu_invalidate` of each draw's own range before it, as before, the same frame draws as the game does
-(`starship_ring_invalidate_each_draw.png`), the Fast3D vertex math and threads otherwise the same.
+later draws' pages while the GPU drew earlier ones. On the console, in Starship's intro, one run drew a large flat
+polygon that isn't in the game across the hangar shot
+(`results/2026-10-22-milestone-61/starship_ring_invalidate_once.png`), and one run with `xsdk_gpu_invalidate` of each
+draw's own range before it drew the frame as the game does (`starship_ring_invalidate_each_draw.png`). That was taken
+for the GPU reading past a draw's range, and the version was reverted.
 
-So the GPU read vertex data written after the segment's invalidate as it was before it: its vertex fetch holds or reads
-ahead past a draw's range, even into the next 4 KB page. Vertex memory the CPU writes while the GPU may already be
-drawing from the same range needs an invalidate of the bytes a draw reads, queued after they're written and before the
-draw, as `xsdk_gpu_invalidate`'s callers in xsdk and vulkan4xenon do.
+It wasn't that. The polygon was a cached vertex pointer that Fast3D read back as an offset, which draws one in about
+half of all runs whatever the invalidate (next section). With that fixed, four runs of the once-a-segment invalidate
+drew Starship's intro at frames 2950, 3025, 3100 and 3175 and the hangar at 4800 as the per-draw invalidate does, pixel
+for pixel (`starship_vertex_cache.txt`, `starship_ring_invalidate_once_marked.png`). So nothing here shows the GPU's
+vertex fetch reading past a draw's range; four runs don't rule it out either.
+
+## Cached vertex pointers below 1 MB, milestone 61 (2026-10-22)
+
+xsdk's heap starts low: `sbrk` reserves it with `NtAllocateVirtualMemory` at an address the kernel picks, and on the
+console that's 0x00070000 (`results/2026-10-20-milestone-49/dusklight.log`, "the heap may grow to 438 MB from
+0x00070000"). So a pointer into the heap can be below 1 MB, and code that tells pointers from small numbers by size
+can't.
+
+libultraship's Fast3D does. A `G_VTX_OTR_HASH` command holds an offset into a vertex resource; the first time it runs,
+the interpreter writes the vertices' address over the offset, and after that takes any value above 0xFFFFF for that
+address (lus:src/graphic/Fast3D/interpreter.cpp, `gfx_vtx_hash_handler_custom`). A resource below 1 MB has its address
+read back as an offset and added to the address again, every time the command runs, until the sum passes 1 MB; from
+then on its vertices come from that address, which holds something else. Where resources land differs from run to run
+with the order the loader's threads allocate in, so the same build drew Starship's intro right in one run and with
+the team's limbs stretched across the corridor in the next. Of four runs, three had one to four vertex resources below
+1 MB and each of those drew stray polygons; each stray pointer was its resource's address times two or three
+(`results/2026-10-22-milestone-61/starship_vertex_cache.txt`, `starship_cached_pointer_low.png`).
+
+libultraship-xenon marks the cached address with bit 0 of the command's first word, which the command never sets
+(starship:tools/Torch/src/n64/gbi-otr.h:132-133; all 4662 in Starship's archive have it clear). In six runs, three
+with vertex resources below 1 MB, every cached pointer lay inside its resource and every frame drew as the game does
+(`starship_cached_pointer_marked.png`).
