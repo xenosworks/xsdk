@@ -5144,3 +5144,19 @@ missing, and a flat triangle across the Arwing passing Corneria
 (`results/2026-10-22-milestone-61/starship_clip_disable.png`). With clipping on and z clamped into 0 to w in the vertex
 shader where w is positive, the same frames drew the corridor whole (`starship_clipping_on.png`). A title that wants
 OpenGL's depth clamp does that; `depth_clamp` suits geometry that stays in front of the camera.
+
+## Vertices written after an invalidate, milestone 61 (2026-10-22)
+
+Fast3D on xsdk writes each batch's vertices into a ring of write-combined memory and draws them from there
+(lus:src/graphic/Fast3D/backends/gfx_xsdk.cpp). A segment of the ring is written again only once the fence after its
+last use has passed. To save a cache invalidate a draw, one version invalidated a 512 KB segment's whole range once,
+before the first draw that used it, and started each draw's vertices on a 4 KB page of its own; the CPU went on writing
+later draws' pages while the GPU drew earlier ones. On the console, in Starship's intro, a large flat polygon that
+isn't in the game drew across the hangar shot (`results/2026-10-22-milestone-61/starship_ring_invalidate_once.png`);
+with `xsdk_gpu_invalidate` of each draw's own range before it, as before, the same frame draws as the game does
+(`starship_ring_invalidate_each_draw.png`), the Fast3D vertex math and threads otherwise the same.
+
+So the GPU read vertex data written after the segment's invalidate as it was before it: its vertex fetch holds or reads
+ahead past a draw's range, even into the next 4 KB page. Vertex memory the CPU writes while the GPU may already be
+drawing from the same range needs an invalidate of the bytes a draw reads, queued after they're written and before the
+draw, as `xsdk_gpu_invalidate`'s callers in xsdk and vulkan4xenon do.
