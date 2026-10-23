@@ -197,6 +197,13 @@ Taken by the user later on 2026-10-22, after steps 1 and 2 ran on the console:
    1 had found Fast3D's interpreter, not the cost of a draw, holding the attract demo to 41 fps at the interpolated 60
    (`local/m61/runs/step1`, about 100 draws and 13 to 14 ms of interpreter a frame), so this widens step 3 from the
    backend to the interpreter. The 10 s log lines give each change's before and after.
+9. **The GPU vertex path is reverted, VMX kept** (the user, on the A/B's numbers). VMX matched the scalar code on every
+   one of about 17 million vertices on the console and cut the interpreter's heavy scenes from 9 to 11 ms a frame to 5
+   to 7. The vertex shader doing GfxSpVertex's work drew the same picture in two of three captured frames, but cost
+   more: the CPU built 580 to 760 vertex states a frame, as N64 display lists change matrices per object part, which
+   took longer than VMX's transform, about twice the triangles reached the GPU without the CPU's culling, and the
+   interpreter's time went up, 6.0 to 7.6 ms against 3.6 to 6.6; one frame drew triangles beyond the far plane that the
+   CPU rejects. It stays on libultraship-xenon's branch `gpu-vertex-experiment`.
 
 ## Size
 
