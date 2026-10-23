@@ -1,0 +1,334 @@
+log: game:\guard.log
+log: named after \Device\Harddisk0\Partition1\starship\guard.xex
+log: no net_log.txt beside the .xex, so not over the network
+open: NtCreateFile(game:\cvars.cfg) failed: 0xC0000034
+[2026-10-23 00:48:56.069] [info] [ArchiveManager.cpp:232] Reading archive: game:/./sf64.o2r
+[2026-10-23 00:48:56.319] [info] [ArchiveManager.cpp:264] Adding Archive game:/./sf64.o2r to Archive Manager
+[2026-10-23 00:48:56.386] [info] [ArchiveManager.cpp:232] Reading archive: game:/./starship.o2r
+[2026-10-23 00:48:56.387] [info] [ArchiveManager.cpp:264] Adding Archive game:/./starship.o2r to Archive Manager
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 21063 us
+open: NtCreateFile(game:\capture.txt) failed: 0xC0000034
+gfx_xsdk: programs are kept in game:/shaders/fast3d/23301E9B7CB9C8D7
+[00:48:57.246] [DisplayListPatch.cpp:11] [info] Applying display list patches
+[00:48:57.261] [GenericArrayFactory.cpp:17] [info] GenericArray Type Num: 0
+open: NtCreateFile(game:\gamecontrollerdb.txt) failed: 0xC0000034
+[00:48:57.261] [GenericArrayFactory.cpp:21] [info] GenericArray Count: 283
+[00:48:57.262] [os.cpp:23] [error] Failed add SDL game controller mappings from "./gamecontrollerdb.txt" (Couldn't open ./gamecontrollerdb.txt: No such file or directory)
+Scene Changed!
+Scene Changed!
+[00:49:06.885] [AnimFactory.cpp:20] [info] JointSize: 23
+[00:49:06.885] [AnimFactory.cpp:20] [info] JointSize: 23
+[00:49:06.886] [AnimFactory.cpp:20] [info] JointSize: 23
+[00:49:06.886] [AnimFactory.cpp:20] [info] JointSize: 21
+[00:49:06.916] [AnimFactory.cpp:20] [info] JointSize: 19
+gfx_xsdk: 575 frames in 10.0 s (57.5 fps); a frame: 7.5 draws (0.0 skipped), 748 triangles, 15834 floats, 0.239 ms in the backend (0.015 copying vertices), 3.710 ms from StartFrame to EndFrame, 8.264 ms of GPU time over 574 frames
+gfx_xsdk: in the window: 6 shaders created (0 compiled, 7 read), 1247 loaded, 6 kept; 63 textures created, 63 uploads of 287 KB; 1728 framebuffer calls
+Scene Changed!
+interpolation: a replay stopped 6 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+Scene Changed!
+interpolation: a replay stopped 81 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+gfx_xsdk: 488 frames in 10.0 s (48.8 fps); a frame: 117.3 draws (0.0 skipped), 1328 triangles, 30884 floats, 0.849 ms in the backend (0.045 copying vertices), 8.963 ms from StartFrame to EndFrame, 7.594 ms of GPU time over 488 frames
+gfx_xsdk: in the window: 4 shaders created (0 compiled, 4 read), 3747 loaded, 10 kept; 78 textures created, 24105 uploads of 98797 KB; 1464 framebuffer calls
+interpolation: a replay stopped 3 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+gfx_xsdk: 587 frames in 10.0 s (58.6 fps); a frame: 122.3 draws (0.0 skipped), 294 triangles, 9210 floats, 1.004 ms in the backend (0.027 copying vertices), 5.271 ms from StartFrame to EndFrame, 14.904 ms of GPU time over 586 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 4393 loaded, 10 kept; 0 textures created, 41978 uploads of 176647 KB; 1761 framebuffer calls
+Scene Changed!
+velocity_diff: 1038.987793
+ at_dist: 600.000000
+ eye_dist: 489.383057
+CAMERA 1 SKIPED: 0
+velocity_diff: 866.692383
+ at_dist: 6064.157715
+ eye_dist: 6526.850586
+CAMERA 1 SKIPED: 1
+gfx_xsdk: 597 frames in 10.0 s (59.5 fps); a frame: 73.9 draws (0.0 skipped), 155 triangles, 4760 floats, 0.771 ms in the backend (0.017 copying vertices), 3.593 ms from StartFrame to EndFrame, 15.307 ms of GPU time over 597 frames
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 3 read), 3869 loaded, 13 kept; 0 textures created, 32206 uploads of 143356 KB; 1791 framebuffer calls
+gfx_xsdk: 601 frames in 10.0 s (60.1 fps); a frame: 117.3 draws (0.0 skipped), 568 triangles, 25145 floats, 0.258 ms in the backend (0.043 copying vertices), 6.491 ms from StartFrame to EndFrame, 14.020 ms of GPU time over 601 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 9259 loaded, 13 kept; 0 textures created, 604 uploads of 4816 KB; 1803 framebuffer calls
+[00:49:52.313] [AnimFactory.cpp:20] [info] JointSize: 19
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 45.3 draws (0.0 skipped), 194 triangles, 8352 floats, 0.131 ms in the backend (0.017 copying vertices), 5.366 ms from StartFrame to EndFrame, 14.621 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 4981 loaded, 13 kept; 0 textures created, 618 uploads of 4829 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 58.7 draws (0.0 skipped), 305 triangles, 13275 floats, 0.166 ms in the backend (0.023 copying vertices), 5.840 ms from StartFrame to EndFrame, 13.853 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 5828 loaded, 13 kept; 0 textures created, 1069 uploads of 6634 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 52.3 draws (0.0 skipped), 292 triangles, 12439 floats, 0.154 ms in the backend (0.020 copying vertices), 5.614 ms from StartFrame to EndFrame, 11.988 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 5178 loaded, 13 kept; 0 textures created, 995 uploads of 6245 KB; 1800 framebuffer calls
+gfx_xsdk: 599 frames in 10.0 s (59.9 fps); a frame: 86.6 draws (0.0 skipped), 599 triangles, 26446 floats, 0.215 ms in the backend (0.038 copying vertices), 6.574 ms from StartFrame to EndFrame, 12.696 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 7401 loaded, 13 kept; 0 textures created, 553 uploads of 4393 KB; 1797 framebuffer calls
+velocity_diff: 439.597870
+ at_dist: 784.921143
+ eye_dist: 674.792725
+CAMERA 1 SKIPED: 2
+gfx_xsdk: 600 frames in 10.0 s (59.9 fps); a frame: 113.5 draws (0.0 skipped), 691 triangles, 30045 floats, 0.263 ms in the backend (0.045 copying vertices), 6.440 ms from StartFrame to EndFrame, 13.830 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 10143 loaded, 13 kept; 0 textures created, 628 uploads of 3824 KB; 1800 framebuffer calls
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+gfx_xsdk: 597 frames in 10.0 s (59.7 fps); a frame: 104.7 draws (0.0 skipped), 328 triangles, 13525 floats, 0.253 ms in the backend (0.031 copying vertices), 5.261 ms from StartFrame to EndFrame, 13.523 ms of GPU time over 596 frames
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read), 13771 loaded, 14 kept; 4 textures created, 628 uploads of 2481 KB; 1791 framebuffer calls
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 10 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+gfx_xsdk: 596 frames in 10.0 s (59.6 fps); a frame: 134.0 draws (0.0 skipped), 428 triangles, 17189 floats, 0.293 ms in the backend (0.038 copying vertices), 5.703 ms from StartFrame to EndFrame, 13.274 ms of GPU time over 596 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 17811 loaded, 14 kept; 21 textures created, 617 uploads of 2434 KB; 1788 framebuffer calls
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 10 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 10 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 10 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 14 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 16 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 16 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 10 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 16 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 16 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 16 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 10 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 6 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 10 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 8 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 10 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 4 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+[00:51:00.999] [Vec3sFactory.cpp:17] [info] Vec3s Count: 36
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+[00:51:01.000] [Vec3fFactory.cpp:17] [info] Vec3f Count: 55
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+[00:51:02.785] [Vec3sFactory.cpp:17] [info] Vec3s Count: 13
+[00:51:02.786] [Vec3fFactory.cpp:17] [info] Vec3f Count: 11
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+gfx_xsdk: 593 frames in 10.0 s (59.3 fps); a frame: 118.6 draws (0.0 skipped), 453 triangles, 18547 floats, 0.284 ms in the backend (0.037 copying vertices), 6.042 ms from StartFrame to EndFrame, 12.927 ms of GPU time over 594 frames
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read), 16141 loaded, 15 kept; 5 textures created, 650 uploads of 2415 KB; 1779 framebuffer calls
+interpolation: a replay stopped 2 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+[00:51:11.478] [AnimFactory.cpp:20] [info] JointSize: 7
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+interpolation: a replay stopped 1 pops at the stack's base and 0 pushes at its top; gVIsPerFrame 2
+[00:51:15.234] [AnimFactory.cpp:20] [info] JointSize: 7
+gfx_xsdk: 590 frames in 10.0 s (58.9 fps); a frame: 137.8 draws (0.0 skipped), 420 triangles, 17031 floats, 0.304 ms in the backend (0.038 copying vertices), 5.684 ms from StartFrame to EndFrame, 12.354 ms of GPU time over 590 frames
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read), 14960 loaded, 16 kept; 25 textures created, 364 uploads of 1713 KB; 1770 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 175.4 draws (0.0 skipped), 613 triangles, 25980 floats, 0.377 ms in the backend (0.052 copying vertices), 7.760 ms from StartFrame to EndFrame, 11.626 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 20925 loaded, 16 kept; 10 textures created, 320 uploads of 1471 KB; 1800 framebuffer calls
+[00:51:29.177] [AnimFactory.cpp:20] [info] JointSize: 10
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 156.8 draws (0.0 skipped), 606 triangles, 26013 floats, 0.337 ms in the backend (0.050 copying vertices), 7.378 ms from StartFrame to EndFrame, 11.761 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 17409 loaded, 16 kept; 5 textures created, 91 uploads of 105 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (59.9 fps); a frame: 159.1 draws (0.0 skipped), 580 triangles, 24253 floats, 0.341 ms in the backend (0.048 copying vertices), 7.305 ms from StartFrame to EndFrame, 12.138 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 19851 loaded, 16 kept; 7 textures created, 233 uploads of 220 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 158.1 draws (0.0 skipped), 604 triangles, 25551 floats, 0.340 ms in the backend (0.050 copying vertices), 7.614 ms from StartFrame to EndFrame, 11.861 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 17635 loaded, 16 kept; 16 textures created, 255 uploads of 1243 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (59.9 fps); a frame: 196.5 draws (0.0 skipped), 661 triangles, 27571 floats, 0.391 ms in the backend (0.056 copying vertices), 8.071 ms from StartFrame to EndFrame, 11.810 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 20484 loaded, 16 kept; 0 textures created, 13 uploads of 104 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 182.4 draws (0.0 skipped), 730 triangles, 30642 floats, 0.387 ms in the backend (0.058 copying vertices), 7.959 ms from StartFrame to EndFrame, 12.304 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 21253 loaded, 16 kept; 4 textures created, 158 uploads of 1235 KB; 1800 framebuffer calls
+[00:52:24.134] [AnimFactory.cpp:20] [info] JointSize: 10
+[00:52:25.901] [AnimFactory.cpp:20] [info] JointSize: 10
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 144.6 draws (0.0 skipped), 564 triangles, 23232 floats, 0.308 ms in the backend (0.045 copying vertices), 6.455 ms from StartFrame to EndFrame, 12.492 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 14912 loaded, 16 kept; 7 textures created, 269 uploads of 293 KB; 1800 framebuffer calls
+[00:52:35.381] [AnimFactory.cpp:20] [info] JointSize: 11
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 106.1 draws (0.0 skipped), 481 triangles, 20287 floats, 0.249 ms in the backend (0.036 copying vertices), 5.789 ms from StartFrame to EndFrame, 12.531 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 10834 loaded, 16 kept; 6 textures created, 501 uploads of 1288 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (59.9 fps); a frame: 119.9 draws (0.0 skipped), 687 triangles, 30039 floats, 0.302 ms in the backend (0.048 copying vertices), 7.889 ms from StartFrame to EndFrame, 12.403 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 17572 loaded, 16 kept; 5 textures created, 620 uploads of 2414 KB; 1800 framebuffer calls
+[00:52:51.363] [AnimFactory.cpp:20] [info] JointSize: 14
+[00:52:54.063] [AnimFactory.cpp:20] [info] JointSize: 9
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 142.9 draws (0.0 skipped), 580 triangles, 24444 floats, 0.321 ms in the backend (0.045 copying vertices), 7.203 ms from StartFrame to EndFrame, 11.422 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 16928 loaded, 16 kept; 7 textures created, 479 uploads of 1902 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 158.9 draws (0.0 skipped), 468 triangles, 18973 floats, 0.320 ms in the backend (0.041 copying vertices), 6.191 ms from StartFrame to EndFrame, 11.900 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 18909 loaded, 16 kept; 2 textures created, 175 uploads of 692 KB; 1800 framebuffer calls
+[00:53:14.582] [AnimFactory.cpp:20] [info] JointSize: 19
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 66.2 draws (0.0 skipped), 286 triangles, 12244 floats, 0.150 ms in the backend (0.022 copying vertices), 3.848 ms from StartFrame to EndFrame, 13.386 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 5481 loaded, 16 kept; 1 textures created, 1 uploads of 4 KB; 1800 framebuffer calls
+[00:53:17.720] [AnimFactory.cpp:20] [info] JointSize: 19
+[00:53:18.753] [AnimFactory.cpp:20] [info] JointSize: 19
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 125.1 draws (0.0 skipped), 517 triangles, 21702 floats, 0.281 ms in the backend (0.040 copying vertices), 7.093 ms from StartFrame to EndFrame, 11.982 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 11209 loaded, 16 kept; 11 textures created, 346 uploads of 1055 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (59.9 fps); a frame: 121.9 draws (0.0 skipped), 527 triangles, 22066 floats, 0.281 ms in the backend (0.040 copying vertices), 6.564 ms from StartFrame to EndFrame, 12.178 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 10065 loaded, 16 kept; 10 textures created, 535 uploads of 1357 KB; 1800 framebuffer calls
+gfx_xsdk: 601 frames in 10.0 s (60.1 fps); a frame: 88.4 draws (0.0 skipped), 367 triangles, 15352 floats, 0.215 ms in the backend (0.029 copying vertices), 5.527 ms from StartFrame to EndFrame, 12.091 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 8012 loaded, 16 kept; 3 textures created, 412 uploads of 221 KB; 1803 framebuffer calls
+gfx_xsdk: 597 frames in 10.0 s (59.6 fps); a frame: 118.3 draws (0.0 skipped), 499 triangles, 20772 floats, 0.270 ms in the backend (0.039 copying vertices), 6.793 ms from StartFrame to EndFrame, 12.023 ms of GPU time over 598 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 10212 loaded, 16 kept; 1 textures created, 303 uploads of 567 KB; 1791 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (59.9 fps); a frame: 119.2 draws (0.0 skipped), 472 triangles, 19575 floats, 0.272 ms in the backend (0.038 copying vertices), 7.122 ms from StartFrame to EndFrame, 11.791 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 9126 loaded, 16 kept; 2 textures created, 512 uploads of 699 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (59.9 fps); a frame: 100.2 draws (0.0 skipped), 430 triangles, 17731 floats, 0.237 ms in the backend (0.033 copying vertices), 6.050 ms from StartFrame to EndFrame, 12.180 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 9219 loaded, 16 kept; 0 textures created, 359 uploads of 180 KB; 1800 framebuffer calls
+gfx_xsdk: 592 frames in 10.0 s (59.1 fps); a frame: 123.5 draws (0.0 skipped), 469 triangles, 19288 floats, 0.273 ms in the backend (0.038 copying vertices), 6.930 ms from StartFrame to EndFrame, 11.625 ms of GPU time over 592 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 9632 loaded, 16 kept; 2 textures created, 433 uploads of 569 KB; 1776 framebuffer calls
+gfx_xsdk: 564 frames in 10.0 s (56.3 fps); a frame: 177.8 draws (0.0 skipped), 571 triangles, 22760 floats, 0.343 ms in the backend (0.047 copying vertices), 7.748 ms from StartFrame to EndFrame, 11.553 ms of GPU time over 564 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 9138 loaded, 16 kept; 0 textures created, 274 uploads of 1112 KB; 1692 framebuffer calls
+velocity_diff: 943.452209
+ at_dist: 3741.899658
+ eye_dist: 2904.793213
+CAMERA 1 SKIPED: 3
+CAMERA 1 SKIPED: 4
+gfx_xsdk: 600 frames in 10.0 s (59.9 fps); a frame: 134.8 draws (0.0 skipped), 405 triangles, 16602 floats, 0.264 ms in the backend (0.035 copying vertices), 5.869 ms from StartFrame to EndFrame, 12.278 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 9979 loaded, 16 kept; 7 textures created, 56 uploads of 402 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 197.0 draws (0.0 skipped), 566 triangles, 23154 floats, 0.381 ms in the backend (0.051 copying vertices), 7.281 ms from StartFrame to EndFrame, 12.722 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 20400 loaded, 16 kept; 0 textures created, 0 uploads of 0 KB; 1800 framebuffer calls
+gfx_xsdk: 600 frames in 10.0 s (60.0 fps); a frame: 197.0 draws (0.0 skipped), 566 triangles, 23154 floats, 0.384 ms in the backend (0.051 copying vertices), 7.281 ms from StartFrame to EndFrame, 12.720 ms of GPU time over 600 frames
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 20400 loaded, 16 kept; 0 textures created, 0 uploads of 0 KB; 1800 framebuffer calls
