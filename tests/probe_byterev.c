@@ -40,6 +40,8 @@ typedef enum {
 	FLOAT_LOAD,
 	FLOAT_CHASE,
 	FLOAT_STORE,
+	VECTOR_LOAD,
+	VECTOR_STORE,
 } Kind;
 
 // Which of a kernel's accesses reverse bytes.
@@ -47,6 +49,7 @@ enum { LOAD_REVERSED = 1, STORE_REVERSED = 2 };
 
 typedef void Kernel(void *base, uint32_t passes, uint64_t *values);
 
+// size_bytes is the width of the access, or for a vector the bytes that vperm reverses together.
 typedef struct {
 	const char *name;
 	Kernel *run;
@@ -63,7 +66,8 @@ Kernel probe_byterev_lhzx, probe_byterev_lhbrx, probe_byterev_lwzx, probe_bytere
 	probe_byterev_stwbrx_lwbrx, probe_byterev_lfsx, probe_byterev_lwbrx_lfs, probe_byterev_chase_lfsx,
 	probe_byterev_chase_lwbrx_lfs, probe_byterev_lfdx, probe_byterev_ldbrx_lfd, probe_byterev_chase_lfdx,
 	probe_byterev_chase_ldbrx_lfd, probe_byterev_stfsx, probe_byterev_stfs_stwbrx, probe_byterev_stfdx,
-	probe_byterev_stfd_stdbrx;
+	probe_byterev_stfd_stdbrx, probe_byterev_lvx, probe_byterev_lvx_words, probe_byterev_lvx_whole, probe_byterev_stvx,
+	probe_byterev_words_stvx, probe_byterev_whole_stvx;
 
 static const Test tests[] = {
 	{ "load: lhzx", probe_byterev_lhzx, LOAD, 2, 0 },
@@ -92,6 +96,12 @@ static const Test tests[] = {
 	{ "float store: stfsx", probe_byterev_stfsx, FLOAT_STORE, 4, 0 },
 	{ "float store: stfs; lwz; stwbrx", probe_byterev_stfs_stwbrx, FLOAT_STORE, 4, STORE_REVERSED },
 	{ "double store: stfdx", probe_byterev_stfdx, FLOAT_STORE, 8, 0 },
+	{ "vector load: lvx", probe_byterev_lvx, VECTOR_LOAD, 1, 0 },
+	{ "vector load: lvx; vperm each word", probe_byterev_lvx_words, VECTOR_LOAD, 4, 0 },
+	{ "vector load: lvx; vperm the whole", probe_byterev_lvx_whole, VECTOR_LOAD, 16, 0 },
+	{ "vector store: stvx", probe_byterev_stvx, VECTOR_STORE, 1, 0 },
+	{ "vector store: vperm each word; stvx", probe_byterev_words_stvx, VECTOR_STORE, 4, 0 },
+	{ "vector store: vperm the whole; stvx", probe_byterev_whole_stvx, VECTOR_STORE, 16, 0 },
 };
 
 // ldbrx and stdbrx, which the console may refuse, so they run after the rest.
@@ -143,6 +153,12 @@ static uint64_t slot_value(uint32_t slot, uint32_t size_bytes, bool reversed)
 	return load_image(bytes, size_bytes, reversed);
 }
 
+// The pattern byte at index i of a vector after vperm reverses each group of group_bytes, 1 for no reversal.
+static uint8_t reversed_byte(uint32_t slot, uint32_t i, uint32_t group_bytes)
+{
+	return pattern_byte(slot, i / group_bytes * group_bytes + group_bytes - 1 - i % group_bytes);
+}
+
 // An FPR's 64 bits after an lfs or lfd of the 32 or 64 bits.
 static uint64_t fpr_bits(uint64_t bits, uint32_t size_bytes)
 {
@@ -177,6 +193,7 @@ static void prepare(const Test *test)
 	switch (test->kind) {
 	case LOAD:
 	case FLOAT_LOAD:
+	case VECTOR_LOAD:
 		for (uint32_t slot = 0; slot < SLOTS; slot++) {
 			for (uint32_t i = 0; i < 16; i++)
 				buffer[slot * SLOT_STRIDE_BYTES + i] = pattern_byte(slot, i);
@@ -196,6 +213,12 @@ static void prepare(const Test *test)
 		break;
 	case STORE_THEN_LOAD:
 		values[0] = slot_value(0, 4, false);
+		break;
+	case VECTOR_STORE:
+		for (uint32_t slot = 0; slot < SLOTS; slot++) {
+			for (uint32_t i = 0; i < 16; i++)
+				((uint8_t *)values)[16 * slot + i] = pattern_byte(slot, i);
+		}
 		break;
 	}
 }
@@ -233,6 +256,17 @@ static bool check(const Test *test, uint32_t passes)
 			ok = ok && memcmp(buffer + slot * SLOT_STRIDE_BYTES, expected, sizeof expected) == 0;
 		}
 		break;
+	case VECTOR_LOAD:
+	case VECTOR_STORE: {
+		// The loaded vectors are in values, 16 bytes apart; the stored ones in the buffer, a slot apart.
+		const bool loaded = test->kind == VECTOR_LOAD;
+		const uint8_t *const result = loaded ? (const uint8_t *)values : buffer;
+		for (uint32_t slot = 0; slot < SLOTS; slot++) {
+			for (uint32_t i = 0; i < 16; i++)
+				ok = ok && result[slot * (loaded ? 16 : SLOT_STRIDE_BYTES) + i] == reversed_byte(slot, i, size_bytes);
+		}
+		break;
+	}
 	case STORE_THEN_LOAD: {
 		// The kernel does an odd count of pairs, so the word was last stored as it began, and the register holds the
 		// load of that.

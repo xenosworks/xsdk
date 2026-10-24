@@ -210,6 +210,56 @@
 	leave \name
 	.endm
 
+	// Eight independent vector loads, each permuted by the control vector in v12 if there is one.
+	.macro vector_loads name, control=
+	enter \name
+	offsets
+	.ifnb \control
+	lis r6, \control@ha
+	addi r6, r6, \control@l
+	lvx 12, 0, r6
+	.endif
+	loop
+	.irp k, 0,1,2,3,4,5,6,7
+	lvx \k, 3, OFFSET + \k
+	.ifnb \control
+	vperm \k, \k, \k, 12
+	.endif
+	.endr
+	again
+	.irp k, 0,1,2,3,4,5,6,7
+	li r6, 16 * \k
+	stvx \k, 5, 6
+	.endr
+	leave \name
+	.endm
+
+	// Eight independent vector stores, each of the vector permuted into v8-v11 if there is a control vector.
+	.macro vector_stores name, control=
+	enter \name
+	offsets
+	.irp k, 0,1,2,3,4,5,6,7
+	li r6, 16 * \k
+	lvx \k, 5, 6
+	.endr
+	.ifnb \control
+	lis r6, \control@ha
+	addi r6, r6, \control@l
+	lvx 12, 0, r6
+	.endif
+	loop
+	.irp k, 0,1,2,3,4,5,6,7
+	.ifb \control
+	stvx \k, 3, OFFSET + \k
+	.else
+	vperm 8 + (\k & 3), \k, \k, 12
+	stvx 8 + (\k & 3), 3, OFFSET + \k
+	.endif
+	.endr
+	again
+	leave \name
+	.endm
+
 	loads probe_byterev_lhzx, lhzx
 	loads probe_byterev_lhbrx, lhbrx
 	loads probe_byterev_lwzx, lwzx
@@ -235,6 +285,12 @@
 	float_stores probe_byterev_stfsx, stfsx
 	float_stores_reversed probe_byterev_stfs_stwbrx, stfs, lwz, stwbrx
 	float_stores probe_byterev_stfdx, stfdx
+	vector_loads probe_byterev_lvx
+	vector_loads probe_byterev_lvx_words, reverse_words
+	vector_loads probe_byterev_lvx_whole, reverse_whole
+	vector_stores probe_byterev_stvx
+	vector_stores probe_byterev_words_stvx, reverse_words
+	vector_stores probe_byterev_whole_stvx, reverse_whole
 
 	// The doubleword byte-reversed forms, which the console may refuse (Xenia has both, for 360 code:
 	// xenia:src/xenia/cpu/ppc/ppc_emit_memory.cc:640-690), so the probe runs them last.
@@ -244,3 +300,11 @@
 	float_loads_reversed probe_byterev_ldbrx_lfd, ldbrx, std, lfd
 	float_chase_reversed probe_byterev_chase_ldbrx_lfd, ldbrx, std, lfd, stfd, ld
 	float_stores_reversed probe_byterev_stfd_stdbrx, stfd, ld, stdbrx
+
+	// vperm's controls, which pick the bytes of its operands, 0 the first: each word reversed, and the whole vector.
+	.section .rodata.probe_byterev_controls, "a"
+	.balign 16
+reverse_words:
+	.byte 3, 2, 1, 0, 7, 6, 5, 4, 11, 10, 9, 8, 15, 14, 13, 12
+reverse_whole:
+	.byte 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
