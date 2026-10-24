@@ -24,8 +24,10 @@ enum {
 	// The kernels' eight slots, 144 bytes apart as in the kernels.
 	SLOTS = 8,
 	SLOT_STRIDE_BYTES = 144,
+	VECTOR_BYTES = 16,
 	BUFFER_BYTES = 2048,
-	VALUE_COUNT = 16,
+	// Room for a vector from each slot.
+	VALUE_COUNT = SLOTS * VECTOR_BYTES / sizeof(uint64_t),
 	// A chase steps 17 entries each time, which visits all of them, as 17 is odd and the counts are powers of two.
 	CHASE_STRIDE = 17,
 	// The main thread's hardware thread, and its sibling's on the same core (include/xsdk/thread.h).
@@ -138,7 +140,7 @@ static uint64_t values[VALUE_COUNT] __attribute__((aligned(16)));
 // The byte a test puts at index i of slot: distinct within a slot and across slots.
 static uint8_t pattern_byte(uint32_t slot, uint32_t i)
 {
-	return (uint8_t)(16 * slot + i + 1);
+	return (uint8_t)(VECTOR_BYTES * slot + i + 1);
 }
 
 // The bytes in memory that a store of the low size_bytes of value leaves, a byte-reversing store's reversed.
@@ -208,7 +210,7 @@ static void prepare(const Test *test)
 	case FLOAT_LOAD:
 	case VECTOR_LOAD:
 		for (uint32_t slot = 0; slot < SLOTS; slot++) {
-			for (uint32_t i = 0; i < 16; i++)
+			for (uint32_t i = 0; i < VECTOR_BYTES; i++)
 				buffer[slot * SLOT_STRIDE_BYTES + i] = pattern_byte(slot, i);
 		}
 		break;
@@ -229,8 +231,8 @@ static void prepare(const Test *test)
 		break;
 	case VECTOR_STORE:
 		for (uint32_t slot = 0; slot < SLOTS; slot++) {
-			for (uint32_t i = 0; i < 16; i++)
-				((uint8_t *)values)[16 * slot + i] = pattern_byte(slot, i);
+			for (uint32_t i = 0; i < VECTOR_BYTES; i++)
+				((uint8_t *)values)[VECTOR_BYTES * slot + i] = pattern_byte(slot, i);
 		}
 		break;
 	case ADD_CHAIN:
@@ -276,12 +278,13 @@ static bool check(const Test *test, uint32_t passes)
 		break;
 	case VECTOR_LOAD:
 	case VECTOR_STORE: {
-		// The loaded vectors are in values, 16 bytes apart; the stored ones in the buffer, a slot apart.
+		// The loaded vectors are in values, side by side; the stored ones in the buffer, a slot apart.
 		const bool loaded = test->kind == VECTOR_LOAD;
 		const uint8_t *const result = loaded ? (const uint8_t *)values : buffer;
+		const uint32_t stride_bytes = loaded ? VECTOR_BYTES : SLOT_STRIDE_BYTES;
 		for (uint32_t slot = 0; slot < SLOTS; slot++) {
-			for (uint32_t i = 0; i < 16; i++)
-				ok = ok && result[slot * (loaded ? 16 : SLOT_STRIDE_BYTES) + i] == reversed_byte(slot, i, size_bytes);
+			for (uint32_t i = 0; i < VECTOR_BYTES; i++)
+				ok = ok && result[slot * stride_bytes + i] == reversed_byte(slot, i, size_bytes);
 		}
 		break;
 	}
@@ -293,8 +296,7 @@ static bool check(const Test *test, uint32_t passes)
 			ok = ok && values[slot] == (uint64_t)passes * (ADDEND + slot);
 		break;
 	case STORE_THEN_LOAD: {
-		// The kernel does an odd count of pairs, so the word was last stored as it began, and the register holds the
-		// load of that.
+		// An odd count of pairs: the word was last stored as it began, and the register holds the load of that.
 		uint8_t image[4];
 		store_image(image, slot_value(0, 4, false), sizeof image, store_reversed);
 		ok = values[0] == load_image(image, sizeof image, load_reversed) && memcmp(buffer, image, sizeof image) == 0;
