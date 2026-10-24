@@ -292,6 +292,34 @@
 	vector_stores probe_byterev_words_stvx, reverse_words
 	vector_stores probe_byterev_whole_stvx, reverse_whole
 
+	// A dependent chain of adds, for the clocks an add takes.
+	enter probe_byterev_add_chain
+	ld VALUE + 1, 0(r5)
+	li VALUE, 0
+	loop
+	.rept 8
+	add VALUE, VALUE, VALUE + 1
+	.endr
+	again
+	std VALUE, 0(r5)
+	leave probe_byterev_add_chain
+
+	// Eight independent adds, each of an addend from values into a register of its own.
+	enter probe_byterev_add_stream
+	.irp k, 0,1,2,3,4,5,6,7
+	li VALUE + \k, 0
+	ld OFFSET + \k, 8 * \k(r5)
+	.endr
+	loop
+	.irp k, 0,1,2,3,4,5,6,7
+	add VALUE + \k, VALUE + \k, OFFSET + \k
+	.endr
+	again
+	.irp k, 0,1,2,3,4,5,6,7
+	std VALUE + \k, 8 * \k(r5)
+	.endr
+	leave probe_byterev_add_stream
+
 	// The doubleword byte-reversed forms, which the console may refuse (Xenia has both, for 360 code:
 	// xenia:src/xenia/cpu/ppc/ppc_emit_memory.cc:640-690), so the probe runs them last.
 	loads probe_byterev_ldbrx, ldbrx

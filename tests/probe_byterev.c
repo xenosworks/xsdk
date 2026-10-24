@@ -28,7 +28,16 @@ enum {
 	VALUE_COUNT = 16,
 	// A chase steps 17 entries each time, which visits all of them, as 17 is odd and the counts are powers of two.
 	CHASE_STRIDE = 17,
+	// The main thread's hardware thread, and its sibling's on the same core (include/xsdk/thread.h).
 	MAIN_HARDWARE_THREAD = 0,
+	SIBLING_HARDWARE_THREAD = 1,
+	// The sibling's spinner counts its passes of 8 adds in blocks of this many.
+	SPIN_PASSES = 1 << 14,
+	SPINNER_STACK_BYTES = 64 * 1024,
+	SPINNER_START_MS = 1000,
+	IDLE_MS = 40,
+	// The first addend of an add kernel; the others follow it.
+	ADDEND = 3,
 };
 
 // How a kernel's result is prepared and checked.
@@ -42,6 +51,8 @@ typedef enum {
 	FLOAT_STORE,
 	VECTOR_LOAD,
 	VECTOR_STORE,
+	ADD_CHAIN,
+	ADD_STREAM,
 } Kind;
 
 // Which of a kernel's accesses reverse bytes.
@@ -67,7 +78,7 @@ Kernel probe_byterev_lhzx, probe_byterev_lhbrx, probe_byterev_lwzx, probe_bytere
 	probe_byterev_chase_lwbrx_lfs, probe_byterev_lfdx, probe_byterev_ldbrx_lfd, probe_byterev_chase_lfdx,
 	probe_byterev_chase_ldbrx_lfd, probe_byterev_stfsx, probe_byterev_stfs_stwbrx, probe_byterev_stfdx,
 	probe_byterev_stfd_stdbrx, probe_byterev_lvx, probe_byterev_lvx_words, probe_byterev_lvx_whole, probe_byterev_stvx,
-	probe_byterev_words_stvx, probe_byterev_whole_stvx;
+	probe_byterev_words_stvx, probe_byterev_whole_stvx, probe_byterev_add_chain, probe_byterev_add_stream;
 
 static const Test tests[] = {
 	{ "load: lhzx", probe_byterev_lhzx, LOAD, 2, 0 },
@@ -102,6 +113,8 @@ static const Test tests[] = {
 	{ "vector store: stvx", probe_byterev_stvx, VECTOR_STORE, 1, 0 },
 	{ "vector store: vperm each word; stvx", probe_byterev_words_stvx, VECTOR_STORE, 4, 0 },
 	{ "vector store: vperm the whole; stvx", probe_byterev_whole_stvx, VECTOR_STORE, 16, 0 },
+	{ "add: one chain", probe_byterev_add_chain, ADD_CHAIN, 0, 0 },
+	{ "add: eight independent", probe_byterev_add_stream, ADD_STREAM, 0, 0 },
 };
 
 // ldbrx and stdbrx, which the console may refuse, so they run after the rest.
@@ -220,6 +233,11 @@ static void prepare(const Test *test)
 				((uint8_t *)values)[16 * slot + i] = pattern_byte(slot, i);
 		}
 		break;
+	case ADD_CHAIN:
+	case ADD_STREAM:
+		for (uint32_t slot = 0; slot < SLOTS; slot++)
+			values[slot] = ADDEND + slot;
+		break;
 	}
 }
 
@@ -267,6 +285,13 @@ static bool check(const Test *test, uint32_t passes)
 		}
 		break;
 	}
+	case ADD_CHAIN:
+		ok = values[0] == (uint64_t)passes * OPERATIONS_PER_PASS * ADDEND;
+		break;
+	case ADD_STREAM:
+		for (uint32_t slot = 0; slot < SLOTS; slot++)
+			ok = ok && values[slot] == (uint64_t)passes * (ADDEND + slot);
+		break;
 	case STORE_THEN_LOAD: {
 		// The kernel does an odd count of pairs, so the word was last stored as it began, and the register holds the
 		// load of that.
@@ -338,6 +363,96 @@ static uint32_t measure_all(const Test *list, uint32_t count)
 	return failed;
 }
 
+// Five seconds, relative, in 100 ns units.
+static const int64_t WAIT_TIMEOUT = -50000000;
+
+// Blocks of SPIN_PASSES passes the spinner has counted, and whether it is to stop.
+static volatile uint32_t spinner_blocks;
+static volatile uint32_t spinner_stop;
+
+// Adds on the sibling hardware thread as fast as it can; the adds take as long whatever they add, so the addends are 0.
+static uint32_t spin(void *context)
+{
+	(void)context;
+	uint64_t addends[VALUE_COUNT] = { 0 };
+	xsdk_log_write("byterev: the spinner runs on hardware thread %u", (unsigned)xsdk_thread_hardware_thread());
+	while (!spinner_stop) {
+		probe_byterev_add_stream(NULL, SPIN_PASSES, addends);
+		spinner_blocks = spinner_blocks + 1;
+	}
+	return 0;
+}
+
+// With the spinner running, runs the test ROUNDS times, or sleeps for NULL, and logs how fast the spinner counted.
+static bool measure_beside_spinner(const Test *test)
+{
+	const char *const what = test ? test->name : "idle";
+	const uint32_t passes = test ? passes_for_target(test) : 0;
+	double rates[ROUNDS];
+	bool ok = true;
+	for (uint32_t round = 0; round < ROUNDS; round++) {
+		const uint32_t blocks = spinner_blocks;
+		const uint32_t start = probe_time_base();
+		uint32_t ticks;
+		if (test)
+			ok = run_once(test, passes, &ticks) && ok;
+		else
+			(void)xsdk_thread_sleep(IDLE_MS);
+		const uint32_t window_ticks = probe_time_base() - start;
+		rates[round] = (double)(spinner_blocks - blocks) * SPIN_PASSES * TIME_BASE_HZ / window_ticks / 1e6;
+	}
+	sort_doubles(rates, ROUNDS);
+	ok = ok && rates[0] > 0;
+	xsdk_log_write(
+		"%s: byterev sibling, main thread %s: the spinner counted %.2f million passes of 8 adds a second at "
+		"worst, %.2f the median, %.2f the best",
+		ok ? "PASS" : "FAIL", what, rates[0], rates[ROUNDS / 2], rates[ROUNDS - 1]);
+	return ok;
+}
+
+static bool measure_beside_spinner_running(Kernel *run)
+{
+	for (uint32_t i = 0; i < TESTS; i++) {
+		if (tests[i].run == run)
+			return measure_beside_spinner(&tests[i]);
+	}
+	xsdk_log_write("FAIL: byterev sibling: the kernel isn't a test");
+	return false;
+}
+
+// Measures how fast the spinner counts on the main thread's sibling while the main thread is idle, adds, and loads with
+// lwzx and with lwbrx; returns the failures.
+static uint32_t measure_with_sibling(void)
+{
+	HANDLE spinner;
+	const NTSTATUS status = xsdk_thread_create_on(&spinner, SPINNER_STACK_BYTES, spin, NULL, SIBLING_HARDWARE_THREAD);
+	if (!NT_SUCCESS(status)) {
+		xsdk_log_write("FAIL: byterev sibling: xsdk_thread_create_on(%u) failed: 0x%08X",
+			(unsigned)SIBLING_HARDWARE_THREAD, (unsigned)status);
+		return 1;
+	}
+	for (uint32_t ms = 0; !spinner_blocks && ms < SPINNER_START_MS; ms++)
+		(void)xsdk_thread_sleep(1);
+	uint32_t failed = 0;
+	if (spinner_blocks) {
+		failed += !measure_beside_spinner(NULL);
+		failed += !measure_beside_spinner_running(probe_byterev_add_stream);
+		failed += !measure_beside_spinner_running(probe_byterev_lwzx);
+		failed += !measure_beside_spinner_running(probe_byterev_lwbrx);
+	} else {
+		xsdk_log_write("FAIL: byterev sibling: the spinner counted nothing in %u ms", (unsigned)SPINNER_START_MS);
+		failed++;
+	}
+	spinner_stop = 1;
+	const NTSTATUS waited = NtWaitForSingleObjectEx(spinner, USER_MODE, 0, &WAIT_TIMEOUT);
+	(void)NtClose(spinner);
+	if (waited != STATUS_SUCCESS) {
+		xsdk_log_write("FAIL: byterev sibling: waiting for the spinner returned 0x%08X", (unsigned)waited);
+		failed++;
+	}
+	return failed;
+}
+
 int main(void)
 {
 	uint32_t failed = 0;
@@ -350,6 +465,7 @@ int main(void)
 	xsdk_log_write("byterev: %u rounds a test, runs of about %u ms", (unsigned)ROUNDS,
 		(unsigned)((uint64_t)TARGET_TICKS * 1000 / TIME_BASE_HZ));
 	failed += measure_all(tests, TESTS);
+	failed += measure_with_sibling();
 	failed += measure_all(last_tests, LAST_TESTS);
 	xsdk_log_write("TESTS COMPLETE: status=%d", failed ? 1 : 0);
 	return failed ? 1 : 0;
