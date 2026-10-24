@@ -5001,3 +5001,30 @@ So with packed mips off the console reads a small base at the corner, as Xenia d
 turns the bit off for a tiled 2D texture of one level whose base would sit in the tail; xsdk's layout then puts that
 base at the corner for uploads and downloads (src/texture_layout.c), and the resolves take such a texture.
 vulkan4xenon calls it for every colour attachment. Only tiled textures were probed, so a linear one isn't taken.
+
+## Byte-reversed loads and stores cost what plain ones do (2026-10-23)
+
+For a JIT running little-endian guest code on this big-endian host, `tests/probe_byterev.c` timed each byte-reversed load
+and store beside its plain indexed form on hardware thread 0, its sibling idle: nine runs of about 40 ms each, each run
+checking the bytes it moved (log: `results/2026-10-23-byterev/byterev.log`; with nine of its kernels broken on
+purpose, exactly their checks failed, `byterev_break.log`). CPU clocks an operation, the median:
+- **Integer loads:** `lhzx`, `lhbrx`, `lwzx`, `lwbrx`, `ldx` and `ldbrx` 1.6 each, eight independent a pass, as eight
+  independent `add`s take. Chained, each load giving the next one's offset, `lwzx`, `lwbrx`, `ldx` and `ldbrx` 5.0 each.
+- **Integer stores:** every form 16.3, `sthbrx`, `stwbrx` and `stdbrx` included. That's this kernel's bound, the same
+  eight cache lines stored again each pass, not a store's usual cost.
+- **A store then a load of the same word:** 48.1 a pair, whether either reverses bytes or not.
+- **Into and out of the FPRs,** which have no byte-reversed load or store, so the value goes through a GPR and memory:
+  - `lwbrx; stw; lfs` 34.8 against `lfsx`'s 3.3, and `ldbrx; std; lfd` 34.8 against `lfdx`'s 3.3.
+  - `stfs; lwz; stwbrx` and `stfd; ld; stdbrx` 67.4 each, against `stfsx`'s and `stfdx`'s 16.3.
+  - Chained, the reversing hop added 50 clocks: 124.2 against 74.3, for floats and doubles alike.
+- **VMX:** `lvx` 3.3 alone, and 3.2 followed by a `vperm` that reverses each word or the whole vector. `stvx` took 16.3
+  with or without a `vperm` before it.
+- **The sibling:** a spinner of adds on hardware thread 1 counted 254 million passes a second while the main thread
+  slept, and 177 million beside the main thread's adds, its `lwzx` loads and its `lwbrx` loads alike. The byte-reversed
+  loads hold the other hardware thread up no more than plain ones.
+- **`ldbrx` and `stdbrx` run,** as Xenia has them for 360 code (xenia:src/xenia/cpu/ppc/ppc_emit_memory.cc:640-690).
+- **Calibration:** a chain of dependent adds took 2.0 clocks an add, eight independent ones 1.6.
+
+So a JIT reaches little-endian guest memory through the byte-reversed forms at no cost for integers. A guest float
+pays the trip between a GPR and an FPR through memory, about 31 clocks a load and 51 a store, while VMX reverses bytes
+for nothing.

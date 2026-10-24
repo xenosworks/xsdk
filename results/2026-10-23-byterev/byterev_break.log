@@ -1,0 +1,87 @@
+log: game:\byterev_break.log
+log: named after \Device\Harddisk0\Partition1\byterev\byterev_break.xex
+log: no net_log.txt beside the .xex, so not over the network
+PASS: byterev: xsdk_thread_move(0) returned 0x00000000, the main thread runs on hardware thread 0
+byterev: 9 rounds a test, runs of about 40 ms
+BEGIN load: lhzx
+FAIL: byterev load: lhzx: 1.6 clocks an operation at best, 1.6 the median, 1.6 the worst, 79921944 operations a run
+BEGIN load: lhbrx
+PASS: byterev load: lhbrx: 1.6 clocks an operation at best, 1.6 the median, 1.6 the worst, 81008648 operations a run
+BEGIN load: lwzx
+PASS: byterev load: lwzx: 1.6 clocks an operation at best, 1.6 the median, 1.6 the worst, 81108904 operations a run
+BEGIN load: lwbrx
+PASS: byterev load: lwbrx: 1.6 clocks an operation at best, 1.6 the median, 1.6 the worst, 81108904 operations a run
+BEGIN load: ldx
+PASS: byterev load: ldx: 1.6 clocks an operation at best, 1.6 the median, 1.6 the worst, 80808872 operations a run
+BEGIN chase: lwzx
+FAIL: byterev chase: lwzx: 5.0 clocks an operation at best, 5.0 the median, 5.0 the worst, 25401544 operations a run
+BEGIN chase: lwbrx
+FAIL: byterev chase: lwbrx: 5.0 clocks an operation at best, 5.0 the median, 5.0 the worst, 25411392 operations a run
+BEGIN chase: ldx
+FAIL: byterev chase: ldx: 5.0 clocks an operation at best, 5.0 the median, 5.0 the worst, 25411392 operations a run
+BEGIN store: sthx
+FAIL: byterev store: sthx: 16.2 clocks an operation at best, 16.4 the median, 16.4 the worst, 8122952 operations a run
+BEGIN store: sthbrx
+PASS: byterev store: sthbrx: 16.3 clocks an operation at best, 16.3 the median, 16.4 the worst, 8131016 operations a run
+BEGIN store: stwx
+PASS: byterev store: stwx: 16.3 clocks an operation at best, 16.4 the median, 16.5 the worst, 8063984 operations a run
+BEGIN store: stwbrx
+PASS: byterev store: stwbrx: 16.3 clocks an operation at best, 16.3 the median, 16.5 the worst, 8141112 operations a run
+BEGIN store: stdx
+PASS: byterev store: stdx: 16.2 clocks an operation at best, 16.4 the median, 16.4 the worst, 8114904 operations a run
+BEGIN store then load: stwx; lwzx
+PASS: byterev store then load: stwx; lwzx: 48.1 clocks an operation at best, 48.1 the median, 48.1 the worst, 2651560 operations a run
+BEGIN store then load: stwbrx; lwzx
+FAIL: byterev store then load: stwbrx; lwzx: 48.1 clocks an operation at best, 48.1 the median, 48.1 the worst, 2647704 operations a run
+BEGIN store then load: stwbrx; lwbrx
+PASS: byterev store then load: stwbrx; lwbrx: 48.1 clocks an operation at best, 48.1 the median, 48.1 the worst, 2665040 operations a run
+BEGIN float load: lfsx
+FAIL: byterev float load: lfsx: 3.3 clocks an operation at best, 3.3 the median, 3.3 the worst, 37969872 operations a run
+BEGIN float load: lwbrx; stw; lfs
+PASS: byterev float load: lwbrx; stw; lfs: 34.8 clocks an operation at best, 34.8 the median, 34.8 the worst, 3674776 operations a run
+BEGIN float chase: lfsx; stfs; lwz; clrlwi
+PASS: byterev float chase: lfsx; stfs; lwz; clrlwi: 74.3 clocks an operation at best, 74.3 the median, 74.3 the worst, 1725536 operations a run
+BEGIN float chase: lwbrx; stw; lfs; stfs; lwz; clrlwi
+PASS: byterev float chase: lwbrx; stw; lfs; stfs; lwz; clrlwi: 124.2 clocks an operation at best, 124.2 the median, 124.2 the worst, 1030568 operations a run
+BEGIN double load: lfdx
+PASS: byterev double load: lfdx: 3.3 clocks an operation at best, 3.3 the median, 3.3 the worst, 37947880 operations a run
+BEGIN double chase: lfdx; stfd; ld; clrlwi
+PASS: byterev double chase: lfdx; stfd; ld; clrlwi: 74.3 clocks an operation at best, 74.3 the median, 74.3 the worst, 1720688 operations a run
+BEGIN float store: stfsx
+PASS: byterev float store: stfsx: 16.3 clocks an operation at best, 16.4 the median, 16.5 the worst, 8095856 operations a run
+BEGIN float store: stfs; lwz; stwbrx
+FAIL: byterev float store: stfs; lwz; stwbrx: 67.4 clocks an operation at best, 67.5 the median, 67.5 the worst, 1900032 operations a run
+BEGIN double store: stfdx
+PASS: byterev double store: stfdx: 16.3 clocks an operation at best, 16.3 the median, 16.4 the worst, 8152256 operations a run
+BEGIN vector load: lvx
+PASS: byterev vector load: lvx: 3.3 clocks an operation at best, 3.3 the median, 3.3 the worst, 38035976 operations a run
+BEGIN vector load: lvx; vperm each word
+FAIL: byterev vector load: lvx; vperm each word: 3.2 clocks an operation at best, 3.2 the median, 3.2 the worst, 39102624 operations a run
+BEGIN vector load: lvx; vperm the whole
+PASS: byterev vector load: lvx; vperm the whole: 3.2 clocks an operation at best, 3.2 the median, 3.2 the worst, 39527136 operations a run
+BEGIN vector store: stvx
+PASS: byterev vector store: stvx: 16.3 clocks an operation at best, 16.3 the median, 16.4 the worst, 8100864 operations a run
+BEGIN vector store: vperm each word; stvx
+PASS: byterev vector store: vperm each word; stvx: 16.3 clocks an operation at best, 16.3 the median, 16.4 the worst, 7553704 operations a run
+BEGIN vector store: vperm the whole; stvx
+PASS: byterev vector store: vperm the whole; stvx: 16.3 clocks an operation at best, 16.4 the median, 16.4 the worst, 8792056 operations a run
+BEGIN add: one chain
+FAIL: byterev add: one chain: 1.8 clocks an operation at best, 1.8 the median, 1.8 the worst, 71157432 operations a run
+BEGIN add: eight independent
+PASS: byterev add: eight independent: 1.6 clocks an operation at best, 1.6 the median, 1.6 the worst, 81008648 operations a run
+byterev: the spinner runs on hardware thread 1
+FAIL: byterev sibling: the spinner counted nothing in 1000 ms
+BEGIN load: ldbrx
+PASS: byterev load: ldbrx: 1.6 clocks an operation at best, 1.6 the median, 1.6 the worst, 81008648 operations a run
+BEGIN chase: ldbrx
+FAIL: byterev chase: ldbrx: 5.0 clocks an operation at best, 5.0 the median, 5.0 the worst, 25411392 operations a run
+BEGIN store: stdbrx
+PASS: byterev store: stdbrx: 16.3 clocks an operation at best, 16.3 the median, 16.4 the worst, 8026448 operations a run
+BEGIN double load: ldbrx; std; lfd
+PASS: byterev double load: ldbrx; std; lfd: 34.8 clocks an operation at best, 34.8 the median, 34.8 the worst, 3676840 operations a run
+BEGIN double chase: ldbrx; std; lfd; stfd; ld; clrlwi
+PASS: byterev double chase: ldbrx; std; lfd; stfd; ld; clrlwi: 124.2 clocks an operation at best, 124.2 the median, 124.2 the worst, 1030600 operations a run
+BEGIN double store: stfd; ld; stdbrx
+PASS: byterev double store: stfd; ld; stdbrx: 67.4 clocks an operation at best, 67.4 the median, 67.5 the worst, 1895472 operations a run
+TESTS COMPLETE: status=1
+exit: status 1
