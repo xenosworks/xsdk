@@ -37,6 +37,9 @@ typedef enum {
 	CHASE,
 	STORE,
 	STORE_THEN_LOAD,
+	FLOAT_LOAD,
+	FLOAT_CHASE,
+	FLOAT_STORE,
 } Kind;
 
 // Which of a kernel's accesses reverse bytes.
@@ -57,7 +60,10 @@ Kernel probe_byterev_lhzx, probe_byterev_lhbrx, probe_byterev_lwzx, probe_bytere
 	probe_byterev_ldbrx, probe_byterev_chase_lwzx, probe_byterev_chase_lwbrx, probe_byterev_chase_ldx,
 	probe_byterev_chase_ldbrx, probe_byterev_sthx, probe_byterev_sthbrx, probe_byterev_stwx, probe_byterev_stwbrx,
 	probe_byterev_stdx, probe_byterev_stdbrx, probe_byterev_stwx_lwzx, probe_byterev_stwbrx_lwzx,
-	probe_byterev_stwbrx_lwbrx;
+	probe_byterev_stwbrx_lwbrx, probe_byterev_lfsx, probe_byterev_lwbrx_lfs, probe_byterev_chase_lfsx,
+	probe_byterev_chase_lwbrx_lfs, probe_byterev_lfdx, probe_byterev_ldbrx_lfd, probe_byterev_chase_lfdx,
+	probe_byterev_chase_ldbrx_lfd, probe_byterev_stfsx, probe_byterev_stfs_stwbrx, probe_byterev_stfdx,
+	probe_byterev_stfd_stdbrx;
 
 static const Test tests[] = {
 	{ "load: lhzx", probe_byterev_lhzx, LOAD, 2, 0 },
@@ -77,6 +83,15 @@ static const Test tests[] = {
 	{ "store then load: stwbrx; lwzx", probe_byterev_stwbrx_lwzx, STORE_THEN_LOAD, 4, STORE_REVERSED },
 	{ "store then load: stwbrx; lwbrx", probe_byterev_stwbrx_lwbrx, STORE_THEN_LOAD, 4,
 		STORE_REVERSED | LOAD_REVERSED },
+	{ "float load: lfsx", probe_byterev_lfsx, FLOAT_LOAD, 4, 0 },
+	{ "float load: lwbrx; stw; lfs", probe_byterev_lwbrx_lfs, FLOAT_LOAD, 4, LOAD_REVERSED },
+	{ "float chase: lfsx; stfs; lwz; clrlwi", probe_byterev_chase_lfsx, FLOAT_CHASE, 4, 0 },
+	{ "float chase: lwbrx; stw; lfs; stfs; lwz; clrlwi", probe_byterev_chase_lwbrx_lfs, FLOAT_CHASE, 4, LOAD_REVERSED },
+	{ "double load: lfdx", probe_byterev_lfdx, FLOAT_LOAD, 8, 0 },
+	{ "double chase: lfdx; stfd; ld; clrlwi", probe_byterev_chase_lfdx, FLOAT_CHASE, 8, 0 },
+	{ "float store: stfsx", probe_byterev_stfsx, FLOAT_STORE, 4, 0 },
+	{ "float store: stfs; lwz; stwbrx", probe_byterev_stfs_stwbrx, FLOAT_STORE, 4, STORE_REVERSED },
+	{ "double store: stfdx", probe_byterev_stfdx, FLOAT_STORE, 8, 0 },
 };
 
 // ldbrx and stdbrx, which the console may refuse, so they run after the rest.
@@ -84,6 +99,9 @@ static const Test last_tests[] = {
 	{ "load: ldbrx", probe_byterev_ldbrx, LOAD, 8, LOAD_REVERSED },
 	{ "chase: ldbrx", probe_byterev_chase_ldbrx, CHASE, 8, LOAD_REVERSED },
 	{ "store: stdbrx", probe_byterev_stdbrx, STORE, 8, STORE_REVERSED },
+	{ "double load: ldbrx; std; lfd", probe_byterev_ldbrx_lfd, FLOAT_LOAD, 8, LOAD_REVERSED },
+	{ "double chase: ldbrx; std; lfd; stfd; ld; clrlwi", probe_byterev_chase_ldbrx_lfd, FLOAT_CHASE, 8, LOAD_REVERSED },
+	{ "double store: stfd; ld; stdbrx", probe_byterev_stfd_stdbrx, FLOAT_STORE, 8, STORE_REVERSED },
 };
 
 enum {
@@ -125,12 +143,29 @@ static uint64_t slot_value(uint32_t slot, uint32_t size_bytes, bool reversed)
 	return load_image(bytes, size_bytes, reversed);
 }
 
+// An FPR's 64 bits after an lfs or lfd of the 32 or 64 bits.
+static uint64_t fpr_bits(uint64_t bits, uint32_t size_bytes)
+{
+	if (size_bytes == 8)
+		return bits;
+	const uint32_t single_bits = (uint32_t)bits;
+	float single;
+	memcpy(&single, &single_bits, sizeof single);
+	const double widened = single;
+	uint64_t double_bits;
+	memcpy(&double_bits, &widened, sizeof double_bits);
+	return double_bits;
+}
+
 // Each entry holds the offset of the one 17 on.
 static void fill_chain(const Test *test)
 {
 	const uint32_t entries = BUFFER_BYTES / test->size_bytes;
+	// A float chase's entries are floats from 1.0 up with the offset in their low bits, not denormals.
+	const uint64_t one = test->size_bytes == 4 ? 0x3F800000 : 0x3FF0000000000000;
 	for (uint32_t i = 0; i < entries; i++) {
-		const uint64_t next = (uint64_t)((i + CHASE_STRIDE) % entries) * test->size_bytes;
+		const uint64_t next =
+			(uint64_t)((i + CHASE_STRIDE) % entries) * test->size_bytes | (test->kind == FLOAT_CHASE ? one : 0);
 		store_image(buffer + i * test->size_bytes, next, test->size_bytes, test->reversed & LOAD_REVERSED);
 	}
 }
@@ -141,17 +176,23 @@ static void prepare(const Test *test)
 	memset(values, 0, sizeof values);
 	switch (test->kind) {
 	case LOAD:
+	case FLOAT_LOAD:
 		for (uint32_t slot = 0; slot < SLOTS; slot++) {
 			for (uint32_t i = 0; i < 16; i++)
 				buffer[slot * SLOT_STRIDE_BYTES + i] = pattern_byte(slot, i);
 		}
 		break;
 	case CHASE:
+	case FLOAT_CHASE:
 		fill_chain(test);
 		break;
 	case STORE:
 		for (uint32_t slot = 0; slot < SLOTS; slot++)
 			values[slot] = slot_value(slot, 8, false);
+		break;
+	case FLOAT_STORE:
+		for (uint32_t slot = 0; slot < SLOTS; slot++)
+			values[slot] = fpr_bits(slot_value(slot, test->size_bytes, false), test->size_bytes);
 		break;
 	case STORE_THEN_LOAD:
 		values[0] = slot_value(0, 4, false);
@@ -171,16 +212,24 @@ static bool check(const Test *test, uint32_t passes)
 		for (uint32_t slot = 0; slot < SLOTS; slot++)
 			ok = ok && values[slot] == slot_value(slot, size_bytes, load_reversed);
 		break;
-	case CHASE: {
+	case FLOAT_LOAD:
+		for (uint32_t slot = 0; slot < SLOTS; slot++)
+			ok = ok && values[slot] == fpr_bits(slot_value(slot, size_bytes, load_reversed), size_bytes);
+		break;
+	case CHASE:
+	case FLOAT_CHASE: {
 		const uint64_t entries = BUFFER_BYTES / size_bytes;
 		const uint64_t steps = (uint64_t)passes * OPERATIONS_PER_PASS;
 		ok = values[0] == steps * CHASE_STRIDE % entries * size_bytes;
 		break;
 	}
 	case STORE:
+	case FLOAT_STORE:
 		for (uint32_t slot = 0; slot < SLOTS; slot++) {
 			uint8_t expected[8] = { 0 };
-			store_image(expected, values[slot], size_bytes, store_reversed);
+			// A float is stored as the bits it was made from, not as the 64 bits of the register.
+			const uint64_t stored = test->kind == FLOAT_STORE ? slot_value(slot, size_bytes, false) : values[slot];
+			store_image(expected, stored, size_bytes, store_reversed);
 			ok = ok && memcmp(buffer + slot * SLOT_STRIDE_BYTES, expected, sizeof expected) == 0;
 		}
 		break;

@@ -112,6 +112,104 @@
 	leave \name
 	.endm
 
+	// Eight independent loads into FPRs.
+	.macro float_loads name, insn
+	enter \name
+	offsets
+	loop
+	.irp k, 0,1,2,3,4,5,6,7
+	\insn \k, 3, OFFSET + \k
+	.endr
+	again
+	.irp k, 0,1,2,3,4,5,6,7
+	stfd \k, 8 * \k(r5)
+	.endr
+	leave \name
+	.endm
+
+	// As float_loads from reversed memory: a byte-reversed load, a store to a slot, and a load from it into the FPR.
+	.macro float_loads_reversed name, load, store, fpr_load
+	enter \name
+	offsets
+	loop
+	.irp k, 0,1,2,3,4,5,6,7
+	\load VALUE + \k, 3, OFFSET + \k
+	\store VALUE + \k, SLOT + 8 * \k(r1)
+	\fpr_load \k, SLOT + 8 * \k(r1)
+	.endr
+	again
+	.irp k, 0,1,2,3,4,5,6,7
+	stfd \k, 8 * \k(r5)
+	.endr
+	leave \name
+	.endm
+
+	// A chase through an FPR: the entry loaded into f0 goes through a slot into r14, whose low bits are the next offset.
+	.macro float_chase name, fpr_load, fpr_store, load
+	enter \name
+	li VALUE, 0
+	loop
+	.rept 8
+	\fpr_load 0, 3, VALUE
+	\fpr_store 0, SLOT(r1)
+	\load VALUE, SLOT(r1)
+	clrlwi VALUE, VALUE, 9
+	.endr
+	again
+	std VALUE, 0(r5)
+	leave \name
+	.endm
+
+	// As float_chase from reversed memory, the entry going through a slot into f0 as well.
+	.macro float_chase_reversed name, load, store, fpr_load, fpr_store, reload
+	enter \name
+	li VALUE, 0
+	loop
+	.rept 8
+	\load VALUE, 3, VALUE
+	\store VALUE, SLOT(r1)
+	\fpr_load 0, SLOT(r1)
+	\fpr_store 0, SLOT(r1)
+	\reload VALUE, SLOT(r1)
+	clrlwi VALUE, VALUE, 9
+	.endr
+	again
+	std VALUE, 0(r5)
+	leave \name
+	.endm
+
+	// Eight independent stores from FPRs.
+	.macro float_stores name, insn
+	enter \name
+	offsets
+	.irp k, 0,1,2,3,4,5,6,7
+	lfd \k, 8 * \k(r5)
+	.endr
+	loop
+	.irp k, 0,1,2,3,4,5,6,7
+	\insn \k, 3, OFFSET + \k
+	.endr
+	again
+	leave \name
+	.endm
+
+	// As float_stores to reversed memory: a store to a slot, a load from it into a GPR, and a byte-reversed store.
+	.macro float_stores_reversed name, fpr_store, load, store
+	enter \name
+	offsets
+	.irp k, 0,1,2,3,4,5,6,7
+	lfd \k, 8 * \k(r5)
+	.endr
+	loop
+	.irp k, 0,1,2,3,4,5,6,7
+	\fpr_store \k, SLOT + 8 * \k(r1)
+	\load VALUE + \k, SLOT + 8 * \k(r1)
+	\store VALUE + \k, 3, OFFSET + \k
+	.endr
+	again
+	leave \name
+	.endm
+
 	loads probe_byterev_lhzx, lhzx
 	loads probe_byterev_lhbrx, lhbrx
 	loads probe_byterev_lwzx, lwzx
@@ -128,9 +226,21 @@
 	store_load probe_byterev_stwx_lwzx, stwx, lwzx
 	store_load probe_byterev_stwbrx_lwzx, stwbrx, lwzx
 	store_load probe_byterev_stwbrx_lwbrx, stwbrx, lwbrx
+	float_loads probe_byterev_lfsx, lfsx
+	float_loads_reversed probe_byterev_lwbrx_lfs, lwbrx, stw, lfs
+	float_chase probe_byterev_chase_lfsx, lfsx, stfs, lwz
+	float_chase_reversed probe_byterev_chase_lwbrx_lfs, lwbrx, stw, lfs, stfs, lwz
+	float_loads probe_byterev_lfdx, lfdx
+	float_chase probe_byterev_chase_lfdx, lfdx, stfd, ld
+	float_stores probe_byterev_stfsx, stfsx
+	float_stores_reversed probe_byterev_stfs_stwbrx, stfs, lwz, stwbrx
+	float_stores probe_byterev_stfdx, stfdx
 
 	// The doubleword byte-reversed forms, which the console may refuse (Xenia has both, for 360 code:
 	// xenia:src/xenia/cpu/ppc/ppc_emit_memory.cc:640-690), so the probe runs them last.
 	loads probe_byterev_ldbrx, ldbrx
 	chase probe_byterev_chase_ldbrx, ldbrx
 	stores probe_byterev_stdbrx, stdbrx
+	float_loads_reversed probe_byterev_ldbrx_lfd, ldbrx, std, lfd
+	float_chase_reversed probe_byterev_chase_ldbrx_lfd, ldbrx, std, lfd, stfd, ld
+	float_stores_reversed probe_byterev_stfd_stdbrx, stfd, ld, stdbrx
