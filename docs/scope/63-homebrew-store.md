@@ -115,13 +115,14 @@ Each done on a clean console run, as xsdk's milestones are.
 
 On 2026-10-24, all seven:
 1. **The name is Homebrew App Store,** in a repository of its own under xenosworks, as SDL-xenon and curl-xenon are,
-   that you create (homebrew-app-store, say).
+   created on 2026-10-24 at your word: xenosworks/homebrew-app-store.
 2. **Hosting on GitHub, no domain of our own:** packages as each app's GitHub release assets, which GitHub gives "no
    limit on the total size of a release, nor bandwidth usage" (docs.github.com, "About releases"); the catalogue and
    screenshots on GitHub Pages at xenosworks's own address, well inside its 1 GB and soft 100 GB a month. Throttling for
    "significantly excessive" bandwidth (its Acceptable Use Policies, section 9) is unlikely for a small community's
    apps of a few MB (you, 2026-10-24). If the catalogue ever has to move, a signed field in it names the new address,
-   which the store takes from then on.
+   which the store takes from then on. You have a server of your own, left unused until there's demand to
+   measure (you, 2026-10-24).
 3. **The key:** ECDSA P-256, held by you, its public half in the store.
 4. **Packages:** zip with deflate through miniz, holding `.xex` files packed with zero runs (step 2).
 5. **Whose apps:** anyone's, by pull request, reviewed by you; the catalogue signed whole; apps not by xenosworks
