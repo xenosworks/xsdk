@@ -225,6 +225,11 @@ Taken on 2026-10-25, after the user heard the sound crackle:
     draw's parts, milestone 61").
 14. **No comparison with the PC's OpenGL build** (the user). Building Starship for the PC in WSL needs packages only
     the user can install; the console's captures are checked against what the user sees.
+15. **The hiccups of the user's plays are taken out where they start** (the user asked for them repaired). Starship
+    records interpolation only for frames it replays (starship-xenon `ae491df6`), the log reserves its file's room
+    (src/log.c), and libultraship reads its archive into memory (libultraship-xenon `fe2122f7`); saves stay as
+    libultraship writes them (docs/HARDWARE.md, the four sections from "The map at 30: recording only what's
+    replayed, milestone 61").
 
 ## Size
 

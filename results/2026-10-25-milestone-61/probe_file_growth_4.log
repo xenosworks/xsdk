@@ -1,0 +1,27 @@
+log: game:\probe_file_growth.log
+log: named after \Device\Harddisk0\Partition1\XSDK\growth\probe_file_growth.xex
+log: no net_log.txt beside the .xex, so not over the network
+growth: game: has 16384-byte units, 8581914 of 9453636 free
+growth: growing: made in 198 us; 1024 writes of 512 bytes, 0x00000000, 502967 us in all, the longest 52439 us; 1 of 2000 us or more, 0 of them at a 16 KB boundary: 264 KB 52439 us
+growth: growing: closed, 524288 bytes long, 524288 held, 32 units taken
+growth: reserved: made in 433 us; 1024 writes of 512 bytes, 0x00000000, 495560 us in all, the longest 48372 us; 2 of 2000 us or more, 0 of them at a 16 KB boundary: 40 KB 11534 us, 327 KB 48372 us
+growth: reserved: closed, 524288 bytes long, 524288 held, 64 units taken
+growth: growing again: made in 199 us; 1024 writes of 512 bytes, 0x00000000, 502796 us in all, the longest 53275 us; 1 of 2000 us or more, 0 of them at a 16 KB boundary: 359 KB 53275 us
+growth: growing again: closed, 524288 bytes long, 524288 held, 32 units taken
+growth: growing, idle: made, 0 units taken
+growth: growing, idle: after 10 s idle, a write inside a unit took 369 us, the write starting the unit at 16 KB 544 us; 0x00000000
+growth: growing, idle: after 10 s idle, a write inside a unit took 500 us, the write starting the unit at 32 KB 584 us; 0x00000000
+growth: growing, idle: after 10 s idle, a write inside a unit took 523 us, the write starting the unit at 48 KB 547 us; 0x00000000
+growth: growing, idle: closed, 49664 bytes long, 49664 held, 4 units taken
+growth: reserved, idle: made, 64 units taken
+growth: reserved, idle: after 10 s idle, a write inside a unit took 49201 us, the write starting the unit at 16 KB 393 us; 0x00000000
+growth: reserved, idle: after 10 s idle, a write inside a unit took 4463 us, the write starting the unit at 32 KB 367 us; 0x00000000
+growth: reserved, idle: after 10 s idle, a write inside a unit took 38721 us, the write starting the unit at 48 KB 357 us; 0x00000000
+growth: reserved, idle: closed, 49664 bytes long, 49664 held, 65 units taken
+growth: reserved over an old file, idle: made, 62 units taken
+growth: reserved over an old file, idle: after 10 s idle, a write inside a unit took 39795 us, the write starting the unit at 16 KB 364 us; 0x00000000
+growth: reserved over an old file, idle: after 10 s idle, a write inside a unit took 363 us, the write starting the unit at 32 KB 57894 us; 0x00000000
+growth: reserved over an old file, idle: after 10 s idle, a write inside a unit took 354 us, the write starting the unit at 48 KB 18957 us; 0x00000000
+growth: reserved over an old file, idle: closed, 49664 bytes long, 49664 held, 62 units taken
+growth: done
+exit: status 0

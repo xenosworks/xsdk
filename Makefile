@@ -487,7 +487,7 @@ $(BUILD)/terminate_check.elf: $(BUILD)/tests/terminate_check.o $(BUILD)/libxsdk.
 
 system_probes: $(BUILD)/probe_terminate.xex $(BUILD)/probe_letterbox.xex
 
-drive_probes: $(BUILD)/probe_drives.xex
+drive_probes: $(BUILD)/probe_drives.xex $(BUILD)/probe_file_growth.xex $(BUILD)/probe_save_writes.xex
 
 # The focused query probe also checks the executable image pool.
 $(BUILD)/probe_query_memory.elf: $(BUILD)/tests/probe_query_memory.o $(BUILD)/tests/jit_pool.o $(BUILD)/libxsdk.a src/xsdk.ld

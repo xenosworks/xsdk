@@ -1,0 +1,214 @@
+log: game:\starship_diag.log
+log: named after \Device\Harddisk0\Partition1\starship\starship_diag.xex
+log: also over UDP to 192.168.0.125:7371
+open: NtCreateFile(game:\cvars.cfg) failed: 0xC0000034
+[2026-10-25 13:48:47.231] [info] [ArchiveManager.cpp:232] Reading archive: game:/./sf64.o2r
+[2026-10-25 13:48:47.506] [info] [ArchiveManager.cpp:264] Adding Archive game:/./sf64.o2r to Archive Manager
+[2026-10-25 13:48:47.575] [info] [ArchiveManager.cpp:232] Reading archive: game:/./starship.o2r
+[2026-10-25 13:48:47.591] [info] [ArchiveManager.cpp:264] Adding Archive game:/./starship.o2r to Archive Manager
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 30418 us
+open: NtCreateFile(game:\capture.txt) failed: 0xC0000034
+gfx_xsdk: programs are kept in game:/shaders/fast3d/F40C88B5615751D4
+gfx_xsdk: the game's shader pack holds 18 programs for F40C88B5615751D4
+[13:48:48.410] [DisplayListPatch.cpp:11] [info] Applying display list patches
+[13:48:48.427] [GenericArrayFactory.cpp:17] [info] GenericArray Type Num: 0
+open: NtCreateFile(game:\gamecontrollerdb.txt) failed: 0xC0000034
+[13:48:48.427] [GenericArrayFactory.cpp:21] [info] GenericArray Count: 283
+[13:48:48.428] [os.cpp:23] [error] Failed add SDL game controller mappings from "./gamecontrollerdb.txt" (Couldn't open ./gamecontrollerdb.txt: No such file or directory)
+open: NtCreateFile(game:\input_script.txt) failed: 0xC0000034
+Scene Changed!
+Scene Changed!
+gfx_xsdk: 261 frames in 10.0 s (26.0 fps); a frame: 5.8 draws (0.0 skipped), 781 triangles, 16427 floats, 0.130 ms in the backend (0.035 drawing, 0.015 of it copying vertices; 0.000 uploading textures), 3.295 ms from StartFrame to EndFrame, 1.292 ms of GPU time over 260 frames; a draw 3.442 us less its copy
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 4 read, 4 of them from the pack), 555 loaded, 3 kept; 3 textures created, 3 uploads of 51 KB; 786 framebuffer calls
+framediag: 264 updates, 95 over 33.4 ms; ms each, average and longest: the game 9.46 26.16, drawing and present 21.83 84.51, audio 6.68 1111.52, the whole 37.96 1145.10
+gfx_xsdk: 299 frames in 10.0 s (29.9 fps); a frame: 14.8 draws (0.0 skipped), 902 triangles, 19123 floats, 0.081 ms in the backend (0.048 drawing, 0.018 of it copying vertices; 0.000 uploading textures), 3.704 ms from StartFrame to EndFrame, 4.402 ms of GPU time over 299 frames; a draw 1.981 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 796 loaded, 3 kept; 4 textures created, 4 uploads of 56 KB; 897 framebuffer calls
+framediag: 300 updates, 108 over 33.4 ms; ms each, average and longest: the game 10.90 11.83, drawing and present 18.92 73.67, audio 3.71 6.14, the whole 33.53 91.03
+[13:49:12.290] [AnimFactory.cpp:20] [info] JointSize: 23
+[13:49:12.290] [AnimFactory.cpp:20] [info] JointSize: 23
+[13:49:12.291] [AnimFactory.cpp:20] [info] JointSize: 23
+[13:49:12.328] [AnimFactory.cpp:20] [info] JointSize: 21
+[13:49:12.370] [AnimFactory.cpp:20] [info] JointSize: 19
+Scene Changed!
+Scene Changed!
+gfx_xsdk: 288 frames in 10.0 s (28.8 fps); a frame: 42.9 draws (0.0 skipped), 1168 triangles, 26063 floats, 0.374 ms in the backend (0.087 drawing, 0.030 of it copying vertices; 0.096 uploading textures), 6.168 ms from StartFrame to EndFrame, 3.658 ms of GPU time over 288 frames; a draw 1.324 us less its copy
+gfx_xsdk: in the window: 6 shaders created (0 compiled, 6 read, 6 of them from the pack), 1150 loaded, 9 kept; 72 textures created, 3317 uploads of 14057 KB; 864 framebuffer calls
+framediag: 290 updates, 108 over 33.4 ms; ms each, average and longest: the game 13.57 136.15, drawing and present 17.33 78.81, audio 3.65 10.70, the whole 34.55 170.95
+gfx_xsdk: 292 frames in 10.0 s (29.2 fps); a frame: 282.8 draws (0.0 skipped), 1516 triangles, 36806 floats, 1.927 ms in the backend (0.327 drawing, 0.083 of it copying vertices; 1.399 uploading textures), 14.108 ms from StartFrame to EndFrame, 10.360 ms of GPU time over 292 frames; a draw 0.863 us less its copy
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read, 1 of them from the pack), 5035 loaded, 10 kept; 64 textures created, 38931 uploads of 155612 KB; 876 framebuffer calls
+framediag: 292 updates, 194 over 33.4 ms; ms each, average and longest: the game 15.85 54.44, drawing and present 14.97 38.26, audio 3.47 6.96, the whole 34.29 97.27
+gfx_xsdk: 274 frames in 10.0 s (27.3 fps); a frame: 301.6 draws (0.0 skipped), 1544 triangles, 37663 floats, 2.022 ms in the backend (0.346 drawing, 0.087 of it copying vertices; 1.490 uploading textures), 14.915 ms from StartFrame to EndFrame, 11.883 ms of GPU time over 274 frames; a draw 0.860 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5134 loaded, 10 kept; 0 textures created, 38574 uploads of 153736 KB; 822 framebuffer calls
+framediag: 273 updates, 268 over 33.4 ms; ms each, average and longest: the game 17.24 18.03, drawing and present 15.43 79.53, audio 3.44 6.78, the whole 36.11 100.73
+gfx_xsdk: 285 frames in 10.0 s (28.4 fps); a frame: 240.3 draws (0.0 skipped), 1017 triangles, 26326 floats, 1.632 ms in the backend (0.277 drawing, 0.067 of it copying vertices; 1.205 uploading textures), 11.177 ms from StartFrame to EndFrame, 8.978 ms of GPU time over 285 frames; a draw 0.871 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4161 loaded, 10 kept; 0 textures created, 33040 uploads of 133986 KB; 855 framebuffer calls
+framediag: 285 updates, 208 over 33.4 ms; ms each, average and longest: the game 11.03 18.01, drawing and present 19.92 47.19, audio 4.15 7.69, the whole 35.10 52.10
+Scene Changed!
+velocity_diff: 1038.987793
+ at_dist: 600.000000
+ eye_dist: 489.383057
+CAMERA 1 SKIPED: 0
+velocity_diff: 866.692383
+ at_dist: 6064.157715
+ eye_dist: 6526.850586
+CAMERA 1 SKIPED: 1
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 81.5 draws (0.0 skipped), 297 triangles, 12141 floats, 0.535 ms in the backend (0.124 drawing, 0.028 of it copying vertices; 0.282 uploading textures), 4.532 ms from StartFrame to EndFrame, 4.762 ms of GPU time over 300 frames; a draw 1.175 us less its copy
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 3 read, 3 of them from the pack), 3253 loaded, 13 kept; 0 textures created, 9006 uploads of 45554 KB; 900 framebuffer calls
+framediag: 300 updates, 108 over 33.4 ms; ms each, average and longest: the game 2.54 47.76, drawing and present 28.41 55.62, audio 2.39 7.70, the whole 33.34 57.64
+velocity_diff: 657.358337
+[13:49:59.319] [AnimFactory.cpp:20] [info] JointSize: 19
+ at_dist: 5326.278809
+ eye_dist: 5613.327637
+CAMERA 1 SKIPED: 2
+gfx_xsdk: 298 frames in 10.0 s (29.7 fps); a frame: 92.2 draws (0.0 skipped), 313 triangles, 13090 floats, 0.215 ms in the backend (0.168 drawing, 0.031 of it copying vertices; 0.018 uploading textures), 5.574 ms from StartFrame to EndFrame, 6.911 ms of GPU time over 298 frames; a draw 1.487 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 6878 loaded, 13 kept; 0 textures created, 356 uploads of 1388 KB; 894 framebuffer calls
+framediag: 297 updates, 124 over 33.4 ms; ms each, average and longest: the game 4.06 56.93, drawing and present 26.50 82.35, audio 3.20 46.34, the whole 33.76 122.62
+[13:50:18.059] [Vec3sFactory.cpp:17] [info] Vec3s Count: 13
+[13:50:18.059] [Vec3fFactory.cpp:17] [info] Vec3f Count: 11
+gfx_xsdk: 298 frames in 10.0 s (29.8 fps); a frame: 95.7 draws (0.0 skipped), 355 triangles, 14509 floats, 0.272 ms in the backend (0.176 drawing, 0.032 of it copying vertices; 0.018 uploading textures), 6.165 ms from StartFrame to EndFrame, 7.883 ms of GPU time over 298 frames; a draw 1.496 us less its copy
+gfx_xsdk: in the window: 2 shaders created (0 compiled, 2 read, 2 of them from the pack), 6257 loaded, 15 kept; 0 textures created, 338 uploads of 1297 KB; 894 framebuffer calls
+[13:50:18.692] [Vec3sFactory.cpp:17] [info] Vec3s Count: 36
+[13:50:18.692] [Vec3fFactory.cpp:17] [info] Vec3f Count: 55
+framediag: 300 updates, 123 over 33.4 ms; ms each, average and longest: the game 5.05 56.56, drawing and present 23.75 29.98, audio 4.64 7.57, the whole 33.44 68.30
+[13:50:21.658] [AnimFactory.cpp:20] [info] JointSize: 7
+[13:50:23.783] [AnimFactory.cpp:20] [info] JointSize: 7
+gfx_xsdk: 299 frames in 10.0 s (29.8 fps); a frame: 143.6 draws (0.0 skipped), 473 triangles, 19422 floats, 0.315 ms in the backend (0.243 drawing, 0.045 of it copying vertices; 0.011 uploading textures), 6.631 ms from StartFrame to EndFrame, 9.475 ms of GPU time over 299 frames; a draw 1.378 us less its copy
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read, 1 of them from the pack), 8191 loaded, 16 kept; 45 textures created, 178 uploads of 1037 KB; 897 framebuffer calls
+framediag: 299 updates, 128 over 33.4 ms; ms each, average and longest: the game 6.85 72.60, drawing and present 20.33 29.81, audio 6.33 8.08, the whole 33.51 86.99
+[13:50:31.489] [AnimFactory.cpp:20] [info] JointSize: 10
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 152.5 draws (0.0 skipped), 602 triangles, 25422 floats, 0.308 ms in the backend (0.263 drawing, 0.051 of it copying vertices; 0.006 uploading textures), 7.496 ms from StartFrame to EndFrame, 10.149 ms of GPU time over 301 frames; a draw 1.387 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 8877 loaded, 16 kept; 13 textures created, 102 uploads of 119 KB; 903 framebuffer calls
+framediag: 301 updates, 123 over 33.4 ms; ms each, average and longest: the game 6.98 10.32, drawing and present 19.43 22.64, audio 6.90 7.97, the whole 33.31 40.29
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 161.0 draws (0.0 skipped), 597 triangles, 24886 floats, 0.311 ms in the backend (0.265 drawing, 0.053 of it copying vertices; 0.008 uploading textures), 7.484 ms from StartFrame to EndFrame, 8.856 ms of GPU time over 301 frames; a draw 1.316 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 7774 loaded, 16 kept; 12 textures created, 123 uploads of 441 KB; 903 framebuffer calls
+framediag: 300 updates, 123 over 33.4 ms; ms each, average and longest: the game 6.58 8.32, drawing and present 19.76 23.27, audio 6.99 8.24, the whole 33.33 36.05
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 171.0 draws (0.0 skipped), 657 triangles, 27479 floats, 0.326 ms in the backend (0.283 drawing, 0.056 of it copying vertices; 0.004 uploading textures), 7.688 ms from StartFrame to EndFrame, 9.603 ms of GPU time over 301 frames; a draw 1.323 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 9101 loaded, 16 kept; 7 textures created, 46 uploads of 325 KB; 903 framebuffer calls
+framediag: 301 updates, 124 over 33.4 ms; ms each, average and longest: the game 6.50 10.38, drawing and present 19.74 23.53, audio 7.08 8.08, the whole 33.33 35.06
+[13:51:02.573] [AnimFactory.cpp:20] [info] JointSize: 10
+[13:51:03.671] [AnimFactory.cpp:20] [info] JointSize: 10
+gfx_xsdk: 296 frames in 10.0 s (29.6 fps); a frame: 115.5 draws (0.0 skipped), 492 triangles, 20536 floats, 0.248 ms in the backend (0.200 drawing, 0.040 of it copying vertices; 0.015 uploading textures), 5.556 ms from StartFrame to EndFrame, 8.383 ms of GPU time over 296 frames; a draw 1.379 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5169 loaded, 16 kept; 4 textures created, 295 uploads of 310 KB; 888 framebuffer calls
+framediag: 296 updates, 125 over 33.4 ms; ms each, average and longest: the game 4.56 6.23, drawing and present 23.40 27.68, audio 5.31 8.11, the whole 33.27 35.65
+[13:51:09.006] [AnimFactory.cpp:20] [info] JointSize: 11
+[13:51:17.941] [AnimFactory.cpp:20] [info] JointSize: 14
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 100.6 draws (0.0 skipped), 568 triangles, 24944 floats, 0.259 ms in the backend (0.196 drawing, 0.041 of it copying vertices; 0.026 uploading textures), 6.257 ms from StartFrame to EndFrame, 7.171 ms of GPU time over 300 frames; a draw 1.537 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 6761 loaded, 16 kept; 6 textures created, 516 uploads of 1261 KB; 900 framebuffer calls
+framediag: 300 updates, 125 over 33.4 ms; ms each, average and longest: the game 5.75 38.26, drawing and present 24.27 27.40, audio 3.32 6.01, the whole 33.34 50.90
+[13:51:19.444] [AnimFactory.cpp:20] [info] JointSize: 9
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 148.5 draws (0.0 skipped), 486 triangles, 19961 floats, 0.291 ms in the backend (0.235 drawing, 0.045 of it copying vertices; 0.019 uploading textures), 6.399 ms from StartFrame to EndFrame, 7.755 ms of GPU time over 301 frames; a draw 1.281 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 6404 loaded, 16 kept; 5 textures created, 337 uploads of 582 KB; 903 framebuffer calls
+framediag: 301 updates, 121 over 33.4 ms; ms each, average and longest: the game 6.78 10.39, drawing and present 21.90 27.37, audio 4.64 7.87, the whole 33.32 37.12
+[13:51:33.233] [AnimFactory.cpp:20] [info] JointSize: 19
+[13:51:36.368] [AnimFactory.cpp:20] [info] JointSize: 19
+[13:51:37.411] [AnimFactory.cpp:20] [info] JointSize: 19
+gfx_xsdk: 299 frames in 10.0 s (29.8 fps); a frame: 74.0 draws (0.0 skipped), 389 triangles, 16878 floats, 0.170 ms in the backend (0.137 drawing, 0.030 of it copying vertices; 0.006 uploading textures), 5.069 ms from StartFrame to EndFrame, 6.948 ms of GPU time over 299 frames; a draw 1.448 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2737 loaded, 16 kept; 15 textures created, 100 uploads of 328 KB; 897 framebuffer calls
+framediag: 298 updates, 128 over 33.4 ms; ms each, average and longest: the game 5.02 9.87, drawing and present 24.09 30.06, audio 4.44 82.68, the whole 33.56 110.29
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 97.3 draws (0.0 skipped), 376 triangles, 15385 floats, 0.213 ms in the backend (0.168 drawing, 0.032 of it copying vertices; 0.015 uploading textures), 6.420 ms from StartFrame to EndFrame, 8.922 ms of GPU time over 301 frames; a draw 1.401 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 3150 loaded, 16 kept; 0 textures created, 246 uploads of 280 KB; 903 framebuffer calls
+framediag: 301 updates, 132 over 33.4 ms; ms each, average and longest: the game 6.66 10.51, drawing and present 21.82 35.39, audio 4.84 7.46, the whole 33.32 50.70
+gfx_xsdk: 295 frames in 10.0 s (29.4 fps); a frame: 120.1 draws (0.0 skipped), 456 triangles, 18839 floats, 0.250 ms in the backend (0.207 drawing, 0.040 of it copying vertices; 0.010 uploading textures), 7.127 ms from StartFrame to EndFrame, 8.938 ms of GPU time over 295 frames; a draw 1.393 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4291 loaded, 16 kept; 9 textures created, 155 uploads of 219 KB; 885 framebuffer calls
+framediag: 291 updates, 126 over 33.4 ms; ms each, average and longest: the game 7.28 10.30, drawing and present 20.75 51.37, audio 5.83 10.33, the whole 33.87 65.96
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 110.1 draws (0.0 skipped), 477 triangles, 19332 floats, 0.219 ms in the backend (0.168 drawing, 0.037 of it copying vertices; 0.020 uploading textures), 7.717 ms from StartFrame to EndFrame, 11.628 ms of GPU time over 300 frames; a draw 1.192 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2760 loaded, 16 kept; 8 textures created, 250 uploads of 807 KB; 900 framebuffer calls
+framediag: 232 updates, 145 over 33.4 ms; ms each, average and longest: the game 8.81 13.74, drawing and present 30.60 56.68, audio 3.83 10.60, the whole 43.24 68.35
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 101.2 draws (0.0 skipped), 391 triangles, 16982 floats, 0.196 ms in the backend (0.168 drawing, 0.036 of it copying vertices; 0.000 uploading textures), 6.208 ms from StartFrame to EndFrame, 5.788 ms of GPU time over 301 frames; a draw 1.305 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 3713 loaded, 16 kept; 1 textures created, 3 uploads of 26 KB; 903 framebuffer calls
+framediag: 299 updates, 114 over 33.4 ms; ms each, average and longest: the game 5.83 6.82, drawing and present 22.89 75.44, audio 4.75 8.41, the whole 33.46 86.46
+gfx_xsdk: 299 frames in 10.0 s (29.9 fps); a frame: 157.3 draws (0.0 skipped), 934 triangles, 40972 floats, 0.290 ms in the backend (0.249 drawing, 0.065 of it copying vertices; 0.000 uploading textures), 9.418 ms from StartFrame to EndFrame, 11.855 ms of GPU time over 299 frames; a draw 1.172 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4931 loaded, 16 kept; 1 textures created, 1 uploads of 8 KB; 897 framebuffer calls
+framediag: 300 updates, 128 over 33.4 ms; ms each, average and longest: the game 6.42 7.08, drawing and present 22.90 25.73, audio 4.03 7.19, the whole 33.35 35.18
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 161.1 draws (0.0 skipped), 993 triangles, 43419 floats, 0.302 ms in the backend (0.259 drawing, 0.068 of it copying vertices; 0.000 uploading textures), 9.237 ms from StartFrame to EndFrame, 12.669 ms of GPU time over 301 frames; a draw 1.189 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5825 loaded, 16 kept; 8 textures created, 8 uploads of 20 KB; 903 framebuffer calls
+framediag: 301 updates, 119 over 33.4 ms; ms each, average and longest: the game 6.14 7.09, drawing and present 22.75 25.76, audio 4.43 7.38, the whole 33.32 35.10
+Scene Changed!
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 72.5 draws (0.0 skipped), 580 triangles, 18032 floats, 0.301 ms in the backend (0.121 drawing, 0.029 of it copying vertices; 0.136 uploading textures), 4.801 ms from StartFrame to EndFrame, 4.277 ms of GPU time over 300 frames; a draw 1.268 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2593 loaded, 16 kept; 0 textures created, 3456 uploads of 15071 KB; 900 framebuffer calls
+framediag: 301 updates, 117 over 33.4 ms; ms each, average and longest: the game 7.42 16.25, drawing and present 21.20 34.67, audio 4.71 7.77, the whole 33.33 38.29
+gfx_xsdk: 276 frames in 10.0 s (27.5 fps); a frame: 318.3 draws (0.0 skipped), 1556 triangles, 39109 floats, 2.226 ms in the backend (0.363 drawing, 0.092 of it copying vertices; 1.668 uploading textures), 14.988 ms from StartFrame to EndFrame, 11.535 ms of GPU time over 276 frames; a draw 0.850 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4748 loaded, 16 kept; 0 textures created, 36490 uploads of 137798 KB; 828 framebuffer calls
+framediag: 275 updates, 247 over 33.4 ms; ms each, average and longest: the game 16.68 18.05, drawing and present 16.26 19.25, audio 3.51 6.99, the whole 36.45 41.34
+gfx_xsdk: 257 frames in 10.0 s (25.6 fps); a frame: 409.4 draws (0.0 skipped), 1772 triangles, 44657 floats, 2.746 ms in the backend (0.453 drawing, 0.114 of it copying vertices; 2.058 uploading textures), 17.106 ms from StartFrame to EndFrame, 13.572 ms of GPU time over 257 frames; a draw 0.828 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5501 loaded, 16 kept; 0 textures created, 41979 uploads of 147693 KB; 771 framebuffer calls
+framediag: 256 updates, 256 over 33.4 ms; ms each, average and longest: the game 17.98 18.78, drawing and present 17.47 18.16, audio 3.65 6.79, the whole 39.10 42.81
+gfx_xsdk: 245 frames in 10.0 s (24.4 fps); a frame: 409.4 draws (0.0 skipped), 1775 triangles, 44728 floats, 2.750 ms in the backend (0.454 drawing, 0.114 of it copying vertices; 2.061 uploading textures), 17.198 ms from StartFrame to EndFrame, 13.685 ms of GPU time over 245 frames; a draw 0.830 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5205 loaded, 16 kept; 0 textures created, 40169 uploads of 141365 KB; 735 framebuffer calls
+framediag: 245 updates, 245 over 33.4 ms; ms each, average and longest: the game 18.81 19.39, drawing and present 17.56 18.66, audio 3.90 8.27, the whole 40.27 44.97
+gfx_xsdk: 235 frames in 10.0 s (23.5 fps); a frame: 409.5 draws (0.0 skipped), 1792 triangles, 45051 floats, 2.763 ms in the backend (0.458 drawing, 0.115 of it copying vertices; 2.068 uploading textures), 17.322 ms from StartFrame to EndFrame, 13.713 ms of GPU time over 235 frames; a draw 0.836 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5144 loaded, 16 kept; 0 textures created, 38626 uploads of 135994 KB; 705 framebuffer calls
+framediag: 235 updates, 235 over 33.4 ms; ms each, average and longest: the game 19.79 20.47, drawing and present 17.68 18.45, audio 4.44 8.29, the whole 41.91 45.74
+gfx_xsdk: 237 frames in 10.0 s (23.6 fps); a frame: 409.5 draws (0.0 skipped), 1824 triangles, 45709 floats, 2.759 ms in the backend (0.456 drawing, 0.115 of it copying vertices; 2.065 uploading textures), 17.373 ms from StartFrame to EndFrame, 13.733 ms of GPU time over 237 frames; a draw 0.835 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5182 loaded, 16 kept; 0 textures created, 38952 uploads of 137149 KB; 711 framebuffer calls
+framediag: 237 updates, 237 over 33.4 ms; ms each, average and longest: the game 20.33 20.80, drawing and present 17.74 18.69, audio 3.52 7.08, the whole 41.59 45.49
+gfx_xsdk: 232 frames in 10.0 s (23.2 fps); a frame: 409.1 draws (0.0 skipped), 1824 triangles, 45690 floats, 2.752 ms in the backend (0.454 drawing, 0.114 of it copying vertices; 2.061 uploading textures), 17.402 ms from StartFrame to EndFrame, 13.718 ms of GPU time over 232 frames; a draw 0.829 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4941 loaded, 16 kept; 0 textures created, 38069 uploads of 133999 KB; 696 framebuffer calls
+framediag: 233 updates, 233 over 33.4 ms; ms each, average and longest: the game 20.81 21.42, drawing and present 17.76 18.58, audio 3.77 7.06, the whole 42.35 45.98
+gfx_xsdk: 234 frames in 10.0 s (23.3 fps); a frame: 409.0 draws (0.0 skipped), 1827 triangles, 45760 floats, 2.731 ms in the backend (0.454 drawing, 0.115 of it copying vertices; 2.040 uploading textures), 17.371 ms from StartFrame to EndFrame, 13.643 ms of GPU time over 234 frames; a draw 0.830 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4937 loaded, 16 kept; 0 textures created, 38354 uploads of 134981 KB; 702 framebuffer calls
+framediag: 234 updates, 234 over 33.4 ms; ms each, average and longest: the game 21.03 21.35, drawing and present 17.73 18.41, audio 3.50 6.63, the whole 42.26 45.98
+gfx_xsdk: 233 frames in 10.0 s (23.2 fps); a frame: 410.1 draws (0.0 skipped), 1830 triangles, 45872 floats, 2.757 ms in the backend (0.456 drawing, 0.115 of it copying vertices; 2.062 uploading textures), 17.486 ms from StartFrame to EndFrame, 13.794 ms of GPU time over 233 frames; a draw 0.833 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5374 loaded, 16 kept; 0 textures created, 38483 uploads of 135590 KB; 699 framebuffer calls
+framediag: 233 updates, 233 over 33.4 ms; ms each, average and longest: the game 21.28 21.87, drawing and present 17.85 18.55, audio 3.39 6.81, the whole 42.52 45.34
+gfx_xsdk: 225 frames in 10.0 s (22.5 fps); a frame: 409.2 draws (0.0 skipped), 1828 triangles, 45842 floats, 2.754 ms in the backend (0.453 drawing, 0.115 of it copying vertices; 2.064 uploading textures), 17.542 ms from StartFrame to EndFrame, 13.984 ms of GPU time over 225 frames; a draw 0.826 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4795 loaded, 16 kept; 0 textures created, 37206 uploads of 131106 KB; 675 framebuffer calls
+framediag: 225 updates, 225 over 33.4 ms; ms each, average and longest: the game 22.18 22.99, drawing and present 17.91 18.79, audio 3.80 6.86, the whole 43.89 47.41
+gfx_xsdk: 218 frames in 10.0 s (21.7 fps); a frame: 408.9 draws (0.0 skipped), 1835 triangles, 45965 floats, 2.754 ms in the backend (0.454 drawing, 0.115 of it copying vertices; 2.061 uploading textures), 17.644 ms from StartFrame to EndFrame, 13.843 ms of GPU time over 218 frames; a draw 0.828 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4587 loaded, 16 kept; 0 textures created, 36046 uploads of 127025 KB; 654 framebuffer calls
+framediag: 217 updates, 217 over 33.4 ms; ms each, average and longest: the game 23.26 24.35, drawing and present 18.02 19.43, audio 4.27 8.20, the whole 45.56 50.71
+gfx_xsdk: 213 frames in 10.0 s (21.3 fps); a frame: 409.5 draws (0.0 skipped), 1843 triangles, 46122 floats, 2.760 ms in the backend (0.456 drawing, 0.116 of it copying vertices; 2.065 uploading textures), 17.967 ms from StartFrame to EndFrame, 14.092 ms of GPU time over 213 frames; a draw 0.830 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4827 loaded, 16 kept; 0 textures created, 35229 uploads of 124120 KB; 639 framebuffer calls
+framediag: 214 updates, 214 over 33.4 ms; ms each, average and longest: the game 23.70 24.74, drawing and present 18.33 20.52, audio 4.13 8.49, the whole 46.16 51.67
+gfx_xsdk: 216 frames in 10.0 s (21.6 fps); a frame: 409.5 draws (0.0 skipped), 1849 triangles, 46266 floats, 2.771 ms in the backend (0.457 drawing, 0.115 of it copying vertices; 2.074 uploading textures), 18.123 ms from StartFrame to EndFrame, 14.361 ms of GPU time over 216 frames; a draw 0.836 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5031 loaded, 16 kept; 0 textures created, 35712 uploads of 125857 KB; 648 framebuffer calls
+framediag: 216 updates, 216 over 33.4 ms; ms each, average and longest: the game 23.72 24.86, drawing and present 18.49 19.67, audio 3.62 7.27, the whole 45.83 50.30
+gfx_xsdk: 219 frames in 10.0 s (21.9 fps); a frame: 409.1 draws (0.0 skipped), 1830 triangles, 45869 floats, 2.773 ms in the backend (0.455 drawing, 0.114 of it copying vertices; 2.080 uploading textures), 17.615 ms from StartFrame to EndFrame, 13.769 ms of GPU time over 219 frames; a draw 0.832 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4826 loaded, 16 kept; 0 textures created, 36216 uploads of 127612 KB; 657 framebuffer calls
+framediag: 219 updates, 219 over 33.4 ms; ms each, average and longest: the game 23.44 23.80, drawing and present 17.97 18.49, audio 3.78 7.03, the whole 45.19 48.84
+gfx_xsdk: 223 frames in 10.0 s (22.3 fps); a frame: 406.3 draws (0.0 skipped), 1825 triangles, 45748 floats, 2.769 ms in the backend (0.452 drawing, 0.114 of it copying vertices; 2.079 uploading textures), 17.530 ms from StartFrame to EndFrame, 13.870 ms of GPU time over 223 frames; a draw 0.830 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5094 loaded, 16 kept; 0 textures created, 36878 uploads of 129943 KB; 669 framebuffer calls
+framediag: 223 updates, 223 over 33.4 ms; ms each, average and longest: the game 22.93 23.43, drawing and present 17.89 18.81, audio 3.50 6.85, the whole 44.32 47.57
+gfx_xsdk: 225 frames in 10.0 s (22.5 fps); a frame: 403.8 draws (0.0 skipped), 1829 triangles, 45829 floats, 2.770 ms in the backend (0.451 drawing, 0.114 of it copying vertices; 2.080 uploading textures), 17.485 ms from StartFrame to EndFrame, 13.782 ms of GPU time over 225 frames; a draw 0.834 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5078 loaded, 16 kept; 0 textures created, 37209 uploads of 131109 KB; 675 framebuffer calls
+framediag: 225 updates, 225 over 33.4 ms; ms each, average and longest: the game 22.61 22.87, drawing and present 17.85 18.45, audio 3.42 6.73, the whole 43.87 47.37
+gfx_xsdk: 225 frames in 10.0 s (22.4 fps); a frame: 400.5 draws (0.0 skipped), 1801 triangles, 45196 floats, 2.739 ms in the backend (0.447 drawing, 0.112 of it copying vertices; 2.055 uploading textures), 17.572 ms from StartFrame to EndFrame, 13.882 ms of GPU time over 225 frames; a draw 0.835 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4807 loaded, 16 kept; 0 textures created, 36995 uploads of 129440 KB; 675 framebuffer calls
+framediag: 225 updates, 225 over 33.4 ms; ms each, average and longest: the game 22.32 22.85, drawing and present 17.94 19.05, audio 3.79 6.91, the whole 44.05 47.20
+gfx_xsdk: 227 frames in 10.0 s (22.7 fps); a frame: 400.3 draws (0.0 skipped), 1787 triangles, 44989 floats, 2.754 ms in the backend (0.446 drawing, 0.112 of it copying vertices; 2.069 uploading textures), 17.877 ms from StartFrame to EndFrame, 14.260 ms of GPU time over 227 frames; a draw 0.834 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4859 loaded, 16 kept; 0 textures created, 37488 uploads of 131858 KB; 681 framebuffer calls
+framediag: 227 updates, 227 over 33.4 ms; ms each, average and longest: the game 21.80 22.41, drawing and present 18.25 19.53, audio 4.16 8.47, the whole 44.21 48.75
+gfx_xsdk: 228 frames in 10.0 s (22.8 fps); a frame: 399.6 draws (0.0 skipped), 1784 triangles, 44972 floats, 2.759 ms in the backend (0.445 drawing, 0.112 of it copying vertices; 2.077 uploading textures), 17.504 ms from StartFrame to EndFrame, 13.975 ms of GPU time over 228 frames; a draw 0.834 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4997 loaded, 16 kept; 0 textures created, 37707 uploads of 132858 KB; 684 framebuffer calls
+framediag: 229 updates, 229 over 33.4 ms; ms each, average and longest: the game 21.34 21.81, drawing and present 17.85 18.70, audio 4.14 8.35, the whole 43.34 47.43
+gfx_xsdk: 235 frames in 10.0 s (23.4 fps); a frame: 399.0 draws (0.0 skipped), 1785 triangles, 45033 floats, 2.762 ms in the backend (0.446 drawing, 0.112 of it copying vertices; 2.078 uploading textures), 17.296 ms from StartFrame to EndFrame, 13.778 ms of GPU time over 235 frames; a draw 0.837 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5291 loaded, 16 kept; 0 textures created, 38855 uploads of 136929 KB; 705 framebuffer calls
+framediag: 235 updates, 235 over 33.4 ms; ms each, average and longest: the game 21.07 21.38, drawing and present 17.66 18.35, audio 3.59 7.16, the whole 42.33 45.76
+gfx_xsdk: 236 frames in 10.0 s (23.5 fps); a frame: 399.2 draws (0.0 skipped), 1783 triangles, 44982 floats, 2.760 ms in the backend (0.448 drawing, 0.112 of it copying vertices; 2.075 uploading textures), 17.283 ms from StartFrame to EndFrame, 13.888 ms of GPU time over 236 frames; a draw 0.841 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5343 loaded, 16 kept; 0 textures created, 39028 uploads of 137518 KB; 708 framebuffer calls
+framediag: 236 updates, 236 over 33.4 ms; ms each, average and longest: the game 20.70 21.23, drawing and present 17.64 18.52, audio 3.73 6.92, the whole 42.07 45.52
+gfx_xsdk: 239 frames in 10.0 s (23.9 fps); a frame: 399.7 draws (0.0 skipped), 1781 triangles, 44947 floats, 2.763 ms in the backend (0.446 drawing, 0.112 of it copying vertices; 2.079 uploading textures), 17.233 ms from StartFrame to EndFrame, 13.764 ms of GPU time over 239 frames; a draw 0.835 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5472 loaded, 16 kept; 0 textures created, 39517 uploads of 139260 KB; 717 framebuffer calls
+framediag: 239 updates, 239 over 33.4 ms; ms each, average and longest: the game 20.27 20.68, drawing and present 17.60 18.18, audio 3.54 6.79, the whole 41.42 44.97
+gfx_xsdk: 240 frames in 10.0 s (23.9 fps); a frame: 401.1 draws (0.0 skipped), 1771 triangles, 44745 floats, 2.766 ms in the backend (0.447 drawing, 0.112 of it copying vertices; 2.080 uploading textures), 17.247 ms from StartFrame to EndFrame, 13.713 ms of GPU time over 240 frames; a draw 0.835 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5126 loaded, 16 kept; 0 textures created, 39690 uploads of 139850 KB; 720 framebuffer calls
+framediag: 240 updates, 240 over 33.4 ms; ms each, average and longest: the game 20.30 20.60, drawing and present 17.67 34.28, audio 3.47 6.88, the whole 41.44 56.79
+gfx_xsdk: 242 frames in 10.0 s (24.1 fps); a frame: 402.9 draws (0.0 skipped), 1748 triangles, 44303 floats, 2.767 ms in the backend (0.449 drawing, 0.112 of it copying vertices; 2.082 uploading textures), 17.217 ms from StartFrame to EndFrame, 13.774 ms of GPU time over 242 frames; a draw 0.836 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5590 loaded, 16 kept; 0 textures created, 40005 uploads of 140905 KB; 726 framebuffer calls
+framediag: 242 updates, 242 over 33.4 ms; ms each, average and longest: the game 20.12 20.43, drawing and present 17.58 18.23, audio 3.69 7.00, the whole 41.39 44.83
+gfx_xsdk: 238 frames in 10.0 s (23.8 fps); a frame: 405.3 draws (0.0 skipped), 1747 triangles, 44342 floats, 2.768 ms in the backend (0.451 drawing, 0.113 of it copying vertices; 2.081 uploading textures), 17.172 ms from StartFrame to EndFrame, 13.725 ms of GPU time over 238 frames; a draw 0.832 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5626 loaded, 16 kept; 0 textures created, 39322 uploads of 138356 KB; 714 framebuffer calls
+framediag: 238 updates, 238 over 33.4 ms; ms each, average and longest: the game 20.00 20.34, drawing and present 17.53 18.44, audio 4.55 8.29, the whole 42.08 45.87
+gfx_xsdk: 240 frames in 10.0 s (24.0 fps); a frame: 408.7 draws (0.0 skipped), 1762 triangles, 44713 floats, 2.772 ms in the backend (0.453 drawing, 0.114 of it copying vertices; 2.083 uploading textures), 17.195 ms from StartFrame to EndFrame, 13.739 ms of GPU time over 240 frames; a draw 0.830 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5016 loaded, 16 kept; 0 textures created, 39684 uploads of 139845 KB; 720 framebuffer calls
+framediag: 240 updates, 240 over 33.4 ms; ms each, average and longest: the game 19.99 20.33, drawing and present 17.56 18.54, audio 3.72 6.71, the whole 41.27 44.80
+gfx_xsdk: 240 frames in 10.0 s (23.9 fps); a frame: 410.5 draws (0.0 skipped), 1775 triangles, 44991 floats, 2.781 ms in the backend (0.455 drawing, 0.115 of it copying vertices; 2.088 uploading textures), 17.229 ms from StartFrame to EndFrame, 13.778 ms of GPU time over 240 frames; a draw 0.828 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4996 loaded, 16 kept; 0 textures created, 39683 uploads of 139841 KB; 720 framebuffer calls
+framediag: 240 updates, 240 over 33.4 ms; ms each, average and longest: the game 20.00 20.55, drawing and present 17.60 18.43, audio 3.75 7.13, the whole 41.34 44.86
+gfx_xsdk: 239 frames in 10.0 s (23.9 fps); a frame: 409.1 draws (0.0 skipped), 1796 triangles, 45389 floats, 2.743 ms in the backend (0.456 drawing, 0.115 of it copying vertices; 2.050 uploading textures), 17.185 ms from StartFrame to EndFrame, 13.720 ms of GPU time over 239 frames; a draw 0.833 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4893 loaded, 16 kept; 0 textures created, 39063 uploads of 137425 KB; 717 framebuffer calls
+framediag: 239 updates, 239 over 33.4 ms; ms each, average and longest: the game 20.30 20.63, drawing and present 17.55 18.16, audio 3.59 7.04, the whole 41.44 44.72
+gfx_xsdk: 241 frames in 10.0 s (24.0 fps); a frame: 409.1 draws (0.0 skipped), 1806 triangles, 45576 floats, 2.737 ms in the backend (0.454 drawing, 0.115 of it copying vertices; 2.046 uploading textures), 17.176 ms from StartFrame to EndFrame, 13.623 ms of GPU time over 241 frames; a draw 0.829 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4771 loaded, 16 kept; 0 textures created, 39346 uploads of 138399 KB; 723 framebuffer calls
+framediag: 241 updates, 241 over 33.4 ms; ms each, average and longest: the game 20.24 20.52, drawing and present 17.54 18.44, audio 3.40 6.83, the whole 41.18 44.75

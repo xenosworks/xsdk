@@ -5257,3 +5257,78 @@ At 30 fps, the default since this session (docs/scope/61-fast3d.md, Decisions, 1
 start, about update 2700, ran at 29.8 to 30.0 fps; the windows before it, the menus and the level's opening, at 29.7 to
 30.0, but the first, at boot, at 25.6 (`starship_corneria_at_30.log`). A frame drew 50 to 199 draws; Fast3D's
 interpreter with the backend took 3.8 to 12.0 ms of it and the GPU 3.9 to 9.8 ms.
+
+## The map at 30: recording only what's replayed, milestone 61 (2026-10-25)
+
+Starship records each frame's matrices for its frame interpolation, which draws frames between the game's
+(starship:src/port/interpolation/FrameInterpolation.cpp; src/port/Engine.cpp, `ProcessGfxCommands`). At the game's
+own 30 fps, xsdk's default (docs/scope/61-fast3d.md, Decisions, 10), nothing is drawn between, yet the recording was
+made, and switched on again within the frame by each object that asks for it. On the map, a frame of about 410 draws,
+the game's own work took 18.0 to 23.7 ms an update, and the map ran at 21.3 to 25.6 fps in all 27 windows
+(`results/2026-10-25-milestone-61/starship_map_recorded_unreplayed.log`, the update's parts from
+`starship_diagnostics_framediag.patch`). Fewer than 30 updates a second slow the sound and run its queue dry (Starship's
+audio follows its updates, above), which the player heard after the first level.
+
+Recording only when the frame will be replayed, by `ProcessGfxCommands`' own rule, the game's work on the map fell to
+3.4 to 3.6 ms an update and the map held 29.9 to 30.0 fps in 60 of its 61 windows; the other, 29.0, held the log's
+stall of the next section (`starship_hiccups_assets_on_disk.log`).
+
+## The log's file grows a unit at a time, milestone 61 (2026-10-25)
+
+The log writes each line to its file as it's logged, from the thread that logs (src/log.c). In a 16-minute Starship
+play, the game's drawing stalled 358, 368 and 361 ms as the file grew past 16, 48 and 64 KB, each time on a line the
+game's own thread wrote (`results/2026-10-25-milestone-61/starship_hiccups_assets_on_disk.log`). The 80 KB
+boundary, written from the same thread, didn't stall; the 32 KB one was written by a loading thread.
+
+`tests/probe_file_growth.c` writes files in game: as the log makes its own, 512 bytes at a time
+(`probe_file_growth_1.log` to `_4.log`):
+- **The disk's unit is 16 KB:** 8,581,979 of its 9,453,636 units were free.
+- **A write took about 0.5 ms;** 512 KB took 0.49 to 0.54 s. Writing as fast as it could, a write stalled 11 to 76 ms
+  once or twice in each 512 KB, at no boundary in particular.
+- **Growth itself cost little on a quiet disk:** after 10 s idle, the write that starts a unit took 0.54 to 0.58 ms in
+  7 of 9 tries, 5.2 and 47 ms in the others, while a write inside a unit took 0.35 to 0.52 ms but 6.6 and 40.5 ms
+  once each. The probe didn't make the 360 ms stalls.
+- **Room reserved by NtCreateFile's allocation size is kept,** whether the file is new or made over an old one: with
+  1 MB reserved, every write that started a unit took 0.34 to 0.39 ms but two, 58 and 19 ms. The kernel takes the
+  room's 64 units when the file is made and still holds them after it closes, with 48 KB written; making it again over
+  the old one frees them.
+
+So the log reserves 1 MB when it's made. In the next play, of the same two levels and the map, the log grew past nine
+boundaries, 16 to 144 KB, and no update stalled as before: the longest in a window with a boundary was 70 ms, at a
+level's end, where the game draws at 20 and the earlier play took 68 ms with no boundary near
+(`starship_hiccups_assets_in_memory.log`).
+
+## Starship's assets from memory, milestone 61 (2026-10-25)
+
+libultraship loads each asset the first time the game asks for it, from its archive on the disk through libzip, on the
+thread that asked: the drawing for a texture, the audio for a sound bank. Below libzip, newlib's stdio reads 1 KB at a
+time (its buffer is BUFSIZ, as xsdk's `fstat` gives no block size; src/file.c). In the levels of a play from disk, the
+drawing stalled 80 to 95 ms four times and the audio 76 and 86 ms twice, away from the log's boundaries
+(`results/2026-10-25-milestone-61/starship_hiccups_assets_on_disk.log`).
+
+On xsdk, libultraship-xenon reads an archive of up to 64 MB into memory when it opens it, and libzip reads from there
+(lus:src/resource/archive/O2rArchive.cpp, `OpenInMemory`). sf64.o2r, 14,559,161 bytes, was read in 336 ms; opening it
+from the disk had taken 309 ms. In the same two levels played again, the drawing's longest update was 37 ms, the game's
+own work 18 ms and the audio 23 ms, and the audio's stall at boot fell from 1,101 to 532 ms
+(`starship_hiccups_assets_in_memory.log`).
+
+What a load still costs is the resources it makes: Starship builds an asset from many small entries in the archive, and
+each costs about 0.1 to 0.16 ms, whatever its size; one of 1,020 bytes took 0.1 ms to read. At boot, one update made
+3,366 resources, the sound banks and their samples, in 534 ms; the first radio message in a level made 778, the message
+table, in 78 ms, stalling the game's work 79 ms (`starship_slow_loads.log`, `starship_load_totals.log`; the timing,
+since taken out, `starship_diagnostics_loads_lus.patch`). Some scene changes held the game's work 252 to 257 ms in one
+update with only 74 resources made, in 8.8 ms, in that window: not loading, and not yet known; they fall while the
+screen is filled black between scenes and the music is stopped.
+
+## Starship's saves, milestone 61 (2026-10-25)
+
+Starship saves 8 bytes at a time, and for each, libultraship reads its 512-byte save whole, makes the file again and
+writes it whole (lus:src/public/libultra/os_eeprom.cpp:31-46). `tests/probe_save_writes.c` writes 16 blocks so, after
+the disk was idle 15, 60 and 180 s, and then each block in place in the file instead
+(`results/2026-10-25-milestone-61/probe_save_writes_1.log`, `_2.log`):
+- **Made again whole,** 16 blocks took 16.8 to 60.4 ms; **in place,** 5.5 to 5.7 ms, but once 47 ms, a single write of
+  42 ms.
+- **How long the disk was idle didn't matter:** after 180 s, the save made whole took 16.8 ms, as after 60 s.
+
+A save after a level is 32 ms or so more than it need be, not the 257 ms stalls of the previous section; libultraship's
+writes are left as they are.

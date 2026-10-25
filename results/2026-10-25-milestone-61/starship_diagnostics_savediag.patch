@@ -1,0 +1,31 @@
+diff --git a/src/engine/fox_save.c b/src/engine/fox_save.c
+index ab870a5b..1c4753d8 100644
+--- a/src/engine/fox_save.c
++++ b/src/engine/fox_save.c
+@@ -1,4 +1,8 @@
+ #include "global.h"
++#ifdef __XSDK__
++#include <stdio.h>
++#include <time.h>
++#endif
+ 
+ SaveFile gSaveFile;
+ 
+@@ -145,6 +149,17 @@ s32 Save_Write(void) {
+     gSaveFile.save.checksum = Save_Checksum(&gSaveFile.save);
+     gSaveFile.backup = gSaveFile.save;
+     gSaveIOBuffer = gSaveFile;
++#ifdef __XSDK__
++    {
++        struct timespec diag_start, diag_end;
++        clock_gettime(CLOCK_MONOTONIC, &diag_start);
++        const s32 diag_result = Save_WriteData();
++        clock_gettime(CLOCK_MONOTONIC, &diag_end);
++        printf("savediag: Save_Write %.1f ms\n",
++               (diag_end.tv_sec - diag_start.tv_sec) * 1000.0 + (diag_end.tv_nsec - diag_start.tv_nsec) / 1e6);
++        return diag_result;
++    }
++#endif
+     return Save_WriteData();
+ }
+ 

@@ -1,0 +1,9 @@
+log: game:\probe_save_writes.log
+log: named after \Device\Harddisk0\Partition1\XSDK\savew\probe_save_writes.xex
+log: no net_log.txt beside the .xex, so not over the network
+save: remade whole, as libultraship writes, round 0: after 15 s idle, 16 blocks in 33371 us, the longest 11516 us
+save: written in place, round 0: after 15 s idle, 16 blocks in 5696 us, the longest 527 us
+save: remade whole, as libultraship writes, round 1: after 15 s idle, 16 blocks in 16968 us, the longest 1140 us
+save: written in place, round 1: after 15 s idle, 16 blocks in 5591 us, the longest 404 us
+save: done
+exit: status 0

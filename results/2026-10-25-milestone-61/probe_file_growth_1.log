@@ -1,0 +1,12 @@
+log: game:\probe_file_growth.log
+log: named after \Device\Harddisk0\Partition1\XSDK\growth\probe_file_growth.xex
+log: no net_log.txt beside the .xex, so not over the network
+growth: game: has 16384-byte units, 8581979 of 9453636 free
+growth: growing: made in 211 us; 1024 writes of 512 bytes, 0x00000000, 514496 us in all, the longest 51673 us; 2 of 2000 us or more, 1 of them at a 16 KB boundary: 0 KB 4579 us, 323 KB 51673 us
+growth: growing: closed, 524288 bytes long, 524288 held
+growth: reserved: made in 397 us; 1024 writes of 512 bytes, 0x00000000, 530785 us in all, the longest 71151 us; 2 of 2000 us or more, 0 of them at a 16 KB boundary: 206 KB 17556 us, 383 KB 71151 us
+growth: reserved: closed, 524288 bytes long, 524288 held
+growth: growing again: made in 195 us; 1024 writes of 512 bytes, 0x00000000, 491668 us in all, the longest 55114 us; 1 of 2000 us or more, 0 of them at a 16 KB boundary: 494 KB 55114 us
+growth: growing again: closed, 524288 bytes long, 524288 held
+growth: done
+exit: status 0

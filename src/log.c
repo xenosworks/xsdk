@@ -19,6 +19,12 @@ enum {
 	// A datagram of the network log: the line's sequence number, then the line.
 	NET_SEQUENCE_BYTES = 4,
 	NET_NOTE_BYTES = 96,
+	// The room the file is made with. Growing into each new 16 KB unit stalled the line's write, and so the thread that
+	// logged, for up to 370 ms in Starship; inside room made at the start it doesn't (docs/HARDWARE.md, "The log's file
+	// grows a unit at a time, milestone 61"). The kernel keeps the room after the file closes, until a run overwrites
+	// it. shortcut: past the room the file grows a unit at a time again; reserve more as it fills if a title logs past
+	// 1 MB.
+	LOG_RESERVE_BYTES = 1024 * 1024,
 };
 
 typedef struct {
@@ -78,9 +84,11 @@ static NTSTATUS create_file(HANDLE *handle, HANDLE root_directory, const char *p
 	};
 	const OBJECT_ATTRIBUTES attributes = { .root_directory = root_directory, .name = &name };
 	IO_STATUS_BLOCK io_status;
+	static const uint64_t reserve_bytes = LOG_RESERVE_BYTES;
 	// Shared for reading, so the log can be read while the title runs.
-	return NtCreateFile(handle, GENERIC_WRITE | SYNCHRONIZE, &attributes, &io_status, NULL, FILE_ATTRIBUTE_NORMAL,
-		FILE_SHARE_READ, FILE_OVERWRITE_IF, FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
+	return NtCreateFile(handle, GENERIC_WRITE | SYNCHRONIZE, &attributes, &io_status, &reserve_bytes,
+		FILE_ATTRIBUTE_NORMAL, FILE_SHARE_READ, FILE_OVERWRITE_IF,
+		FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
 }
 
 static void write_line(const char *line, size_t length_bytes)

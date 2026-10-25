@@ -1,0 +1,22 @@
+log: game:\probe_file_growth.log
+log: named after \Device\Harddisk0\Partition1\XSDK\growth\probe_file_growth.xex
+log: no net_log.txt beside the .xex, so not over the network
+growth: game: has 16384-byte units, 8581978 of 9453636 free
+growth: growing: made in 197 us; 1024 writes of 512 bytes, 0x00000000, 508129 us in all, the longest 44507 us; 1 of 2000 us or more, 0 of them at a 16 KB boundary: 145 KB 44507 us
+growth: growing: closed, 524288 bytes long, 524288 held, 32 units taken
+growth: reserved: made in 408 us; 1024 writes of 512 bytes, 0x00000000, 532325 us in all, the longest 66387 us; 2 of 2000 us or more, 0 of them at a 16 KB boundary: 33 KB 17956 us, 190 KB 66387 us
+growth: reserved: closed, 524288 bytes long, 524288 held, 64 units taken
+growth: growing again: made in 198 us; 1024 writes of 512 bytes, 0x00000000, 528634 us in all, the longest 60846 us; 1 of 2000 us or more, 0 of them at a 16 KB boundary: 244 KB 60846 us
+growth: growing again: closed, 524288 bytes long, 524288 held, 32 units taken
+growth: growing, idle: made, 0 units taken
+growth: growing, idle: after 10 s idle, a write inside a unit took 6602 us, the write starting the unit at 16 KB 547 us; 0x00000000
+growth: growing, idle: after 10 s idle, a write inside a unit took 40508 us, the write starting the unit at 32 KB 547 us; 0x00000000
+growth: growing, idle: after 10 s idle, a write inside a unit took 388 us, the write starting the unit at 48 KB 47370 us; 0x00000000
+growth: growing, idle: closed, 49664 bytes long, 49664 held, 4 units taken
+growth: reserved, idle: made, 64 units taken
+growth: reserved, idle: after 10 s idle, a write inside a unit took 375 us, the write starting the unit at 16 KB 374 us; 0x00000000
+growth: reserved, idle: after 10 s idle, a write inside a unit took 376 us, the write starting the unit at 32 KB 382 us; 0x00000000
+growth: reserved, idle: after 10 s idle, a write inside a unit took 373 us, the write starting the unit at 48 KB 344 us; 0x00000000
+growth: reserved, idle: closed, 49664 bytes long, 49664 held, 65 units taken
+growth: done
+exit: status 0

@@ -1,0 +1,58 @@
+diff --git a/src/resource/ResourceManager.cpp b/src/resource/ResourceManager.cpp
+index 9454b6ee..38be7c57 100644
+--- a/src/resource/ResourceManager.cpp
++++ b/src/resource/ResourceManager.cpp
+@@ -4,6 +4,8 @@
+ #include "resource/archive/Archive.h"
+ #include <algorithm>
+ #include <thread>
++#include <chrono>
++#include <atomic>
+ #include "utils/StringHelper.h"
+ #include "utils/Utils.h"
+ #include "public/bridge/consolevariablebridge.h"
+@@ -11,6 +13,11 @@
+ 
+ namespace Ship {
+ 
++// DIAG, not to commit: every resource made, and the time the outermost ones took, read by Starship's framediag.
++std::atomic<uint64_t> gLoadDiagCount;
++std::atomic<uint64_t> gLoadDiagUs;
++static thread_local int sLoadDiagDepth;
++
+ ResourceFilter::ResourceFilter(const std::list<std::string>& includeMasks, const std::list<std::string>& excludeMasks,
+                                const uintptr_t owner, const std::shared_ptr<Archive> parent)
+     : IncludeMasks(includeMasks), ExcludeMasks(excludeMasks), Owner(owner), Parent(parent) {
+@@ -138,7 +145,9 @@ std::shared_ptr<IResource> ResourceManager::LoadResourceProcess(const ResourceId
+     }
+ 
+     // Get the file from the OTR
++    const auto diag_start = std::chrono::steady_clock::now();
+     auto file = LoadFileProcess(identifier.Path);
++    const auto diag_read = std::chrono::steady_clock::now();
+     if (file == nullptr) {
+         SPDLOG_TRACE("Failed to load resource file at path {}", identifier.Path);
+         mResourceCache[identifier] = ResourceLoadError::NotFound;
+@@ -146,7 +155,22 @@ std::shared_ptr<IResource> ResourceManager::LoadResourceProcess(const ResourceId
+     }
+ 
+     // Transform the raw data into a resource
++    sLoadDiagDepth++;
+     auto resource = GetResourceLoader()->LoadResource(identifier.Path, file, initData);
++    sLoadDiagDepth--;
++    {
++        const auto diag_end = std::chrono::steady_clock::now();
++        gLoadDiagCount++;
++        if (sLoadDiagDepth == 0) {
++            gLoadDiagUs += std::chrono::duration_cast<std::chrono::microseconds>(diag_end - diag_start).count();
++        }
++        const double read_ms = std::chrono::duration<double, std::milli>(diag_read - diag_start).count();
++        const double made_ms = std::chrono::duration<double, std::milli>(diag_end - diag_read).count();
++        if (read_ms + made_ms > 10.0) {
++            SPDLOG_INFO("loaddiag: {} ({} bytes): read {:.1f} ms, made {:.1f} ms", identifier.Path,
++                        file->Buffer ? file->Buffer->size() : 0, read_ms, made_ms);
++        }
++    }
+ 
+     // Another thread could have loaded the resource while we were processing, so we want to check before setting to
+     // the cache.

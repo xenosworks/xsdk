@@ -180,6 +180,12 @@ work begins.
   - **Left because** the user chose, on 2026-10-25, faster loading later over letting the audio thread run on its own
     clock, as the N64's did, which would take locking those queues and running the game and audio threads truly
     together for the first time (docs/scope/61-fast3d.md, Decisions, 11).
+  - **Since then,** the archive is read into memory, and the stalls from the disk are gone; what's left is about 0.1
+    to 0.16 ms for each resource the game makes, whatever its size: 534 ms of audio at boot for 3,366, and 78 ms for
+    the 778 of the first radio message in a level (docs/HARDWARE.md, "Starship's assets from memory, milestone 61").
+    Next: time the parts of one entry's load at boot, which makes the most, to find where that goes. Some scene
+    changes hold one update 252 to 257 ms that isn't loading, while the screen is black and the music stopped; not
+    yet known.
 
 ## Tried and reverted
 

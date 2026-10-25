@@ -1,0 +1,20 @@
+log: game:\probe_file_growth.log
+log: named after \Device\Harddisk0\Partition1\XSDK\growth\probe_file_growth.xex
+log: no net_log.txt beside the .xex, so not over the network
+growth: game: has 16384-byte units, 8581979 of 9453636 free
+growth: growing: made in 224 us; 1024 writes of 512 bytes, 0x00000000, 503918 us in all, the longest 60307 us; 1 of 2000 us or more, 0 of them at a 16 KB boundary: 284 KB 60307 us
+growth: growing: closed, 524288 bytes long, 524288 held
+growth: reserved: made in 425 us; 1024 writes of 512 bytes, 0x00000000, 536379 us in all, the longest 75739 us; 2 of 2000 us or more, 0 of them at a 16 KB boundary: 227 KB 11047 us, 352 KB 75739 us
+growth: reserved: closed, 524288 bytes long, 524288 held
+growth: growing again: made in 198 us; 1024 writes of 512 bytes, 0x00000000, 541772 us in all, the longest 75132 us; 1 of 2000 us or more, 0 of them at a 16 KB boundary: 395 KB 75132 us
+growth: growing again: closed, 524288 bytes long, 524288 held
+growth: growing, idle: after 10 s idle, a write inside a unit took 372 us, the write starting the unit at 16 KB 557 us; 0x00000000
+growth: growing, idle: after 10 s idle, a write inside a unit took 377 us, the write starting the unit at 32 KB 545 us; 0x00000000
+growth: growing, idle: after 10 s idle, a write inside a unit took 367 us, the write starting the unit at 48 KB 5171 us; 0x00000000
+growth: growing, idle: closed, 49664 bytes long, 49664 held
+growth: reserved, idle: after 10 s idle, a write inside a unit took 368 us, the write starting the unit at 16 KB 367 us; 0x00000000
+growth: reserved, idle: after 10 s idle, a write inside a unit took 366 us, the write starting the unit at 32 KB 376 us; 0x00000000
+growth: reserved, idle: after 10 s idle, a write inside a unit took 347 us, the write starting the unit at 48 KB 339 us; 0x00000000
+growth: reserved, idle: closed, 49664 bytes long, 49664 held
+growth: done
+exit: status 0
