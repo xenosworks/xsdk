@@ -1,0 +1,169 @@
+log: game:\starship_fix2.log
+log: named after \Device\Harddisk0\Partition1\starship\starship_fix2.xex
+log: also over UDP to 192.168.0.125:7371
+open: NtCreateFile(game:\cvars.cfg) failed: 0xC0000034
+[2026-10-25 13:12:20.045] [info] [ArchiveManager.cpp:232] Reading archive: game:/./sf64.o2r
+[2026-10-25 13:12:20.359] [info] [ArchiveManager.cpp:264] Adding Archive game:/./sf64.o2r to Archive Manager
+[2026-10-25 13:12:20.403] [info] [ArchiveManager.cpp:232] Reading archive: game:/./starship.o2r
+[2026-10-25 13:12:20.415] [info] [ArchiveManager.cpp:264] Adding Archive game:/./starship.o2r to Archive Manager
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 29867 us
+open: NtCreateFile(game:\capture.txt) failed: 0xC0000034
+gfx_xsdk: programs are kept in game:/shaders/fast3d/F40C88B5615751D4
+gfx_xsdk: the game's shader pack holds 18 programs for F40C88B5615751D4
+[13:12:21.235] [DisplayListPatch.cpp:11] [info] Applying display list patches
+[13:12:21.252] [GenericArrayFactory.cpp:17] [info] GenericArray Type Num: 0
+open: NtCreateFile(game:\gamecontrollerdb.txt) failed: 0xC0000034
+[13:12:21.252] [GenericArrayFactory.cpp:21] [info] GenericArray Count: 283
+[13:12:21.253] [os.cpp:23] [error] Failed add SDL game controller mappings from "./gamecontrollerdb.txt" (Couldn't open ./gamecontrollerdb.txt: No such file or directory)
+open: NtCreateFile(game:\input_script.txt) failed: 0xC0000034
+Scene Changed!
+Scene Changed!
+gfx_xsdk: 260 frames in 10.0 s (26.0 fps); a frame: 5.8 draws (0.0 skipped), 780 triangles, 16422 floats, 0.135 ms in the backend (0.035 drawing, 0.014 of it copying vertices; 0.000 uploading textures), 3.313 ms from StartFrame to EndFrame, 1.280 ms of GPU time over 259 frames; a draw 3.475 us less its copy
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 4 read, 4 of them from the pack), 553 loaded, 3 kept; 3 textures created, 3 uploads of 51 KB; 783 framebuffer calls
+gfx_xsdk: 299 frames in 10.0 s (29.9 fps); a frame: 14.8 draws (0.0 skipped), 901 triangles, 19118 floats, 0.082 ms in the backend (0.048 drawing, 0.018 of it copying vertices; 0.000 uploading textures), 3.709 ms from StartFrame to EndFrame, 4.399 ms of GPU time over 299 frames; a draw 2.019 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 796 loaded, 3 kept; 4 textures created, 4 uploads of 56 KB; 897 framebuffer calls
+gfx_xsdk: 296 frames in 10.0 s (29.6 fps); a frame: 31.8 draws (0.0 skipped), 1078 triangles, 23780 floats, 0.156 ms in the backend (0.072 drawing, 0.026 of it copying vertices; 0.002 uploading textures), 4.923 ms from StartFrame to EndFrame, 2.133 ms of GPU time over 296 frames; a draw 1.445 us less its copy
+gfx_xsdk: in the window: 2 shaders created (0 compiled, 2 read, 2 of them from the pack), 916 loaded, 5 kept; 37 textures created, 37 uploads of 100 KB; 888 framebuffer calls
+gfx_xsdk: 299 frames in 10.0 s (29.9 fps); a frame: 43.6 draws (0.0 skipped), 1005 triangles, 22141 floats, 0.128 ms in the backend (0.089 drawing, 0.027 of it copying vertices; 0.001 uploading textures), 5.293 ms from StartFrame to EndFrame, 5.441 ms of GPU time over 299 frames; a draw 1.428 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 1189 loaded, 5 kept; 19 textures created, 19 uploads of 28 KB; 897 framebuffer calls
+[13:13:10.956] [AnimFactory.cpp:20] [info] JointSize: 23
+[13:13:11.283] [AnimFactory.cpp:20] [info] JointSize: 23
+[13:13:11.319] [AnimFactory.cpp:20] [info] JointSize: 23
+[13:13:11.330] [AnimFactory.cpp:20] [info] JointSize: 21
+gfx_xsdk: 293 frames in 10.2 s (28.8 fps); a frame: 65.0 draws (0.0 skipped), 1095 triangles, 25016 floats, 0.207 ms in the backend (0.114 drawing, 0.033 of it copying vertices; 0.002 uploading textures), 5.678 ms from StartFrame to EndFrame, 4.128 ms of GPU time over 293 frames; a draw 1.242 us less its copy
+gfx_xsdk: in the window: 2 shaders created (0 compiled, 2 read, 2 of them from the pack), 1612 loaded, 7 kept; 46 textures created, 46 uploads of 135 KB; 879 framebuffer calls
+gfx_xsdk: 302 frames in 10.0 s (30.1 fps); a frame: 86.9 draws (0.0 skipped), 860 triangles, 38592 floats, 0.191 ms in the backend (0.156 drawing, 0.050 of it copying vertices; 0.000 uploading textures), 6.018 ms from StartFrame to EndFrame, 6.094 ms of GPU time over 302 frames; a draw 1.223 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 1963 loaded, 7 kept; 1 textures created, 1 uploads of 7 KB; 906 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 57.3 draws (0.0 skipped), 564 triangles, 25305 floats, 0.136 ms in the backend (0.109 drawing, 0.033 of it copying vertices; 0.000 uploading textures), 5.229 ms from StartFrame to EndFrame, 5.621 ms of GPU time over 301 frames; a draw 1.316 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 1307 loaded, 7 kept; 2 textures created, 2 uploads of 15 KB; 903 framebuffer calls
+[13:13:40.224] [AnimFactory.cpp:20] [info] JointSize: 19
+gfx_xsdk: 290 frames in 10.0 s (28.9 fps); a frame: 94.5 draws (0.0 skipped), 1081 triangles, 41431 floats, 0.235 ms in the backend (0.165 drawing, 0.053 of it copying vertices; 0.001 uploading textures), 6.341 ms from StartFrame to EndFrame, 5.335 ms of GPU time over 290 frames; a draw 1.181 us less its copy
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read, 1 of them from the pack), 2048 loaded, 8 kept; 29 textures created, 29 uploads of 80 KB; 870 framebuffer calls
+CAMERA 1 SKIPED: 0
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 104.2 draws (0.0 skipped), 796 triangles, 20551 floats, 0.188 ms in the backend (0.154 drawing, 0.039 of it copying vertices; 0.000 uploading textures), 7.121 ms from StartFrame to EndFrame, 7.089 ms of GPU time over 300 frames; a draw 1.107 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2394 loaded, 8 kept; 8 textures created, 8 uploads of 40 KB; 900 framebuffer calls
+CAMERA 1 SKIPED: 1
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 96.7 draws (0.0 skipped), 1273 triangles, 30163 floats, 0.203 ms in the backend (0.158 drawing, 0.045 of it copying vertices; 0.000 uploading textures), 8.458 ms from StartFrame to EndFrame, 6.720 ms of GPU time over 301 frames; a draw 1.173 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2714 loaded, 8 kept; 0 textures created, 0 uploads of 0 KB; 903 framebuffer calls
+[13:14:01.550] [AnimFactory.cpp:20] [info] JointSize: 23
+[13:14:01.551] [AnimFactory.cpp:20] [info] JointSize: 23
+[13:14:01.551] [AnimFactory.cpp:20] [info] JointSize: 23
+[13:14:01.552] [AnimFactory.cpp:20] [info] JointSize: 21
+gfx_xsdk: 297 frames in 10.0 s (29.7 fps); a frame: 162.1 draws (0.0 skipped), 2256 triangles, 55394 floats, 0.324 ms in the backend (0.254 drawing, 0.081 of it copying vertices; 0.001 uploading textures), 10.807 ms from StartFrame to EndFrame, 7.645 ms of GPU time over 297 frames; a draw 1.070 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 1479 loaded, 8 kept; 11 textures created, 11 uploads of 123 KB; 891 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 160.4 draws (0.0 skipped), 2286 triangles, 56183 floats, 0.321 ms in the backend (0.251 drawing, 0.081 of it copying vertices; 0.000 uploading textures), 10.842 ms from StartFrame to EndFrame, 7.662 ms of GPU time over 300 frames; a draw 1.062 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 1500 loaded, 8 kept; 0 textures created, 0 uploads of 0 KB; 900 framebuffer calls
+Scene Changed!
+Scene Changed!
+gfx_xsdk: 298 frames in 10.0 s (29.7 fps); a frame: 136.1 draws (0.0 skipped), 1375 triangles, 33498 floats, 0.804 ms in the backend (0.195 drawing, 0.055 of it copying vertices; 0.449 uploading textures), 8.973 ms from StartFrame to EndFrame, 6.391 ms of GPU time over 298 frames; a draw 1.028 us less its copy
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 3 read, 3 of them from the pack), 2215 loaded, 11 kept; 11 textures created, 12190 uploads of 49784 KB; 894 framebuffer calls
+Scene Changed!
+velocity_diff: 1038.987793
+ at_dist: 600.000000
+ eye_dist: 489.383057
+CAMERA 1 SKIPED: 0
+velocity_diff: 866.692383
+ at_dist: 6064.157715
+ eye_dist: 6526.850586
+CAMERA 1 SKIPED: 1
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 72.0 draws (0.0 skipped), 211 triangles, 7980 floats, 0.610 ms in the backend (0.106 drawing, 0.022 of it copying vertices; 0.386 uploading textures), 3.772 ms from StartFrame to EndFrame, 4.055 ms of GPU time over 301 frames; a draw 1.163 us less its copy
+gfx_xsdk: in the window: 2 shaders created (0 compiled, 2 read, 2 of them from the pack), 2552 loaded, 13 kept; 0 textures created, 11746 uploads of 57778 KB; 903 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 105.1 draws (0.0 skipped), 503 triangles, 22266 floats, 0.228 ms in the backend (0.178 drawing, 0.042 of it copying vertices; 0.018 uploading textures), 6.443 ms from StartFrame to EndFrame, 5.971 ms of GPU time over 301 frames; a draw 1.301 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4199 loaded, 13 kept; 0 textures created, 309 uploads of 2436 KB; 903 framebuffer calls
+[13:14:55.060] [AnimFactory.cpp:20] [info] JointSize: 19
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 41.5 draws (0.0 skipped), 183 triangles, 7854 floats, 0.134 ms in the backend (0.092 drawing, 0.017 of it copying vertices; 0.018 uploading textures), 5.485 ms from StartFrame to EndFrame, 6.687 ms of GPU time over 301 frames; a draw 1.820 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2379 loaded, 13 kept; 0 textures created, 314 uploads of 2425 KB; 903 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 60.8 draws (0.0 skipped), 319 triangles, 13838 floats, 0.177 ms in the backend (0.124 drawing, 0.025 of it copying vertices; 0.025 uploading textures), 6.126 ms from StartFrame to EndFrame, 7.565 ms of GPU time over 300 frames; a draw 1.617 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2976 loaded, 13 kept; 0 textures created, 603 uploads of 3540 KB; 900 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 48.8 draws (0.0 skipped), 271 triangles, 11564 floats, 0.152 ms in the backend (0.106 drawing, 0.021 of it copying vertices; 0.019 uploading textures), 5.656 ms from StartFrame to EndFrame, 7.163 ms of GPU time over 301 frames; a draw 1.763 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2490 loaded, 13 kept; 0 textures created, 422 uploads of 2734 KB; 903 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 111.8 draws (0.0 skipped), 781 triangles, 34428 floats, 0.254 ms in the backend (0.198 drawing, 0.052 of it copying vertices; 0.018 uploading textures), 7.312 ms from StartFrame to EndFrame, 7.525 ms of GPU time over 300 frames; a draw 1.304 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4238 loaded, 13 kept; 0 textures created, 308 uploads of 2418 KB; 900 framebuffer calls
+velocity_diff: 439.597870
+ at_dist: 784.921143
+ eye_dist: 674.792725
+CAMERA 1 SKIPED: 2
+gfx_xsdk: 299 frames in 10.0 s (29.9 fps); a frame: 98.7 draws (0.0 skipped), 539 triangles, 23296 floats, 0.233 ms in the backend (0.182 drawing, 0.040 of it copying vertices; 0.017 uploading textures), 5.998 ms from StartFrame to EndFrame, 7.102 ms of GPU time over 299 frames; a draw 1.438 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5431 loaded, 13 kept; 0 textures created, 326 uploads of 1731 KB; 897 framebuffer calls
+gfx_xsdk: 299 frames in 10.0 s (29.9 fps); a frame: 111.2 draws (0.0 skipped), 338 triangles, 14109 floats, 0.282 ms in the backend (0.206 drawing, 0.036 of it copying vertices; 0.018 uploading textures), 6.176 ms from StartFrame to EndFrame, 7.492 ms of GPU time over 299 frames; a draw 1.527 us less its copy
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read, 1 of them from the pack), 8711 loaded, 14 kept; 0 textures created, 369 uploads of 1241 KB; 897 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 145.0 draws (0.0 skipped), 509 triangles, 20437 floats, 0.333 ms in the backend (0.250 drawing, 0.047 of it copying vertices; 0.019 uploading textures), 6.625 ms from StartFrame to EndFrame, 8.331 ms of GPU time over 300 frames; a draw 1.401 us less its copy
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read, 1 of them from the pack), 8990 loaded, 15 kept; 0 textures created, 343 uploads of 1342 KB; 900 framebuffer calls
+[13:16:02.265] [Vec3sFactory.cpp:17] [info] Vec3s Count: 13
+[13:16:02.266] [Vec3fFactory.cpp:17] [info] Vec3f Count: 11
+[13:16:05.068] [Vec3sFactory.cpp:17] [info] Vec3s Count: 36
+[13:16:05.068] [Vec3fFactory.cpp:17] [info] Vec3f Count: 55
+[13:16:10.202] [AnimFactory.cpp:20] [info] JointSize: 7
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 114.1 draws (0.0 skipped), 371 triangles, 15174 floats, 0.280 ms in the backend (0.208 drawing, 0.037 of it copying vertices; 0.012 uploading textures), 5.637 ms from StartFrame to EndFrame, 9.942 ms of GPU time over 301 frames; a draw 1.505 us less its copy
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read, 1 of them from the pack), 7601 loaded, 16 kept; 11 textures created, 195 uploads of 962 KB; 903 framebuffer calls
+[13:16:13.876] [AnimFactory.cpp:20] [info] JointSize: 7
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 175.1 draws (0.0 skipped), 577 triangles, 24155 floats, 0.351 ms in the backend (0.297 drawing, 0.055 of it copying vertices; 0.014 uploading textures), 7.486 ms from StartFrame to EndFrame, 8.679 ms of GPU time over 300 frames; a draw 1.379 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 9309 loaded, 16 kept; 27 textures created, 232 uploads of 1032 KB; 900 framebuffer calls
+[13:16:25.849] [AnimFactory.cpp:20] [info] JointSize: 10
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 158.4 draws (0.0 skipped), 616 triangles, 26462 floats, 0.321 ms in the backend (0.277 drawing, 0.055 of it copying vertices; 0.004 uploading textures), 7.741 ms from StartFrame to EndFrame, 9.017 ms of GPU time over 300 frames; a draw 1.402 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 7947 loaded, 16 kept; 6 textures created, 89 uploads of 83 KB; 900 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 163.0 draws (0.0 skipped), 615 triangles, 25891 floats, 0.331 ms in the backend (0.284 drawing, 0.055 of it copying vertices; 0.007 uploading textures), 7.746 ms from StartFrame to EndFrame, 8.302 ms of GPU time over 300 frames; a draw 1.404 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 9420 loaded, 16 kept; 6 textures created, 111 uploads of 109 KB; 900 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 151.4 draws (0.0 skipped), 549 triangles, 23348 floats, 0.306 ms in the backend (0.262 drawing, 0.050 of it copying vertices; 0.006 uploading textures), 7.340 ms from StartFrame to EndFrame, 8.118 ms of GPU time over 301 frames; a draw 1.399 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 8213 loaded, 16 kept; 16 textures created, 89 uploads of 550 KB; 903 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 198.4 draws (0.0 skipped), 675 triangles, 28001 floats, 0.367 ms in the backend (0.325 drawing, 0.062 of it copying vertices; 0.000 uploading textures), 8.186 ms from StartFrame to EndFrame, 8.494 ms of GPU time over 300 frames; a draw 1.324 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 10208 loaded, 16 kept; 0 textures created, 0 uploads of 0 KB; 900 framebuffer calls
+gfx_xsdk: 291 frames in 10.0 s (29.0 fps); a frame: 168.9 draws (0.0 skipped), 700 triangles, 29451 floats, 0.350 ms in the backend (0.300 drawing, 0.059 of it copying vertices; 0.006 uploading textures), 7.691 ms from StartFrame to EndFrame, 9.436 ms of GPU time over 291 frames; a draw 1.429 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 10069 loaded, 16 kept; 6 textures created, 81 uploads of 597 KB; 873 framebuffer calls
+[13:17:15.743] [AnimFactory.cpp:20] [info] JointSize: 10
+[13:17:17.207] [AnimFactory.cpp:20] [info] JointSize: 10
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 131.5 draws (0.0 skipped), 542 triangles, 22344 floats, 0.281 ms in the backend (0.230 drawing, 0.046 of it copying vertices; 0.015 uploading textures), 6.222 ms from StartFrame to EndFrame, 8.115 ms of GPU time over 301 frames; a draw 1.402 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5972 loaded, 16 kept; 5 textures created, 280 uploads of 212 KB; 903 framebuffer calls
+[13:17:24.511] [AnimFactory.cpp:20] [info] JointSize: 11
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 102.1 draws (0.0 skipped), 552 triangles, 24007 floats, 0.266 ms in the backend (0.203 drawing, 0.042 of it copying vertices; 0.025 uploading textures), 6.095 ms from StartFrame to EndFrame, 7.187 ms of GPU time over 300 frames; a draw 1.576 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 7187 loaded, 16 kept; 3 textures created, 493 uploads of 1178 KB; 900 framebuffer calls
+[13:17:37.283] [AnimFactory.cpp:20] [info] JointSize: 14
+[13:17:39.446] [AnimFactory.cpp:20] [info] JointSize: 9
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 132.3 draws (0.0 skipped), 604 triangles, 25611 floats, 0.306 ms in the backend (0.241 drawing, 0.049 of it copying vertices; 0.024 uploading textures), 6.931 ms from StartFrame to EndFrame, 7.830 ms of GPU time over 300 frames; a draw 1.452 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 7953 loaded, 16 kept; 4 textures created, 447 uploads of 1096 KB; 900 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 154.1 draws (0.0 skipped), 460 triangles, 18594 floats, 0.293 ms in the backend (0.251 drawing, 0.045 of it copying vertices; 0.006 uploading textures), 6.190 ms from StartFrame to EndFrame, 7.563 ms of GPU time over 301 frames; a draw 1.341 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 7385 loaded, 16 kept; 1 textures created, 91 uploads of 364 KB; 903 framebuffer calls
+[13:17:56.901] [AnimFactory.cpp:20] [info] JointSize: 19
+[13:18:00.036] [AnimFactory.cpp:20] [info] JointSize: 19
+[13:18:01.079] [AnimFactory.cpp:20] [info] JointSize: 19
+gfx_xsdk: 299 frames in 10.0 s (29.8 fps); a frame: 67.2 draws (0.0 skipped), 354 triangles, 15424 floats, 0.160 ms in the backend (0.132 drawing, 0.027 of it copying vertices; 0.002 uploading textures), 4.733 ms from StartFrame to EndFrame, 6.704 ms of GPU time over 299 frames; a draw 1.554 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2675 loaded, 16 kept; 12 textures created, 34 uploads of 227 KB; 897 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 117.3 draws (0.0 skipped), 489 triangles, 20509 floats, 0.259 ms in the backend (0.211 drawing, 0.041 of it copying vertices; 0.013 uploading textures), 6.916 ms from StartFrame to EndFrame, 7.419 ms of GPU time over 300 frames; a draw 1.450 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4474 loaded, 16 kept; 2 textures created, 214 uploads of 452 KB; 900 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 139.7 draws (0.0 skipped), 588 triangles, 24655 floats, 0.300 ms in the backend (0.244 drawing, 0.049 of it copying vertices; 0.017 uploading textures), 8.239 ms from StartFrame to EndFrame, 8.036 ms of GPU time over 301 frames; a draw 1.399 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5054 loaded, 16 kept; 10 textures created, 274 uploads of 780 KB; 903 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 96.7 draws (0.0 skipped), 392 triangles, 16303 floats, 0.231 ms in the backend (0.186 drawing, 0.034 of it copying vertices; 0.013 uploading textures), 6.573 ms from StartFrame to EndFrame, 7.100 ms of GPU time over 301 frames; a draw 1.577 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4163 loaded, 16 kept; 2 textures created, 204 uploads of 200 KB; 903 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 94.0 draws (0.0 skipped), 361 triangles, 14693 floats, 0.222 ms in the backend (0.177 drawing, 0.032 of it copying vertices; 0.014 uploading textures), 5.951 ms from StartFrame to EndFrame, 7.342 ms of GPU time over 300 frames; a draw 1.547 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4017 loaded, 16 kept; 0 textures created, 221 uploads of 216 KB; 900 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 103.2 draws (0.0 skipped), 430 triangles, 18068 floats, 0.242 ms in the backend (0.197 drawing, 0.037 of it copying vertices; 0.011 uploading textures), 7.266 ms from StartFrame to EndFrame, 7.076 ms of GPU time over 301 frames; a draw 1.552 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4584 loaded, 16 kept; 1 textures created, 188 uploads of 244 KB; 903 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 109.6 draws (0.0 skipped), 433 triangles, 17986 floats, 0.251 ms in the backend (0.205 drawing, 0.038 of it copying vertices; 0.013 uploading textures), 6.572 ms from StartFrame to EndFrame, 7.788 ms of GPU time over 301 frames; a draw 1.524 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4528 loaded, 16 kept; 0 textures created, 210 uploads of 315 KB; 903 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 104.4 draws (0.0 skipped), 404 triangles, 16670 floats, 0.237 ms in the backend (0.198 drawing, 0.036 of it copying vertices; 0.007 uploading textures), 7.015 ms from StartFrame to EndFrame, 7.354 ms of GPU time over 300 frames; a draw 1.554 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4738 loaded, 16 kept; 0 textures created, 119 uploads of 59 KB; 900 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 120.6 draws (0.0 skipped), 513 triangles, 21474 floats, 0.263 ms in the backend (0.218 drawing, 0.043 of it copying vertices; 0.010 uploading textures), 7.111 ms from StartFrame to EndFrame, 7.825 ms of GPU time over 301 frames; a draw 1.451 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4674 loaded, 16 kept; 0 textures created, 158 uploads of 379 KB; 903 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 130.4 draws (0.0 skipped), 544 triangles, 22821 floats, 0.279 ms in the backend (0.232 drawing, 0.046 of it copying vertices; 0.011 uploading textures), 7.409 ms from StartFrame to EndFrame, 7.820 ms of GPU time over 300 frames; a draw 1.425 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5267 loaded, 16 kept; 0 textures created, 163 uploads of 434 KB; 900 framebuffer calls
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 142.5 draws (0.0 skipped), 547 triangles, 22640 floats, 0.290 ms in the backend (0.245 drawing, 0.047 of it copying vertices; 0.008 uploading textures), 8.036 ms from StartFrame to EndFrame, 8.045 ms of GPU time over 301 frames; a draw 1.386 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 5230 loaded, 16 kept; 0 textures created, 121 uploads of 488 KB; 903 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 130.8 draws (0.0 skipped), 503 triangles, 20562 floats, 0.275 ms in the backend (0.227 drawing, 0.043 of it copying vertices; 0.012 uploading textures), 7.265 ms from StartFrame to EndFrame, 7.474 ms of GPU time over 300 frames; a draw 1.405 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4970 loaded, 16 kept; 0 textures created, 197 uploads of 241 KB; 900 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 110.5 draws (0.0 skipped), 401 triangles, 16366 floats, 0.251 ms in the backend (0.203 drawing, 0.037 of it copying vertices; 0.015 uploading textures), 6.417 ms from StartFrame to EndFrame, 7.454 ms of GPU time over 300 frames; a draw 1.504 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4790 loaded, 16 kept; 4 textures created, 236 uploads of 225 KB; 900 framebuffer calls
+velocity_diff: 1583.959961
+ at_dist: 5043.804199
+ eye_dist: 3547.077148
+CAMERA 1 SKIPED: 3
+interpolation: a close whose open wasn't recorded pops nothing (logged once)
+gfx_xsdk: 301 frames in 10.0 s (30.0 fps); a frame: 126.4 draws (0.0 skipped), 476 triangles, 19972 floats, 0.246 ms in the backend (0.208 drawing, 0.041 of it copying vertices; 0.005 uploading textures), 7.275 ms from StartFrame to EndFrame, 9.078 ms of GPU time over 301 frames; a draw 1.323 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 4094 loaded, 16 kept; 6 textures created, 74 uploads of 383 KB; 903 framebuffer calls
+CAMERA 1 SKIPED: 4
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 196.1 draws (0.0 skipped), 643 triangles, 26945 floats, 0.364 ms in the backend (0.323 drawing, 0.062 of it copying vertices; 0.001 uploading textures), 7.985 ms from StartFrame to EndFrame, 8.920 ms of GPU time over 300 frames; a draw 1.330 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 10503 loaded, 16 kept; 1 textures created, 13 uploads of 94 KB; 900 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 207.0 draws (0.0 skipped), 687 triangles, 28794 floats, 0.384 ms in the backend (0.343 drawing, 0.067 of it copying vertices; 0.000 uploading textures), 8.495 ms from StartFrame to EndFrame, 9.587 ms of GPU time over 300 frames; a draw 1.334 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 11400 loaded, 16 kept; 0 textures created, 0 uploads of 0 KB; 900 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 207.0 draws (0.0 skipped), 687 triangles, 28794 floats, 0.382 ms in the backend (0.341 drawing, 0.067 of it copying vertices; 0.000 uploading textures), 8.481 ms from StartFrame to EndFrame, 9.586 ms of GPU time over 300 frames; a draw 1.325 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 11400 loaded, 16 kept; 0 textures created, 0 uploads of 0 KB; 900 framebuffer calls
