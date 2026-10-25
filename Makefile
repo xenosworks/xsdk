@@ -354,6 +354,11 @@ $(BUILD)/probe_replace.xex: $(BUILD)/probe_replace.elf tools/elf2xex.py
 $(BUILD)/probe_replace_v2.xex: $(BUILD)/probe_replace.elf tools/elf2xex.py
 	$(PYTHON) tools/elf2xex.py --title-name "xsdk probe_replace 2" --version 0.0.0.2 $< $@
 
+# Milestone 63 step 3's check of tools/store_catalogue.py, on the PC, packing a .xex with a version.
+.PHONY: store_catalogue_check
+store_catalogue_check: $(BUILD)/probe_replace_v2.xex
+	$(PYTHON) tests/check_store_catalogue.py $<
+
 # Milestone 49 step 1's probe of what puts the hierarchical buffer right after a depth clear, with xsdk_test's
 # hierarchical depth checks; outside all. xsdk_test_nohizpass leaves the pass out, so must fail "hiz: near and far drawn
 # both ways over depth clears, less-than and greater-than, every pixel right", and likely "hiz: draws whose pixel shader
