@@ -5028,3 +5028,42 @@ purpose, exactly their checks failed, `byterev_break.log`). CPU clocks an operat
 So a JIT reaches little-endian guest memory through the byte-reversed forms at no cost for integers. A guest float
 pays the trip between a GPR and an FPR through memory, about 31 clocks a load and 51 a store, while VMX reverses bytes
 for nothing.
+
+## Zero runs in a .xex, milestone 63 (2026-10-24)
+
+Step 2 of docs/scope/63-homebrew-store.md: tools/elf2xex.py leaves an image's 4 KB pages of zeros out of the file, as
+basic compression's `{data_size, zero_size}` blocks (xenia:src/xenia/kernel/util/xex2_info.h:345-348). xsdk_test's
+10.94 MB image, packed five ways and run from `hdd:\XSDK\m63` by the console agent (logs:
+`results/2026-10-24-milestone-63-step-1/`):
+- **One raw block,** the packing before (`x_raw`): 634 passed, from 10.95 MB.
+- **4 KB runs, the last block ending in the 6.6 MB of zeros at the image's end:** the launch returned as any does, then
+  nothing; no log was made and the console was back on Aurora.
+- **XexTool's** (`-c u`, its "uncompressed (no zeroed data)", from the file before; `x_tool`): two blocks, runs at
+  32 KB, and the blocks stop short of the image's end, the last with no zeros: 634 passed.
+- **32 KB runs as XexTool's, the zeros at the end in the last block:** nothing, as the second.
+- **4 KB runs, the zeros at the end in no block** (`x_tail`): 634 passed, from 3.93 MB.
+
+So the loader takes runs at 4 KB and fills what the blocks leave of the image with zeros, and starts no title whose
+last block ends in zeros. Whether it's that block's place or its 6.6 MB run that it refuses isn't settled: the runs
+between data blocks here were 44 KB at most, and SwanStation's 264 KB. elf2xex now ends the last block at its data.
+So packed, xsdk_test passed 634 (`xsdk_test`; the 2 failures, as ever, the controller's with nobody at it), SwanStation
+started from 4.97 MB, 31.98 MB of image, and read its games folder (`swanstation`), and curl_check downloaded a packed
+launch_target and launched it (below). Xenia loads xsdk_test so packed: it zero-fills the whole image before copying the
+blocks in (xenia:src/xenia/cpu/xex_module.cc:564-648).
+
+## A store's update and its downloads, milestone 63 (2026-10-24)
+
+Step 1 of docs/scope/63-homebrew-store.md, from `hdd:\XSDK\m63` and `m63c` (logs:
+`results/2026-10-24-milestone-63-step-1/`):
+- **A running title replaces its own `.xex`:** probe_replace is one ELF packed as "xsdk probe_replace 1" and "2". Started
+  as version 1 with version 2 beside it as `probe_replace.new`, it opened its own `.xex` to read and to write, renamed
+  the new one over it, and launched that path; what started there carried version 2's name (`probe_replace`). Started
+  without the new one, it said so and launched nothing (`probe_replace_nonew`). The store updates itself as it updates
+  any app, no second title needed.
+- **A folder renames** with its files in it, as on 2026-10-14 ("Files renamed on the console").
+- **A GitHub release's asset comes at 9 MB/s:** curl_check fetched Dusklight's 21.4 MB beta zip from github.com, which
+  redirects to release-assets.githubusercontent.com, into memory with `SO_RCVBUF` raised: 2.32 s, 9006 KB/s, over
+  TLS-ECDHE-RSA-WITH-CHACHA20-POLY1305-SHA256. Mbed TLS offers ChaCha20-Poly1305 first
+  (mbedtls-xenon:library/ssl_ciphersuites.c:51-54), and from the PC (OpenSSL, TLS 1.2) both hosts take whichever of
+  ChaCha20-Poly1305 and AES-GCM is offered first. One run, beside Cloudflare's 7.9 MB/s in the same run; curl_check's 13
+  checks passed (`curl_check`).

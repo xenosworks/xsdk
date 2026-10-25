@@ -1,0 +1,12 @@
+log: game:\probe_replace.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63\probe_replace.xex
+log: no net_log.txt beside the .xex, so not over the network
+probe_replace: \Device\Harddisk0\Partition1\XSDK\m63\probe_replace.xex, version 2 by its name
+probe_replace: version 1 running from probe_replace.xex, 409600 bytes, with probe_replace.new of 409600 bytes
+probe_replace: the running .xex opened to read: yes, errno 0
+probe_replace: the running .xex opened to write: yes, errno 0
+probe_replace: rename(probe_replace.new, probe_replace.xex) over the running .xex: done
+probe_replace: probe_replace.xex is now 409600 bytes, probe_replace.new is gone
+probe_replace: version 2 started from probe_replace.xex; version 1 replaced its own .xex and launched it
+probe_replace: done
+exit: status 0

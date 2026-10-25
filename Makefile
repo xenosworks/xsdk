@@ -90,7 +90,7 @@ UNROLL_O2_FLAGS := -munroll-only-small-loops -fno-rename-registers
 UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_loops_unrolled.o
 
 .PHONY: all clean cmake_check cmake_check_break samples sample_breaks occlusion_tries tiles_probe loop_break_probes \
-	instancing_probes cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe drive_probes system_probes launch_probes
+	instancing_probes cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe drive_probes system_probes launch_probes 	store_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
 all: $(BUILD)/m55_check.xex $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -343,6 +343,16 @@ launch_probes: $(BUILD)/probe_launch.xex $(BUILD)/probe_launch_t2.xex
 
 $(BUILD)/probe_launch_t2.xex: $(BUILD)/probe_launch.elf tools/elf2xex.py
 	$(PYTHON) tools/elf2xex.py --title-id 0x58534451 --title-name "xsdk probe_launch 2" $< $@
+
+# Milestone 63 step 1's probe: version 1 renames version 2 over its own running .xex and launches it; outside all, as
+# a launch ends the title making it.
+store_probes: $(BUILD)/probe_replace.xex $(BUILD)/probe_replace_v2.xex
+
+$(BUILD)/probe_replace.xex: $(BUILD)/probe_replace.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --title-name "xsdk probe_replace 1" --version 0.0.0.1 $< $@
+
+$(BUILD)/probe_replace_v2.xex: $(BUILD)/probe_replace.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --title-name "xsdk probe_replace 2" --version 0.0.0.2 $< $@
 
 # Milestone 49 step 1's probe of what puts the hierarchical buffer right after a depth clear, with xsdk_test's
 # hierarchical depth checks; outside all. xsdk_test_nohizpass leaves the pass out, so must fail "hiz: near and far drawn

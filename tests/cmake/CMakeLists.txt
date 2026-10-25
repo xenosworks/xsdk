@@ -14,4 +14,4 @@ set(title_name "xsdk cmake check")
 target_compile_definitions(cmake_check PRIVATE TITLE_ID_HEX="${title_id}" TITLE_NAME="${title_name}")
 # Writes cmake_check_shaders.h, with quad_vs_hlsl and quad_ps_hlsl.
 xsdk_add_shaders(cmake_check quad_vs.hlsl quad_ps.hlsl)
-xsdk_add_xex(cmake_check TITLE_ID 0x${title_id} NAME "${title_name}")
+xsdk_add_xex(cmake_check TITLE_ID 0x${title_id} NAME "${title_name}" VERSION 1.2.300.4)

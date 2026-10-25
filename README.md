@@ -21,8 +21,8 @@ each fact the console settled, and TODO.md what's still open.
 
 ## What's in it
 
-- **Titles:** `tools/elf2xex.py` packs an ELF into a XEX2 the retail loader accepts, with imports by ordinal and a
-  title ID and name of its own. The C17 runtime is on newlib, and the C++23 runtime has exceptions, threads, atomics,
+- **Titles:** `tools/elf2xex.py` packs an ELF into a XEX2 the retail loader accepts, with imports by ordinal, its pages
+  of zeros left out of the file, and a title ID, name and version of its own. The C17 runtime is on newlib, and the C++23 runtime has exceptions, threads, atomics,
   chrono, filesystem and format.
 - **The system:** threads placed on the six hardware threads, with priorities; the kernel's waits on several objects,
   events, owned mutexes, timers and lock-free lists; files on `game:`, the hard disk, USB, memory units and the DVD;

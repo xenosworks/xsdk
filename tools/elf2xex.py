@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert a title ELF linked with src/xsdk.ld into an unencrypted, uncompressed XEX2."""
+"""Convert a title ELF linked with src/xsdk.ld into an unencrypted XEX2, its pages of zeros left out of the file."""
 
 import argparse
 import hashlib
@@ -43,8 +43,10 @@ SYSTEM_HANDLE_GAMEPAD_DISCONNECT = 0x00000020
 REGION_ALL = 0xFFFFFFFF
 MEDIA_ALL = 0xFFFFFFFF
 ENCRYPTION_NONE = 0
-# Basic compression with one raw block is "not compressed"; homebrew packers emit it rather than type 0.
+# Basic compression: blocks of data, each followed by zeros the loader fills in rather than reads
+# (xenia:src/xenia/kernel/util/xex2_info.h:345-348, xenia:src/xenia/cpu/xex_module.cc:564-648).
 COMPRESSION_BASIC = 1
+ZERO_RUN_BYTES = 0x1000
 TLS_SLOTS = 64
 
 SECURITY_INFO_BYTES = 0x184
@@ -96,6 +98,13 @@ LIBRARY_IDS = {"xboxkrnl.exe": 0x45DC17E0, "xam.xex": 0xFCA15C76}
 # The versions a working XDK-built homebrew title carries (XexTool listing on the user's console files).
 IMPORT_VERSION = version(2, 0, 21256, 0)
 IMPORT_VERSION_MIN = version(2, 0, 1861, 0)
+
+
+def parse_version(text):
+    parts = [int(part) for part in text.split(".")]
+    if len(parts) != 4 or not all(0 <= part < 1 << bits for part, bits in zip(parts, (4, 4, 16, 8))):
+        raise argparse.ArgumentTypeError(f"{text}: want major.minor.build.fix, in 4, 4, 16 and 8 bits")
+    return version(*parts)
 
 
 def fail(message):
@@ -311,6 +320,41 @@ def page_descriptors(image, runs):
     return b"".join(descriptors), next_digest
 
 
+def compression_blocks(image):
+    """Splits the image into [data, zeros] blocks at 4 KB pages, the zeros at its end left out of the blocks."""
+    blocks = []
+    zero_page = bytes(ZERO_RUN_BYTES)
+    for offset in range(0, len(image), ZERO_RUN_BYTES):
+        if image[offset:offset + ZERO_RUN_BYTES] == zero_page and blocks:
+            blocks[-1][1] += ZERO_RUN_BYTES
+        elif blocks and not blocks[-1][1]:
+            blocks[-1][0] += ZERO_RUN_BYTES
+        else:
+            blocks.append([ZERO_RUN_BYTES, 0])
+    # The console starts no title whose last block ends in zeros, and fills what the blocks leave of the image with
+    # zeros (docs/HARDWARE.md, "Zero runs in a .xex, milestone 63").
+    blocks[-1][1] = 0
+    return blocks
+
+
+def file_data(image, blocks):
+    data = bytearray()
+    offset = 0
+    for data_bytes, zero_bytes in blocks:
+        data += image[offset:offset + data_bytes]
+        offset += data_bytes + zero_bytes
+    return data
+
+
+def expand(blocks, data, image_bytes):
+    image = bytearray()
+    offset = 0
+    for data_bytes, zero_bytes in blocks:
+        image += data[offset:offset + data_bytes] + bytes(zero_bytes)
+        offset += data_bytes
+    return image + bytes(image_bytes - len(image))
+
+
 def optional_header_table(inline, blocks, data_offset, placed):
     keys = sorted(list(inline) + list(blocks) + list(placed))
     table = b""
@@ -329,6 +373,9 @@ def optional_header_table(inline, blocks, data_offset, placed):
 def build_xex(image, runs, entry, libraries, resources, args):
     imports, import_digest = import_libraries_header(libraries)
     descriptors, image_digest = page_descriptors(image, runs)
+    compression = compression_blocks(image)
+    image_data = file_data(image, compression)
+    assert expand(compression, image_data, len(image)) == image
 
     inline = {
         HEADER_ENTRY_POINT: entry,
@@ -337,9 +384,10 @@ def build_xex(image, runs, entry, libraries, resources, args):
         HEADER_SYSTEM_FLAGS: SYSTEM_NO_FORCED_REBOOT | SYSTEM_HANDLE_GAMEPAD_DISCONNECT,
     }
     blocks = {
-        HEADER_FILE_FORMAT_INFO: struct.pack(">IHHII", 16, ENCRYPTION_NONE, COMPRESSION_BASIC, len(image), 0),
+        HEADER_FILE_FORMAT_INFO: struct.pack(">IHH", 8 + 8 * len(compression), ENCRYPTION_NONE, COMPRESSION_BASIC)
+            + b"".join(struct.pack(">II", *block) for block in compression),
         HEADER_TLS_INFO: struct.pack(">IIII", TLS_SLOTS, 0, 0, 0),
-        HEADER_EXECUTION_INFO: struct.pack(">IIIIBBBBI", 0, 0, 0, args.title_id, 0, 0, 1, 1, 0),
+        HEADER_EXECUTION_INFO: struct.pack(">IIIIBBBBI", 0, args.version, 0, args.title_id, 0, 0, 1, 1, 0),
     }
     if resources:
         blocks[HEADER_RESOURCE_INFO] = resources
@@ -371,7 +419,7 @@ def build_xex(image, runs, entry, libraries, resources, args):
     # The header digest covers everything the signature doesn't.
     header_digest = sha1(header[security_offset + 0x17C:], header[:security_offset + 8])
     header[security_offset + 0x164:security_offset + 0x178] = header_digest
-    return bytes(header) + bytes(image)
+    return bytes(header) + image_data
 
 
 def patch_import_records(image, libraries):
@@ -391,6 +439,7 @@ def main():
     parser.add_argument("--title-id", type=lambda text: int(text, 16), default=0x5853444B)
     parser.add_argument("--stack-size", type=lambda text: int(text, 0), default=1024 * 1024)
     parser.add_argument("--title-name", help="the name the dashboard shows")
+    parser.add_argument("--version", type=parse_version, default=0, help="the title's version, as 1.2.300.4")
     args = parser.parse_args()
 
     entry, sections = read_elf(args.elf.read_bytes())

@@ -71,16 +71,19 @@ function(xsdk_add_shaders target)
 endfunction()
 
 # Packs a title's ELF into <target>.xex beside it, and lists what Xenia would skip, as the Makefile does:
-# xsdk_add_xex(target [TITLE_ID 0x5853444B] [NAME "the name the dashboard shows"]). A title ID of its own keeps its
-# saves apart from other titles'.
+# xsdk_add_xex(target [TITLE_ID 0x5853444B] [NAME "the name the dashboard shows"] [VERSION 1.2.300.4]). A title ID of
+# its own keeps its saves apart from other titles'.
 function(xsdk_add_xex target)
-	cmake_parse_arguments(PARSE_ARGV 1 XEX "" "TITLE_ID;NAME" "")
+	cmake_parse_arguments(PARSE_ARGV 1 XEX "" "TITLE_ID;NAME;VERSION" "")
 	set(options)
 	if(DEFINED XEX_TITLE_ID)
 		list(APPEND options --title-id "${XEX_TITLE_ID}")
 	endif()
 	if(DEFINED XEX_NAME)
 		list(APPEND options --title-name "${XEX_NAME}")
+	endif()
+	if(DEFINED XEX_VERSION)
+		list(APPEND options --version "${XEX_VERSION}")
 	endif()
 	# The link rule names these outside CMake's view, so a rebuilt SDK would otherwise leave the title linked to the old.
 	set_property(TARGET ${target} APPEND PROPERTY LINK_DEPENDS

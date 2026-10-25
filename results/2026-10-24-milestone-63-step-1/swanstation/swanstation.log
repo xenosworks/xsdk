@@ -1,0 +1,15 @@
+log: game:\swanstation.log
+log: named after \Device\Harddisk0\Partition1\swanstation\swanstation.xex
+log: no net_log.txt beside the .xex, so not over the network
+open: NtCreateFile(game:\host.txt) failed: 0xC0000034
+swanstation: the picker, the Recompiler CPU, on hardware thread 0
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 31587 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 22978 us
+core: [InitDiskControlInterface] Failed to set disk control interface
+open: NtCreateFile(\Device\Mass0\games) failed: 0xC0000034
+open: NtCreateFile(\Device\Mass1\games) failed: 0xC00002B6
+open: NtCreateFile(\Device\Mass2\games) failed: 0xC00002B6
+open: NtCreateFile(game:\games\Digimon World (USA)\Digimon World (USA).sbi) failed: 0xC0000034
+picker: read game:\games\Digimon World (USA)\Digimon World (USA).cue's serial, "SLUS-01032", in 130.2 ms
