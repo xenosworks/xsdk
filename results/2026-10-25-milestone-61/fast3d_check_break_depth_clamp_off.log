@@ -1,0 +1,54 @@
+log: game:\fast3d_check.log
+log: named after \Device\Harddisk0\Partition1\XSDK\f3db_depth_clamp_off\fast3d_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+fast3d_check: gfx_xsdk's checks
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 23316 us
+open: NtCreateFile(game:\cvars.cfg) failed: 0xC0000034
+gfx_xsdk: programs are kept in game:/shaders/fast3d/67CB4C1909CD4200
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\clear.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program clear: glslang 929.3 ms, xost 0.3 ms
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\0000000000001000-00000000-1.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program 0000000000001000-00000000-1: glslang 12.9 ms, xost 0.8 ms
+PASS: combiner_single
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\0000000000000108-00000000-1.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program 0000000000000108-00000000-1: glslang 16.3 ms, xost 1.7 ms
+PASS: combiner_multiply
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\000000000000A1A8-00000000-1.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program 000000000000A1A8-00000000-1: glslang 19.7 ms, xost 3.1 ms
+PASS: combiner_mix_both_textures
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\000000000000281C-00000000-1.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program 000000000000281C-00000000-1: glslang 16.8 ms, xost 1.8 ms
+PASS: combiner_general
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\0000010D00008000-00000010-1.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program 0000010D00008000-00000010-1: glslang 19.9 ms, xost 2.1 ms
+PASS: combiner_two_cycles
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\0000000010001000-00000001-1.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program 0000000010001000-00000001-1: glslang 12.8 ms, xost 0.7 ms
+PASS: alpha_blend
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\0000000000001000-00000002-1.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program 0000000000001000-00000002-1: glslang 13.5 ms, xost 1.0 ms
+PASS: fog
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\0000000000008000-00000000-1.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program 0000000000008000-00000000-1: glslang 16.0 ms, xost 1.6 ms
+PASS: wrap
+PASS: wrap_mirror
+PASS: wrap_clamp
+PASS: wrap_mirror_once
+open: NtCreateFile(game:\shaders\fast3d\67CB4C1909CD4200\0000000000008000-00000100-1.f3dx) failed: 0xC0000034
+gfx_xsdk: compiled program 0000000000008000-00000100-1: glslang 16.4 ms, xost 1.8 ms
+PASS: texture_size_constant
+PASS: textures_share_a_block
+PASS: decal
+depth_clamp: (0, 0) is 000000, not 00FF00
+depth_clamp: (1, 0) is 000000, not 00FF00
+depth_clamp: (2, 0) is 000000, not 00FF00
+depth_clamp: (3, 0) is 000000, not 00FF00
+depth_clamp: (33, 0) is 000000, not 00FF00
+depth_clamp: (34, 0) is 000000, not 00FF00
+depth_clamp: (35, 0) is 000000, not 00FF00
+depth_clamp: (36, 0) is 000000, not 00FF00
+FAIL: depth_clamp
+PASS: game_framebuffer
+tests: 15 passed, 1 failed
+exit: status 1
