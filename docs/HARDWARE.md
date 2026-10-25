@@ -5243,3 +5243,17 @@ With both, the build of record's costs (`starship_draw_costs_final.log`), at 30 
 - **The frame's shares:** the backend 0.13 to 0.24 ms, under 1%; Fast3D's interpreter with the backend, from
   `StartFrame` to `EndFrame`, 5.2 to 7.0 ms, 16 to 21%; the GPU 4.5 to 7.1 ms. The game's own work, its audio and the
   present's wait are the rest (previous sections).
+
+## Corneria at the game's own 30, milestone 61 (2026-10-25)
+
+Starship played from boot into Corneria by a script of buttons held over counted updates, read in its controller code
+(`results/2026-10-25-milestone-61/starship_corneria_input_script.txt`; the reader, since taken out,
+`starship_diagnostics_input_script.patch`): Start past the intro and the title, A on Main Game, Start past the prologue,
+then A every 150 updates through the map, the briefing and the level, which fires. Nobody steers, so the Arwing flies
+into the scenery and the level starts again from its checkpoint, twice, through the sea, the city and the pipeline
+(`starship_corneria_frames.png`, updates 2600 to 6200).
+
+At 30 fps, the default since this session (docs/scope/61-fast3d.md, Decisions, 10), every 10 s window from the level's
+start, about update 2700, ran at 29.8 to 30.0 fps; the windows before it, the menus and the level's opening, at 29.7 to
+30.0, but the first, at boot, at 25.6 (`starship_corneria_at_30.log`). A frame drew 50 to 199 draws; Fast3D's
+interpreter with the backend took 3.8 to 12.0 ms of it and the GPU 3.9 to 9.8 ms.

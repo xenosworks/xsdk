@@ -1,0 +1,66 @@
+diff --git a/src/sys/sys_joybus.c b/src/sys/sys_joybus.c
+index 4d697173..89a49fae 100644
+--- a/src/sys/sys_joybus.c
++++ b/src/sys/sys_joybus.c
+@@ -81,6 +81,51 @@ void Controller_UpdateInput(void) {
+     }
+ }
+ 
++#define XSDK_INPUT_SCRIPT 1 // DIAG, not to commit
++#ifdef XSDK_INPUT_SCRIPT
++#include <stdio.h>
++// DIAG: buttons and a stick held on controller 1 over spans of updates, from input_script.txt beside the game, a line
++// each: <first update> <last update> <buttons in hex> [<stick x> <stick y>].
++typedef struct {
++    u32 first, last;
++    u16 buttons;
++    s8 x, y;
++} ScriptStep;
++static ScriptStep sScript[128];
++static s32 sScriptSteps = -1;
++
++static void Script_Apply(void) {
++    s32 i;
++    if (sScriptSteps < 0) {
++#ifdef __XSDK__
++        FILE* file = fopen("game:/input_script.txt", "r");
++#else
++        FILE* file = fopen("input_script.txt", "r");
++#endif
++        char line[128];
++        sScriptSteps = 0;
++        while (file != NULL && sScriptSteps < 128 && fgets(line, sizeof(line), file) != NULL) {
++            unsigned first, last, buttons;
++            int x = 0, y = 0;
++            if (sscanf(line, "%u %u %x %d %d", &first, &last, &buttons, &x, &y) >= 3) {
++                sScript[sScriptSteps++] = (ScriptStep){ first, last, (u16) buttons, (s8) x, (s8) y };
++            }
++        }
++        if (file != NULL) {
++            fclose(file);
++        }
++    }
++    for (i = 0; i < sScriptSteps; i++) {
++        if (gSysFrameCount >= sScript[i].first && gSysFrameCount <= sScript[i].last) {
++            sNextController[0].button |= sScript[i].buttons;
++            sNextController[0].stick_x = sScript[i].x;
++            sNextController[0].stick_y = sScript[i].y;
++            sNextController[0].err_no = 0;
++        }
++    }
++}
++#endif
++
+ void Controller_ReadData(void) {
+     s32 i;
+ 
+@@ -93,6 +138,9 @@ void Controller_ReadData(void) {
+     } else {
+         osContStartReadData(&gSerialEventQueue);
+         osContGetReadData(sNextController);
++#ifdef XSDK_INPUT_SCRIPT
++        Script_Apply();
++#endif
+     }
+ }
+ 
