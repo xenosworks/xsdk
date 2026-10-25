@@ -1,0 +1,26 @@
+log: game:\fast3d_check.log
+log: named after \Device\Harddisk0\Partition1\XSDK\f3dc\fast3d_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+fast3d_check: gfx_xsdk's checks
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 21048 us
+open: NtCreateFile(game:\cvars.cfg) failed: 0xC0000034
+gfx_xsdk: programs are kept in game:/shaders/fast3d/23301E9B7CB9C8D7
+PASS: combiner_single
+PASS: combiner_multiply
+PASS: combiner_mix_both_textures
+PASS: combiner_general
+PASS: combiner_two_cycles
+PASS: alpha_blend
+PASS: fog
+PASS: wrap
+PASS: wrap_mirror
+PASS: wrap_clamp
+PASS: wrap_mirror_once
+PASS: texture_size_constant
+PASS: textures_share_a_block
+PASS: decal
+PASS: depth_clamp
+PASS: game_framebuffer
+tests: 16 passed, 0 failed
+exit: status 0

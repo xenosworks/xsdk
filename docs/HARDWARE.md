@@ -5212,3 +5212,34 @@ On the console, counting each audio frame the game queued and what the queue hel
 The texture uploads in the heavy scenes, 0.45 to 0.79 ms a frame, are textures the game invalidates every frame: about
 90 of them missed Fast3D's cache once a frame each, with the cache never full and nothing evicted
 (`starship_texture_cache_misses.log`).
+
+## A Fast3D draw's parts, milestone 61 (2026-10-25)
+
+gfx_xsdk's `DrawTriangles` timed a part at a time with the time base, over Starship's first 100 s from boot at the
+game's own 30 fps (`results/2026-10-25-milestone-61/starship_draw_parts.log`; the timing, since taken out, cost about
+0.01 us a draw). In the windows of 87 to 104 draws a frame, a draw took, in us:
+- **0.33 to 0.37 binding textures:** 78 to 95 of a frame's draws bind a texture, as an N64 display list changes texture
+  with each part of an object; a bind writes 7 dwords, the texture's fetch constants (src/gpu_draw.c,
+  `xsdk_gpu_set_texture`).
+- **0.35 to 0.42 on the block of constants:** building and comparing it every draw, and writing its 3 registers in 29
+  to 44 of them, when a texture's size or filtering changes. Its sizes were converted from integers each draw, which
+  the in-order core does through memory; kept as floats with each texture, the block took 0.27 to 0.33
+  (`starship_draw_parts_sizes_as_floats.log`).
+- **0.26 to 0.28 on the invalidate,** 11 dwords, a WAIT_REG_MEM among them, every draw (src/gpu_draw.c,
+  `xsdk_gpu_invalidate`).
+- **0.19 to 0.20 submitting:** the vertices' fetch constant and the draw, the GPU layer's own cost.
+- **0.14 to 0.16 switching programs and 0.08 to 0.09 on state,** for the 7 or so of a frame's draws that change them.
+
+A part costs about what it writes into the ring, about 25 to 50 ns a dword, not what it decides. Invalidating the
+vertex ring once a segment as it's first written, with each draw's vertices on pages of their own (previous section's
+argument), took 0.22 to 0.31 us off a draw and left GPU time where it was. Frames 600, 1800 and 2400 then came out
+byte for byte the same as with the per-draw invalidate, in two runs; frame 1200 differed, by as much between two runs
+of the same build, in a patch of the planet's glow (`starship_invalidate_captures.txt`).
+
+With both, the build of record's costs (`starship_draw_costs_final.log`), at 30 fps, a frame of 33.3 ms:
+- **A draw less its copy,** 1.18 to 1.35 us in the windows of 58 to 104 draws, and up to 3.6 us in the title's 6,
+  as a frame's fixed calls are shared among fewer draws.
+- **The copy** about 3.2 GB/s: 165 KB a frame in 0.052 ms.
+- **The frame's shares:** the backend 0.13 to 0.24 ms, under 1%; Fast3D's interpreter with the backend, from
+  `StartFrame` to `EndFrame`, 5.2 to 7.0 ms, 16 to 21%; the GPU 4.5 to 7.1 ms. The game's own work, its audio and the
+  present's wait are the rest (previous sections).

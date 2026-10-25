@@ -158,8 +158,9 @@ the GPU layer, built against libultraship's ImGui.
 - xsdk_test and the backend's checks pass twice, and each break fails what it names.
 - Starship plays through Corneria on the console through `gfx_xsdk`, its captures matching what the user sees and the
   PC's OpenGL build draws.
-- The backend's CPU time a draw, not counting the copy of its vertices, is at most twice the GPU layer's own cost for a
-  draw, 0.6 us; the copy's rate and the share of the frame each part takes are recorded.
+- The backend's CPU time a draw, not counting the copy of its vertices, its parts, the copy's rate and the share of
+  the frame each part takes are recorded (Decisions, 13; it was to be at most 0.6 us, twice the GPU layer's own cost
+  for a draw).
 - Corneria holds the game's own 30 fps: every settled 10 s window at 29.5 fps or more, milestone 30's bar. The
   interpolated 60 is measured and recorded, not required (Decisions, 5).
 
@@ -210,11 +211,18 @@ Taken on 2026-10-25, after the user heard the sound crackle:
 10. **Starship draws at the game's own 30 by default on the console.** At the interpolated 60 the heavy scenes made
     25.6 to 28.9 game updates a second, and the game makes its audio a frame an update, so the audio queue ran dry up
     to 92 times in 10 s. At 30 the updates held 30.0 a second outside scene loads, and the queue never ran dry there
-    (starship-xenon `4a87bc39`; docs/HARDWARE.md, "Starship's audio follows its updates, milestone 61"). A rate the player picks in the menu still wins. This is decision 5's frame rate as
-    the default.
+    (starship-xenon `4a87bc39`; docs/HARDWARE.md, "Starship's audio follows its updates, milestone 61"). A rate the
+    player picks in the menu still wins. This is decision 5's frame rate as the default.
 11. **The audio gaps at a scene load stay until loading is faster** (the user). Loading a scene's resources holds one
     update 130 to 440 ms, past the queue's 77 ms, as the audio runs in lockstep with the game (TODO.md, "Starship's
     scene loads stall its audio"). Letting the audio thread run on its own clock was the other way, not taken.
+12. **The vertex ring is invalidated once a segment, its draws a page each** (the user, on the numbers): the
+    per-draw invalidate cost 0.26 us of a draw, and drew nothing different (docs/HARDWARE.md, "A Fast3D draw's
+    parts, milestone 61").
+13. **A draw's cost is recorded, not required to be 0.6 us** (the user). A heavy scene's draw costs 1.18 to 1.35 us
+    less its copy, most of it the dwords a texture bind and a block of constants write into the ring, which an N64
+    display list needs nearly every draw; the backend takes under 1% of Starship's frame (docs/HARDWARE.md, "A Fast3D
+    draw's parts, milestone 61").
 
 ## Size
 

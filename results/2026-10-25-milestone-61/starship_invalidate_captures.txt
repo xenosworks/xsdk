@@ -1,0 +1,8 @@
+frame 600: each draw acfa3f5ab8944002, each segment acfa3f5ab8944002, each segment again acfa3f5ab8944002
+frame 1200: each draw 1070cd3748f5b245, each segment fad709330cc53d8f, each segment again 0b24f2c2fbb9bd97
+frame 1800: each draw 52715bb8a16ca820, each segment 52715bb8a16ca820, each segment again 52715bb8a16ca820
+frame 2400: each draw ad1af8bd824aefa2, each segment ad1af8bd824aefa2, each segment again ad1af8bd824aefa2
+frame 2900: each draw e3b0c44298fc1c14, each segment e3b0c44298fc1c14, each segment again e3b0c44298fc1c14
+frame 1200, the two runs of each segment: 2910 of 921600 pixels differ, at most 255 a channel, in x 1236-1279, y 191-290
+frame 1200, each draw against each segment: 2712 of 921600 pixels differ, at most 255 a channel, in x 1241-1279, y 183-290
+frame 2900: every run ended before it, so no capture was written (the sha256 of nothing)
