@@ -205,6 +205,17 @@ Taken by the user later on 2026-10-22, after steps 1 and 2 ran on the console:
    interpreter's time went up, 6.0 to 7.6 ms against 3.6 to 6.6; one frame drew triangles beyond the far plane that the
    CPU rejects. It stays on libultraship-xenon's branch `gpu-vertex-experiment`.
 
+Taken on 2026-10-25, after the user heard the sound crackle:
+
+10. **Starship draws at the game's own 30 by default on the console.** At the interpolated 60 the heavy scenes made
+    25.6 to 28.9 game updates a second, and the game makes its audio a frame an update, so the audio queue ran dry up
+    to 92 times in 10 s. At 30 the updates held 30.0 a second outside scene loads, and the queue never ran dry there
+    (starship-xenon `4a87bc39`; docs/HARDWARE.md, "Starship's audio follows its updates, milestone 61"). A rate the player picks in the menu still wins. This is decision 5's frame rate as
+    the default.
+11. **The audio gaps at a scene load stay until loading is faster** (the user). Loading a scene's resources holds one
+    update 130 to 440 ms, past the queue's 77 ms, as the audio runs in lockstep with the game (TODO.md, "Starship's
+    scene loads stall its audio"). Letting the audio thread run on its own clock was the other way, not taken.
+
 ## Size
 
 Large. Step 1 is most of it: about eight libraries and sdl2-compat to build for xsdk, Starship's start-up, and the

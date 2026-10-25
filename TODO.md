@@ -172,6 +172,14 @@ work begins.
   - **`xsdk_gpu_set_vertices`' fetch constant flush,** kept untried where the texture's went.
   - **When to take it up:** next for the GPU, if the user agrees; the probe (`tests/probe_gpu_draw_cost.c`) takes
     the variants.
+- **Starship's scene loads stall its audio (milestone 61).** While the game loads a scene's resources, one update
+  takes 130 to 440 ms, where the audio queue holds about 77 ms, so the queue runs dry one to four times a load and the
+  sound gaps (docs/HARDWARE.md, "Starship's audio follows its updates, milestone 61"). The audio is made a frame an
+  update in lockstep with the game, as libultraship's message queues take no lock
+  (lus:src/public/libultra/os_mesg.cpp:15-25), so the audio thread can't run on through a stall.
+  - **Left because** the user chose, on 2026-10-25, faster loading later over letting the audio thread run on its own
+    clock, as the N64's did, which would take locking those queues and running the game and audio threads truly
+    together for the first time (docs/scope/61-fast3d.md, Decisions, 11).
 
 ## Tried and reverted
 

@@ -1,0 +1,85 @@
+diff --git a/src/port/Game.cpp b/src/port/Game.cpp
+index ef7894be..f23b119f 100644
+--- a/src/port/Game.cpp
++++ b/src/port/Game.cpp
+@@ -13,20 +13,80 @@ extern "C" {
+     void AudioThread_CreateTask();
+ }
+ 
++#define XSDK_FRAME_DIAG 1 // DIAG, not to commit
++#ifdef XSDK_FRAME_DIAG
++#include "xsdk/log.h"
++// DIAG: a 10 s window of game updates: the game's own work, its drawing and present, and the audio thread's, each's
++// average and longest, in ms.
++static uint32_t DiagTicks() {
++    uint32_t ticks;
++    __asm__ volatile("mftb %0" : "=r"(ticks));
++    return ticks;
++}
++struct DiagPart {
++    uint64_t sum;
++    uint32_t most;
++    void Add(uint32_t ticks) {
++        sum += ticks;
++        most = ticks > most ? ticks : most;
++    }
++};
++static DiagPart sDiagGame, sDiagDraw, sDiagAudio, sDiagWhole;
++static uint32_t sDiagUpdates, sDiagStart, sDiagOver;
++static uint32_t sDiagDrawTicks;
++#endif
++
+ extern "C"
+ void Graphics_PushFrame(Gfx* data) {
++#ifdef XSDK_FRAME_DIAG
++    const uint32_t start = DiagTicks();
++#endif
+     GameEngine::ProcessGfxCommands(data);
++#ifdef XSDK_FRAME_DIAG
++    sDiagDrawTicks += DiagTicks() - start;
++#endif
+ }
+ 
+ extern "C" void Timer_Update();
+ 
+ void push_frame() {
++#ifdef XSDK_FRAME_DIAG
++    const uint32_t start = DiagTicks();
++    sDiagDrawTicks = 0;
++#endif
+     Graphics_ThreadUpdate();
++#ifdef XSDK_FRAME_DIAG
++    const uint32_t updated = DiagTicks();
++#endif
+     GameEngine::StartAudioFrame();
+     GameEngine::Instance->StartFrame();
+     Timer_Update();
+     // thread5_iteration();
+     GameEngine::EndAudioFrame();
++#ifdef XSDK_FRAME_DIAG
++    const uint32_t end = DiagTicks();
++    constexpr double TICKS_PER_MS = 49875.0;
++    sDiagDraw.Add(sDiagDrawTicks);
++    sDiagGame.Add(updated - start - sDiagDrawTicks);
++    sDiagAudio.Add(end - updated);
++    sDiagWhole.Add(end - start);
++    sDiagOver += end - start > 33.4 * TICKS_PER_MS;
++    sDiagUpdates++;
++    if (sDiagStart == 0) {
++        sDiagStart = start;
++    }
++    if (end - sDiagStart >= 10 * 1000 * TICKS_PER_MS) {
++        auto avg = [](const DiagPart& p) { return sDiagUpdates ? p.sum / TICKS_PER_MS / sDiagUpdates : 0.0; };
++        auto most = [](const DiagPart& p) { return p.most / TICKS_PER_MS; };
++        xsdk_log_write("framediag: %u updates, %u over 33.4 ms; ms each, average and longest: the game %.2f %.2f, "
++                       "drawing and present %.2f %.2f, audio %.2f %.2f, the whole %.2f %.2f",
++                       (unsigned)sDiagUpdates, (unsigned)sDiagOver, avg(sDiagGame), most(sDiagGame), avg(sDiagDraw),
++                       most(sDiagDraw), avg(sDiagAudio), most(sDiagAudio), avg(sDiagWhole), most(sDiagWhole));
++        sDiagGame = sDiagDraw = sDiagAudio = sDiagWhole = {};
++        sDiagUpdates = sDiagOver = 0;
++        sDiagStart = end;
++    }
++#endif
+ }
+ 
+ #ifdef _WIN32

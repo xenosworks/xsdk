@@ -1,0 +1,121 @@
+log: game:\texdiag.log
+log: named after \Device\Harddisk0\Partition1\starship\texdiag.xex
+log: no net_log.txt beside the .xex, so not over the network
+open: NtCreateFile(game:\cvars.cfg) failed: 0xC0000034
+[2026-10-25 01:32:57.040] [info] [ArchiveManager.cpp:232] Reading archive: game:/./sf64.o2r
+[2026-10-25 01:32:57.341] [info] [ArchiveManager.cpp:264] Adding Archive game:/./sf64.o2r to Archive Manager
+[2026-10-25 01:32:57.405] [info] [ArchiveManager.cpp:232] Reading archive: game:/./starship.o2r
+[2026-10-25 01:32:57.406] [info] [ArchiveManager.cpp:264] Adding Archive game:/./starship.o2r to Archive Manager
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 27299 us
+open: NtCreateFile(game:\capture.txt) failed: 0xC0000034
+gfx_xsdk: programs are kept in game:/shaders/fast3d/23301E9B7CB9C8D7
+[01:32:58.203] [DisplayListPatch.cpp:11] [info] Applying display list patches
+[01:32:58.222] [GenericArrayFactory.cpp:17] [info] GenericArray Type Num: 0
+open: NtCreateFile(game:\gamecontrollerdb.txt) failed: 0xC0000034
+[01:32:58.222] [GenericArrayFactory.cpp:21] [info] GenericArray Count: 283
+[01:32:58.223] [os.cpp:23] [error] Failed add SDL game controller mappings from "./gamecontrollerdb.txt" (Couldn't open ./gamecontrollerdb.txt: No such file or directory)
+Scene Changed!
+Scene Changed!
+texdiag: 866 lookups, 3 misses of 3 keys (0 keys missed more than once, 0 of the misses), 0 evictions, 3 in the cache
+texdiag:   1 misses: addr 0x23e0658 palettes 0x23d32f8 0x0 fmt 2 siz 0 palette 0 bytes 208
+texdiag:   1 misses: addr 0x23e0cf0 palettes 0x23d3488 0x0 fmt 2 siz 0 palette 0 bytes 1664
+texdiag:   1 misses: addr 0x1add7d8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 9472
+texdiag: keys missed once: 3 addresses, 3 first palettes
+gfx_xsdk: 465 frames in 10.0 s (46.4 fps); a frame: 5.8 draws (0.0 skipped), 773 triangles, 16277 floats, 0.126 ms in the backend (0.032 drawing, 0.015 of it copying vertices; 0.000 uploading textures), 3.515 ms from StartFrame to EndFrame, 6.505 ms of GPU time over 464 frames; a draw 3.071 us less its copy
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 4 read), 996 loaded, 3 kept; 3 textures created, 3 uploads of 51 KB; 1398 framebuffer calls
+[01:33:13.682] [AnimFactory.cpp:20] [info] JointSize: 23
+[01:33:13.683] [AnimFactory.cpp:20] [info] JointSize: 23
+[01:33:13.683] [AnimFactory.cpp:20] [info] JointSize: 23
+[01:33:13.684] [AnimFactory.cpp:20] [info] JointSize: 21
+[01:33:13.715] [AnimFactory.cpp:20] [info] JointSize: 19
+texdiag: 30374 lookups, 64 misses of 64 keys (0 keys missed more than once, 0 of the misses), 0 evictions, 67 in the cache
+texdiag:   1 misses: addr 0x2524e60 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 512
+texdiag:   1 misses: addr 0x2485390 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 2048
+texdiag:   1 misses: addr 0x23d10a8 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 2048
+texdiag:   1 misses: addr 0x23e9a38 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 2048
+texdiag:   1 misses: addr 0x23fa430 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 512
+texdiag:   1 misses: addr 0x24c0e20 palettes 0x249d9e0 0x249dae0 fmt 2 siz 1 palette 0 bytes 2016
+texdiag:   1 misses: addr 0x248cb78 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 128
+texdiag:   1 misses: addr 0x248c9d0 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 128
+texdiag: keys missed once: 64 addresses, 8 first palettes
+gfx_xsdk: 508 frames in 10.0 s (50.8 fps); a frame: 64.0 draws (0.0 skipped), 1336 triangles, 30969 floats, 0.344 ms in the backend (0.131 drawing, 0.037 of it copying vertices; 0.001 uploading textures), 6.576 ms from StartFrame to EndFrame, 5.408 ms of GPU time over 508 frames; a draw 1.468 us less its copy
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 3 read), 1647 loaded, 6 kept; 64 textures created, 64 uploads of 253 KB; 1524 framebuffer calls
+texdiag: 63051 lookups, 0 misses of 0 keys (0 keys missed more than once, 0 of the misses), 0 evictions, 67 in the cache
+texdiag: keys missed once: 0 addresses, 0 first palettes
+gfx_xsdk: 398 frames in 10.0 s (39.8 fps); a frame: 162.4 draws (0.0 skipped), 2258 triangles, 55452 floats, 0.367 ms in the backend (0.297 drawing, 0.074 of it copying vertices; 0.000 uploading textures), 11.020 ms from StartFrame to EndFrame, 8.827 ms of GPU time over 398 frames; a draw 1.377 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 1990 loaded, 6 kept; 0 textures created, 0 uploads of 0 KB; 1194 framebuffer calls
+Scene Changed!
+texdiag: 44796 lookups, 11 misses of 11 keys (0 keys missed more than once, 0 of the misses), 0 evictions, 78 in the cache
+texdiag:   1 misses: addr 0x244ad68 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 800
+texdiag:   1 misses: addr 0x25fdeb0 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 640
+texdiag:   1 misses: addr 0x25be570 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 768
+texdiag:   1 misses: addr 0x24bbdc0 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 320
+texdiag:   1 misses: addr 0x261eb78 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 960
+texdiag:   1 misses: addr 0x2598ea8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   1 misses: addr 0x23fbe28 palettes 0x25827a8 0x24a1f58 fmt 2 siz 0 palette 0 bytes 128
+texdiag:   1 misses: addr 0x2400c60 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 256
+texdiag: keys missed once: 11 addresses, 3 first palettes
+gfx_xsdk: 464 frames in 10.0 s (46.4 fps); a frame: 100.5 draws (0.0 skipped), 1732 triangles, 41299 floats, 0.284 ms in the backend (0.196 drawing, 0.052 of it copying vertices; 0.000 uploading textures), 8.229 ms from StartFrame to EndFrame, 7.580 ms of GPU time over 464 frames; a draw 1.434 us less its copy
+gfx_xsdk: in the window: 2 shaders created (0 compiled, 2 read), 2086 loaded, 8 kept; 11 textures created, 11 uploads of 27 KB; 1392 framebuffer calls
+Scene Changed!
+texdiag: 32132 lookups, 22831 misses of 79 keys (78 keys missed more than once, 22830 of the misses), 0 evictions, 76 in the cache
+texdiag:   361 misses: addr 0x2416b38 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 2048
+texdiag:   361 misses: addr 0x26437e0 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 9984
+texdiag:   361 misses: addr 0x23d2230 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 2048
+texdiag:   361 misses: addr 0x82f8e5c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   361 misses: addr 0x23d10a8 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 2048
+texdiag:   361 misses: addr 0x24162d0 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 2048
+texdiag:   361 misses: addr 0x253edf0 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 2048
+texdiag:   361 misses: addr 0x24899f8 palettes 0x0 0x0 fmt 0 siz 2 palette 0 bytes 2048
+texdiag: keys missed once: 1 addresses, 1 first palettes
+gfx_xsdk: 440 frames in 10.0 s (43.9 fps); a frame: 78.1 draws (0.0 skipped), 1227 triangles, 27581 floats, 0.829 ms in the backend (0.150 drawing, 0.036 of it copying vertices; 0.448 uploading textures), 8.261 ms from StartFrame to EndFrame, 7.970 ms of GPU time over 440 frames; a draw 1.450 us less its copy
+gfx_xsdk: in the window: 2 shaders created (0 compiled, 2 read), 3058 loaded, 10 kept; 1 textures created, 22831 uploads of 87034 KB; 1320 framebuffer calls
+texdiag: 69597 lookups, 32090 misses of 84 keys (84 keys missed more than once, 32090 of the misses), 0 evictions, 79 in the cache
+texdiag:   400 misses: addr 0x82f903c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   400 misses: addr 0x82f8f7c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   400 misses: addr 0x82f8fac8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   400 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 2 bytes 104
+texdiag:   400 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 1 bytes 104
+texdiag:   400 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 0 bytes 104
+texdiag:   400 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 3 bytes 104
+texdiag:   400 misses: addr 0x82f8fdc8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag: keys missed once: 0 addresses, 0 first palettes
+gfx_xsdk: 400 frames in 10.0 s (40.0 fps); a frame: 179.0 draws (0.0 skipped), 1548 triangles, 36393 floats, 1.119 ms in the backend (0.288 drawing, 0.059 of it copying vertices; 0.696 uploading textures), 11.049 ms from StartFrame to EndFrame, 9.755 ms of GPU time over 400 frames; a draw 1.279 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 3200 loaded, 10 kept; 3 textures created, 32090 uploads of 99272 KB; 1200 framebuffer calls
+texdiag: 99938 lookups, 31982 misses of 87 keys (87 keys missed more than once, 31982 of the misses), 0 evictions, 85 in the cache
+texdiag:   393 misses: addr 0x82f903c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   393 misses: addr 0x82f8f4c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   393 misses: addr 0x82f8f7c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   393 misses: addr 0x82f8fac8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   393 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 2 bytes 104
+texdiag:   393 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 1 bytes 104
+texdiag:   393 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 0 bytes 104
+texdiag:   393 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 3 bytes 104
+texdiag: keys missed once: 0 addresses, 0 first palettes
+gfx_xsdk: 393 frames in 10.0 s (39.3 fps); a frame: 259.3 draws (0.0 skipped), 1722 triangles, 41626 floats, 1.243 ms in the backend (0.391 drawing, 0.076 of it copying vertices; 0.709 uploading textures), 12.477 ms from StartFrame to EndFrame, 10.087 ms of GPU time over 392 frames; a draw 1.214 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 3144 loaded, 10 kept; 4 textures created, 31982 uploads of 95166 KB; 1179 framebuffer calls
+texdiag: 106356 lookups, 32700 misses of 93 keys (93 keys missed more than once, 32700 of the misses), 0 evictions, 88 in the cache
+texdiag:   386 misses: addr 0x259a600 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 2048
+texdiag:   386 misses: addr 0x82f8f7c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   386 misses: addr 0x82f8fac8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   386 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 2 bytes 104
+texdiag:   386 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 1 bytes 104
+texdiag:   386 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 0 bytes 104
+texdiag:   386 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 3 bytes 104
+texdiag:   386 misses: addr 0x82f8fdc8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag: keys missed once: 0 addresses, 0 first palettes
+gfx_xsdk: 386 frames in 10.0 s (38.6 fps); a frame: 280.5 draws (0.0 skipped), 1722 triangles, 41766 floats, 1.311 ms in the backend (0.418 drawing, 0.079 of it copying vertices; 0.747 uploading textures), 12.993 ms from StartFrame to EndFrame, 10.670 ms of GPU time over 386 frames; a draw 1.209 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 3088 loaded, 10 kept; 3 textures created, 32700 uploads of 100141 KB; 1158 framebuffer calls
+texdiag: 109671 lookups, 31348 misses of 91 keys (91 keys missed more than once, 31348 of the misses), 0 evictions, 86 in the cache
+texdiag:   353 misses: addr 0x82f903c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   353 misses: addr 0x82f8f4c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   353 misses: addr 0x82f8f7c8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   353 misses: addr 0x82f8fac8 palettes 0x0 0x0 fmt 3 siz 1 palette 0 bytes 864
+texdiag:   353 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 1 bytes 104
+texdiag:   353 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 0 bytes 104
+texdiag:   353 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 2 bytes 104
+texdiag:   353 misses: addr 0x2692e38 palettes 0x82ce60d8 0x25f0790 fmt 2 siz 0 palette 3 bytes 104
+texdiag: keys missed once: 0 addresses, 0 first palettes
+gfx_xsdk: 353 frames in 10.0 s (35.2 fps); a frame: 315.7 draws (0.0 skipped), 1810 triangles, 44321 floats, 1.404 ms in the backend (0.463 drawing, 0.087 of it copying vertices; 0.789 uploading textures), 13.702 ms from StartFrame to EndFrame, 12.740 ms of GPU time over 354 frames; a draw 1.191 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read), 2824 loaded, 10 kept; 1 textures created, 31348 uploads of 91734 KB; 1059 framebuffer calls

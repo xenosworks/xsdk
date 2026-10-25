@@ -5184,3 +5184,31 @@ libultraship-xenon marks the cached address with bit 0 of the command's first wo
 (starship:tools/Torch/src/n64/gbi-otr.h:132-133; all 4662 in Starship's archive have it clear). In six runs, three
 with vertex resources below 1 MB, every cached pointer lay inside its resource and every frame drew as the game does
 (`starship_cached_pointer_marked.png`).
+
+## Starship's audio follows its updates, milestone 61 (2026-10-25)
+
+Starship makes its audio a frame a game update: after each update and its drawing, the game wakes its audio thread
+and waits for it (starship:src/port/Game.cpp, `push_frame`; src/port/Engine.cpp, `HandleAudioThread`). An update makes
+two audio frames of 528 or 560 samples at 32 kHz, 560 while the queue holds fewer than libultraship's 2480
+(lus:src/audio/AudioPlayer.h:12), so 30 updates a second make what the console plays and fewer make less. The game
+updates 30 times a second and, interpolating to 60, draws its display list twice an update
+(starship:src/port/Engine.cpp, `ProcessGfxCommands`).
+
+On the console, counting each audio frame the game queued and what the queue held before it, over 100 s from boot
+(`results/2026-10-25-milestone-61/`; the counters, since taken out, are `starship_diagnostics_*.patch` there):
+- **At 60**, the default the port came with, the scenes that drew under 60 made 25.6 to 28.9 updates a second, so
+  28,294 to 31,307 samples a second of the 32,000 played, and the queue was empty before an audio frame up to 92
+  times in 10 s; in the windows at 59.1 to 60 fps its lowest was 0 to 1429 samples (`starship_audio_at_60.log`).
+  The player hears it crackle.
+- **At 30**, the updates held 30.0 a second in every window without a scene load, and the queue was never empty in
+  them (`starship_audio_at_30.log`; `starship_default_30.log` with 30 as starship-xenon's default and the player's
+  settings untouched).
+- **Loading** held one update 130 to 440 ms, in the game's own work (once 351 ms in its audio), in each window where
+  the game loaded a scene's resources: its animation loader logged and 29 to 46 textures were new. The queue ran dry
+  one to four times in each such window at either rate (`starship_update_parts_at_30.log`). An update otherwise took
+  2.5 to 13.8 ms of the game's work, 16 to 26 ms drawing and presenting, the present's wait for the frame's time
+  included, and 3.7 to 5.5 ms of audio, one after the other.
+
+The texture uploads in the heavy scenes, 0.45 to 0.79 ms a frame, are textures the game invalidates every frame: about
+90 of them missed Fast3D's cache once a frame each, with the cache never full and nothing evicted
+(`starship_texture_cache_misses.log`).

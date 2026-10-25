@@ -1,0 +1,130 @@
+diff --git a/src/audio/SDLAudioPlayer.cpp b/src/audio/SDLAudioPlayer.cpp
+index fce0c4a0..4fcae76e 100644
+--- a/src/audio/SDLAudioPlayer.cpp
++++ b/src/audio/SDLAudioPlayer.cpp
+@@ -1,5 +1,6 @@
+ #include "SDLAudioPlayer.h"
+ #include <spdlog/spdlog.h>
++#include <algorithm>
+ 
+ namespace Ship {
+ 
+@@ -34,7 +35,44 @@ int SDLAudioPlayer::Buffered() {
+     return SDL_GetQueuedAudioSize(mDevice) / (sizeof(int16_t) * mNumChannels);
+ }
+ 
++#define XSDK_AUDIO_DIAG 1 // DIAG, not to commit
++#ifdef XSDK_AUDIO_DIAG
++} // namespace Ship
++#include "xsdk/log.h"
++namespace Ship {
++// DIAG: a 10 s window of the game's audio frames: how many, the samples they made against those a second plays, and
++// how often the queue had run dry or was too full to take them.
++static uint32_t sDiagStart, sDiagPlays, sDiagEmpty, sDiagDropped, sDiagMin = 1u << 30;
++static uint64_t sDiagSamples;
++#endif
++
+ void SDLAudioPlayer::Play(const uint8_t* buf, size_t len) {
++#ifdef XSDK_AUDIO_DIAG
++    const int buffered = Buffered();
++    const uint32_t now = SDL_GetTicks();
++    if (sDiagStart == 0) {
++        sDiagStart = now;
++    }
++    sDiagPlays++;
++    sDiagEmpty += buffered == 0;
++    sDiagMin = std::min<uint32_t>(sDiagMin, (uint32_t)buffered);
++    if (buffered < 6000) {
++        sDiagSamples += len / (sizeof(int16_t) * mNumChannels);
++    } else {
++        sDiagDropped++;
++    }
++    if (now - sDiagStart >= 10000) {
++        const double seconds = (now - sDiagStart) / 1000.0;
++        xsdk_log_write("audiodiag: %u frames in %.1f s (%.1f a second), %.0f samples a second of %d played, "
++                       "%u found the queue empty, %u samples queued at the lowest before one, %u dropped as too much",
++                       (unsigned)sDiagPlays, seconds, sDiagPlays / seconds, sDiagSamples / seconds,
++                       (int)GetSampleRate(), (unsigned)sDiagEmpty, (unsigned)sDiagMin, (unsigned)sDiagDropped);
++        sDiagStart = now;
++        sDiagPlays = sDiagEmpty = sDiagDropped = 0;
++        sDiagMin = 1u << 30;
++        sDiagSamples = 0;
++    }
++#endif
+     if (Buffered() < 6000) {
+         // Don't fill the audio buffer too much in case this happens
+         SDL_QueueAudio(mDevice, buf, len);
+diff --git a/src/graphic/Fast3D/interpreter.cpp b/src/graphic/Fast3D/interpreter.cpp
+index 9e2ec263..9f7a8037 100644
+--- a/src/graphic/Fast3D/interpreter.cpp
++++ b/src/graphic/Fast3D/interpreter.cpp
+@@ -39,7 +39,8 @@
+ 
+ #ifdef __XSDK__
+ #include <altivec.h>
+-#ifdef XSDK_FAST3D_VMX_VERIFY
++#define XSDK_FAST3D_TEXTURE_DIAG 1 // DIAG, not to commit
++#if defined(XSDK_FAST3D_VMX_VERIFY) || defined(XSDK_FAST3D_TEXTURE_DIAG)
+ #include "xsdk/log.h"
+ #endif
+ #endif
+@@ -422,9 +423,59 @@ void Interpreter::TextureCacheClear() {
+     mTextureCache.lru.clear();
+ }
+ 
++#ifdef XSDK_FAST3D_TEXTURE_DIAG
++// DIAG: the texture cache's lookups and misses in a 10 s window, logged by gfx_xsdk's window line.
++static std::unordered_map<TextureCacheKey, uint32_t, TextureCacheKey::Hasher> sDiagMisses;
++static uint32_t sDiagLookups, sDiagEvictions;
++static size_t sDiagCacheSize;
++void XsdkTextureDiagLog() {
++    uint32_t misses = 0, repeated = 0, repeatedMisses = 0;
++    std::vector<std::pair<uint32_t, TextureCacheKey>> top;
++    for (const auto& [key, count] : sDiagMisses) {
++        misses += count;
++        if (count > 1) {
++            repeated++;
++            repeatedMisses += count;
++        }
++        top.push_back({ count, key });
++    }
++    std::sort(top.begin(), top.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
++    xsdk_log_write("texdiag: %u lookups, %u misses of %u keys (%u keys missed more than once, %u of the misses), "
++                   "%u evictions, %u in the cache",
++                   (unsigned)sDiagLookups, (unsigned)misses, (unsigned)sDiagMisses.size(), (unsigned)repeated,
++                   (unsigned)repeatedMisses, (unsigned)sDiagEvictions, (unsigned)sDiagCacheSize);
++    for (size_t k = 0; k < top.size() && k < 8; k++) {
++        const TextureCacheKey& key = top[k].second;
++        xsdk_log_write("texdiag:   %u misses: addr %p palettes %p %p fmt %u siz %u palette %u bytes %u",
++                       (unsigned)top[k].first, key.texture_addr, key.palette_addrs[0], key.palette_addrs[1],
++                       (unsigned)key.fmt, (unsigned)key.siz, (unsigned)key.palette_index, (unsigned)key.size_bytes);
++    }
++    // Keys missed once each: how many distinct addresses and palettes they have.
++    std::unordered_map<const uint8_t*, uint32_t> addrs, palettes;
++    for (const auto& [key, count] : sDiagMisses) {
++        if (count == 1) {
++            addrs[key.texture_addr]++;
++            palettes[key.palette_addrs[0]]++;
++        }
++    }
++    xsdk_log_write("texdiag: keys missed once: %u addresses, %u first palettes", (unsigned)addrs.size(),
++                   (unsigned)palettes.size());
++    sDiagMisses.clear();
++    sDiagLookups = sDiagEvictions = 0;
++}
++#endif
++
+ bool Interpreter::TextureCacheLookup(int i, const TextureCacheKey& key) {
+     TextureCacheMap::iterator it = mTextureCache.map.find(key);
+     TextureCacheNode** n = &mRenderingState.mTextures[i];
++#ifdef XSDK_FAST3D_TEXTURE_DIAG
++    sDiagLookups++;
++    sDiagCacheSize = mTextureCache.map.size();
++    if (it == mTextureCache.map.end()) {
++        sDiagMisses[key]++;
++        sDiagEvictions += mTextureCache.map.size() >= TEXTURE_CACHE_MAX_SIZE;
++    }
++#endif
+ 
+     if (it != mTextureCache.map.end()) {
+         mRapi->SelectTexture(i, it->second.texture_id);
