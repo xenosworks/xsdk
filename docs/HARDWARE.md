@@ -5101,3 +5101,18 @@ Step 5 of docs/scope/63-homebrew-store.md: the store's store_check from `hdd:\XS
   `AT_REMOVEDIR` (src/path.c); xsdk has no `rmdir`, and a folder with something left in it stays, its unlink failing
   with 0xC0000101, `STATUS_DIRECTORY_NOT_EMPTY`.
 - store_check passed 21 of 21, each of the fourteen breaks of the store's tests/breaks.py failing the checks it names.
+
+## Launching, and the store updating itself, milestone 63 (2026-10-24)
+
+Step 6 of docs/scope/63-homebrew-store.md: store_check from `hdd:\XSDK\m63s`, the store from `m63ya` and `m63z`
+(logs: `results/2026-10-24-milestone-63-step-6/`):
+- **An app the store installed starts from its own folder with the store's path as launch data:** `xsdk_launch` of
+  `game:\apps\launch-target\launch_target.xex`, a folder inside the store's, with `ExLoadedImageName` and its 0, 63
+  bytes; launch_target found the path and launched the store back by it, and the store started again with launch data.
+  Dropped to no data, launch_target can't come back and says so.
+- **A running title updates itself:** store_check 0.0.0.1 installed 0.0.0.2 over the .xex it ran from, through the
+  `.part` files and the `app.json.pending` to `app.json.part` journal, then `xsdk_launch` of its own
+  `ExLoadedImageName` started the new one, which read 0.0.0.2 from its .xex; the store did the same from 0.1.0.0 to
+  0.2.0.0, its page then saying Running. Step 1 had shown the rename over a running .xex.
+- store_check passed 23 of 23 over its three starts, each of the seventeen breaks of the store's tests/breaks.py
+  failing the checks it names.

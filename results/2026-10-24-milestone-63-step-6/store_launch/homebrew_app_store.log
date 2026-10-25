@@ -1,0 +1,26 @@
+log: game:\homebrew_app_store.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63ya\homebrew_app_store.xex
+log: no net_log.txt beside the .xex, so not over the network
+store: store.txt: url https://localhost:7381/site/launch/catalogue.json, ca game:\test-ca2.crt, resolve localhost:7381:192.168.0.125, apps in game:\apps\, writing each screen
+store: \Device\Harddisk0\Partition1\XSDK\m63ya\homebrew_app_store.xex, title 58534153 version 0.1.0.0
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 20352 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 21730 us
+open: NtCreateFile(game:\app.json.part) failed: 0xC0000034
+open: NtCreateFile(game:\app.json.pending) failed: 0xC0000034
+open: NtCreateFile(game:\catalogue.kept) failed: 0xC0000034
+open: NtCreateFile(game:\apps\launch-target\app.json) failed: 0xC000003A
+open: NtCreateFile(game:\apps\launch-target\launch_target.xex) failed: 0xC000003A
+store: the catalogue, fetched: serial 5 from https://localhost:7381/site/launch/catalogue.json, kept
+store: wrote shot_categories.ppm
+open: NtCreateFile(game:\shots\launch-target.shot) failed: 0xC000003A
+store: wrote shot_apps.ppm
+store: wrote shot_app.ppm
+mkdir: NtCreateFile(game:\apps) failed: 0xC0000035
+open: NtCreateFile(game:\downloads\launch-target-68704d6f.zip.part) failed: 0xC0000034
+open: NtCreateFile(game:\apps\launch-target\app.json) failed: 0xC0000034
+store: launch-target's install: done
+store: wrote shot_installed.ppm
+store: launching game:\apps\launch-target\launch_target.xex
+exit: status 0, launching game:\apps\launch-target\launch_target.xex

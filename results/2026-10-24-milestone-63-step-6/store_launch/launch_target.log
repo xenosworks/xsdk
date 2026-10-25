@@ -1,0 +1,7 @@
+log: game:\launch_target.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63ya\apps\launch-target\launch_target.xex
+log: no net_log.txt beside the .xex, so not over the network
+launch_target: argv[0] "launch_target.xex"
+launch_target: 63 bytes of launch data, the path to go back to \Device\Harddisk0\Partition1\XSDK\m63ya\homebrew_app_store.xex
+launch_target: launching \Device\Harddisk0\Partition1\XSDK\m63ya\homebrew_app_store.xex, the data reversed
+exit: status 0, launching launch:\homebrew_app_store.xex

@@ -1,0 +1,32 @@
+log: game:\store_check.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63s\store_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 17515 us
+store check: libcurl/8.23.0-DEV mbedTLS/3.6.7, title 58534143 version 2
+mkdir: NtCreateFile(game:\check) failed: 0xC0000035
+PASS: catalogue: a signed one fetched is taken and kept
+PASS: catalogue: one with a byte changed is refused, and the kept one shown
+PASS: catalogue: one signed with another key is refused
+PASS: catalogue: a signed one older than the kept one is refused
+PASS: catalogue: with nothing at its address, the kept one is shown
+PASS: catalogue: with nothing at its address and none kept, there's none
+PASS: catalogue: a signed new address is where the next one comes from
+PASS: shots: one fetched is scaled to the page's size, white on its left and red on its right
+PASS: shots: the kept one comes back with the site out of reach
+PASS: shots: one that isn't the signed one is refused
+PASS: installed: an app's .xex at the catalogue's version is installed, an older one's has an update ready
+PASS: installed: a .xex with another title ID isn't the app
+PASS: install: an app installs its files and app.json, and nothing else
+PASS: install: a package that isn't the signed one is refused, and the version installed stays
+PASS: update: replaces the app's files, deletes the one it dropped, and keeps what the app made
+FAIL: remove: deletes app.json's files and app.json, and leaves what the app made
+PASS: remove: with everything, the app's folder goes too
+PASS: install: a file that isn't the one the catalogue signed is refused, and nothing of it is left
+PASS: download: a cut one is taken up where it stopped
+PASS: recover: an install cut before its files were checked is taken back, the installed one left
+PASS: recover: an install cut after its files were checked is finished
+PASS: launch: launch_target, installed and started with store_check's path, came back with it
+PASS: update: store_check updated itself and started again, the .xex it runs from now the newer one
+tests: 22 passed, 1 failed
+exit: status 1

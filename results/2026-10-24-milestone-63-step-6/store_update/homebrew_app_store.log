@@ -1,0 +1,20 @@
+log: game:\homebrew_app_store.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63z\homebrew_app_store.xex
+log: no net_log.txt beside the .xex, so not over the network
+mkdir: NtCreateFile(game:\apps) failed: 0xC0000035
+store: store.txt: url https://localhost:7381/site/selfstore/catalogue.json, ca game:\test-ca2.crt, resolve localhost:7381:192.168.0.125, apps in game:\apps\, writing each screen
+store: \Device\Harddisk0\Partition1\XSDK\m63z\homebrew_app_store.xex, title 58534153 version 0.2.0.0
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 28196 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 21476 us
+open: NtCreateFile(game:\app.json.part) failed: 0xC0000034
+open: NtCreateFile(game:\app.json.pending) failed: 0xC0000034
+store: the catalogue, fetched: serial 5 from https://localhost:7381/site/selfstore/catalogue.json, kept
+store: wrote shot_categories.ppm
+store: wrote shot_apps.ppm
+store: wrote shot_app.ppm
+store: wrote shot_installed.ppm
+store: wrote shot_warning.ppm
+store: done
+exit: status 0

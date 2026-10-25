@@ -1,0 +1,6 @@
+log: game:\launch_target.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63s\check\apps\launch-target\launch_target.xex
+log: no net_log.txt beside the .xex, so not over the network
+launch_target: argv[0] "launch_target.xex"
+launch_target: 0 bytes of launch data, the path to go back to missing
+exit: status 1
