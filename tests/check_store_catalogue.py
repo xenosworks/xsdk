@@ -96,6 +96,8 @@ def check_catalogue(work, xex):
     packages = work / "packages"
     packages.mkdir()
     catalogue = work / "catalogue.json"
+    (work / "shots").mkdir()
+    (work / "shots" / "probe.png").write_bytes(b"\x89PNG\r\n\x1a\n" + bytes(64))
     url = "https://github.com/xenosworks/xsdk/releases/download/v1/probe-replace-0.0.0.2.zip"
     write_catalogue(catalogue, url)
     zip_path = packages / "probe-replace-0.0.0.2.zip"
@@ -124,6 +126,9 @@ def check_catalogue(work, xex):
 
     with zipfile.ZipFile(zip_path, "a") as archive:
         archive.comment = b"changed"
+    (work / "shots" / "probe.png").write_bytes(b"\x89PNG\r\n\x1a\n" + bytes(63) + b"\x01")
+    check("catalogue: a screenshot changed after signing is refused", tool("check", catalogue).returncode == 1)
+    (work / "shots" / "probe.png").write_bytes(b"\x89PNG\r\n\x1a\n" + bytes(64))
     check("catalogue: a package changed outside its files, its comment, is refused",
           tool("check", catalogue, "--packages", packages).returncode == 1)
     zip_path.write_bytes(first_zip)

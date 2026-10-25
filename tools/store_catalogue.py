@@ -7,23 +7,26 @@
                          zips the app's folder, then writes into the app's entry the zip's size and SHA-256, each
                          file's, and the title ID and version of the .xex the entry launches
   sign <catalogue> <key.pem>
-                         raises the serial, then signs the file into <catalogue>.sig
+                         writes each screenshot's SHA-256, from the file beside the catalogue, raises the serial,
+                         then signs the file into <catalogue>.sig
   check <catalogue> [--public <key.pub.pem>] [--packages <folder>]
-                         checks the entries, then the signature, then the packages the entries name, found in the
-                         folder under their URL's last part
+                         checks the entries and the screenshots beside the catalogue, then the signature, then the
+                         packages the entries name, found in the folder under their URL's last part
 
 The catalogue is JSON:
   {"format": 1, "serial": <raised by each signing; the store refuses one lower than the last it took>,
    "url": "<where it's served; a signed new one moves the store there>",
    "categories": [{"id", "name", "sentence"}],
    "apps": [{"id", "name", "author", "category", "sentence", "needs", "changes", "source", "license",
-             "screenshot": "<a .png or .jpg beside the catalogue>", "title_id": "<8 hex digits>",
+             "screenshot": "<a .png or .jpg beside the catalogue>", "screenshot_sha256": "<sign writes it>",
+             "title_id": "<8 hex digits>",
              "version": "1.2.300.4", "version_number": <packed as the .xex packs it>,
              "launch": "<the .xex to start, among the files>", "package": {"url", "size", "sha256"},
              "files": [{"path", "size", "sha256"}]}]}
 The signature is ECDSA on P-256 over the file's SHA-256, DER-encoded, as Mbed TLS's mbedtls_pk_verify takes it. An
 app installs to hdd:\\apps\\<id>\\, each file written as <name>.part first, so a name has 37 characters at most: FATX
-takes 42 (docs/HARDWARE.md, "Shaders compiled as the game asks")."""
+takes 42 (docs/HARDWARE.md, "Shaders compiled as the game asks"). A screenshot is a PNG or JPEG of 2 MB at most,
+which the store decodes only once its SHA-256 is the signed one."""
 
 import argparse
 import base64
@@ -59,6 +62,8 @@ ID = re.compile(r"[a-z0-9][a-z0-9-]{0,31}")
 TITLE_ID = re.compile(r"[0-9A-F]{8}")
 SHA256 = re.compile(r"[0-9a-f]{64}")
 NAME_BYTES = 37
+SCREENSHOT_BYTES = 2 * 1024 * 1024
+SCREENSHOT_MAGIC = (b"\x89PNG\r\n\x1a\n", b"\xff\xd8\xff")
 NOT_IN_NAMES = set('\\/:*?"<>|')
 # Fixed, so the same files always make the same zip.
 ZIP_TIME = (1980, 1, 1, 0, 0, 0)
@@ -269,6 +274,8 @@ def check_app(app, categories, problems):
     screenshot = app.get("screenshot")
     if path_problem(screenshot) or not str(screenshot).lower().endswith((".png", ".jpg", ".jpeg")):
         problems.append(f"{where}: screenshot isn't a .png or .jpg path beside the catalogue")
+    if not SHA256.fullmatch(str(app.get("screenshot_sha256"))):
+        problems.append(f"{where}: screenshot_sha256 isn't a lower-case SHA-256; sign writes it")
     if not isinstance(app.get("title_id"), str) or not TITLE_ID.fullmatch(app["title_id"]):
         problems.append(f"{where}: title_id isn't 8 upper-case hex digits")
     try:
@@ -334,6 +341,26 @@ def check_entries(catalogue):
             problems.append(f"app {app.get('id')!r} comes twice")
         ids.add(app.get("id"))
     return problems
+
+
+def read_screenshot(folder, app):
+    """The screenshot's bytes beside the catalogue, or why they can't be shown."""
+    try:
+        data = (folder / app["screenshot"]).read_bytes()
+    except OSError as error:
+        return f"app {app['id']!r}: screenshot {app['screenshot']}: {error.strerror}"
+    if len(data) > SCREENSHOT_BYTES or not data.startswith(SCREENSHOT_MAGIC):
+        return f"app {app['id']!r}: screenshot {app['screenshot']} isn't a PNG or JPEG of 2 MB at most"
+    return data
+
+
+def check_screenshots(catalogue, folder, problems):
+    for app in catalogue["apps"]:
+        data = read_screenshot(folder, app)
+        if isinstance(data, str):
+            problems.append(data)
+        elif sha256(data).hex() != app["screenshot_sha256"]:
+            problems.append(f"app {app['id']!r}: screenshot {app['screenshot']} isn't the one signed")
 
 
 def package_name(app):
@@ -431,6 +458,12 @@ def pack(args):
 
 def sign_catalogue(args):
     catalogue = read_catalogue(args.catalogue)
+    for app in catalogue.get("apps", []):
+        if isinstance(app, dict) and not path_problem(app.get("screenshot")):
+            data = read_screenshot(args.catalogue.parent, app)
+            if isinstance(data, str):
+                fail(f"not signed: {data}")
+            app["screenshot_sha256"] = sha256(data).hex()
     problems = check_entries(catalogue)
     if problems:
         fail("not signed: " + "; ".join(problems))
@@ -450,6 +483,8 @@ def check(args):
     data = args.catalogue.read_bytes()
     catalogue = read_catalogue(args.catalogue)
     problems = check_entries(catalogue)
+    if not problems:
+        check_screenshots(catalogue, args.catalogue.parent, problems)
     if args.public:
         try:
             signature = read_signature(args.catalogue.with_name(args.catalogue.name + ".sig").read_bytes())

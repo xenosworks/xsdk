@@ -1,0 +1,16 @@
+log: game:\homebrew_app_store.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63u\homebrew_app_store.xex
+log: no net_log.txt beside the .xex, so not over the network
+store: store.txt: url https://localhost:7379/site/good/catalogue.json, ca game:\test-ca2.crt, resolve localhost:7381:192.168.0.125, writing each screen
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 32670 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 21157 us
+open: NtCreateFile(\Device\Harddisk0\Partition1\apps\alpha\alpha.xex) failed: 0xC000003A
+open: NtCreateFile(\Device\Harddisk0\Partition1\apps\beta\beta.xex) failed: 0xC000003A
+store: the catalogue, kept, as fetching failed: https://localhost:7379/site/good/catalogue.json: Could not connect to server: Failed to connect to localhost:7379 after 0 ms: Could not connect to server
+store: wrote shot_categories.ppm
+store: wrote shot_apps.ppm
+store: wrote shot_app.ppm
+store: done
+exit: status 0

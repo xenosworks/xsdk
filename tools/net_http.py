@@ -6,7 +6,9 @@ HTTPS on the next, with Mbed TLS's test certificate and key for localhost. It se
 - /files/data_<N>.bin, N bytes, byte i being (i * 31 + 7) & 0xFF, with Range's "bytes=a-" and "bytes=a-b";
 - /redirect, a 302 to /files/data_4096.bin; /stall, headers with a Content-Length, then nothing until the client
   closes; /drop/data_<N>.bin, headers and half the body, then the connection closed;
-- /launch_target.xex, build/launch_target.xex.
+- /launch_target.xex, build/launch_target.xex;
+- /site/<path>, the file at <path> in --site's folder, such as a store catalogue's test site
+  (docs/scope/63-homebrew-store.md).
 --break changes one thing, for a check broken on purpose: "byte", one byte of every file; "range", Range ignored, the
 whole file sent with 200; "catalog", one entry's size; "nosend", launch_target built to launch back with no data
 (tests/breaks/m56). Logs each request; runs until stopped, or for --seconds."""
@@ -20,6 +22,7 @@ import re
 import ssl
 import threading
 import time
+import urllib.parse
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 LAUNCH_TARGET = ROOT / "build" / "launch_target.xex"
@@ -28,6 +31,7 @@ LAUNCH_TARGET_NOSEND = ROOT / "build" / "m56-breaks" / "nosend" / "launch_target
 CERTIFICATES = ROOT.parent / "mbedtls-xenon" / "framework" / "data_files"
 CATALOG_SIZES = (4096, 65536, 1048576, 8388608)
 MAX_FILE_BYTES = 256 * 1024 * 1024
+SITE_TYPES = {".json": "application/json", ".png": "image/png", ".jpg": "image/jpeg", ".zip": "application/zip"}
 CHUNK_BYTES = 65536
 STALL_BYTES = 4096
 HANDLER_TIMEOUT_S = 30
@@ -102,6 +106,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self.send_headers(302, 0, headers=[("Location", "/files/data_4096.bin")])
         elif path == "/stall":
             self.stall()
+        elif path.startswith("/site/") and self.server.site:
+            self.send_site_file(urllib.parse.unquote(path[len("/site/"):]))
         elif path == "/launch_target.xex":
             target = self.server.launch_target()
             if target.is_file():
@@ -151,6 +157,14 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 f"{stop - start} of {size} bytes")
             self.close_connection = True
 
+    def send_site_file(self, name):
+        root = self.server.site.resolve()
+        path = (root / name).resolve()
+        if root not in path.parents or not path.is_file():
+            self.send_error(404)
+            return
+        self.send_body(path.read_bytes(), SITE_TYPES.get(path.suffix.lower(), "application/octet-stream"))
+
     def stall(self):
         self.send_headers(200, STALL_BYTES)
         self.close_connection = True
@@ -166,12 +180,13 @@ class Handler(http.server.BaseHTTPRequestHandler):
 
 
 class Server(http.server.ThreadingHTTPServer):
-    def __init__(self, port, context, break_name, file_hashes):
+    def __init__(self, port, context, break_name, file_hashes, site):
         super().__init__(("", port), Handler)
         self.scheme = "https" if context else "http"
         self.context = context
         self.break_name = break_name
         self.file_hashes = file_hashes
+        self.site = site
 
     # Each connection wrapped as it's accepted, as a wrapped listening socket fails on some Pythons for Windows.
     def get_request(self):
@@ -203,6 +218,7 @@ def main():
     parser.add_argument("--break", dest="break_name", choices=BREAKS, help="one thing broken on purpose")
     parser.add_argument("--certificates", type=pathlib.Path, default=CERTIFICATES,
                         help="the folder with server5.crt and server5.key, mbedtls-xenon's framework/data_files")
+    parser.add_argument("--site", type=pathlib.Path, help="a folder served under /site/")
     arguments = parser.parse_args()
     assert pattern(250, 262) == bytes((i * 31 + 7) & 0xFF for i in range(250, 262))
 
@@ -212,8 +228,8 @@ def main():
         parser.error(f"no {certificate}: give --certificates mbedtls-xenon's framework/data_files")
     context.load_cert_chain(certificate, arguments.certificates / "server5.key")
     file_hashes = {size: file_hash(size) for size in CATALOG_SIZES}
-    http_server = Server(arguments.port, None, arguments.break_name, file_hashes)
-    https_server = Server(arguments.port + 1, context, arguments.break_name, file_hashes)
+    http_server = Server(arguments.port, None, arguments.break_name, file_hashes, arguments.site)
+    https_server = Server(arguments.port + 1, context, arguments.break_name, file_hashes, arguments.site)
     for server in (http_server, https_server):
         threading.Thread(target=server.serve_forever, daemon=True).start()
     log(f"HTTP on port {arguments.port}, HTTPS on {arguments.port + 1}"

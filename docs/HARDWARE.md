@@ -5067,3 +5067,20 @@ Step 1 of docs/scope/63-homebrew-store.md, from `hdd:\XSDK\m63` and `m63c` (logs
   (mbedtls-xenon:library/ssl_ciphersuites.c:51-54), and from the PC (OpenSSL, TLS 1.2) both hosts take whichever of
   ChaCha20-Poly1305 and AES-GCM is offered first. One run, beside Cloudflare's 7.9 MB/s in the same run; curl_check's 13
   checks passed (`curl_check`).
+
+## The store's catalogue and screenshots, milestone 63 (2026-10-24)
+
+Step 4 of docs/scope/63-homebrew-store.md: the Homebrew App Store and its store_check, from `hdd:\XSDK\m63s` and
+`m63u`, against tools/net_http.py `--site` serving the store's test site (logs:
+`results/2026-10-24-milestone-63-step-4/`):
+- **Mbed TLS takes tools/store_catalogue.py's signatures:** the catalogue signed by the tool's standard-library ECDSA,
+  P-256 with RFC 6979's nonces, verifies with `mbedtls_pk_verify` on the console, and one with a byte changed or signed
+  with another key doesn't. store_check passed 12 of 12, each of the seven breaks of the store's tests/breaks.py
+  failing the checks it names.
+- **A catalogue kept on `hdd:` through `.part`, `fsync` and `rename` comes back** when the address answers nothing, an
+  older signed one is refused, and a signed new address is followed on the next fetch.
+- **stb_image 2.30 decodes a 1280x720 PNG on the console,** which the store scales to 768x432 and keeps, so the next
+  showing reads it off the disk without the network; one whose SHA-256 isn't the signed one is never decoded.
+- **The store draws its three screens at 720 lines** with Archivo through imgui-xenon, identical frames on two runs
+  (`store/`), and shows the kept catalogue and screenshot with a notice when the address answers nothing
+  (`store_offline/`).

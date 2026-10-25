@@ -1,0 +1,52 @@
+log: game:\store_check.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63s\store_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 31316 us
+store check: libcurl/8.23.0-DEV mbedTLS/3.6.7
+mkdir: NtCreateFile(game:\check) failed: 0xC0000035
+unlink: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: good: source 0, serial 5: serial 5 from https://localhost:7381/site/good/catalogue.json, kept
+PASS: catalogue: a signed one fetched is taken and kept
+store check: byte: source 3, serial 0: https://localhost:7381/site/byte/catalogue.json isn't signed with the store's key
+FAIL: catalogue: one with a byte changed is refused, and the kept one shown
+store check: otherkey: source 3, serial 0: https://localhost:7381/site/otherkey/catalogue.json isn't signed with the store's key
+FAIL: catalogue: one signed with another key is refused
+store check: old: source 0, serial 4: serial 4 from https://localhost:7381/site/old/catalogue.json, kept
+FAIL: catalogue: a signed one older than the kept one is refused
+store check: a closed port: source 3: https://localhost:7379/site/good/catalogue.json: Could not connect to server: Failed to connect to localhost:7379 after 0 ms: Could not connect to server
+FAIL: catalogue: with nothing at its address, the kept one is shown
+unlink: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+PASS: catalogue: with nothing at its address and none kept, there's none
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: moved: source 0, serial 6: serial 6 from https://localhost:7381/site/moved/catalogue.json, kept
+store check: the kept address: source 3, serial 0: https://xenosworks.github.io/homebrew-app-catalogue/catalogue.json: SSL peer certificate or SSH remote key was not OK: mbedTLS: The certificate is not correctly signed by the trusted CA
+
+FAIL: catalogue: a signed new address is where the next one comes from
+unlink: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: good: source 0, serial 5: serial 5 from https://localhost:7381/site/good/catalogue.json, kept
+open: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+mkdir: NtCreateFile(game:\check\shots) failed: 0xC0000035
+store check: alpha's screenshot: had
+PASS: shots: one fetched is scaled to the page's size, white on its left and red on its right
+PASS: shots: the kept one comes back with the site out of reach
+open: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+store check: beta's screenshot: not had: https://localhost:7381/site/good/shots/beta.png isn't the screenshot the catalogue signed
+PASS: shots: one that isn't the signed one is refused
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: good: source 0, serial 5: serial 5 from https://localhost:7381/site/good/catalogue.json, kept
+mkdir: NtCreateFile(game:\check\apps) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\apps\alpha) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\apps\beta) failed: 0xC0000035
+PASS: installed: an app's .xex at the catalogue's version is installed, an older one's has an update ready
+mkdir: NtCreateFile(game:\check\apps\beta) failed: 0xC0000035
+PASS: installed: a .xex with another title ID isn't the app
+tests: 7 passed, 5 failed
+exit: status 1
