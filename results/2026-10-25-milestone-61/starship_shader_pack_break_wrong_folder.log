@@ -1,0 +1,46 @@
+log: game:\pack_wrong.log
+log: named after \Device\Harddisk0\Partition1\starship\pack_wrong.xex
+log: no net_log.txt beside the .xex, so not over the network
+open: NtCreateFile(game:\cvars.cfg) failed: 0xC0000034
+[2026-10-25 10:07:12.405] [info] [ArchiveManager.cpp:232] Reading archive: game:/./sf64.o2r
+[2026-10-25 10:07:12.705] [info] [ArchiveManager.cpp:264] Adding Archive game:/./sf64.o2r to Archive Manager
+[2026-10-25 10:07:12.771] [info] [ArchiveManager.cpp:232] Reading archive: game:/./starship.o2r
+[2026-10-25 10:07:12.786] [info] [ArchiveManager.cpp:264] Adding Archive game:/./starship.o2r to Archive Manager
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 22162 us
+open: NtCreateFile(game:\capture.txt) failed: 0xC0000034
+gfx_xsdk: programs are kept in game:/shaders/fast3d/23301E9B7CB9C8D7
+gfx_xsdk: the game's shader pack holds 18 programs for 0000000000000000, not these templates or compilers: it isn't used
+[10:07:13.597] [DisplayListPatch.cpp:11] [info] Applying display list patches
+[10:07:13.611] [GenericArrayFactory.cpp:17] [info] GenericArray Type Num: 0
+open: NtCreateFile(game:\gamecontrollerdb.txt) failed: 0xC0000034
+[10:07:13.611] [GenericArrayFactory.cpp:21] [info] GenericArray Count: 283
+[10:07:13.612] [os.cpp:23] [error] Failed add SDL game controller mappings from "./gamecontrollerdb.txt" (Couldn't open ./gamecontrollerdb.txt: No such file or directory)
+open: NtCreateFile(game:\input_script.txt) failed: 0xC0000034
+Scene Changed!
+Scene Changed!
+gfx_xsdk: 261 frames in 10.0 s (26.1 fps); a frame: 5.8 draws (0.0 skipped), 781 triangles, 16427 floats, 0.172 ms in the backend (0.035 drawing, 0.015 of it copying vertices; 0.000 uploading textures), 3.337 ms from StartFrame to EndFrame, 1.280 ms of GPU time over 260 frames; a draw 3.512 us less its copy
+gfx_xsdk: in the window: 3 shaders created (0 compiled, 4 read, 0 of them from the pack), 555 loaded, 3 kept; 3 textures created, 3 uploads of 51 KB; 786 framebuffer calls
+gfx_xsdk: 298 frames in 10.0 s (29.8 fps); a frame: 14.8 draws (0.0 skipped), 902 triangles, 19122 floats, 0.082 ms in the backend (0.048 drawing, 0.019 of it copying vertices; 0.000 uploading textures), 3.695 ms from StartFrame to EndFrame, 4.409 ms of GPU time over 298 frames; a draw 1.966 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 794 loaded, 3 kept; 4 textures created, 4 uploads of 56 KB; 894 framebuffer calls
+gfx_xsdk: 295 frames in 10.0 s (29.4 fps); a frame: 31.9 draws (0.0 skipped), 1078 triangles, 23784 floats, 0.217 ms in the backend (0.073 drawing, 0.026 of it copying vertices; 0.002 uploading textures), 5.000 ms from StartFrame to EndFrame, 2.165 ms of GPU time over 295 frames; a draw 1.471 us less its copy
+gfx_xsdk: in the window: 2 shaders created (0 compiled, 2 read, 0 of them from the pack), 913 loaded, 5 kept; 37 textures created, 37 uploads of 100 KB; 885 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 43.5 draws (0.0 skipped), 1005 triangles, 22142 floats, 0.130 ms in the backend (0.092 drawing, 0.027 of it copying vertices; 0.001 uploading textures), 5.255 ms from StartFrame to EndFrame, 5.391 ms of GPU time over 300 frames; a draw 1.486 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 1192 loaded, 5 kept; 19 textures created, 19 uploads of 28 KB; 900 framebuffer calls
+[10:08:03.333] [AnimFactory.cpp:20] [info] JointSize: 23
+[10:08:03.339] [AnimFactory.cpp:20] [info] JointSize: 23
+[10:08:03.666] [AnimFactory.cpp:20] [info] JointSize: 23
+[10:08:03.696] [AnimFactory.cpp:20] [info] JointSize: 21
+gfx_xsdk: 293 frames in 10.2 s (28.9 fps); a frame: 65.0 draws (0.0 skipped), 1095 triangles, 25019 floats, 0.213 ms in the backend (0.119 drawing, 0.034 of it copying vertices; 0.002 uploading textures), 5.645 ms from StartFrame to EndFrame, 4.121 ms of GPU time over 293 frames; a draw 1.309 us less its copy
+gfx_xsdk: in the window: 2 shaders created (0 compiled, 2 read, 0 of them from the pack), 1615 loaded, 7 kept; 46 textures created, 46 uploads of 135 KB; 879 framebuffer calls
+gfx_xsdk: 302 frames in 10.0 s (30.1 fps); a frame: 86.9 draws (0.0 skipped), 860 triangles, 38592 floats, 0.193 ms in the backend (0.159 drawing, 0.050 of it copying vertices; 0.000 uploading textures), 5.958 ms from StartFrame to EndFrame, 6.049 ms of GPU time over 302 frames; a draw 1.257 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 1963 loaded, 7 kept; 1 textures created, 1 uploads of 7 KB; 906 framebuffer calls
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 57.2 draws (0.0 skipped), 563 triangles, 25251 floats, 0.137 ms in the backend (0.111 drawing, 0.034 of it copying vertices; 0.000 uploading textures), 5.181 ms from StartFrame to EndFrame, 5.623 ms of GPU time over 300 frames; a draw 1.348 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 1302 loaded, 7 kept; 2 textures created, 2 uploads of 15 KB; 900 framebuffer calls
+[10:08:32.524] [AnimFactory.cpp:20] [info] JointSize: 19
+gfx_xsdk: 291 frames in 10.0 s (29.1 fps); a frame: 94.5 draws (0.0 skipped), 1080 triangles, 41431 floats, 0.238 ms in the backend (0.168 drawing, 0.054 of it copying vertices; 0.001 uploading textures), 6.291 ms from StartFrame to EndFrame, 5.298 ms of GPU time over 291 frames; a draw 1.202 us less its copy
+gfx_xsdk: in the window: 1 shaders created (0 compiled, 1 read, 0 of them from the pack), 2053 loaded, 8 kept; 29 textures created, 29 uploads of 80 KB; 873 framebuffer calls
+CAMERA 1 SKIPED: 0
+gfx_xsdk: 300 frames in 10.0 s (30.0 fps); a frame: 104.1 draws (0.0 skipped), 796 triangles, 20548 floats, 0.192 ms in the backend (0.157 drawing, 0.039 of it copying vertices; 0.001 uploading textures), 7.042 ms from StartFrame to EndFrame, 7.111 ms of GPU time over 300 frames; a draw 1.137 us less its copy
+gfx_xsdk: in the window: 0 shaders created (0 compiled, 0 read, 0 of them from the pack), 2394 loaded, 8 kept; 8 textures created, 8 uploads of 40 KB; 900 framebuffer calls
+CAMERA 1 SKIPED: 1
