@@ -8,7 +8,8 @@ HTTPS on the next, with Mbed TLS's test certificate and key for localhost. It se
   closes; /drop/data_<N>.bin, headers and half the body, then the connection closed;
 - /launch_target.xex, build/launch_target.xex;
 - /site/<path>, the file at <path> in --site's folder, such as a store catalogue's test site
-  (docs/scope/63-homebrew-store.md).
+  (docs/scope/63-homebrew-store.md), with Range as /files/ has it; /site-drop/<path>, half of it, then the connection
+  closed.
 --break changes one thing, for a check broken on purpose: "byte", one byte of every file; "range", Range ignored, the
 whole file sent with 200; "catalog", one entry's size; "nosend", launch_target built to launch back with no data
 (tests/breaks/m56). Logs each request; runs until stopped, or for --seconds."""
@@ -107,7 +108,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
         elif path == "/stall":
             self.stall()
         elif path.startswith("/site/") and self.server.site:
-            self.send_site_file(urllib.parse.unquote(path[len("/site/"):]))
+            self.send_site_file(urllib.parse.unquote(path[len("/site/"):]), drop=False)
+        elif path.startswith("/site-drop/") and self.server.site:
+            self.send_site_file(urllib.parse.unquote(path[len("/site-drop/"):]), drop=True)
         elif path == "/launch_target.xex":
             target = self.server.launch_target()
             if target.is_file():
@@ -157,13 +160,27 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 f"{stop - start} of {size} bytes")
             self.close_connection = True
 
-    def send_site_file(self, name):
+    def send_site_file(self, name, drop):
         root = self.server.site.resolve()
         path = (root / name).resolve()
         if root not in path.parents or not path.is_file():
             self.send_error(404)
             return
-        self.send_body(path.read_bytes(), SITE_TYPES.get(path.suffix.lower(), "application/octet-stream"))
+        data = path.read_bytes()
+        part = (0, len(data), 200) if drop else self.asked_range(len(data))
+        if part is None:
+            self.send_headers(416, 0, headers=[("Content-Range", f"bytes */{len(data)}")])
+            return
+        start, end, status = part
+        headers = [("Accept-Ranges", "bytes")]
+        if status == 206:
+            headers.append(("Content-Range", f"bytes {start}-{end - 1}/{len(data)}"))
+        self.send_headers(status, end - start, SITE_TYPES.get(path.suffix.lower(), "application/octet-stream"), headers)
+        self.wfile.write(data[start:start + (end - start) // 2] if drop else data[start:end])
+        if drop:
+            log(f"{self.server.scheme} {self.client_address[0]}:{self.client_address[1]}: dropped after "
+                f"{(end - start) // 2} of {len(data)} bytes")
+            self.close_connection = True
 
     def stall(self):
         self.send_headers(200, STALL_BYTES)

@@ -5084,3 +5084,20 @@ Step 4 of docs/scope/63-homebrew-store.md: the Homebrew App Store and its store_
 - **The store draws its three screens at 720 lines** with Archivo through imgui-xenon, identical frames on two runs
   (`store/`), and shows the kept catalogue and screenshot with a notice when the address answers nothing
   (`store_offline/`).
+
+## Installing, updating and removing, milestone 63 (2026-10-24)
+
+Step 5 of docs/scope/63-homebrew-store.md: the store's store_check from `hdd:\XSDK\m63s` against tools/net_http.py
+`--site`, and the store from `m63v` (logs: `results/2026-10-24-milestone-63-step-5/`):
+- **miniz 3.1.2 unzips on the console** from memory, its byte order set big-endian, each file streamed to its `.part`
+  through a SHA-256 checked against the catalogue's; a package whose SHA-256 isn't the signed one is never opened, and
+  one file signed with a wrong hash leaves nothing of the install behind.
+- **A download cut at half is taken up with a Range:** curl's `CURLOPT_RESUME_FROM_LARGE` from what the writer thread
+  had put in the `.part`, net_http.py answering 206 for the other 134 of 268 bytes.
+- **The journal holds:** `app.json.pending` renamed `app.json.part` is the commit point; a cut install laid out before
+  it is taken back on the next start and one after it finished, the rename replacing app.json and each file as on
+  2026-10-14 ("Files renamed on the console").
+- **`remove` takes an empty folder as well as a file,** newlib's `remove` reaching xsdk's `unlinkat` without
+  `AT_REMOVEDIR` (src/path.c); xsdk has no `rmdir`, and a folder with something left in it stays, its unlink failing
+  with 0xC0000101, `STATUS_DIRECTORY_NOT_EMPTY`.
+- store_check passed 21 of 21, each of the fourteen breaks of the store's tests/breaks.py failing the checks it names.

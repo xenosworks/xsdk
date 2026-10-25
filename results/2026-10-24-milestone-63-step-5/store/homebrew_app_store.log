@@ -1,0 +1,28 @@
+log: game:\homebrew_app_store.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63w\homebrew_app_store.xex
+log: no net_log.txt beside the .xex, so not over the network
+store: store.txt: url https://localhost:7381/site/good/catalogue.json, ca game:\test-ca2.crt, resolve localhost:7381:192.168.0.125, apps in game:\apps\, writing each screen
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 26294 us
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 32322 us
+open: NtCreateFile(game:\catalogue.kept) failed: 0xC0000034
+open: NtCreateFile(game:\apps\alpha\app.json) failed: 0xC000003A
+open: NtCreateFile(game:\apps\alpha\alpha.xex) failed: 0xC000003A
+open: NtCreateFile(game:\apps\beta\app.json) failed: 0xC000003A
+open: NtCreateFile(game:\apps\beta\beta.xex) failed: 0xC000003A
+store: the catalogue, fetched: serial 5 from https://localhost:7381/site/good/catalogue.json, kept
+store: wrote shot_categories.ppm
+open: NtCreateFile(game:\shots\alpha.shot) failed: 0xC000003A
+store: wrote shot_apps.ppm
+store: wrote shot_app.ppm
+mkdir: NtCreateFile(game:\apps) failed: 0xC0000035
+open: NtCreateFile(game:\downloads\alpha-2d314cb8.zip.part) failed: 0xC0000034
+open: NtCreateFile(game:\apps\alpha\app.json) failed: 0xC0000034
+store: alpha's install: done
+store: wrote shot_installed.ppm
+open: NtCreateFile(game:\shots\beta.shot) failed: 0xC0000034
+store: beta's screenshot: https://localhost:7381/site/good/shots/beta.png isn't the screenshot the catalogue signed
+store: wrote shot_warning.ppm
+store: done
+exit: status 0

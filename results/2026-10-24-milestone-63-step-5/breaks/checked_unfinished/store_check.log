@@ -1,0 +1,125 @@
+log: game:\store_check.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m63s\store_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 32417 us
+store check: libcurl/8.23.0-DEV mbedTLS/3.6.7
+mkdir: NtCreateFile(game:\check) failed: 0xC0000035
+unlink: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: good: source 0, serial 5: serial 5 from https://localhost:7381/site/good/catalogue.json, kept
+PASS: catalogue: a signed one fetched is taken and kept
+store check: byte: source 2, serial 5: https://localhost:7381/site/byte/catalogue.json isn't signed with the store's key
+PASS: catalogue: one with a byte changed is refused, and the kept one shown
+store check: otherkey: source 2, serial 5: https://localhost:7381/site/otherkey/catalogue.json isn't signed with the store's key
+PASS: catalogue: one signed with another key is refused
+store check: old: source 2, serial 5: https://localhost:7381/site/old/catalogue.json is serial 4, older than the kept one's 5
+PASS: catalogue: a signed one older than the kept one is refused
+store check: a closed port: source 1: https://localhost:7379/site/good/catalogue.json: Could not connect to server: Failed to connect to localhost:7379 after 0 ms: Could not connect to server
+PASS: catalogue: with nothing at its address, the kept one is shown
+unlink: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+PASS: catalogue: with nothing at its address and none kept, there's none
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: moved: source 0, serial 6: serial 6 from https://localhost:7381/site/moved/catalogue.json, kept
+store check: the kept address: source 0, serial 7: serial 7 from https://localhost:7381/site/moved_to/catalogue.json, kept
+PASS: catalogue: a signed new address is where the next one comes from
+unlink: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: good: source 0, serial 5: serial 5 from https://localhost:7381/site/good/catalogue.json, kept
+open: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+mkdir: NtCreateFile(game:\check\shots) failed: 0xC0000035
+store check: alpha's screenshot: had
+PASS: shots: one fetched is scaled to the page's size, white on its left and red on its right
+PASS: shots: the kept one comes back with the site out of reach
+open: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+store check: beta's screenshot: not had: https://localhost:7381/site/good/shots/beta.png isn't the screenshot the catalogue signed
+PASS: shots: one that isn't the signed one is refused
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: good: source 0, serial 5: serial 5 from https://localhost:7381/site/good/catalogue.json, kept
+mkdir: NtCreateFile(game:\check\apps) failed: 0xC0000035
+open: NtCreateFile(game:\check\apps\alpha\app.json) failed: 0xC0000034
+open: NtCreateFile(game:\check\apps\beta\app.json) failed: 0xC0000034
+PASS: installed: an app's .xex at the catalogue's version is installed, an older one's has an update ready
+mkdir: NtCreateFile(game:\check\apps\beta) failed: 0xC0000035
+open: NtCreateFile(game:\check\apps\alpha\app.json) failed: 0xC0000034
+open: NtCreateFile(game:\check\apps\beta\app.json) failed: 0xC0000034
+PASS: installed: a .xex with another title ID isn't the app
+open: NtCreateFile(game:\check\apps\alpha\app.json) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\apps\alpha\app.json) failed: 0xC0000034
+open: NtCreateFile(game:\check\apps\beta\app.json) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\apps\beta\app.json) failed: 0xC0000034
+store check: good: source 0, serial 5: serial 5 from https://localhost:7381/site/good/catalogue.json, kept
+mkdir: NtCreateFile(game:\check\apps) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\downloads) failed: 0xC0000035
+open: NtCreateFile(game:\check\downloads\alpha-2d314cb8.zip.part) failed: 0xC0000034
+open: NtCreateFile(game:\check\apps\alpha\app.json) failed: 0xC0000034
+store check: alpha 1.0.0.0 installs: done
+PASS: install: an app installs its files and app.json, and nothing else
+store check: badupdate: source 0, serial 8: serial 8 from https://localhost:7381/site/badupdate/catalogue.json, kept
+mkdir: NtCreateFile(game:\check\apps) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\apps\alpha) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\downloads) failed: 0xC0000035
+open: NtCreateFile(game:\check\downloads\alpha-55beb3ff.zip.part) failed: 0xC0000034
+store check: alpha 1.1.0.0 installs: failed: https://localhost:7381/site/badupdate/packages/alpha.zip isn't the package the catalogue signed
+PASS: install: a package that isn't the signed one is refused, and the version installed stays
+store check: update: source 0, serial 9: serial 9 from https://localhost:7381/site/update/catalogue.json, kept
+mkdir: NtCreateFile(game:\check\apps) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\apps\alpha) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\downloads) failed: 0xC0000035
+open: NtCreateFile(game:\check\downloads\alpha-55beb3ff.zip.part) failed: 0xC0000034
+mkdir: NtCreateFile(game:\check\apps\alpha\data) failed: 0xC0000035
+unlink: NtSetInformationFile(game:\check\apps\alpha\data) failed: 0xC0000101
+store check: alpha 1.1.0.0 installs: done
+PASS: update: replaces the app's files, deletes the one it dropped, and keeps what the app made
+open: NtCreateFile(game:\check\apps\alpha\app.json) failed: 0xC0000034
+PASS: remove: deletes app.json's files and app.json, and leaves what the app made
+open: NtCreateFile(game:\check\apps\alpha\app.json) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\apps\alpha\app.json) failed: 0xC0000034
+PASS: remove: with everything, the app's folder goes too
+unlink: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: badfile: source 0, serial 5: serial 5 from https://localhost:7381/site/badfile/catalogue.json, kept
+mkdir: NtCreateFile(game:\check\apps) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\downloads) failed: 0xC0000035
+open: NtCreateFile(game:\check\downloads\beta-6cfbd15e.zip.part) failed: 0xC0000034
+open: NtCreateFile(game:\check\apps\beta\app.json) failed: 0xC0000034
+store check: beta from badfile installs: failed: data/readme.txt isn't the file the catalogue signed
+PASS: install: a file that isn't the one the catalogue signed is refused, and nothing of it is left
+unlink: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+open: NtCreateFile(game:\check\catalogue.kept) failed: 0xC0000034
+store check: drop: source 0, serial 5: serial 5 from https://localhost:7381/site/drop/catalogue.json, kept
+unlink: NtCreateFile(game:\check\downloads\beta-6cfbd15e.zip.part) failed: 0xC0000034
+mkdir: NtCreateFile(game:\check\apps) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\apps\beta) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\downloads) failed: 0xC0000035
+open: NtCreateFile(game:\check\downloads\beta-6cfbd15e.zip.part) failed: 0xC0000034
+store check: beta 2.1.0.3 installs: failed: https://localhost:7381/site-drop/drop/packages/beta.zip: Failure when receiving data from the peer: ssl_read returned: (-0x0000) 
+store check: good: source 0, serial 5: serial 5 from https://localhost:7381/site/good/catalogue.json, kept
+mkdir: NtCreateFile(game:\check\apps) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\apps\beta) failed: 0xC0000035
+mkdir: NtCreateFile(game:\check\downloads) failed: 0xC0000035
+open: NtCreateFile(game:\check\apps\beta\app.json) failed: 0xC0000034
+mkdir: NtCreateFile(game:\check\apps\beta\data) failed: 0xC0000035
+store check: beta 2.1.0.3 installs: done
+store check: beta's package, 268 bytes: 134 fetched after the cut
+PASS: download: a cut one is taken up where it stopped
+mkdir: NtCreateFile(game:\check\apps\beta\data) failed: 0xC0000035
+open: NtCreateFile(game:\check\apps\beta\app.json.part) failed: 0xC0000034
+store: game:\check\apps\beta: an install cut before its files were checked is taken back
+PASS: recover: an install cut before its files were checked is taken back, the installed one left
+mkdir: NtCreateFile(game:\check\apps\beta) failed: 0xC0000035
+unlink: NtCreateFile(game:\check\apps\beta\app.json.pending) failed: 0xC0000034
+store: game:\check\apps\beta: an install cut after its files were checked still couldn't be finished
+FAIL: recover: an install cut after its files were checked is finished
+unlink: NtCreateFile(game:\check\shots\alpha.shot) failed: 0xC0000034
+unlink: NtCreateFile(game:\check\shots\beta.shot) failed: 0xC0000034
+tests: 20 passed, 1 failed
+exit: status 1
