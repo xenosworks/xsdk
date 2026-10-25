@@ -156,8 +156,8 @@ the GPU layer, built against libultraship's ImGui.
 ## Done when
 
 - xsdk_test and the backend's checks pass twice, and each break fails what it names.
-- Starship plays through Corneria on the console through `gfx_xsdk`, its captures matching what the user sees and the
-  PC's OpenGL build draws.
+- Starship plays through Corneria on the console through `gfx_xsdk`, its captures matching what the user sees
+  (Decisions, 14: no longer the PC's OpenGL build too).
 - The backend's CPU time a draw, not counting the copy of its vertices, its parts, the copy's rate and the share of
   the frame each part takes are recorded (Decisions, 13; it was to be at most 0.6 us, twice the GPU layer's own cost
   for a draw).
@@ -223,6 +223,8 @@ Taken on 2026-10-25, after the user heard the sound crackle:
     less its copy, most of it the dwords a texture bind and a block of constants write into the ring, which an N64
     display list needs nearly every draw; the backend takes under 1% of Starship's frame (docs/HARDWARE.md, "A Fast3D
     draw's parts, milestone 61").
+14. **No comparison with the PC's OpenGL build** (the user). Building Starship for the PC in WSL needs packages only
+    the user can install; the console's captures are checked against what the user sees.
 
 ## Size
 
