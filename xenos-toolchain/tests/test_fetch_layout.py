@@ -12,7 +12,8 @@ SDK's docs/HARDWARE.md, "The texel rate, milestone 36").
   simulator gives what the GLSL says.
 - fs_dsolid.frag, its one fetch reading the add before it, keeps them in one exec: nothing was measured to gain from
   an exec of its own.
-- Every fragment shader in xsc/testdata whose fetches read only its inputs lowers byte for byte as without the layout.
+- Every fragment shader in xsc/testdata whose fetches read only its inputs and come before its ALU work lowers byte for
+  byte as without the layout; deriv_width.frag's second fetch of a vec4 follows ALU work, and the layout moves it up.
 """
 import re
 import sys
@@ -166,6 +167,17 @@ def reads_only_inputs(blob):
     return True
 
 
+def fetches_lead(blob):
+    """Whether every fetch comes before the first ALU instruction, so the layout has none to move."""
+    alu = False
+    for block in blocks(blob):
+        for fetch, _, _ in block:
+            if fetch and alu:
+                return False
+            alu |= not fetch
+    return True
+
+
 def lone_fetch():
     name = "fs_dsolid.frag"
     return check(f"{name}: its one fetch stays in an exec with the add before it", lower(name) ==
@@ -180,14 +192,14 @@ def inputs_only():
             before = lower_without_layout(name)
         except (LowerError, NotImplementedError, ValueError):
             continue
-        if not reads_only_inputs(before):
+        if not reads_only_inputs(before) or not fetches_lead(before):
             laid_out += 1
             continue
         if lower(name) != before:
             ok &= check(f"{name}: lowers as without the layout", False, "it changed")
         same += 1
-    check(f"{same} fragment shaders that sample only their inputs lower byte for byte as before; {laid_out} others "
-          f"are laid out", ok and same > 0)
+    check(f"{same} fragment shaders that sample only their inputs, first, lower byte for byte as before; {laid_out} "
+          f"others are laid out", ok and same > 0)
     return ok and same > 0
 
 
