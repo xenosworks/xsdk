@@ -475,6 +475,10 @@ void VdSwap(volatile uint32_t *ring_space, const uint32_t *fetch_constant, volat
 	void *system_buffer, uint32_t system_value, uint32_t *front_buffer, uint32_t *texture_format, uint32_t *color_space,
 	uint32_t *width, uint32_t *height);
 void XeCryptRandom(void *buffer, uint32_t length_bytes);
+// SHA-1 of up to three buffers, one after another, a null or empty one skipped; writes output_bytes of the 20-byte
+// digest, at most all of it (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_crypt.cc:147-168).
+void XeCryptSha(const void *input_1, uint32_t input_1_bytes, const void *input_2, uint32_t input_2_bytes,
+	const void *input_3, uint32_t input_3_bytes, void *output, uint32_t output_bytes);
 // Returns 0 if a module like "xboxkrnl.exe" is loaded (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_modules.cc:42-62).
 uint32_t XexGetModuleHandle(const char *module_name, HANDLE *module);
 // A resource the .xex names, such as the title's name under its title ID in hex (xenia:src/xenia/kernel/xboxkrnl/

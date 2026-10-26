@@ -52,6 +52,12 @@ work begins.
   More taps would mean loading our own coefficients through 0x6578 and 0x657C, in the layout AMD's
   `program_multi_taps_filter` uses (docs/HARDWARE.md, "What AMD's code says about the scaler" and "The built-in 2-tap
   filter scales 1280x720 to 1920x1080 whole").
+- **A second colour of text in a frame scatters it (milestone 64).** Starship's first-run screen drew a bar as two
+  `xsdk_text_draw` calls side by side, the first in 0xFFEEEEEA and the second in 0xFF2A2A2C. The first drew whole; the
+  second's glyphs came out speckled, in its place and as stray marks far below it, with `#` as with U+2588, frame
+  after frame of a still screen (frames read back from the console through the debug monitor, local/m64). Text in one
+  colour, of any size and in any number of calls, drew whole. Not yet known; test_text.c draws one colour a frame.
+  Starship draws its bar as one string meanwhile.
 
 ## Toolchain
 

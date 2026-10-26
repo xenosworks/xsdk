@@ -19,6 +19,7 @@ enum {
 	PATTERN = 0xA5,
 	NAME_BYTES = TIME_ZONE_NAME_CHARS + 1,
 	DATE_BYTES = 96,
+	SHA1_BYTES = 20,
 };
 
 typedef union {
@@ -129,8 +130,27 @@ static void check_language_and_country(void)
 	check("settings: the console's language and country read", language != 0 && country != 0);
 }
 
+// The kernel's SHA-1, which Torch-xenon hashes a ROM with (milestone 64): "abc", whole and split across the three
+// inputs, against FIPS 180-2's digest of it, and nothing written past the 20 bytes asked for.
+static void check_sha1(void)
+{
+	static const uint8_t digest[SHA1_BYTES] = { 0xA9, 0x99, 0x3E, 0x36, 0x47, 0x06, 0x81, 0x6A, 0xBA, 0x3E, 0x25, 0x71,
+		0x78, 0x50, 0xC2, 0x6C, 0x9C, 0xD0, 0xD8, 0x9D };
+	uint8_t whole[SHA1_BYTES];
+	uint8_t split[SHA1_BYTES + 4];
+	memset(split, PATTERN, sizeof(split));
+	XeCryptSha("abc", 3, NULL, 0, NULL, 0, whole, sizeof(whole));
+	XeCryptSha("a", 1, "b", 1, "c", 1, split, SHA1_BYTES);
+	const bool kept = split[SHA1_BYTES] == PATTERN && split[SHA1_BYTES + 3] == PATTERN;
+	xsdk_log_write("system: XeCryptSha of \"abc\" %02X%02X%02X%02X..., split %02X%02X%02X%02X..., the bytes after %s",
+		whole[0], whole[1], whole[2], whole[3], split[0], split[1], split[2], split[3], kept ? "kept" : "written");
+	check("system: the kernel's SHA-1 of \"abc\", whole and in three parts, is FIPS 180-2's, in 20 bytes",
+		memcmp(whole, digest, SHA1_BYTES) == 0 && memcmp(split, digest, SHA1_BYTES) == 0 && kept);
+}
+
 void test_system(void)
 {
 	check_time_zone();
 	check_language_and_country();
+	check_sha1();
 }

@@ -42,6 +42,7 @@ xboxkrnl.exe  0x153  KeTlsFree
 xboxkrnl.exe  0x154  KeTlsGetValue
 xboxkrnl.exe  0x155  KeTlsSetValue
 xboxkrnl.exe  0x18A  XeCryptRandom
+xboxkrnl.exe  0x192  XeCryptSha
 xboxkrnl.exe  0x195  XexGetModuleHandle
 xboxkrnl.exe  0x196  XexGetModuleSection
 xboxkrnl.exe  0x197  XexGetProcedureAddress
