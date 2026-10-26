@@ -7,8 +7,12 @@ whose noise is three helpers deep, came out "a store into part of local".
 - vk_functions.vert calls one helper three times, one from another, with an inout and an out parameter and a store
   into part of a parameter; the simulator gives the position the GLSL says.
 - vk_functions.frag inlines a helper of a helper into a pixel shader, each called with the other's result.
-- vk_function_branch.frag's helper returns early, control flow the inliner doesn't take: refused by name.
+- vk_function_select.frag inlines helpers with control flow, as PPSSPP's normalizeOr001 has: a conditional's arms,
+  and a call in the right-hand side of &&, whose block the phi after it names; with a zero vector and not, and the
+  && taken both ways.
+- vk_function_branch.frag's helper returns from two places, which the inliner doesn't take: refused by name.
 """
+import math
 import sys
 from pathlib import Path
 
@@ -59,10 +63,18 @@ def main():
     shaded = mix(A, B, UV[0])[:3] + [UV[1]]
     check("vk_functions.frag, a helper of a helper", run_fragment("vk_functions.frag", [A, B]), mix(shaded, A, 0.25))
 
+    # A's xyz normalized and B's zero, so (0, 0, 1); the && is taken at u 0.75, not at 0.25.
+    length = math.sqrt(sum(c * c for c in A[:3]))
+    n = [c / length for c in A[:3]]
+    zero = [0.0, 0.0, 0.0, 0.5]
+    for u, w in ((0.75, 1.0), (0.25, 0.25)):
+        check(f"vk_function_select.frag, helpers with control flow, u {u}",
+              run_fragment("vk_function_select.frag", [A, zero], uv=[u, UV[1]]), [n[0] + 1.0, n[1], 0.0, w])
+
     try:
         lower_ex(module("vk_function_branch.frag"), XSDK_REGISTERS)
     except LowerError as error:
-        if "a function with control flow" not in str(error):
+        if "returns from more than one place" not in str(error):
             raise SystemExit(f"FAILED: vk_function_branch.frag refused for another reason: {error}")
         print(f"  PASS vk_function_branch.frag refused: {error}")
     else:
