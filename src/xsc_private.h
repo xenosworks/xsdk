@@ -438,6 +438,9 @@ bool xsdk_xsc_sampler_dim(const XscInterface *si, uint32_t slot, int64_t *dim);
 // switch made an if/else chain; one neither takes is refused.
 bool xsdk_xsc_switches(Xsc *x, XscModule *m);
 
+// Each call inlined into the entry point, which is then the one function; a callee with control flow is refused.
+bool xsdk_xsc_inline(Xsc *x, XscModule *m);
+
 // ---- loops in SSA form (xsc_ssa.c) ----
 
 // Loops in SSA form, from glslang's HLSL through spirv-opt, put in the memory form the unroller takes; a module whose

@@ -75,6 +75,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | hardware loops nested 4 deep, and in an if/else on data or an unrolled loop's pass | each level its own loop constant, registers and gating (see "Loops a block counts"; `tests/test_nested_loops.py`) |
 | a sample or derivative of what a hardware loop's pass works out | lowered in the pass, after what it reads (see "Loops a block counts"; `tests/test_loop_samples.py`) |
 | `vec4 t = ...;` (function-local) | store-forwarding |
+| a call to a helper function, which glslang leaves GLSL's as | inlined first, each parameter the caller's argument and the helper's locals the entry point's, the other functions dropped; a helper with control flow, an early `return` or an `if` among it, is refused (`xsdk:src/xsc_inline.c`; `tests/test_functions.py`) |
 | uniforms (block + bare), samplers | constant regs / fetch consts |
 | Vulkan uniform / push constant block members at any std140 offset | the member's register, swizzled from its first component |
 | block matrix (column-major, std140) `M * v` / `v * M` / `A * B` | `mul`+`mad` over columns / 4x `dp4` with columns / columns of A times each column of B |
