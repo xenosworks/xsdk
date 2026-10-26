@@ -25,8 +25,11 @@ the FIFO worker would come from Aurora.
   differs:
   - **Paired singles:** Gekko's `ps_*` keep two floats in a register and `psq_l`/`psq_st` load and store them
     quantized through the GQRs; Xenon has neither, so they go to VMX128 or FPU pairs.
-  - **Xenon's registers are 64 bits:** a record form sets CR0 from the whole register, and carries come from 64 bits
-    (xenia:src/xenia/cpu/ppc/ppc_emit_alu.cc:48-60), so 32-bit overflow, carry and sign must be kept right.
+  - **Not Xenon's 64-bit registers:** a title runs in 32-bit mode, MSR's SF clear (docs/HARDWARE.md, "A title runs
+    in 32-bit mode", milestone 52), where record forms' CR0, carries, overflow and effective addresses come from the
+    low 32 bits, so Gekko's integer code keeps its meaning as it is; Xenia models 64-bit mode
+    (xenia:src/xenia/cpu/ppc/ppc_emit_alu.cc:48-60), which the console doesn't run titles in. The recompiler's
+    self-check still covers overflow and carry, to confirm it on the console.
   - **The memory map:** GameCube code runs at 0x80000000 (cached) and 0xC0000000 (uncached) and reaches the
     hardware at 0xCC000000; a title's own image sits at 0x82000000. Every load and store is rebased onto guest memory,
     and the hardware's ranges go to its emulation.
