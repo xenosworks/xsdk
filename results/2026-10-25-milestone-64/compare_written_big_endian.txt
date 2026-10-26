@@ -1,0 +1,336 @@
+compare_o2r: 15898 entries on the console, 15898 on the PC; 1 match
+compare_o2r: 15897 differ:
+   1280  ast_audio 4150434C, such as ast_audio/ast_audio_v1_adpcm_loop_10000, ast_audio/ast_audio_v1_adpcm_loop_10020, ast_audio/ast_audio_v1_adpcm_loop_10040
+   1280  ast_audio 41554643, such as ast_audio/ast_audio_v1_sample_10010, ast_audio/ast_audio_v1_sample_10030, ast_audio/ast_audio_v1_sample_10050
+    940  ast_audio 494E5354, such as ast_audio/ast_audio_v1_instrument_10200, ast_audio/ast_audio_v1_instrument_10220, ast_audio/ast_audio_v1_instrument_10240
+    779  ast_radio 4D534720, such as ast_radio/gMsg_ID_1, ast_radio/gMsg_ID_10, ast_radio/gMsg_ID_10010
+    479  ast_audio 4452554D, such as ast_audio/ast_audio_v1_drum_17120, ast_audio/ast_audio_v1_drum_17130, ast_audio/ast_audio_v1_drum_17140
+    317  ast_macbeth 4F565458, such as ast_macbeth/D_MA_VTX_602A0D0, ast_macbeth/ast_macbeth_seg6_vtx_10598, ast_macbeth/ast_macbeth_seg6_vtx_106B8
+    279  ast_audio 41504342, such as ast_audio/ast_audio_v1_adpcm_book_10080, ast_audio/ast_audio_v1_adpcm_book_100F0, ast_audio/ast_audio_v1_adpcm_book_10180
+    260  ast_corneria 4F565458, such as ast_corneria/ast_corneria_seg6_vtx_10010, ast_corneria/ast_corneria_seg6_vtx_10BB8, ast_corneria/ast_corneria_seg6_vtx_10BF8
+    241  ast_common 4F544558, such as ast_common/D_1000000, ast_common/D_1000280, ast_common/D_1000640
+    237  ast_aquas 4F565458, such as ast_aquas/D_AQ_6011A78, ast_aquas/D_AQ_6018878, ast_aquas/D_AQ_6018C78
+    205  ast_versus 4F565458, such as ast_versus/ast_versus_seg3_vtx_10080, ast_versus/ast_versus_seg3_vtx_10180, ast_versus/ast_versus_seg3_vtx_101B0
+    204  ast_sector_y 4F565458, such as ast_sector_y/ast_sector_y_seg6_vtx_10110, ast_sector_y/ast_sector_y_seg6_vtx_101D0, ast_sector_y/ast_sector_y_seg6_vtx_106B8
+    204  ast_zoness 4F565458, such as ast_zoness/D_ZO_6009ED0, ast_zoness/D_ZO_600C780, ast_zoness/ast_zoness_seg6_vtx_117C8
+    200  ast_area_6 53434D44, such as ast_area_6/D_A6_6027F50_cmd_0, ast_area_6/D_A6_6027F50_cmd_1, ast_area_6/D_A6_6027F50_cmd_10
+    190  ast_title 4F565458, such as ast_title/ast_title_seg6_vtx_14C28, ast_title/ast_title_seg6_vtx_14C68, ast_title/ast_title_seg6_vtx_14CA8
+    183  ast_aquas 4C494D42, such as ast_aquas/D_AQ_602BD60_limb_0, ast_aquas/D_AQ_602BD60_limb_1, ast_aquas/D_AQ_602BD60_limb_10
+    175  ast_ve1_boss 4F565458, such as ast_ve1_boss/ast_ve1_boss_seg9_vtx_11048, ast_ve1_boss/ast_ve1_boss_seg9_vtx_11300, ast_ve1_boss/ast_ve1_boss_seg9_vtx_114E0
+    174  ast_sector_x 4F565458, such as ast_sector_x/ast_sector_x_seg6_vtx_10220, ast_sector_x/ast_sector_x_seg6_vtx_10330, ast_sector_x/ast_sector_x_seg6_vtx_10470
+    161  ast_macbeth 4F444C54, such as ast_macbeth/D_MA_6001180, ast_macbeth/D_MA_60014A0, ast_macbeth/D_MA_6001A60
+    156  ast_versus 4F544558, such as ast_versus/D_versus_3000000, ast_versus/D_versus_3000080, ast_versus/D_versus_30000A0
+    150  ast_aquas 53434D44, such as ast_aquas/D_AQ_60308B8_cmd_0, ast_aquas/D_AQ_60308B8_cmd_1, ast_aquas/D_AQ_60308B8_cmd_10
+    150  ast_corneria 53434D44, such as ast_corneria/D_CO_603D9E8_cmd_0, ast_corneria/D_CO_603D9E8_cmd_1, ast_corneria/D_CO_603D9E8_cmd_10
+    150  ast_meteo 53434D44, such as ast_meteo/D_ME_602F3AC_cmd_0, ast_meteo/D_ME_602F3AC_cmd_1, ast_meteo/D_ME_602F3AC_cmd_10
+    150  ast_sector_x 53434D44, such as ast_sector_x/D_SX_60320D0_cmd_0, ast_sector_x/D_SX_60320D0_cmd_1, ast_sector_x/D_SX_60320D0_cmd_10
+    150  ast_sector_y 53434D44, such as ast_sector_y/D_SY_6032E18_cmd_0, ast_sector_y/D_SY_6032E18_cmd_1, ast_sector_y/D_SY_6032E18_cmd_10
+    150  ast_venom_1 53434D44, such as ast_venom_1/aVe1EventScript_cmd_0, ast_venom_1/aVe1EventScript_cmd_1, ast_venom_1/aVe1EventScript_cmd_10
+    140  ast_meteo 4F565458, such as ast_meteo/ast_meteo_seg6_vtx_16298, ast_meteo/ast_meteo_seg6_vtx_17B28, ast_meteo/ast_meteo_seg6_vtx_17C98
+    139  ast_map 4F544558, such as ast_map/D_MAP_6001C80, ast_map/D_MAP_6002160, ast_map/D_MAP_60030D0
+    138  ast_aquas 4F444C54, such as ast_aquas/D_AQ_6003350, ast_aquas/D_AQ_60040F0, ast_aquas/D_AQ_6004DB0
+    138  ast_macbeth 4C494D42, such as ast_macbeth/D_MA_600C65C_limb_0, ast_macbeth/D_MA_600C65C_limb_1, ast_macbeth/D_MA_600C65C_limb_10
+    120  ast_arwing 4F565458, such as ast_arwing/ast_arwing_seg3_vtx_1148, ast_arwing/ast_arwing_seg3_vtx_11550, ast_arwing/ast_arwing_seg3_vtx_11650
+    114  ast_common 4F565458, such as ast_common/ast_common_seg1_vtx_11FC0, ast_common/ast_common_seg1_vtx_12160, ast_common/ast_common_seg1_vtx_153B8
+    113  ast_versus 4F444C54, such as ast_versus/D_versus_300D550, ast_versus/D_versus_300EE80, ast_versus/D_versus_3010A90
+    110  ast_A_ti 4C494D42, such as ast_A_ti/D_TI_A000568_limb_0, ast_A_ti/D_TI_A000568_limb_1, ast_A_ti/D_TI_A000568_limb_2
+    109  ast_macbeth 4F544558, such as ast_macbeth/D_MA_60012A0, ast_macbeth/D_MA_60013A0, ast_macbeth/D_MA_6001578
+    107  ast_area_6 4F565458, such as ast_area_6/ast_area_6_seg6_vtx_10338, ast_area_6/ast_area_6_seg6_vtx_10438, ast_area_6/ast_area_6_seg6_vtx_10638
+    106  ast_zoness 4C494D42, such as ast_zoness/D_ZO_601863C_limb_0, ast_zoness/D_ZO_601863C_limb_1, ast_zoness/D_ZO_601863C_limb_2
+    105  ast_venom_2 4F565458, such as ast_venom_2/ast_venom_2_seg6_vtx_107C8, ast_venom_2/ast_venom_2_seg6_vtx_10A40, ast_venom_2/ast_venom_2_seg6_vtx_10C20
+    103  ast_andross 4F565458, such as ast_andross/D_ANDROSS_C017598, ast_andross/D_ANDROSS_C038FE8, ast_andross/ast_andross_seg12_vtx_13308
+    102  ast_text 4F544558, such as ast_text/aDownWrenchTLUT, ast_text/aDownWrenchTexture, ast_text/aLargeText_0
+    100  ast_andross 53434D44, such as ast_andross/D_ANDROSS_C037E3C_cmd_0, ast_andross/D_ANDROSS_C037E3C_cmd_1, ast_andross/D_ANDROSS_C037E3C_cmd_10
+    100  ast_macbeth 53434D44, such as ast_macbeth/D_MA_60381D8_cmd_0, ast_macbeth/D_MA_60381D8_cmd_1, ast_macbeth/D_MA_60381D8_cmd_10
+    100  ast_solar 53434D44, such as ast_solar/D_SO_6020DD0_cmd_0, ast_solar/D_SO_6020DD0_cmd_1, ast_solar/D_SO_6020DD0_cmd_10
+    100  ast_titania 53434D44, such as ast_titania/D_TI_600631C_cmd_0, ast_titania/D_TI_600631C_cmd_1, ast_titania/D_TI_600631C_cmd_10
+    100  ast_training 53434D44, such as ast_training/D_TR_6009B34_cmd_0, ast_training/D_TR_6009B34_cmd_1, ast_training/D_TR_6009B34_cmd_10
+    100  ast_zoness 53434D44, such as ast_zoness/D_ZO_602AAC0_cmd_0, ast_zoness/D_ZO_602AAC0_cmd_1, ast_zoness/D_ZO_602AAC0_cmd_10
+     96  ast_title 4F544558, such as ast_title/D_TITLE_60195C0, ast_title/D_TITLE_6019DC0, ast_title/D_TITLE_601A5C0
+     94  ast_font_3d 4F565458, such as ast_font_3d/ast_font_3d_seg9_vtx_1218, ast_font_3d/ast_font_3d_seg9_vtx_1418, ast_font_3d/ast_font_3d_seg9_vtx_1608
+     93  ast_audio 45564C50, such as ast_audio/ast_audio_v1_envelope_101E0, ast_audio/ast_audio_v1_envelope_11100, ast_audio/ast_audio_v1_envelope_11F60
+     91  ast_katina 4F565458, such as ast_katina/ast_katina_seg6_vtx_10338, ast_katina/ast_katina_seg6_vtx_104B8, ast_katina/ast_katina_seg6_vtx_10858
+     90  ast_corneria 4F444C54, such as ast_corneria/CoMoleMissileDL, ast_corneria/D_CO_6004900, ast_corneria/D_CO_60059F0
+     89  ast_7_ti_1 4F565458, such as ast_7_ti_1/ast_7_ti_1_seg7_vtx_2330, ast_7_ti_1/ast_7_ti_1_seg7_vtx_25A0, ast_7_ti_1/ast_7_ti_1_seg7_vtx_2620
+     89  ast_enmy_space 4F565458, such as ast_enmy_space/ast_enmy_space_seg4_vtx_10A8, ast_enmy_space/ast_enmy_space_seg4_vtx_1530, ast_enmy_space/ast_enmy_space_seg4_vtx_15B0
+     87  ast_zoness 4F444C54, such as ast_zoness/D_ZO_6000C40, ast_zoness/D_ZO_6003690, ast_zoness/D_ZO_6004380
+     86  ast_title 4C494D42, such as ast_title/aFalcoSkel_limb_0, ast_title/aFalcoSkel_limb_1, ast_title/aFalcoSkel_limb_10
+     83  ast_common 4F444C54, such as ast_common/D_1003130, ast_common/D_1011F20, ast_common/D_1015320
+     80  ast_versus 4C494D42, such as ast_versus/aVsOnFootFalcoSkel_limb_0, ast_versus/aVsOnFootFalcoSkel_limb_1, ast_versus/aVsOnFootFalcoSkel_limb_10
+     74  ast_aquas 4F544558, such as ast_aquas/D_AQ_6001130, ast_aquas/D_AQ_6002D58, ast_aquas/D_AQ_6003158
+     74  ast_title 4F444C54, such as ast_title/D_TITLE_601E430, ast_title/D_TITLE_601E720, ast_title/D_TITLE_602B8C0
+     71  ast_bolse 4F565458, such as ast_bolse/D_BO_600C0B8, ast_bolse/D_BO_6011E28, ast_bolse/ast_bolse_seg6_vtx_1138
+     69  ast_great_fox 4F565458, such as ast_great_fox/ast_great_fox_seg14_vtx_10A8, ast_great_fox/ast_great_fox_seg14_vtx_11DD8, ast_great_fox/ast_great_fox_seg14_vtx_1298
+     65  ast_vs_menu 4F544558, such as ast_vs_menu/D_VS_MENU_7000490, ast_vs_menu/D_VS_MENU_7001030, ast_vs_menu/D_VS_MENU_7001270
+     65  ast_zoness 4F544558, such as ast_zoness/D_ZO_6000E98, ast_zoness/D_ZO_6001098, ast_zoness/D_ZO_6001810
+     61  ast_andross 4C494D42, such as ast_andross/D_ANDROSS_C01CC3C_limb_0, ast_andross/D_ANDROSS_C01CC3C_limb_1, ast_andross/D_ANDROSS_C01CC3C_limb_10
+     61  ast_corneria 4F544558, such as ast_corneria/D_CO_60018F8, ast_corneria/D_CO_60020F8, ast_corneria/D_CO_60028F8
+     61  ast_enmy_planet 4F565458, such as ast_enmy_planet/ast_enmy_planet_seg4_vtx_1B78, ast_enmy_planet/ast_enmy_planet_seg4_vtx_1BC8, ast_enmy_planet/ast_enmy_planet_seg4_vtx_1C58
+     60  ast_macbeth 48544258, such as ast_macbeth/D_MA_60359AC, ast_macbeth/D_MA_6035A94, ast_macbeth/D_MA_6035B44
+     60  ast_option 4F544558, such as ast_option/D_OPT_8000000, ast_option/D_OPT_8000680, ast_option/D_OPT_80006A0
+     58  ast_solar 4F565458, such as ast_solar/D_SO_6001C50, ast_solar/D_SO_6004500, ast_solar/ast_solar_seg6_vtx_100E8
+     57  ast_ending 4F565458, such as ast_ending/ast_ending_seg7_vtx_109C8, ast_ending/ast_ending_seg7_vtx_112D8, ast_ending/ast_ending_seg7_vtx_11338
+     57  ast_ve1_boss 4F444C54, such as ast_ve1_boss/D_VE1_9000000, ast_ve1_boss/D_VE1_90007F0, ast_ve1_boss/D_VE1_900D180
+     56  ast_corneria 4C494D42, such as ast_corneria/aCoCarrierSkel_limb_0, ast_corneria/aCoCarrierSkel_limb_1, ast_corneria/aCoCarrierSkel_limb_10
+     54  ast_sector_x 4F444C54, such as ast_sector_x/D_SX_60010C0, ast_sector_x/D_SX_6002AC0, ast_sector_x/D_SX_6006810
+     53  ast_area_6 4F544558, such as ast_area_6/D_A6_6000B60, ast_area_6/D_A6_6001A80, ast_area_6/D_A6_60029A0
+     51  ast_map 4F565458, such as ast_map/ast_map_seg6_vtx_1C120, ast_map/ast_map_seg6_vtx_1C9B0, ast_map/ast_map_seg6_vtx_1D290
+     51  ast_sector_x 4C494D42, such as ast_sector_x/D_SX_601390C_limb_0, ast_sector_x/D_SX_601390C_limb_1, ast_sector_x/D_SX_601390C_limb_2
+     46  ast_audio 4F424C42, such as ast_audio/ast_audio_v1_sequence_100B40, ast_audio/ast_audio_v1_sequence_103670, ast_audio/ast_audio_v1_sequence_103E60
+     44  ast_andross 4F444C54, such as ast_andross/D_ANDROSS_C001880, ast_andross/D_ANDROSS_C002B20, ast_andross/D_ANDROSS_C002F00
+     44  ast_corneria 48544258, such as ast_corneria/CoGarudaHitbox, ast_corneria/D_CO_603DC40, ast_corneria/D_CO_603E2C0
+     43  ast_ending 4F544558, such as ast_ending/D_END_7000118, ast_ending/D_END_7001118, ast_ending/D_END_7002238
+     43  ast_meteo 4F544558, such as ast_meteo/D_ME_6000B10, ast_meteo/D_ME_6004738, ast_meteo/D_ME_6004F38
+     41  ast_bolse 4C494D42, such as ast_bolse/D_BO_60086B4_limb_0, ast_bolse/D_BO_60086B4_limb_1, ast_bolse/D_BO_6008760_limb_0
+     41  ast_sector_y 4F544558, such as ast_sector_y/D_SY_6000840, ast_sector_y/D_SY_60018D0, ast_sector_y/D_SY_6004958
+     39  ast_7_ti_1 4F444C54, such as ast_7_ti_1/D_TI1_7000A80, ast_7_ti_1/D_TI1_7002270, ast_7_ti_1/D_TI1_7002490
+     39  ast_meteo 4F444C54, such as ast_meteo/D_ME_6000A80, ast_meteo/D_ME_60080C0, ast_meteo/D_ME_600DDF0
+     37  ast_arwing 4F544558, such as ast_arwing/D_arwing_3003960, ast_arwing/D_arwing_30039E0, ast_arwing/D_arwing_3003A60
+     37  ast_font_3d 4F444C54, such as ast_font_3d/aFont3D_0, ast_font_3d/aFont3D_1, ast_font_3d/aFont3D_2
+     37  ast_sector_y 4F444C54, such as ast_sector_y/D_SY_6001840, ast_sector_y/D_SY_60121E0, ast_sector_y/D_SY_60132A0
+     36  ast_solar 4F444C54, such as ast_solar/D_SO_60005B0, ast_solar/D_SO_6002E60, ast_solar/D_SO_6007C40
+     35  ast_7_ti_1 4F544558, such as ast_7_ti_1/D_AST_7_TI_1_7000000, ast_7_ti_1/D_TI1_7000D08, ast_7_ti_1/D_TI1_7001108
+     35  ast_7_ti_1 4C494D42, such as ast_7_ti_1/aTi1DesertCrawlerSkel_limb_0, ast_7_ti_1/aTi1DesertCrawlerSkel_limb_1, ast_7_ti_1/aTi1DesertCrawlerSkel_limb_10
+     35  ast_aquas 48544258, such as ast_aquas/D_AQ_6030B68, ast_aquas/D_AQ_6030BAC, ast_aquas/D_AQ_6030D3C
+     35  ast_titania 48544258, such as ast_titania/D_TI_6006874, ast_titania/D_TI_6006924, ast_titania/D_TI_6006940
+     33  ast_audio 53464E54, such as ast_audio/ast_audio_v1_sound_font_0, ast_audio/ast_audio_v1_sound_font_106C0, ast_audio/ast_audio_v1_sound_font_115E0
+     32  ast_ve1_boss 4C494D42, such as ast_ve1_boss/D_VE1_901C0F4_limb_0, ast_ve1_boss/D_VE1_901C0F4_limb_1, ast_ve1_boss/D_VE1_901C0F4_limb_10
+     31  ast_fortuna 4F565458, such as ast_fortuna/ast_fortuna_seg6_vtx_1490, ast_fortuna/ast_fortuna_seg6_vtx_15D0, ast_fortuna/ast_fortuna_seg6_vtx_1790
+     31  ast_sector_x 4F544558, such as ast_sector_x/D_SX_60008C0, ast_sector_x/D_SX_6001150, ast_sector_x/D_SX_6001AD8
+     31  ast_ve1_boss 4F544558, such as ast_ve1_boss/D_VE1_90003E8, ast_ve1_boss/D_VE1_90005E8, ast_ve1_boss/D_VE1_9000AF0
+     30  ast_venom_2 4F444C54, such as ast_venom_2/D_VE2_60038E0, ast_venom_2/D_VE2_6006E20, ast_venom_2/D_VE2_6007650
+     29  ast_landmaster 4F565458, such as ast_landmaster/ast_landmaster_seg3_vtx_1050, ast_landmaster/ast_landmaster_seg3_vtx_1190, ast_landmaster/ast_landmaster_seg3_vtx_1290
+     29  ast_venom_2 4C494D42, such as ast_venom_2/D_VE2_600C0A4_limb_0, ast_venom_2/D_VE2_600C0A4_limb_1, ast_venom_2/D_VE2_600C0A4_limb_2
+     28  ast_8_ti 4F565458, such as ast_8_ti/ast_8_ti_seg8_vtx_1278, ast_8_ti/ast_8_ti_seg8_vtx_1558, ast_8_ti/ast_8_ti_seg8_vtx_1770
+     28  ast_blue_marine 4F565458, such as ast_blue_marine/ast_blue_marine_seg3_vtx_00000418, ast_blue_marine/ast_blue_marine_seg3_vtx_11D0, ast_blue_marine/ast_blue_marine_seg3_vtx_13C0
+     28  ast_solar 4F544558, such as ast_solar/D_SO_6005710, ast_solar/D_SO_6006DD8, ast_solar/D_SO_6007CC0
+     28  ast_solar 4C494D42, such as ast_solar/D_SO_600E470_limb_0, ast_solar/D_SO_600E470_limb_1, ast_solar/D_SO_600E470_limb_10
+     27  ast_sector_z 4F544558, such as ast_sector_z/D_SZ_6000840, ast_sector_z/D_SZ_60012D0, ast_sector_z/D_SZ_6001C80
+     27  ast_star_wolf 4F544558, such as ast_star_wolf/D_STAR_WOLF_F000000, ast_star_wolf/D_STAR_WOLF_F000F20, ast_star_wolf/D_STAR_WOLF_F001E40
+     26  ast_andross 4F544558, such as ast_andross/D_ANDROSS_C000000, ast_andross/D_ANDROSS_C0019E8, ast_andross/D_ANDROSS_C0031D0
+     25  ast_allies 4F544558, such as ast_allies/D_D000170, ast_allies/D_D001090, ast_allies/D_D001FB0
+     25  ast_katina 4F544558, such as ast_katina/D_KA_6001260, ast_katina/D_KA_6001968, ast_katina/D_KA_6004078
+     25  ast_map 4F444C54, such as ast_map/D_MAP_604D680, ast_map/D_MAP_605A120, ast_map/D_MAP_605C230
+     25  ast_sector_z 4F565458, such as ast_sector_z/ast_sector_z_seg6_vtx_15C8, ast_sector_z/ast_sector_z_seg6_vtx_1748, ast_sector_z/ast_sector_z_seg6_vtx_1808
+     24  ast_radio 4F544558, such as ast_radio/text_char_3456, ast_radio/text_char_789a, ast_radio/text_char_abcd_upper
+     24  ast_star_wolf 4F565458, such as ast_star_wolf/ast_star_wolf_seg15_vtx_10110, ast_star_wolf/ast_star_wolf_seg15_vtx_107A0, ast_star_wolf/ast_star_wolf_seg15_vtx_10980
+     23  ast_bolse 4F544558, such as ast_bolse/D_BO_6000C80, ast_bolse/D_BO_6001908, ast_bolse/D_BO_6004848
+     23  ast_bolse 4F444C54, such as ast_bolse/D_BO_6000D80, ast_bolse/D_BO_6002020, ast_bolse/D_BO_6006910
+     23  ast_fortuna 4F544558, such as ast_fortuna/D_FO_6001260, ast_fortuna/D_FO_6001890, ast_fortuna/D_FO_6002090
+     23  ast_venom_2 4F544558, such as ast_venom_2/D_VE2_6000000, ast_venom_2/D_VE2_6000A80, ast_venom_2/D_VE2_60020D0
+     22  ast_enmy_space 4F544558, such as ast_enmy_space/D_ENMY_SPACE_4001108, ast_enmy_space/D_ENMY_SPACE_4002C50, ast_enmy_space/D_ENMY_SPACE_4002E50
+     22  ast_katina 4F444C54, such as ast_katina/D_KA_6002170, ast_katina/D_KA_6009250, ast_katina/D_KA_600BFB0
+     22  ast_venom_1 4F544558, such as ast_venom_1/D_VE1_6000000, ast_venom_1/D_VE1_6000A80, ast_venom_1/D_VE1_6001B80
+     21  ast_arwing 4F444C54, such as ast_arwing/D_arwing_3016B30, ast_arwing/D_arwing_30183D0, ast_arwing/D_arwing_30194E0
+     21  ast_macbeth 414E494D, such as ast_macbeth/D_MA_600C4D0, ast_macbeth/D_MA_600CD18, ast_macbeth/D_MA_600FEC4
+     20  ast_allies 4F565458, such as ast_allies/ast_allies_seg13_vtx_00000098, ast_allies/ast_allies_seg13_vtx_9908, ast_allies/ast_allies_seg13_vtx_9C58
+     20  ast_andross 414E494D, such as ast_andross/D_ANDROSS_C00208C, ast_andross/D_ANDROSS_C002654, ast_andross/D_ANDROSS_C002B08
+     20  ast_bg_planet 4F444C54, such as ast_bg_planet/D_BG_PLANET_2000000, ast_bg_planet/D_BG_PLANET_2001090, ast_bg_planet/D_BG_PLANET_2002120
+     20  ast_bg_planet 4F544558, such as ast_bg_planet/D_BG_PLANET_2000088, ast_bg_planet/D_BG_PLANET_2001118, ast_bg_planet/D_BG_PLANET_20021A8
+     20  ast_bg_planet 4F565458, such as ast_bg_planet/ast_bg_planet_seg2_vtx_101F8, ast_bg_planet/ast_bg_planet_seg2_vtx_10A88, ast_bg_planet/ast_bg_planet_seg2_vtx_10E8
+     20  ast_great_fox 4F544558, such as ast_great_fox/D_GREAT_FOX_E007430, ast_great_fox/D_GREAT_FOX_E0074B0, ast_great_fox/D_GREAT_FOX_E0084B0
+     20  ast_sector_y 4C494D42, such as ast_sector_y/D_SY_602D140_limb_0, ast_sector_y/D_SY_602D140_limb_1, ast_sector_y/D_SY_602D140_limb_10
+     19  ast_andross 48544258, such as ast_andross/D_ANDROSS_C037FCC, ast_andross/D_ANDROSS_C0380C0, ast_andross/D_ANDROSS_C0381B4
+     19  ast_sector_x 48544258, such as ast_sector_x/D_SX_6032328, ast_sector_x/D_SX_6032408, ast_sector_x/D_SX_603265C
+     19  ast_venom_1 48544258, such as ast_venom_1/D_VE1_601B474, ast_venom_1/D_VE1_601B4C4, ast_venom_1/Ve1Wall1Hitbox
+     19  ast_venom_1 4F565458, such as ast_venom_1/ast_venom_1_seg6_vtx_26D8, ast_venom_1/ast_venom_1_seg6_vtx_27F8, ast_venom_1/ast_venom_1_seg6_vtx_28F8
+     18  ast_area_6 4F444C54, such as ast_area_6/D_A6_600F1F0, ast_area_6/D_A6_6011910, ast_area_6/D_A6_6012550
+     18  ast_arwing 4C494D42, such as ast_arwing/D_arwing_3016610_limb_0, ast_arwing/D_arwing_3016610_limb_1, ast_arwing/D_arwing_3016610_limb_10
+     18  ast_enmy_planet 4F544558, such as ast_enmy_planet/D_ENMY_PLANET_4000E98, ast_enmy_planet/D_ENMY_PLANET_4001098, ast_enmy_planet/D_ENMY_PLANET_4001298
+     18  ast_enmy_space 4F444C54, such as ast_enmy_space/D_ENMY_SPACE_4002230, ast_enmy_space/D_ENMY_SPACE_4003BD0, ast_enmy_space/D_ENMY_SPACE_4007870
+     18  ast_zoness 48544258, such as ast_zoness/aZoBarrierHitbox, ast_zoness/aZoBarrierHitbox2, ast_zoness/aZoBirdHitbox
+     17  ast_7_ti_2 4F565458, such as ast_7_ti_2/ast_7_ti_2_seg7_vtx_40D8, ast_7_ti_2/ast_7_ti_2_seg7_vtx_4138, ast_7_ti_2/ast_7_ti_2_seg7_vtx_41C8
+     17  ast_9_ti 4F565458, such as ast_9_ti/ast_9_ti_seg9_vtx_10078, ast_9_ti/ast_9_ti_seg9_vtx_4348, ast_9_ti/ast_9_ti_seg9_vtx_4470
+     17  ast_enmy_planet 4F444C54, such as ast_enmy_planet/D_ENMY_PLANET_4000290, ast_enmy_planet/D_ENMY_PLANET_40018A0, ast_enmy_planet/D_ENMY_PLANET_4006280
+     17  ast_sector_y 48544258, such as ast_sector_y/D_SY_60340C0, ast_sector_y/D_SY_60341A8, ast_sector_y/D_SY_603421C
+     16  ast_area_6 4C494D42, such as ast_area_6/D_A6_6018BA0_limb_0, ast_area_6/D_A6_6018BA0_limb_1, ast_area_6/D_A6_6018BA0_limb_10
+     16  ast_blue_marine 4F544558, such as ast_blue_marine/D_blue_marine_3000090, ast_blue_marine/D_blue_marine_3000120, ast_blue_marine/D_blue_marine_3000600
+     16  ast_ending 4F444C54, such as ast_ending/D_END_7000000, ast_ending/D_END_7002120, ast_ending/D_END_7004240
+     16  ast_fortuna 4F444C54, such as ast_fortuna/D_FO_6001360, ast_fortuna/D_FO_6005CC0, ast_fortuna/D_FO_6006BE0
+     16  ast_landmaster 4F544558, such as ast_landmaster/D_landmaster_3001680, ast_landmaster/D_landmaster_3001E80, ast_landmaster/D_landmaster_3002680
+     15  ast_8_ti 4F544558, such as ast_8_ti/D_TI_8000FC0, ast_8_ti/D_TI_80012E8, ast_8_ti/D_TI_80013E8
+     15  ast_aquas 414E494D, such as ast_aquas/D_AQ_601DE50, ast_aquas/D_AQ_6024F80, ast_aquas/D_AQ_602AC28
+     14  ast_aquas 534B454C, such as ast_aquas/D_AQ_602BD60, ast_aquas/D_AQ_602C014, ast_aquas/aAqAnglerFishSkel
+     14  ast_bg_space 4F444C54, such as ast_bg_space/D_BG_SPACE_2000000, ast_bg_space/D_BG_SPACE_2000890, ast_bg_space/D_BG_SPACE_2001120
+     14  ast_bg_space 4F544558, such as ast_bg_space/D_BG_SPACE_2000088, ast_bg_space/D_BG_SPACE_2000918, ast_bg_space/D_BG_SPACE_20011A8
+     14  ast_bg_space 4F565458, such as ast_bg_space/ast_bg_space_seg2_vtx_1178, ast_bg_space/ast_bg_space_seg2_vtx_1A08, ast_bg_space/ast_bg_space_seg2_vtx_2298
+     14  ast_enmy_planet 4C494D42, such as ast_enmy_planet/aFirebirdSkel_limb_0, ast_enmy_planet/aFirebirdSkel_limb_1, ast_enmy_planet/aFirebirdSkel_limb_2
+     14  ast_title 414E494D, such as ast_title/D_TITLE_601E424, ast_title/D_TITLE_601F8E0, ast_title/D_TITLE_6020058
+     14  ast_warp_zone 4F565458, such as ast_warp_zone/ast_warp_zone_seg7_vtx_120, ast_warp_zone/ast_warp_zone_seg7_vtx_1240, ast_warp_zone/ast_warp_zone_seg7_vtx_13C0
+     13  ast_8_ti 4F444C54, such as ast_8_ti/D_TI_8000D90, ast_8_ti/D_TI_80011C0, ast_8_ti/D_TI_80014A0
+     13  ast_sector_z 4F444C54, such as ast_sector_z/D_SZ_6004010, ast_sector_z/D_SZ_6005BF0, ast_sector_z/D_SZ_6006660
+     13  ast_training 4F565458, such as ast_training/ast_training_seg6_vtx_27F0, ast_training/ast_training_seg6_vtx_2870, ast_training/ast_training_seg6_vtx_3220
+     12  ast_9_ti 4F444C54, such as ast_9_ti/D_TI_90042A0, ast_9_ti/D_TI_90043D0, ast_9_ti/D_TI_90044E0
+     12  ast_macbeth 534B454C, such as ast_macbeth/D_MA_600C65C, ast_macbeth/D_MA_600D1E4, ast_macbeth/D_MA_601042C
+     12  ast_sector_y 414E494D, such as ast_sector_y/D_SY_6003348, ast_sector_y/D_SY_60034C4, ast_sector_y/D_SY_601F3B8
+     12  ast_training 4F544558, such as ast_training/D_TR_6000000, ast_training/D_TR_6000480, ast_training/D_TR_6000900
+     12  ast_versus 414E494D, such as ast_versus/D_versus_301C0A4, ast_versus/D_versus_301C3A8, ast_versus/D_versus_301C79C
+     12  ast_versus 56433346, such as ast_versus/D_versus_302E56C, ast_versus/D_versus_302E65C, ast_versus/D_versus_302E74C
+     11  ast_katina 4C494D42, such as ast_katina/D_KA_6010744_limb_0, ast_katina/D_KA_6010744_limb_1, ast_katina/D_KA_6010744_limb_10
+     11  ast_sector_x 414E494D, such as ast_sector_x/D_SX_6009FF8, ast_sector_x/D_SX_600A2D4, ast_sector_x/D_SX_600F890
+     11  ast_titania 4F544558, such as ast_titania/D_TI_6000B10, ast_titania/D_TI_6001BA8, ast_titania/D_TI_6002438
+     11  ast_venom_1 4F444C54, such as ast_venom_1/D_VE1_60046F0, ast_venom_1/D_VE1_60066D0, ast_venom_1/aVe1EnemyGateDL
+     10  ast_7_ti_2 4F444C54, such as ast_7_ti_2/D_TI2_7003F00, ast_7_ti_2/D_TI2_7004270, ast_7_ti_2/D_TI2_7004400
+     10  ast_enmy_space 4C494D42, such as ast_enmy_space/aCruiserGunSkel_limb_0, ast_enmy_space/aCruiserGunSkel_limb_1, ast_enmy_space/aCruiserGunSkel_limb_2
+     10  ast_meteo 48544258, such as ast_meteo/D_ME_602F638, ast_meteo/aMeCrusherHitbox, ast_meteo/aMeCrusherShieldHitbox
+      9  ast_A_ti 4F565458, such as ast_A_ti/ast_A_ti_seg10_vtx_1D08, ast_A_ti/ast_A_ti_seg10_vtx_1D58, ast_A_ti/ast_A_ti_seg10_vtx_1E50
+      9  ast_blue_marine 4F444C54, such as ast_blue_marine/D_blue_marine_3000130, ast_blue_marine/D_blue_marine_3000470, ast_blue_marine/D_blue_marine_3000660
+      9  ast_corneria 414E494D, such as ast_corneria/D_CO_602AA04, ast_corneria/D_CO_602D31C, ast_corneria/aCoCarrierAnim
+      9  ast_fortuna 4C494D42, such as ast_fortuna/aFoRadarSkel_limb_0, ast_fortuna/aFoRadarSkel_limb_1, ast_fortuna/aFoRadarSkel_limb_2
+      9  ast_solar 414E494D, such as ast_solar/D_SO_6009D30, ast_solar/D_SO_600B1B4, ast_solar/D_SO_600C15C
+      9  ast_titania 4F444C54, such as ast_titania/D_TI_6000A80, ast_titania/D_TI_6001B10, ast_titania/D_TI_6003440
+      9  ast_titania 4F565458, such as ast_titania/ast_titania_seg6_vtx_1B68, ast_titania/ast_titania_seg6_vtx_2408, ast_titania/ast_titania_seg6_vtx_3498
+      9  ast_zoness 414E494D, such as ast_zoness/D_ZO_6018550, ast_zoness/D_ZO_60195EC, ast_zoness/D_ZO_601996C
+      9  ast_zoness 534B454C, such as ast_zoness/D_ZO_601863C, ast_zoness/D_ZO_6019738, ast_zoness/D_ZO_601AB14
+      8  ast_7_ti_1 414E494D, such as ast_7_ti_1/D_TI1_70067C4, ast_7_ti_1/D_TI1_7006F74, ast_7_ti_1/D_TI1_7007130
+      8  ast_fortuna 48544258, such as ast_fortuna/D_FO_600FF64, ast_fortuna/aFoBaseHitbox, ast_fortuna/aFoMountain1Hitbox
+      8  ast_meteo 4C494D42, such as ast_meteo/aMeHopBotSkel_limb_0, ast_meteo/aMeHopBotSkel_limb_1, ast_meteo/aMeHopBotSkel_limb_2
+      8  ast_ve1_boss 414E494D, such as ast_ve1_boss/D_VE1_9002CD8, ast_ve1_boss/D_VE1_9010FC4, ast_ve1_boss/D_VE1_9018BD0
+      7  ast_7_ti_2 4F544558, such as ast_7_ti_2/D_TI2_70047B0, ast_7_ti_2/D_TI2_70048B0, ast_7_ti_2/D_TI2_7004AB0
+      7  ast_bolse 48544258, such as ast_bolse/D_BO_6011B20, ast_bolse/D_BO_6011BA4, ast_bolse/aBoBaseCoreHitbox
+      7  ast_landmaster 4F444C54, such as ast_landmaster/D_landmaster_30066B0, ast_landmaster/D_landmaster_3006940, ast_landmaster/D_landmaster_3006DE0
+      7  ast_sector_z 4C494D42, such as ast_sector_z/aSzMissileSkel_limb_0, ast_sector_z/aSzMissileSkel_limb_1, ast_sector_z/aSzMissileSkel_limb_2
+      7  ast_versus 48544258, such as ast_versus/aVsArchHitbox, ast_versus/aVsBuilding1Hibox, ast_versus/aVsBuilding2Hibox
+      7  ast_warp_zone 4F444C54, such as ast_warp_zone/D_WZ_7001540, ast_warp_zone/aWzGateDL, ast_warp_zone/aWzMeteor1DL
+      6  ast_9_ti 4F544558, such as ast_9_ti/D_TI_9004858, ast_9_ti/D_TI_9004958, ast_9_ti/D_TI_9004A68
+      6  ast_A_ti 4F444C54, such as ast_A_ti/D_TI_A000000, ast_A_ti/D_TI_A001BE0, ast_A_ti/D_TI_A001DB0
+      6  ast_A_ti 414E494D, such as ast_A_ti/D_TI_A0002BC, ast_A_ti/D_TI_A00047C, ast_A_ti/D_TI_A000858
+      6  ast_allies 4F444C54, such as ast_allies/aBillMarkDL, ast_allies/aBillShipDL, ast_allies/aJamesMarkDL
+      6  ast_andross 4F42494E, such as ast_andross/D_ANDROSS_C035154, ast_andross/D_ANDROSS_C0356A4, ast_andross/D_ANDROSS_C0356CC
+      6  ast_macbeth 56433353, such as ast_macbeth/D_MA_6030E74, ast_macbeth/D_MA_6030EB0, ast_macbeth/D_MA_6030EEC
+      6  ast_macbeth 56433346, such as ast_macbeth/D_MA_6030E80, ast_macbeth/D_MA_6030EBC, ast_macbeth/D_MA_6030EF8
+      5  ast_area_6 48544258, such as ast_area_6/D_A6_6028578, ast_area_6/aA6GorgonHitbox, ast_area_6/aA6HarlockFrigateHitbox
+      5  ast_bolse 414E494D, such as ast_bolse/D_BO_6008668, ast_bolse/D_BO_60086F4, ast_bolse/aBoBaseCoreAnim
+      5  ast_bolse 534B454C, such as ast_bolse/D_BO_60086B4, ast_bolse/D_BO_6008760, ast_bolse/aBoBaseCoreSkel
+      5  ast_corneria 534B454C, such as ast_corneria/aCoCarrierSkel, ast_corneria/aCoDoorsSkel, ast_corneria/aCoGarudaSkel
+      5  ast_ending 4C494D42, such as ast_ending/D_END_70187B4_limb_0, ast_ending/D_END_70187B4_limb_1, ast_ending/D_END_70187B4_limb_2
+      5  ast_training 4F444C54, such as ast_training/D_TR_6003760, ast_training/D_TR_6005880, ast_training/aItemTrainingRingDL
+      4  ast_7_ti_1 534B454C, such as ast_7_ti_1/aTi1DesertCrawlerSkel, ast_7_ti_1/aTi1DesertRoverSkel, ast_7_ti_1/aTiBomberSkel
+      4  ast_7_ti_2 414E494D, such as ast_7_ti_2/D_TI2_7003EE8, ast_7_ti_2/D_TI2_70084CC, ast_7_ti_2/D_TI2_70096EC
+      4  ast_aquas 56433346, such as ast_aquas/D_AQ_6031FE0, ast_aquas/D_AQ_603204C, ast_aquas/D_AQ_603216C
+      4  ast_arwing 414E494D, such as ast_arwing/D_arwing_3015AF4, ast_arwing/D_arwing_3015C28, ast_arwing/D_arwing_3015D68
+      4  ast_great_fox 4F444C54, such as ast_great_fox/D_GREAT_FOX_E00DFB0, ast_great_fox/D_GREAT_FOX_E011D80, ast_great_fox/aGreatFoxDamagedDL
+      4  ast_macbeth 4F42494E, such as ast_macbeth/D_MA_6031000, ast_macbeth/D_MA_6035678, ast_macbeth/D_MA_60357CC
+      4  ast_sector_z 48544258, such as ast_sector_z/aSZMissileHitbox, ast_sector_z/aSzGreatFoxHitbox, ast_sector_z/aSzSpaceJunk1Hitbox
+      4  ast_star_wolf 4F444C54, such as ast_star_wolf/aStarWolfRadarMarkDL, ast_star_wolf/aStarWolfShadowDL, ast_star_wolf/aStarWolfStandardShipDL
+      4  ast_title 534B454C, such as ast_title/aFalcoSkel, ast_title/aFoxSkel, ast_title/aPeppySkel
+      4  ast_venom_2 414E494D, such as ast_venom_2/D_VE2_600C038, ast_venom_2/D_VE2_600C200, ast_venom_2/aVe2AndrossGateAnim
+      4  ast_venom_2 534B454C, such as ast_venom_2/D_VE2_600C0A4, ast_venom_2/D_VE2_600C2AC, ast_venom_2/aVe2AndrossGateSkel
+      4  ast_versus 4F42494E, such as ast_versus/D_versus_302DE3C, ast_versus/D_versus_302E0E4, ast_versus/D_versus_302E170
+      4  ast_versus 56433353, such as ast_versus/D_versus_302EEE8, ast_versus/D_versus_302EF6C, ast_versus/D_versus_302EFF0
+      4  ast_versus 534B454C, such as ast_versus/aVsOnFootFalcoSkel, ast_versus/aVsOnFootFoxSkel, ast_versus/aVsOnFootPeppySkel
+      4  ast_warp_zone 4F544558, such as ast_warp_zone/D_WZ_7000260, ast_warp_zone/D_WZ_7000A30, ast_warp_zone/D_WZ_7000C30
+      3  ast_8_ti 414E494D, such as ast_8_ti/D_TI_8000708, ast_8_ti/D_TI_8000D80, ast_8_ti/D_TI_8008FE8
+      3  ast_A_ti 534B454C, such as ast_A_ti/D_TI_A000568, ast_A_ti/D_TI_A000EDC, ast_A_ti/D_TI_A001A70
+      3  ast_aquas 56433353, such as ast_aquas/D_AQ_6031FB0, ast_aquas/D_AQ_60320B8, ast_aquas/D_AQ_6032388
+      3  ast_audio 4154424C, such as ast_audio/audio_sample_bank_table, ast_audio/audio_seq_table, ast_audio/audio_soundfont_table
+      3  ast_fortuna 43504C59, such as ast_fortuna/D_FO_600F1DC, ast_fortuna/D_FO_600F3F4, ast_fortuna/D_FO_600F60C
+      3  ast_fortuna 56433353, such as ast_fortuna/D_FO_600F394, ast_fortuna/D_FO_600F5AC, ast_fortuna/D_FO_600FD50
+      3  ast_katina 48544258, such as ast_katina/D_KA_60111D8, ast_katina/aKaFrontlineBaseHitbox, ast_katina/aKaSaucererHitbox
+      3  ast_meteo 43504C59, such as ast_meteo/D_ME_602FA9C, ast_meteo/D_ME_6030208, ast_meteo/D_ME_60305DC
+      3  ast_meteo 56433353, such as ast_meteo/D_ME_60300C8, ast_meteo/D_ME_6030550, ast_meteo/D_ME_603184C
+      3  ast_option 4F444C54, such as ast_option/D_OPT_80147F0, ast_option/D_OPT_8015550, ast_option/aLightningDL
+      3  ast_option 4F565458, such as ast_option/ast_option_seg8_vtx_00014B50, ast_option/ast_option_seg8_vtx_155A8, ast_option/ast_option_seg8_vtx_15E48
+      3  ast_training 48544258, such as ast_training/aItemTrainingRingHitbox, ast_training/aTrBarrierHitbox, ast_training/aTrBuildingHitbox
+      3  ast_venom_2 48544258, such as ast_venom_2/aVe2BaseHitbox, ast_venom_2/aVe2MountainHitbox, ast_venom_2/aVe2TowerHitbox
+      3  ast_versus 454E5653, such as ast_versus/D_versus_302DD70, ast_versus/D_versus_302DDB4, ast_versus/D_versus_302DDF8
+      2  ast_9_ti 414E494D, such as ast_9_ti/D_TI_9004288, ast_9_ti/D_TI_900FC4C
+      2  ast_A_ti 4F544558, such as ast_A_ti/D_TI_A0000C8, ast_A_ti/D_TI_A0001C8
+      2  ast_aquas 454E5653, such as ast_aquas/D_AQ_602E540, ast_aquas/D_AQ_602E584
+      2  ast_area_6 454E5653, such as ast_area_6/D_A6_6023F20, ast_area_6/D_A6_6028760
+      2  ast_area_6 4F42494E, such as ast_area_6/D_A6_6023F64, ast_area_6/D_A6_60287A4
+      2  ast_area_6 53435250, such as ast_area_6/D_A6_6027F50, ast_area_6/D_A6_60289FC
+      2  ast_corneria 56433353, such as ast_corneria/D_CO_603F338, ast_corneria/D_CO_603F40C
+      2  ast_corneria 56433346, such as ast_corneria/D_CO_603F388, ast_corneria/D_CO_603F4E4
+      2  ast_corneria 4F42494E, such as ast_corneria/aCoAllRangeLevelObjects, ast_corneria/aCoOnRailsLevelObjects
+      2  ast_ending_expert 4F544558, such as ast_ending_expert/ending_expert_reward, ast_ending_expert/ending_normal_reward
+      2  ast_enmy_planet 414E494D, such as ast_enmy_planet/aFirebirdAnim, ast_enmy_planet/aTripodAnim
+      2  ast_enmy_planet 534B454C, such as ast_enmy_planet/aFirebirdSkel, ast_enmy_planet/aTripodSkel
+      2  ast_enmy_space 414E494D, such as ast_enmy_space/aCruiserGunAnim, ast_enmy_space/aKillerBeeAnim
+      2  ast_enmy_space 534B454C, such as ast_enmy_space/aCruiserGunSkel, ast_enmy_space/aKillerBeeSkel
+      2  ast_font_3d 4F544558, such as ast_font_3d/D_FONT3D_9000528, ast_font_3d/D_FONT3D_9000548
+      2  ast_meteo 4F42494E, such as ast_meteo/D_ME_6026CC4, ast_meteo/D_ME_602B148
+      2  ast_sector_x 534B454C, such as ast_sector_x/D_SX_601390C, ast_sector_x/aSxSpyborgSkel
+      2  ast_sector_x 4F42494E, such as ast_sector_x/D_SX_602A164, ast_sector_x/D_SX_602F18C
+      2  ast_sector_y 4F42494E, such as ast_sector_y/D_SY_602E4F4, ast_sector_y/D_SY_6030B14
+      2  ast_solar 534B454C, such as ast_solar/D_SO_600E470, ast_solar/aSoGoreSkel
+      2  ast_training 4F42494E, such as ast_training/D_TR_6006AA4, ast_training/D_TR_6008EF8
+      2  ast_ve1_boss 534B454C, such as ast_ve1_boss/D_VE1_901C0F4, ast_ve1_boss/aVe1MonkeyStatueSkel
+      2  ast_venom_1 4F42494E, such as ast_venom_1/D_VE1_6007E74, ast_venom_1/D_VE1_6010088
+      2  ast_zoness 47415252, such as ast_zoness/D_ZO_602AC50, ast_zoness/D_ZO_602AE94
+      1  ast_allies 4F424C42, such as ast_allies/D_D0000C8
+      1  ast_andross 534B454C, such as ast_andross/D_ANDROSS_C01CC3C
+      1  ast_andross 454E5653, such as ast_andross/D_ANDROSS_C035110
+      1  ast_andross 53435250, such as ast_andross/D_ANDROSS_C037E3C
+      1  ast_aquas 4F42494E, such as ast_aquas/D_AQ_602E5C8
+      1  ast_aquas 53435250, such as ast_aquas/D_AQ_60308B8
+      1  ast_area_6 414E494D, such as ast_area_6/D_A6_6018994
+      1  ast_area_6 534B454C, such as ast_area_6/D_A6_6018BA0
+      1  ast_arwing 4F424C42, such as ast_arwing/D_ARWING_BLOB_1
+      1  ast_arwing 534B454C, such as ast_arwing/D_arwing_3016610
+      1  ast_audio 47415252, such as ast_audio/audio_seq_font_table
+      1  ast_blue_marine 4F424C42, such as ast_blue_marine/D_blue_marine_30005E8
+      1  ast_bolse 454E5653, such as ast_bolse/D_BO_600FF30
+      1  ast_bolse 4F42494E, such as ast_bolse/D_BO_600FF74
+      1  ast_bolse 43504C59, such as ast_bolse/D_BO_6010294
+      1  ast_bolse 56433353, such as ast_bolse/D_BO_601170C
+      1  ast_corneria 454E5653, such as ast_corneria/D_CO_6037160
+      1  ast_corneria 53435250, such as ast_corneria/D_CO_603D9E8
+      1  ast_ending 414E494D, such as ast_ending/D_END_7018708
+      1  ast_ending 534B454C, such as ast_ending/D_END_70187B4
+      1  ast_ending_award_back 4F544558, such as ast_ending_award_back/ending_award_back
+      1  ast_ending_award_front 4F544558, such as ast_ending_award_front/ending_award_front
+      1  ast_fortuna 454E5653, such as ast_fortuna/D_FO_600EA90
+      1  ast_fortuna 4F42494E, such as ast_fortuna/D_FO_600EAD4
+      1  ast_fortuna 414E494D, such as ast_fortuna/aFoRadarAnim
+      1  ast_fortuna 534B454C, such as ast_fortuna/aFoRadarSkel
+      1  ast_katina 414E494D, such as ast_katina/D_KA_60105D8
+      1  ast_katina 534B454C, such as ast_katina/D_KA_6010744
+      1  ast_katina 454E5653, such as ast_katina/D_KA_6011000
+      1  ast_katina 4F42494E, such as ast_katina/D_KA_6011044
+      1  ast_logo 4F544558, such as ast_logo/nintendo_logo
+      1  ast_macbeth 454E5653, such as ast_macbeth/D_MA_6030E30
+      1  ast_macbeth 53435250, such as ast_macbeth/D_MA_60381D8
+      1  ast_meteo 454E5653, such as ast_meteo/D_ME_6026C80
+      1  ast_meteo 53435250, such as ast_meteo/D_ME_602F3AC
+      1  ast_meteo 414E494D, such as ast_meteo/aMeHopBotAnim
+      1  ast_meteo 534B454C, such as ast_meteo/aMeHopBotSkel
+      1  ast_radio 4D534754, such as ast_radio/message_table
+      1  ast_sector_x 454E5653, such as ast_sector_x/D_SX_602A120
+      1  ast_sector_x 53435250, such as ast_sector_x/D_SX_60320D0
+      1  ast_sector_y 534B454C, such as ast_sector_y/D_SY_602D140
+      1  ast_sector_y 454E5653, such as ast_sector_y/D_SY_602E4B0
+      1  ast_sector_y 53435250, such as ast_sector_y/D_SY_6032E18
+      1  ast_sector_y 43504C59, such as ast_sector_y/D_SY_6033070
+      1  ast_sector_y 56433353, such as ast_sector_y/D_SY_6033E08
+      1  ast_sector_z 454E5653, such as ast_sector_z/D_SZ_6006E70
+      1  ast_sector_z 4F42494E, such as ast_sector_z/D_SZ_6006EB4
+      1  ast_sector_z 43504C59, such as ast_sector_z/D_SZ_6007558
+      1  ast_sector_z 56433353, such as ast_sector_z/D_SZ_6008E08
+      1  ast_sector_z 414E494D, such as ast_sector_z/aSzMissileAnim
+      1  ast_sector_z 534B454C, such as ast_sector_z/aSzMissileSkel
+      1  ast_solar 454E5653, such as ast_solar/D_SO_601F1F0
+      1  ast_solar 4F42494E, such as ast_solar/D_SO_601F234
+      1  ast_solar 53435250, such as ast_solar/D_SO_6020DD0
+      1  ast_solar 47415252, such as ast_solar/D_SO_6022760
+      1  ast_solar 48544258, such as ast_solar/D_SO_60231A4
+      1  ast_text 4F444C54, such as ast_text/aDownWrenchDL
+      1  ast_text 4F565458, such as ast_text/ast_text_seg5_vtx_B6A8
+      1  ast_titania 454E5653, such as ast_titania/D_TI_6005000
+      1  ast_titania 53435250, such as ast_titania/D_TI_600631C
+      1  ast_titania 4F42494E, such as ast_titania/D_TI_6006C60
+      1  ast_training 454E5653, such as ast_training/D_TR_6006A60
+      1  ast_training 53435250, such as ast_training/D_TR_6009B34
+      1  ast_venom_1 454E5653, such as ast_venom_1/D_VE1_6007E30
+      1  ast_venom_1 53435250, such as ast_venom_1/aVe1EventScript
+      1  ast_venom_2 454E5653, such as ast_venom_2/D_VE2_6014D50
+      1  ast_venom_2 4F42494E, such as ast_venom_2/D_VE2_6014D94
+      1  ast_venom_2 43504C59, such as ast_venom_2/D_VE2_6014FEC
+      1  ast_venom_2 56433353, such as ast_venom_2/D_VE2_6016374
+      1  ast_vs_menu 4F444C54, such as ast_vs_menu/D_VS_MENU_7012410
+      1  ast_vs_menu 4F565458, such as ast_vs_menu/ast_vs_menu_seg7_vtx_124A8
+      1  ast_zoness 454E5653, such as ast_zoness/D_ZO_60266D0
+      1  ast_zoness 4F42494E, such as ast_zoness/D_ZO_6026714
+      1  ast_zoness 53435250, such as ast_zoness/D_ZO_602AAC0
+      1  ast_zoness 56433353, such as ast_zoness/D_ZO_602CACC
+      1  ast_zoness 56433346, such as ast_zoness/D_ZO_602CB80

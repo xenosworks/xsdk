@@ -5332,3 +5332,53 @@ the disk was idle 15, 60 and 180 s, and then each block in place in the file ins
 
 A save after a level is 32 ms or so more than it need be, not the 257 ms stalls of the previous section; libultraship's
 writes are left as they are.
+
+## Torch on the console, milestone 64 (2026-10-25)
+
+Torch-xenon, Torch at Starship's pin built for xsdk, makes `sf64.o2r` on the console in `torch_check`, a title that
+runs it on the US 1.1 ROM beside it (starship-xenon:xsdk/torch_check.cpp); `compare_o2r.py` compares that archive
+with the one the PC made from the same ROM, entry by entry (starship-xenon:xsdk/compare_o2r.py;
+`results/2026-10-25-milestone-64/compare_*.txt`):
+- **In the host's order, 1 of 15,898 entries matched.** Torch's readers and writers default to the host's byte order
+  (Torch:lib/binarytools/endianness.h, `Endianness::Native`), big-endian on the console, and its resource headers say
+  which they were written in (`compare_written_big_endian.txt`).
+- **Little-endian by default, as on the PC, 15,712 matched.** The 57 places Torch swaps bytes itself were left as they
+  are: reading as the PC does, each swap meets the order it was written for. The 186 left were animations, whose joint
+  keys Torch wrote as their array's raw bytes, in the host's order (Torch:src/factories/sf64/AnimFactory.cpp:116;
+  `compare_little_by_default.txt`).
+- **With the keys written one at a time, all 15,898 match** (`compare_animation_keys.txt`), as in every run since.
+- **It took 234 to 238 s, and 56 s without a copy of the ROM for each asset:** Torch's `AddAsset` took a copy of the
+  12 MB ROM and didn't use it (Torch:src/Companion.cpp). Without it, 55.7 to 55.8 s (`torch_check_rom_copied.log`,
+  `torch_check_no_rom_copy.log`).
+- **The heap holds 215 MB when Torch is done,** in use by newlib's count, and 63.8 MB once its companion is deleted.
+  Starship's first run starts the title again afterwards, so the game doesn't start with it.
+
+Torch's own SHA-1 (Torch:lib/hj/sha1.h) is GPL-3.0-or-later, the one part of Torch that isn't MIT, so on xsdk
+Torch-xenon hashes the ROM with `XeCryptSha`, xboxkrnl's ordinal 0x192, which hashes up to three buffers into one digest
+(xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_table.inc:416; xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_crypt.cc:146-167).
+On the console its digest of "abc", whole and in three parts, is FIPS 180-2's, and it writes no more than the 20
+bytes asked for (`xsdk_test_xecryptsha.log`; 648 of 650 passed, the 2 failures the controller's state and rumble, with
+no one at the console). It hashed the ROM to Starship's US 1.1 hash, `09f0d105...` (starship:README.md:24), and Torch
+took 55.7 s with it (`torch_check_kernel_sha1.log`).
+
+## Starship's first run, milestone 64 (2026-10-25)
+
+With no `sf64.o2r` beside it, Starship 0.2.0.0 looks there for a ROM before its archives open
+(starship-xenon:src/port/xsdk/FirstRun.cpp): any `.z64`, `.n64` or `.v64`, put in `.z64` order, its SHA-1 checked.
+Torch runs on a thread of its own, with a 2 MB stack, while the main thread draws its progress in xsdk's text. Torch
+writes the archive into a folder of its own; it's copied beside the `.xex` as `sf64.o2r.part`, renamed `sf64.o2r` and
+opened with libzip, and only then is the ROM deleted and the title started again.
+- **A rename into another folder failed:** `NtSetInformationFile` renaming `game:\sf64.part\sf64.o2r` to a name
+  beside the `.xex` returned 0xC0000022, and the ROM was kept, as decided
+  (`results/2026-10-25-milestone-64/first_run_rename_across_folders.log`). A rename within the folder works.
+- **It took 61 to 62 s, and 82 s the first time,** from a `.z64`, a `.v64`, and a `.n64` with a cut run's folder left
+  (`first_run_z64.log`, `first_run_v64.log`, `first_run_n64_after_cut_run.log`, `first_run_kernel_sha1.log`). Each
+  archive fetched back matches all 15,898 of the PC's entries (`compare_first_run_*.txt`).
+- **Each error stays on the screen until a button:** a ROM Starship doesn't take, by its SHA-1, and no ROM at all
+  (`first_run_wrong_rom.log`, `first_run_no_rom.log`); too little space, broken on purpose to ask for 1 PB
+  (`first_run_break_space.log`). Each keeps what's beside the `.xex`.
+- **From the store:** the store, on a test-signed catalogue, updated 0.1.0.0 to 0.2.0.0 in place, 105 files in its
+  receipt, keeping the player's `sf64.o2r`, saves and settings (`store_update_0.1_to_0.2.log`, `store_update_page.png`,
+  the store's own capture). With `sf64.o2r` taken away and a ROM put in its place, the first run took 62 s and deleted
+  the ROM, and the game read the new archive, 14,559,161 bytes in 419 ms, and ran at 28.3 to 30.0 fps
+  (`first_run_store_update.log`, `first_run_store_update_restart.log`).

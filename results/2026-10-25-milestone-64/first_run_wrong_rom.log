@@ -1,0 +1,7 @@
+log: game:\starship.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m64s\starship.xex
+log: also over UDP to 192.168.0.125:7371
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 30802 us
+first run: bad.z64, SHA-1 53988dda1c606bf53a0da44fb90fb84ae9fb8b33, isn't a ROM Starship takes
+first run: no ROM Starship takes beside the .xex

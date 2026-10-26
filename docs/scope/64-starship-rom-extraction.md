@@ -39,6 +39,11 @@ beside the `.xex`, and then delete the ROM, with a message for the player.
    pushing it, or making one, waits for the user.
 4. **A progress screen,** in xsdk's text: what it's doing and how far, then that it's done and the ROM removed, for a
    few seconds; an error stays until a button is pressed: no ROM found, a ROM Starship doesn't take, too little space.
+5. **The console kernel's SHA-1, not Torch's.** Torch's lib/hj/sha1.h is Chocobo1's, GPL-3.0-or-later, the one part of
+   Torch that isn't MIT; linked in, it would make the released .xex GPL-3. On xsdk Torch-xenon hashes with
+   XeCryptSha, imported for it.
+6. **Torch-xenon goes public with Starship 0.2.0.0,** as xenosworks/Torch-xenon on branch xenon, so starship-xenon's
+   submodule points at commits anyone can fetch.
 
 ## Steps
 

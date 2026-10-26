@@ -1,0 +1,7 @@
+log: game:\starship.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m64s\starship.xex
+log: also over UDP to 192.168.0.125:7371
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 25800 us
+first run: DIAG 1280x720 front buffers at 0xBF3F0000, 0xBF050000
+first run: 140435505152 bytes free, 1125899906842624 needed

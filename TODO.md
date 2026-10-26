@@ -55,9 +55,9 @@ work begins.
 - **A second colour of text in a frame scatters it (milestone 64).** Starship's first-run screen drew a bar as two
   `xsdk_text_draw` calls side by side, the first in 0xFFEEEEEA and the second in 0xFF2A2A2C. The first drew whole; the
   second's glyphs came out speckled, in its place and as stray marks far below it, with `#` as with U+2588, frame
-  after frame of a still screen (frames read back from the console through the debug monitor, local/m64). Text in one
-  colour, of any size and in any number of calls, drew whole. Not yet known; test_text.c draws one colour a frame.
-  Starship draws its bar as one string meanwhile.
+  after frame of a still screen. Text in one colour, of any size and in any number of calls, drew whole. Seen on the
+  console only, not yet in a check of xsdk's own: test_text.c draws one colour a frame, and a check drawing two would
+  show it. Starship draws its bar as one string meanwhile.
 
 ## Toolchain
 

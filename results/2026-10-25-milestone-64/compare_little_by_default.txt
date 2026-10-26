@@ -1,0 +1,29 @@
+compare_o2r: 15898 entries on the console, 15898 on the PC; 15712 match
+compare_o2r: 186 differ:
+     21  ast_macbeth 414E494D, such as ast_macbeth/D_MA_600C4D0, ast_macbeth/D_MA_600CD18, ast_macbeth/D_MA_600FEC4
+     20  ast_andross 414E494D, such as ast_andross/D_ANDROSS_C00208C, ast_andross/D_ANDROSS_C002654, ast_andross/D_ANDROSS_C002B08
+     15  ast_aquas 414E494D, such as ast_aquas/D_AQ_601DE50, ast_aquas/D_AQ_6024F80, ast_aquas/D_AQ_602AC28
+     14  ast_title 414E494D, such as ast_title/D_TITLE_601E424, ast_title/D_TITLE_601F8E0, ast_title/D_TITLE_6020058
+     12  ast_sector_y 414E494D, such as ast_sector_y/D_SY_6003348, ast_sector_y/D_SY_60034C4, ast_sector_y/D_SY_601F3B8
+     12  ast_versus 414E494D, such as ast_versus/D_versus_301C0A4, ast_versus/D_versus_301C3A8, ast_versus/D_versus_301C79C
+     11  ast_sector_x 414E494D, such as ast_sector_x/D_SX_6009FF8, ast_sector_x/D_SX_600A2D4, ast_sector_x/D_SX_600F890
+      9  ast_corneria 414E494D, such as ast_corneria/D_CO_602AA04, ast_corneria/D_CO_602D31C, ast_corneria/aCoCarrierAnim
+      9  ast_solar 414E494D, such as ast_solar/D_SO_6009D30, ast_solar/D_SO_600B1B4, ast_solar/D_SO_600C15C
+      9  ast_zoness 414E494D, such as ast_zoness/D_ZO_6018550, ast_zoness/D_ZO_60195EC, ast_zoness/D_ZO_601996C
+      8  ast_7_ti_1 414E494D, such as ast_7_ti_1/D_TI1_70067C4, ast_7_ti_1/D_TI1_7006F74, ast_7_ti_1/D_TI1_7007130
+      8  ast_ve1_boss 414E494D, such as ast_ve1_boss/D_VE1_9002CD8, ast_ve1_boss/D_VE1_9010FC4, ast_ve1_boss/D_VE1_9018BD0
+      6  ast_A_ti 414E494D, such as ast_A_ti/D_TI_A0002BC, ast_A_ti/D_TI_A00047C, ast_A_ti/D_TI_A000858
+      5  ast_bolse 414E494D, such as ast_bolse/D_BO_6008668, ast_bolse/D_BO_60086F4, ast_bolse/aBoBaseCoreAnim
+      4  ast_7_ti_2 414E494D, such as ast_7_ti_2/D_TI2_7003EE8, ast_7_ti_2/D_TI2_70084CC, ast_7_ti_2/D_TI2_70096EC
+      4  ast_arwing 414E494D, such as ast_arwing/D_arwing_3015AF4, ast_arwing/D_arwing_3015C28, ast_arwing/D_arwing_3015D68
+      4  ast_venom_2 414E494D, such as ast_venom_2/D_VE2_600C038, ast_venom_2/D_VE2_600C200, ast_venom_2/aVe2AndrossGateAnim
+      3  ast_8_ti 414E494D, such as ast_8_ti/D_TI_8000708, ast_8_ti/D_TI_8000D80, ast_8_ti/D_TI_8008FE8
+      2  ast_9_ti 414E494D, such as ast_9_ti/D_TI_9004288, ast_9_ti/D_TI_900FC4C
+      2  ast_enmy_planet 414E494D, such as ast_enmy_planet/aFirebirdAnim, ast_enmy_planet/aTripodAnim
+      2  ast_enmy_space 414E494D, such as ast_enmy_space/aCruiserGunAnim, ast_enmy_space/aKillerBeeAnim
+      1  ast_area_6 414E494D, such as ast_area_6/D_A6_6018994
+      1  ast_ending 414E494D, such as ast_ending/D_END_7018708
+      1  ast_fortuna 414E494D, such as ast_fortuna/aFoRadarAnim
+      1  ast_katina 414E494D, such as ast_katina/D_KA_60105D8
+      1  ast_meteo 414E494D, such as ast_meteo/aMeHopBotAnim
+      1  ast_sector_z 414E494D, such as ast_sector_z/aSzMissileAnim
