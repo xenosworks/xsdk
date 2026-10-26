@@ -801,6 +801,12 @@ static bool declare_inputs(Xsc *x, const XscModule *m, const XscType *types, Xsc
 	*param_reg = XSC_NONE;
 	for (size_t i = 0; i < si->interp_in_count; i++) {
 		const XscVarUse *const use = &si->interp_in[i];
+		// A GLSL shader's locations may skip some, as its vertex shader's do (exported_interpolators): each one skipped
+		// takes its register unread, so the next is interpolated from its own location's export.
+		while ((int64_t)p->interpolator_count < (int64_t)use->a) {
+			if (!xsdk_xsc_program_input(x, p, (int64_t)p->interpolator_count, XSC_USAGE_TEXCOORD))
+				return false;
+		}
 		if (!xsdk_xsc_program_input(x, p, use->a, use->b))
 			return false;
 		if ((int64_t)use->a > *highest)
