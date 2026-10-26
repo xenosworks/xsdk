@@ -193,35 +193,40 @@ static bool point_coord_register(XscLower *l, const XscInterface *si, int64_t pa
 
 static bool gather(Fragment *f, uint32_t ssa);
 
+// The derivative of src's components first and first + 1 into r's lanes in mask: getGradients takes two components
+// a fetch, so a vec3's or vec4's z and w take a second.
+static bool derivative_pair(XscLower *l, const XscInstr *ins, int64_t src, int64_t first, int64_t r, int64_t mask)
+{
+	const int64_t grad = xsdk_xsc_fresh(l);
+	XscFetch t = xsdk_xsc_template_tfetch();
+	t.opcode = XSC_FETCH_GET_GRADIENTS;
+	t.src_swizzle = first | (first + 1) << 2;
+	t.dest = grad;
+	t.src = src;
+	if (!xsdk_xsc_program_tfetch(l->x, l->p, &t))
+		return false;
+	if (ins->opcode == SPV_DPDX || ins->opcode == SPV_DPDY) {
+		const XscSrc s = xsc_src(xsc_reg(grad), false, ins->opcode == SPV_DPDX ? GRADIENT_X : GRADIENT_Y);
+		return xsc_emit2(l, XSC_VECTOR_MAX, s, s, r, false, mask);
+	}
+	// fwidth = |ddx| + |ddy|.
+	const int64_t ag = xsdk_xsc_fresh(l);
+	if (!xsc_emit2(l, XSC_VECTOR_MAX, xsc_temp(grad), xsc_negated(xsc_reg(grad)), ag, false, 0xF))
+		return false;
+	const XscSrc x = xsc_src(xsc_reg(ag), false, GRADIENT_X);
+	return xsc_emit2(l, XSC_VECTOR_ADD, x, xsc_src(xsc_reg(ag), false, GRADIENT_Y), r, false, mask);
+}
+
 bool xsdk_xsc_emit_derivative(XscLower *l, uint32_t ssa, const XscInstr *ins)
 {
 	const XscOperand src = xsdk_xsc_to_reg(l, xsdk_xsc_lower_operand(l, xsdk_xsc_operand(ins, 0)));
 	if (xsc_failed(l))
 		return false;
-	const int64_t grad = xsdk_xsc_fresh(l);
-	XscFetch t = xsdk_xsc_template_tfetch();
-	t.opcode = XSC_FETCH_GET_GRADIENTS;
-	t.src_swizzle = 0 | 1 << 2;
-	t.dest = grad;
-	t.src = src.value;
-	if (!xsdk_xsc_program_tfetch(l->x, l->p, &t))
+	const bool wide = xsdk_xsc_vec_size(l, xsdk_xsc_operand(ins, 0)) > 2;
+	const int64_t r = xsdk_xsc_fresh(l);
+	if (!derivative_pair(l, ins, src.value, 0, r, wide ? 0x3 : 0xF) ||
+		(wide && !derivative_pair(l, ins, src.value, 2, r, 0xC)))
 		return false;
-	int64_t r;
-	if (ins->opcode == SPV_DPDX || ins->opcode == SPV_DPDY) {
-		r = xsdk_xsc_fresh(l);
-		const XscSrc s = xsc_src(xsc_reg(grad), false, ins->opcode == SPV_DPDX ? GRADIENT_X : GRADIENT_Y);
-		if (!xsc_emit2(l, XSC_VECTOR_MAX, s, s, r, false, 0xF))
-			return false;
-	} else {
-		// fwidth = |ddx| + |ddy|.
-		const int64_t ag = xsdk_xsc_fresh(l);
-		if (!xsc_emit2(l, XSC_VECTOR_MAX, xsc_temp(grad), xsc_negated(xsc_reg(grad)), ag, false, 0xF))
-			return false;
-		r = xsdk_xsc_fresh(l);
-		const XscSrc x = xsc_src(xsc_reg(ag), false, GRADIENT_X);
-		if (!xsc_emit2(l, XSC_VECTOR_ADD, x, xsc_src(xsc_reg(ag), false, GRADIENT_Y), r, false, 0xF))
-			return false;
-	}
 	l->deriv_reg[ssa] = r;
 	return true;
 }
