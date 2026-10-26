@@ -334,16 +334,36 @@ static int64_t natural_log(XscLower *l, const XscInstr *ins, int64_t dst, bool e
 	return done(xsc_emit2(l, XSC_VECTOR_MUL, xsc_temp(lg), xsc_plain(ck), dst, export_, 0xF), dst);
 }
 
+// x - 2pi * floor(x / 2pi + 0.5), in [-pi, pi), in a temp: the hardware's sin and cos hold only over that range
+// (xenos-toolchain/docs/builtin-lowering.md, "sin(x) / cos(x)"), so x is brought into it first, as fxc does.
+static int64_t reduced_angle(XscLower *l, XscOperand x)
+{
+	XscOperand inv_two_pi, half, two_pi, minus_pi;
+	if (!splat(l, 0.15915494309189535, &inv_two_pi) || !splat(l, 0.5, &half) ||
+		!splat(l, 6.283185307179586, &two_pi) || !splat(l, -3.141592653589793, &minus_pi))
+		return XSC_NONE;
+	const int64_t t = xsdk_xsc_fresh(l);
+	return done(xsc_emit3(l, XSC_VECTOR_MAD, xsc_plain(x), xsc_plain(inv_two_pi), xsc_plain(half), t, false, 0xF) &&
+			xsc_emit2(l, XSC_VECTOR_FRC, xsc_temp(t), xsc_temp(t), t, false, 0xF) &&
+			xsc_emit3(l, XSC_VECTOR_MAD, xsc_temp(t), xsc_plain(two_pi), xsc_plain(minus_pi), t, false, 0xF),
+		t);
+}
+
 static int64_t sin_cos(XscLower *l, const XscInstr *ins, int64_t sop, int64_t dst, bool export_)
 {
 	const int64_t n = xsdk_xsc_vec_size(l, arg(ins, 0));
 	XscOperand ox;
-	if (n > 1)
-		return arg_operand(l, ins, 0, &ox) ? each_lane(l, sop, ox, n, dst, export_) : XSC_NONE;
+	if (n > 1) {
+		if (!arg_operand(l, ins, 0, &ox))
+			return XSC_NONE;
+		const int64_t t = reduced_angle(l, ox);
+		return t == XSC_NONE ? XSC_NONE : each_lane(l, sop, xsc_reg(t), n, dst, export_);
+	}
 	ScalarSource s;
 	if (!scalar_source(l, arg(ins, 0), &s))
 		return XSC_NONE;
-	return scalar_result(l, sop, s.o, s.comp, dst, export_);
+	const int64_t t = reduced_angle(l, s.o);
+	return t == XSC_NONE ? XSC_NONE : scalar_result(l, sop, xsc_reg(t), s.comp, dst, export_);
 }
 
 // i - 2 * dot(n, i) * n.
@@ -420,10 +440,13 @@ static int64_t tangent(XscLower *l, const XscInstr *ins, int64_t dst, bool expor
 	ScalarSource s;
 	if (!scalar_source(l, arg(ins, 0), &s))
 		return XSC_NONE;
-	const int64_t si = xsdk_xsc_emit_scalar(l, XSC_SCALAR_SIN, xsdk_xsc_fresh(l), s.o, s.comp, 0xF);
+	const int64_t t = reduced_angle(l, s.o);
+	if (t == XSC_NONE)
+		return XSC_NONE;
+	const int64_t si = xsdk_xsc_emit_scalar(l, XSC_SCALAR_SIN, xsdk_xsc_fresh(l), xsc_reg(t), s.comp, 0xF);
 	if (si == XSC_NONE)
 		return XSC_NONE;
-	const int64_t co = xsdk_xsc_emit_scalar(l, XSC_SCALAR_COS, xsdk_xsc_fresh(l), s.o, s.comp, 0xF);
+	const int64_t co = xsdk_xsc_emit_scalar(l, XSC_SCALAR_COS, xsdk_xsc_fresh(l), xsc_reg(t), s.comp, 0xF);
 	if (co == XSC_NONE)
 		return XSC_NONE;
 	const int64_t rc = xsdk_xsc_emit_scalar(l, XSC_SCALAR_RCP, xsdk_xsc_fresh(l), xsc_reg(co), 3, 0xF);

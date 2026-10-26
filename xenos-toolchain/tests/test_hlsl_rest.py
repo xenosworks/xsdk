@@ -166,12 +166,18 @@ def bool_case(a, use):
 EXP_IN = [0.5, -0.75, 1.25, 0.25]
 
 
+def reduced_angle(x):
+    """x brought into [-pi, pi) as xost does before sin and cos (src/xsc_lower_glsl.c, reduced_angle)."""
+    t = s(x * s(0.15915494309189535) + 0.5)
+    return s(s(t - math.floor(t)) * s(6.283185307179586) + s(-3.141592653589793))
+
+
 def vector_exp():
     a = EXP_IN
     e = [s(2.0 ** s(x * LOG2_E)) for x in a[:2]]
     lg = [s(math.log2(s(x + 2.0))) for x in a[2:]]
     roots = [s(math.sqrt(s(x * x))) for x in (a[1], a[3])]
-    sines = [s(math.sin(x)) for x in (a[0], a[2])]
+    sines = [s(math.sin(reduced_angle(x))) for x in (a[0], a[2])]
     return [s(x + y) for x, y in zip(e + lg, roots + sines)]
 
 

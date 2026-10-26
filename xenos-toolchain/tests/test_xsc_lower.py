@@ -394,8 +394,8 @@ def main():
         ("absign", ["max(u_offset.xyzw, -u_offset.xyzw)",
                      "r6.xyzw > -r6.xyzw", "-r6.xyzw > r6.xyzw"],
          "abs()=max(x,-x), sign()=sgt(x,-x)-sgt(-x,x)"),
-        ("tangent", ["sin(u_phase.x)", "cos(u_phase.x)"],
-         "tan(x)=sin(x)*rcp(cos(x))"),
+        ("tangent", ["frac(", "sin(r", "cos(r"],
+         "tan(x)=sin(x)*rcp(cos(x)), x brought into [-pi, pi) first"),
     ]:
         blob = compile_glsl(f"{name}.frag")
         h = oracle_hlsl(blob, f"{name}_frag")
@@ -819,7 +819,11 @@ def main():
     vwave, vwman = lower_ex(spirv.Module.parse(
         (TD / "vs_wave.vert.spv").read_bytes()))
     vwhl = oracle_hlsl(vwave, "vs_wave_vert")
-    want_vwman = [(4, (0.5, 0.5, 0.5, 0.5))]
+    # 0.5, then sin's range reduction: 1/2pi, 2pi and -pi (src/xsc_lower_glsl.c, reduced_angle).
+    want_vwman = [(4, (0.5, 0.5, 0.5, 0.5)),
+                  (5, (0.15915494309189535,) * 4),
+                  (6, (6.283185307179586,) * 4),
+                  (7, (-3.141592653589793,) * 4)]
     need = ["ps = sin(r6.w)", "r3.xzw = max(r0.xzw, r0.xzw)",
             "r3.y = r0.y + r4.y", "dot(r3.xyzw, u_mvp(0)"]
     miss = [s for s in need if not vwhl or not found(s, vwhl)]
