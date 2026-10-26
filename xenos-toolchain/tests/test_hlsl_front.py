@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """What glslang's HLSL brings xost's front (xsdk:docs/scope/50-hlsl.md, step 2): static globals, which are Private
 variables, as locals (xsdk:src/xsc_spirv.c, xsdk_xsc_declares_local); clamp's bounds folded to constant splats
-(src/xsc_lower.c, xsdk_xsc_const_scalar); OpUndef and OpConstantNull as zeros (src/xsc_spirv.c,
+(src/xsc_lower.c, xsdk_xsc_splat_const); OpUndef and OpConstantNull as zeros (src/xsc_spirv.c,
 xsdk_xsc_spirv_zero_nulls); and a float2 FragCoord used whole, which has no z or w (src/xsc_lower_fragment.c,
 reads_depth). And step 4's guard: a Private variable given an initializer, which xost would drop, is refused
 (src/xsc_compile.c, refuse_initializers); glslang writes a static's value as a store.

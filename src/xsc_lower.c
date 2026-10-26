@@ -677,33 +677,6 @@ int64_t xsdk_xsc_recip(XscLower *l, XscOperand opnd, int64_t n)
 	return r;
 }
 
-bool xsdk_xsc_const_scalar(XscLower *l, uint32_t ssa, double *value)
-{
-	const XscInstr *const ins = xsdk_xsc_lower_result(l, ssa);
-	if (!ins)
-		return false;
-	if (ins->opcode == SPV_CONSTANT) {
-		*value = xsdk_xsc_scalar_const(l, ssa);
-		return true;
-	}
-	// A splat, a constant one too.
-	if (ins->opcode == SPV_COMPOSITE_CONSTRUCT || ins->opcode == SPV_CONSTANT_COMPOSITE) {
-		uint32_t count;
-		const uint32_t *const ops = xsdk_xsc_operands(ins, &count);
-		bool same = count > 0;
-		for (uint32_t i = 1; i < count; i++)
-			same = same && ops[i] == ops[0];
-		const XscInstr *const part = same ? xsdk_xsc_lower_result(l, ops[0]) : NULL;
-		if (xsc_failed(l))
-			return false;
-		if (part && part->opcode == SPV_CONSTANT) {
-			*value = xsdk_xsc_scalar_const(l, ops[0]);
-			return true;
-		}
-	}
-	return xsdk_xsc_lower_refuse(l, "%%%u is not a constant scalar", (unsigned)ssa);
-}
-
 // An int constant's raw literal (lower.py const_val).
 static bool const_val(XscLower *l, uint32_t ssa, int64_t *value)
 {

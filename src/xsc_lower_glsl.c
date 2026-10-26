@@ -339,8 +339,8 @@ static int64_t natural_log(XscLower *l, const XscInstr *ins, int64_t dst, bool e
 static int64_t reduced_angle(XscLower *l, XscOperand x)
 {
 	XscOperand inv_two_pi, half, two_pi, minus_pi;
-	if (!splat(l, 0.15915494309189535, &inv_two_pi) || !splat(l, 0.5, &half) ||
-		!splat(l, 6.283185307179586, &two_pi) || !splat(l, -3.141592653589793, &minus_pi))
+	if (!splat(l, 0.15915494309189535, &inv_two_pi) || !splat(l, 0.5, &half) || !splat(l, 6.283185307179586, &two_pi) ||
+		!splat(l, -3.141592653589793, &minus_pi))
 		return XSC_NONE;
 	const int64_t t = xsdk_xsc_fresh(l);
 	return done(xsc_emit3(l, XSC_VECTOR_MAD, xsc_plain(x), xsc_plain(inv_two_pi), xsc_plain(half), t, false, 0xF) &&
@@ -404,8 +404,8 @@ static int64_t power(XscLower *l, const XscInstr *ins, int64_t dst, bool export_
 			return XSC_NONE;
 		const int64_t mi = xsdk_xsc_fresh(l);
 		// Lane i's exponent: pow takes x and y alike, a component at a time (GLSL.std.450, Pow).
-		if (!xsc_emit2(l, XSC_VECTOR_MUL, xsc_temp(li), xsc_src(oy, false, xsdk_xsc_bsw(y_vector ? i : 0)), mi, false,
-				0xF))
+		if (!xsc_emit2(
+				l, XSC_VECTOR_MUL, xsc_temp(li), xsc_src(oy, false, xsdk_xsc_bsw(y_vector ? i : 0)), mi, false, 0xF))
 			return XSC_NONE;
 		const int64_t ri = xsdk_xsc_emit_scalar(l, XSC_SCALAR_EXP, xsdk_xsc_fresh(l), xsc_reg(mi), 3, 0xF);
 		if (ri == XSC_NONE || !xsc_emit2(l, XSC_VECTOR_MAX, xsc_temp(ri), xsc_temp(ri), dst, export_, (int64_t)1 << i))
@@ -602,15 +602,18 @@ static int64_t refract(XscLower *l, const XscInstr *ins, int64_t dst, bool expor
 		dst);
 }
 
+// Between constants, 0 and 1 the saturate modifier and others pooled literals; between other values, as PPSSPP clamps
+// texture coordinates to a block's, the values themselves.
 static int64_t clamp(XscLower *l, const XscInstr *ins, int64_t dst, bool export_)
 {
 	double lo, hi;
-	if (!xsdk_xsc_const_scalar(l, arg(ins, 1), &lo) || !xsdk_xsc_const_scalar(l, arg(ins, 2), &hi))
-		return XSC_NONE;
-	if (lo == 0.0 && hi == 1.0)
+	const bool constant = xsdk_xsc_splat_const(l, arg(ins, 1), &lo) && xsdk_xsc_splat_const(l, arg(ins, 2), &hi);
+	if (constant && lo == 0.0 && hi == 1.0)
 		return xsdk_xsc_emit_clamped(l, arg(ins, 0), dst, export_);
 	XscOperand ox, lo_op, hi_op;
-	if (!arg_operand(l, ins, 0, &ox) || !splat(l, lo, &lo_op) || !splat(l, hi, &hi_op))
+	const bool bounds = constant ? splat(l, lo, &lo_op) && splat(l, hi, &hi_op)
+								 : arg_operand(l, ins, 1, &lo_op) && arg_operand(l, ins, 2, &hi_op);
+	if (!arg_operand(l, ins, 0, &ox) || !bounds)
 		return XSC_NONE;
 	const int64_t t = xsdk_xsc_fresh(l);
 	return done(xsc_emit2(l, XSC_VECTOR_MAX, xsc_plain(ox), xsc_plain(lo_op), t, false, 0xF) &&
