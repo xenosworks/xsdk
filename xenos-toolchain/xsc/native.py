@@ -13,7 +13,7 @@ LIBRARY = Path(__file__).resolve().parents[2] / "build" / "host" / "libxsc.so"
 OK, REFUSED, REGISTERS, BAD_VALUE, MALFORMED, OUT_OF_MEMORY = range(6)
 STATUS_NAMES = ("ok", "refused", "registers", "bad value", "malformed", "out of memory")
 LITERAL, ARRAY, LOOP, BLOCK_LOOP, CLIP_PLANE, FIXED_LOOP = range(6)
-RESOURCE_KINDS = ("push", "uniform", "sampler", "comparison", "instance")
+RESOURCE_KINDS = ("push", "uniform", "sampler", "comparison", "instance", "vertex_base")
 MESSAGE_BYTES = 512
 # The pixel constant gl_FragCoord.xy adds to the pixel parameters, which xsdk keeps at 0.5 and 0.5 more than a tiled
 # pass's band's top row (xsdk:include/xsdk/xsc.h, XSDK_XSC_FRAG_COORD_CONSTANT).
@@ -225,8 +225,9 @@ def compile_spirv(spirv: bytes, pixel_registers: int, vertex_registers: int, opt
     int in a block counts, i from start by step, ("fixed_loop", id, passes) for loops whose count is data, which run
     passes, 255, and ("clip", plane, register) for a user clip plane; the resources [(kind, set, binding, register,
     registers)], blocks, samplers, comparisons, then an instanced vertex shader's group, the float constant the runtime
-    writes before each piece of a draw (xsdk:include/xsdk/xsc.h, XSDK_XSC_INSTANCE). instanced lowers a vertex shader
-    for instanced draws, as one reading gl_InstanceIndex always is."""
+    writes before each piece of a draw (xsdk:include/xsdk/xsc.h, XSDK_XSC_INSTANCE), then the vertex base of one
+    reading gl_VertexIndex, the float constant the runtime writes before each draw (XSDK_XSC_VERTEX_BASE). instanced
+    lowers a vertex shader for instanced draws, as one reading gl_InstanceIndex always is."""
     library = _load()
     words = (ctypes.c_uint32 * (len(spirv) // 4)).from_buffer_copy(spirv[:len(spirv) // 4 * 4])
     options = Options(pixel_registers, vertex_registers, optimize, group_fetches, instanced)

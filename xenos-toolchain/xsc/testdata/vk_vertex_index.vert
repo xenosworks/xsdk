@@ -1,5 +1,5 @@
 #version 450
-// gl_VertexIndex, which xsc doesn't lower: refused, not fetched as a vertex input.
+// gl_VertexIndex beside an input: the input fetched at r0.x into r1, gl_VertexIndex r0.x plus the vertex base.
 layout(location = 0) in vec4 a_position;
 
 void main()

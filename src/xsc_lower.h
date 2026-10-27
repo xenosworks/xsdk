@@ -68,8 +68,10 @@ typedef struct {
 	bool vertex;
 	int64_t next_reg;
 	int64_t lit_base;
-	// The register an instanced vertex shader's prologue holds gl_InstanceIndex in, in every component.
+	// The register an instanced vertex shader's prologue holds gl_InstanceIndex in, in every component, and the one a
+	// vertex shader holds gl_VertexIndex in.
 	int64_t instance;
+	int64_t vertex_index;
 	XscLiteral *pool;
 	double *pool_keys;
 	size_t pool_count;

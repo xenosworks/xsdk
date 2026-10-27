@@ -34,7 +34,8 @@ static bool has_branches(const XscModule *m)
 }
 
 // Each input fetched at index.x into the registers from first: at r0 from r0, r0 last as it's the vertex index
-// (xenia:src/xenia/gpu/dxbc_shader_translator_fetch.cc:80-88), or at an instanced shader's t from r1.
+// (xenia:src/xenia/gpu/dxbc_shader_translator_fetch.cc:80-88), at r0 from r1 in a shader reading gl_VertexIndex, or at
+// an instanced shader's t from r1.
 static bool fetch_inputs(XscLower *l, const XscInterface *si, int64_t index, int64_t first)
 {
 	for (size_t n = si->vfetch_count; n-- > 0;) {
@@ -69,6 +70,17 @@ static int64_t prologue(XscLower *l, int64_t group, bool reads_index)
 			return XSC_NONE;
 	}
 	return xsdk_xsc_program_predicate(l->x, l->p, XSC_PREDICATE_NONE) ? t : XSC_NONE;
+}
+
+// gl_VertexIndex, held whole in l->vertex_index: the GPU's vertex index, which it leaves in r0.x as a float, its index
+// offset added (xenia:src/xenia/gpu/spirv_shader_translator.cc:1500-1517, dxbc_shader_translator.cc:345-374), or an
+// instanced shader's t.x, plus the vertex base, the runtime's x of group, as the runtime offsets the streams in its
+// place; a float holds the sum exactly below 2^24, as the GPU's 24-bit index is (xenos.h:38-42).
+static bool vertex_index(XscLower *l, int64_t index, int64_t group)
+{
+	l->vertex_index = xsdk_xsc_fresh(l);
+	return xsc_emit2(l, XSC_VECTOR_ADD, xsc_src(xsc_reg(index), false, xsdk_xsc_bsw(0)),
+		xsc_src(xsc_const(group), false, xsdk_xsc_bsw(0)), l->vertex_index, false, 0xF);
 }
 
 // The member of gl_PerVertex decorated with this BuiltIn.
@@ -206,6 +218,26 @@ static bool sample_all(XscLower *l, bool used[FETCH_SLOTS])
 		used[slot] = true;
 	}
 	return true;
+}
+
+// Where an interpolator is stored once, whole, a load of it reads the value stored, as PPSSPP's shaders read theirs
+// back; GLSL leaves one read before it's written undefined, so the store serves there too.
+static void read_back_interpolators(XscLower *l, const XscInterface *si, const XscStores *stores)
+{
+	for (size_t i = 0; i < si->interp_out_count; i++) {
+		const uint32_t var = si->interp_out[i].var->vid;
+		size_t count = 0;
+		for (size_t n = 0; n < l->m->instr_count; n++) {
+			const XscInstr *const ins = &l->m->instrs[n];
+			const XscInstr *const chain =
+				ins->opcode == SPV_STORE ? xsdk_xsc_by_result(l->m, xsdk_xsc_operand(ins, 0)) : NULL;
+			count += ins->opcode == SPV_STORE &&
+				(xsdk_xsc_operand(ins, 0) == var ||
+					(chain && chain->opcode == SPV_ACCESS_CHAIN && xsdk_xsc_operand(chain, 0) == var));
+		}
+		if (count == 1 && stores->value[var])
+			l->local_store[var] = stores->value[var];
+	}
 }
 
 // The samplers first, as a pixel shader's container has them, then the uniforms, the instance group and the literals.
@@ -354,22 +386,26 @@ bool xsdk_xsc_lower_vertex(Xsc *x, const XscModule *m, const XsdkXscOptions *opt
 	p.optimize = options->optimize;
 	// Temps run past r63 till the allocator packs them.
 	p.whole_sources = true;
-	const int64_t index_group = xsdk_xsc_instance_index_reg(si);
+	const int64_t index_group = xsdk_xsc_index_reg(si, XSC_ROLE_INSTANCE_INDEX);
+	const int64_t vertex_base = xsdk_xsc_index_reg(si, XSC_ROLE_VERTEX_INDEX);
 	// The option's group takes the register past what the shader declares, as gl_InstanceIndex's does.
 	out->instance = index_group == XSC_NONE && options->instanced ? si->constant_end++ : index_group;
-	// An instanced shader's fetches leave r0, the vertex index its prologue reads, as the hardware filled it.
-	const int64_t first = out->instance != XSC_NONE;
+	// The fetches of an instanced shader or one reading gl_VertexIndex leave r0, the vertex index, as the hardware
+	// filled it.
+	const int64_t first = out->instance != XSC_NONE || vertex_base != XSC_NONE;
 	XscLower l;
 	if (!xsdk_xsc_lower_init(
 			x, &l, m, si, &p, types, true, first + (int64_t)si->vfetch_count, xsdk_xsc_literal_base(si)))
 		return false;
-	const int64_t index = first ? prologue(&l, out->instance, index_group != XSC_NONE) : 0;
-	if (index == XSC_NONE || !fetch_inputs(&l, si, index, first))
+	const int64_t index = out->instance != XSC_NONE ? prologue(&l, out->instance, index_group != XSC_NONE) : 0;
+	if (index == XSC_NONE || !fetch_inputs(&l, si, index, first) ||
+		(vertex_base != XSC_NONE && !vertex_index(&l, index, vertex_base)))
 		return false;
 	bool *const locals = xsdk_xsc_local_vars(x, m, 0, m->instr_count);
 	if (!locals || !xsdk_xsc_check_local_stores(x, m, locals, 0, 0))
 		return false;
 	xsdk_xsc_fill_local_store(&l, &stores, locals);
+	read_back_interpolators(&l, si, &stores);
 	bool used[FETCH_SLOTS] = { false };
 	XscConstants constants = { 0 };
 	const PerVertex pv = per_vertex(m, types, si);

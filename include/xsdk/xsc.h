@@ -80,6 +80,10 @@ typedef enum {
 	// (0 for S a power of two), S, and the piece's first instance, S the vertices or the copies' step an instance
 	// (xenos-toolchain/docs/xsc.md, "Interface conventions"); set and binding 0.
 	XSDK_XSC_INSTANCE,
+	// A vertex shader's vertex base, read with gl_VertexIndex: the float constant the runtime writes before each draw,
+	// x what Vulkan's index adds to the GPU's, which a draw's first vertex or vertex offset is where the runtime moves
+	// the streams by it, and 0 in y to w; set and binding 0.
+	XSDK_XSC_VERTEX_BASE,
 } XsdkXscResourceKind;
 
 typedef struct {

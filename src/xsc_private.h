@@ -343,6 +343,8 @@ typedef enum {
 	XSC_ROLE_ARRAY,
 	// A vertex shader's gl_InstanceIndex, which its prologue works out from the instance group (xsc_lower_vertex.c).
 	XSC_ROLE_INSTANCE_INDEX,
+	// A vertex shader's gl_VertexIndex, r0.x plus the vertex base (xsc_lower_vertex.c).
+	XSC_ROLE_VERTEX_INDEX,
 	XSC_ROLE_POINT_COORD,
 } XscRoleKind;
 
@@ -427,8 +429,9 @@ const XscType *xsdk_xsc_type(const XscModule *m, const XscType *types, uint64_t 
 const char *xsdk_xsc_type_kind_name(XscTypeKind kind);
 bool xsdk_xsc_resolve_interface(Xsc *x, const XscModule *m, XscInterface *si);
 const XscRole *xsdk_xsc_role(const XscInterface *si, uint32_t id);
-// The instance group's register of a shader that reads gl_InstanceIndex, or XSC_NONE in a shader without it.
-int64_t xsdk_xsc_instance_index_reg(const XscInterface *si);
+// The register of a shader's instance group, kind XSC_ROLE_INSTANCE_INDEX, or vertex base, XSC_ROLE_VERTEX_INDEX, or
+// XSC_NONE in a shader that doesn't read gl_InstanceIndex or gl_VertexIndex.
+int64_t xsdk_xsc_index_reg(const XscInterface *si, XscRoleKind kind);
 // The dim a slot's sampler has: false where Python's sampler_dims.get gives None for a missing slot.
 bool xsdk_xsc_sampler_dim(const XscInterface *si, uint32_t slot, int64_t *dim);
 
