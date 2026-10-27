@@ -99,7 +99,8 @@ static bool reads_depth(Xsc *x, const XscModule *m, const XscType *types, const 
 		if (ins->opcode == SPV_VECTOR_SHUFFLE) {
 			const XscInstr *const first = xsdk_xsc_by_result(m, xsdk_xsc_operand(ins, 0));
 			if (!first)
-				return xsdk_xsc_fail(x, XSDK_XSC_MALFORMED, "%u", (unsigned)xsdk_xsc_operand(ins, 0));
+				return xsdk_xsc_fail(x, XSDK_XSC_MALFORMED, "%%%u: no instruction xost reads makes it",
+					(unsigned)xsdk_xsc_operand(ins, 0));
 			const XscType *const t = xsdk_xsc_type(m, types, first->result_type);
 			const uint32_t size = t && t->kind == XSC_TYPE_VECTOR ? t->count : 1;
 			const bool load1 = count > 1 && ops[1] < m->id_limit && loads[ops[1]];

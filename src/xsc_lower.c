@@ -150,12 +150,12 @@ bool xsdk_xsc_lower_init(Xsc *x, XscLower *l, const XscModule *m, const XscInter
 		(!(m->branch_count || m->loop_count) || xsdk_xsc_find_varying(l)) && (!m->loop_count || mark_pass_work(x, l));
 }
 
-// An SSA id's instruction, refused as Python's by_result[ssa] would fail.
+// An SSA id's instruction, failing where no instruction xost reads makes it, as Python's by_result[ssa] would.
 const XscInstr *xsdk_xsc_lower_result(XscLower *l, uint32_t ssa)
 {
 	const XscInstr *const ins = xsdk_xsc_by_result(l->m, ssa);
 	if (!ins)
-		xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "%u", (unsigned)ssa);
+		xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "%%%u: no instruction xost reads makes it", (unsigned)ssa);
 	return ins;
 }
 
@@ -1777,7 +1777,7 @@ static XscOrigin load_origin(XscLower *l, uint32_t ssa, const XscInstr *ins, boo
 	if (found) {
 		const XscType *const t = xsdk_xsc_type(l->m, l->types, access.tid);
 		if (!t) {
-			xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "%u", (unsigned)access.tid);
+			xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "type %%%u: not one xost reads", (unsigned)access.tid);
 			return origin((XscOperand){ 0 }, 0);
 		}
 		if (t->kind != XSC_TYPE_VECTOR)

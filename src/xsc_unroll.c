@@ -1926,7 +1926,7 @@ static bool walk(Unroller *u, uint32_t start, uint32_t stop, bool has_stop, uint
 	while (!*ended && !(has_stop && cur == stop)) {
 		const Block *const b = block_of(u, cur);
 		if (!b)
-			return xsdk_xsc_fail(u->x, XSDK_XSC_MALFORMED, "%u", (unsigned)cur);
+			return xsdk_xsc_fail(u->x, XSDK_XSC_MALFORMED, "block %%%u: no such label", (unsigned)cur);
 		if (block_has(u, b, SPV_LOOP_MERGE, NULL)) {
 			if (!expand_loop(u, b, &cur))
 				return false;
