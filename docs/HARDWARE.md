@@ -5382,3 +5382,20 @@ opened with libzip, and only then is the ROM deleted and the title started again
   the store's own capture). With `sf64.o2r` taken away and a ROM put in its place, the first run took 62 s and deleted
   the ROM, and the game read the new archive, 14,559,161 bytes in 419 ms, and ran at 28.3 to 30.0 fps
   (`first_run_store_update.log`, `first_run_store_update_restart.log`).
+
+## Hierarchical depth on surfaces narrower than their pitch, milestone 67 (2026-10-27)
+
+vulkan4xenon's small depth test drew a near quad at 0.25 on the left half and a far one at 0.75 on the right of 16x16
+and 8x8 sampled D24S8 targets, after a resolve that cleared depth to 1 and the hierarchical buffer from it. Each such
+target is 32 texels resolved across an eDRAM pitch of 160. Logs: `results/2026-10-27-milestone-67-hiz-pitch/`.
+- **The far quad landed in the top 4 rows alone,** on every target, 16 and 8 rows high alike, and the near quad whole:
+  the rows below kept the clear, 1.0, read back from memory and sampled (`before_round15.log`). Drawing the far quad
+  first changed nothing (`before_far_first.log`). Xenia, which models no hierarchical buffer, drew them right.
+- **That fits a clear that runs through the buffer as though the resolve were as wide as the pitch:** 32 by 16 or 32
+  by 8 texels' worth reach only part of the first 4 rows of a 160-pixel pitch, and the rows past them keep what earlier
+  draws left there, which rejected the far quad and not the near one. Milestones 30 and 49 checked only targets whose
+  width is their pitch, 640, 1280 and 1280x1024.
+- **So xsdk keeps the buffer only where the resolved width is the surface's pitch** (`xsdk_gpu_hiz_fits`), and leaves
+  it off for the rest. Then every small depth check passed, 565 of 565 in vulkan4xenon_test (`after_round18.log`);
+  with the check undone, the memory and sampled checks failed again, the far quad in its top 4 rows alone
+  (`break_hiz_kept_narrow.log`).
