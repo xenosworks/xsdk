@@ -96,6 +96,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | vertex `gl_ClipDistance[n] = dot(gl_Position, plane)`, n 0 to 5, the plane a whole vec4 of a uniform or push constant block | no instruction: user clip plane n, the manifest's `("clip", n, register)`; any other form, and `gl_CullDistance`, refused (`tests/test_clip_distance.py`) |
 | float / vec literals in FS/VS | constant pool; 0/1 folds (see below) |
 | ternary `cond ? a : b` (OpSelect) | `f + (t−f)·cond` (sub + mad) |
+| float comparisons' unordered forms, OpFUnordEqual to OpFUnordGreaterThanEqual, as glslang makes GLSL's `!=` | lowered as the ordered forms, which differ for NaN alone (`tests/test_unordered_compare.py`) |
 | vector relational `lessThan`/`greaterThan`/`equal`/`notEqual`/… → bvec | per-component `sgt`/`sge`/`seq`/`sne` (1.0/0.0) |
 | `any` / `all` / `not` (bvec) | horizontal `max` / horizontal `min` / `1−v` |
 | `&&` / `\|\|` | `min` / `max` of 0/1 bools |

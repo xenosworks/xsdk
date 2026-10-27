@@ -247,7 +247,12 @@ bool xsdk_xsc_spirv_parse(Xsc *x, const uint32_t *words, size_t word_count, XscM
 	size_t i = HEADER_WORDS;
 	while (i < word_count) {
 		const uint32_t count = copy[i] >> 16;
-		const uint32_t opcode = copy[i] & 0xFFFF;
+		// A float comparison's unordered form, which glslang makes of GLSL's != (PPSSPP's alpha test), is lowered as
+		// its ordered one, OpFUnordEqual 181 to OpFUnordGreaterThanEqual 191 as 180 to 190: they differ for NaN alone,
+		// which Xenos's compares take one way.
+		const uint32_t raw = copy[i] & 0xFFFF;
+		const uint32_t opcode =
+			raw >= SPV_F_UNORD_EQUAL && raw <= SPV_F_UNORD_GREATER_EQUAL && (raw & 1) ? raw - 1 : raw;
 		if (!count)
 			return xsdk_xsc_fail(x, XSDK_XSC_MALFORMED, "zero word-count at %zu", i);
 		const uint32_t available = (uint32_t)(word_count - i - 1 < count - 1 ? word_count - i - 1 : count - 1);

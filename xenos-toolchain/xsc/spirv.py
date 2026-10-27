@@ -55,7 +55,9 @@ OP = {
     179: "SLessThanEqual",
     180: "FOrdEqual", 182: "FOrdNotEqual", 184: "FOrdLessThan",
     186: "FOrdGreaterThan", 188: "FOrdLessThanEqual",
-    190: "FOrdGreaterThanEqual",
+    190: "FOrdGreaterThanEqual", 181: "FUnordEqual", 183: "FUnordNotEqual",
+    185: "FUnordLessThan", 187: "FUnordGreaterThan", 189: "FUnordLessThanEqual",
+    191: "FUnordGreaterThanEqual",
     194: "ShiftRightLogical", 195: "ShiftRightArithmetic",
     196: "ShiftLeftLogical", 197: "BitwiseOr", 198: "BitwiseXor",
     199: "BitwiseAnd", 200: "Not",
@@ -73,6 +75,7 @@ _HAS_TYPE_AND_RESULT = {
     91, 92, 124, 127,
     129, 130, 131, 133, 136, 141, 142, 144, 145, 146, 148,
     169, 180, 182, 184, 186, 188, 190,        # OpSelect + FOrd comparisons
+    181, 183, 185, 187, 189, 191,             # FUnord comparisons, which xsc lowers as FOrd's
     110, 111, 128, 132, 134, 135, 137, 138, 139,  # int arith/div/mod + convert
     154, 155, 166, 167, 168,                  # any/all + logical and/or/not
     170, 171, 172, 173, 174, 175, 176, 177, 178, 179,  # int comparisons
