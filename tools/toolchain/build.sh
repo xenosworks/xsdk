@@ -1,5 +1,6 @@
 #!/bin/bash
-# Builds the SDK's cross toolchain (binutils, GCC for C and C++, newlib) for 32-bit PowerPC. Run inside WSL Debian.
+# Builds the SDK's cross toolchain (binutils, GCC for C and C++, newlib) for 32-bit PowerPC. Run on Linux:
+# Debian, on its own or in WSL.
 set -euo pipefail
 
 TARGET=powerpc-xsdk-elf

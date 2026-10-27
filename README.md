@@ -9,8 +9,8 @@ an RGH console, and its GPU layer drives Xenos directly, writing the command pro
 in it comes from public reverse engineering, mainly Xenia, libxenon and xost, and from results on the console: no
 Microsoft tooling and no leaked SDK material.
 
-**New to xsdk?** Start with [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md): from a Windows PC and an RGH or JTAG
-console to a title of your own running on it. Then [docs/GUIDE.md](docs/GUIDE.md) has the calls by task,
+**New to xsdk?** Start with [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md): from a Windows or Linux PC and an RGH
+or JTAG console to a title of your own running on it. Then [docs/GUIDE.md](docs/GUIDE.md) has the calls by task,
 [docs/PITFALLS.md](docs/PITFALLS.md) what breaks a title on the console and not on a PC, and `samples/` titles to
 start from.
 
@@ -55,9 +55,10 @@ each fact the console settled, and TODO.md what's still open.
 
 ## Building
 
-docs/GETTING_STARTED.md takes it a step at a time. In short: the toolchain is GCC 15, binutils and newlib for
-`powerpc-xsdk-elf`, built in WSL Debian by `tools/toolchain/build.sh` (its specs and patches say what differs from a
-stock build) and installed at `~/xsdk-gcc`. Then, in the repository:
+docs/GETTING_STARTED.md takes it a step at a time. The build runs on Linux: Debian, on its own or in WSL on Windows.
+macOS hasn't been tried (docs/GETTING_STARTED.md, "macOS"). In short: the toolchain is GCC 15, binutils and newlib
+for `powerpc-xsdk-elf`, built by `tools/toolchain/build.sh` (its specs and patches say what differs from a stock
+build) and installed at `~/xsdk-gcc`. Then, in the repository:
 
 ```
 make

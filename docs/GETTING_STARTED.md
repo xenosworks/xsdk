@@ -1,14 +1,16 @@
 # Getting started
 
-From a Windows PC and an RGH or JTAG console to a title of your own running on the console. Take the steps in order:
-each gives its commands, and what they print, shortened. Times are from the PC xsdk is built on, which has 32 hardware
-threads. docs/GUIDE.md then has the calls by task, and docs/PITFALLS.md what breaks a title on the console and not on
-a PC.
+From a Windows or Linux PC and an RGH or JTAG console to a title of your own running on the console. Take the steps
+in order: each gives its commands, and what they print, shortened. Times are from the PC xsdk is built on, which has
+32 hardware threads. docs/GUIDE.md then has the calls by task, and docs/PITFALLS.md what breaks a title on the console
+and not on a PC.
 
 ## What you need
 
-- **Windows 10 or 11** with WSL 2, and about 10 GB free for WSL: the toolchain takes 1.5 GB installed and 7 GB while it
-  builds, which can be deleted after.
+- **Windows 10 or 11 with WSL 2, or Linux,** and about 10 GB free: the toolchain takes 1.5 GB installed and 7 GB while
+  it builds, which can be deleted after. Everything from the packages in step 1 on runs in Linux: WSL's Debian on
+  Windows, or the PC's own. These steps were taken on Debian 13; another distribution needs the same packages under
+  its own names. macOS hasn't been tried (see "macOS" at the end).
 - **An RGH or JTAG console** whose dashboard launches unsigned `.xex` files and serves FTP, such as Aurora, on the same
   network as the PC. A retail console won't load xsdk's titles: they aren't signed (docs/PARITY.md, "Building and
   packaging").
@@ -16,7 +18,7 @@ a PC.
 
 ## 1. WSL Debian
 
-In PowerShell:
+On a Linux PC, skip to the packages below. On Windows, in PowerShell:
 
 ```
 wsl --install -d Debian
@@ -34,7 +36,7 @@ The rest runs inside Debian: open it from the Start menu, or run one command fro
 PowerShell, not Git Bash. A command run that way doesn't read `~/.bashrc`, so these steps give full paths rather than
 changing `PATH`.
 
-In Debian, install what the toolchain and the builds need:
+In Debian, WSL's or your own, install what the toolchain and the builds need:
 
 ```
 sudo apt update
@@ -67,7 +69,7 @@ That's Debian 13. CMake must be 3.25 or later, and Python 3.11 or later.
 
 ## 2. xsdk
 
-Clone it into Debian's own file system, where builds run several times faster than under `/mnt/c`:
+On WSL, clone it into Debian's own file system, where builds run several times faster than under `/mnt/c`:
 
 ```
 git clone https://github.com/xenosworks/xsdk.git ~/xsdk
@@ -243,6 +245,13 @@ curl.exe -T \\wsl.localhost\Debian\home\<you>\xsdk\build\samples\hello\hello.xex
   ftp://<console>/Hdd1/xsdk/hello/ --user <user>:<password>
 ```
 
+On Linux, the same with curl from step 1:
+
+```
+curl -T ~/xsdk/build/samples/hello/hello.xex --ftp-create-dirs ftp://<console>/Hdd1/xsdk/hello/ \
+  --user <user>:<password>
+```
+
 curl prints its transfer table, then nothing more when the copy worked. Then launch `Hdd1/xsdk/hello/hello.xex` from
 the dashboard's file browser. Every sample shows the vulkan4xenon logo first, then does what the table above says,
 until Back. Back ends it, and the console goes back to the dashboard. Leaving through the Guide's Xbox Home ends it
@@ -259,7 +268,8 @@ it's open, milestone 27"):
 curl.exe ftp://<console>/Hdd1/xsdk/hello/hello.log --user <user>:<password>
 ```
 
-xsdk writes the first lines and the last; between them is the title's own. hello writes:
+On Linux, `curl` takes the same arguments. xsdk writes the first lines and the last; between them is the title's
+own. hello writes:
 
 ```
 log: game:\hello.log
@@ -335,8 +345,9 @@ shaders join the build through `xsdk_add_shaders`, as `samples/triangle/CMakeLis
 
 Xenia Canary runs a `.xex` on the PC, which catches a crash at start-up or a call that never returns before a trip to
 the console. It isn't the console: its kernel is written at a high level, it skips the `.xex`'s checks, and it gets
-several things wrong. The console decides (CODE_GUIDELINES.md, section 12). Copy the `.xex`, and anything it
-reads beside it, to a Windows folder, then from PowerShell:
+several things wrong. The console decides (CODE_GUIDELINES.md, section 12). xsdk has been checked with Xenia's
+Windows build only; on a Linux PC, skip this step. Copy the `.xex`, and anything it reads beside it, to a Windows
+folder, then from PowerShell:
 
 ```
 xenia_canary.exe C:\xsdk\hello\hello.xex
@@ -374,3 +385,10 @@ Where Xenia differs from the console, so a check passes or fails in Xenia alone 
   console's.
 - **Memory alignment isn't checked,** so a float load at an unaligned address, which faults on the console, runs
   (docs/HARDWARE.md, "Dusklight runs the title scene").
+
+## macOS
+
+macOS hasn't been tried. What's known to stand in the way: `tools/toolchain/build.sh` and the Makefile call GNU
+coreutils' `nproc` and `sha256sum`, and GCC's build needs GMP, MPFR and MPC where its configure finds them, which
+Debian's packages give in step 1. Until it's tried, a Debian 13 virtual machine is the way to take these steps on a
+Mac; it hasn't been tried either.
