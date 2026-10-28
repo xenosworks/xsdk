@@ -26,13 +26,13 @@ static const struct {
 	{ 91, "ImageSampleProjImplicitLod" }, { 92, "ImageSampleProjExplicitLod" }, { 110, "ConvertFToS" },
 	{ 111, "ConvertSToF" }, { 124, "Bitcast" }, { 127, "FNegate" }, { 128, "IAdd" }, { 129, "FAdd" }, { 130, "ISub" },
 	{ 131, "FSub" }, { 132, "IMul" }, { 133, "FMul" }, { 134, "UDiv" }, { 135, "SDiv" }, { 136, "FDiv" },
-	{ 137, "UMod" }, { 138, "SRem" }, { 139, "SMod" }, { 142, "VectorTimesScalar" }, { 144, "VectorTimesMatrix" },
-	{ 145, "MatrixTimesVector" }, { 146, "MatrixTimesMatrix" }, { 148, "Dot" }, { 154, "Any" }, { 155, "All" },
-	{ 166, "LogicalOr" }, { 167, "LogicalAnd" }, { 168, "LogicalNot" }, { 169, "Select" }, { 170, "IEqual" },
-	{ 171, "INotEqual" }, { 172, "UGreaterThan" }, { 173, "SGreaterThan" }, { 174, "UGreaterThanEqual" },
-	{ 175, "SGreaterThanEqual" }, { 176, "ULessThan" }, { 177, "SLessThan" }, { 178, "ULessThanEqual" },
-	{ 179, "SLessThanEqual" }, { 180, "FOrdEqual" }, { 182, "FOrdNotEqual" }, { 184, "FOrdLessThan" },
-	{ 186, "FOrdGreaterThan" }, { 188, "FOrdLessThanEqual" }, { 190, "FOrdGreaterThanEqual" },
+	{ 137, "UMod" }, { 138, "SRem" }, { 139, "SMod" }, { 142, "VectorTimesScalar" }, { 143, "MatrixTimesScalar" },
+	{ 144, "VectorTimesMatrix" }, { 145, "MatrixTimesVector" }, { 146, "MatrixTimesMatrix" }, { 148, "Dot" },
+	{ 154, "Any" }, { 155, "All" }, { 166, "LogicalOr" }, { 167, "LogicalAnd" }, { 168, "LogicalNot" },
+	{ 169, "Select" }, { 170, "IEqual" }, { 171, "INotEqual" }, { 172, "UGreaterThan" }, { 173, "SGreaterThan" },
+	{ 174, "UGreaterThanEqual" }, { 175, "SGreaterThanEqual" }, { 176, "ULessThan" }, { 177, "SLessThan" },
+	{ 178, "ULessThanEqual" }, { 179, "SLessThanEqual" }, { 180, "FOrdEqual" }, { 182, "FOrdNotEqual" },
+	{ 184, "FOrdLessThan" }, { 186, "FOrdGreaterThan" }, { 188, "FOrdLessThanEqual" }, { 190, "FOrdGreaterThanEqual" },
 	{ 194, "ShiftRightLogical" }, { 195, "ShiftRightArithmetic" }, { 196, "ShiftLeftLogical" }, { 197, "BitwiseOr" },
 	{ 198, "BitwiseXor" }, { 199, "BitwiseAnd" }, { 200, "Not" }, { 207, "DPdx" }, { 208, "DPdy" }, { 209, "Fwidth" },
 	{ 246, "LoopMerge" }, { 247, "SelectionMerge" }, { 248, "Label" }, { 249, "Branch" }, { 250, "BranchConditional" },
@@ -41,9 +41,9 @@ static const struct {
 
 // Opcodes whose first two words are a result type and id, and those with an id alone (spirv.py).
 static const uint16_t type_and_result[] = { 12, 43, 44, 54, 55, 57, 59, 61, 65, 79, 80, 81, 82, 84, 87, 88, 89, 90, 91,
-	92, 124, 127, 129, 130, 131, 133, 136, 141, 142, 144, 145, 146, 148, 169, 180, 182, 184, 186, 188, 190, 110, 111,
-	128, 132, 134, 135, 137, 138, 139, 154, 155, 166, 167, 168, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 194,
-	195, 196, 197, 198, 199, 200, 207, 208, 209, 41, 42, 245, 1, 46 };
+	92, 124, 127, 129, 130, 131, 133, 136, 141, 142, 143, 144, 145, 146, 148, 169, 180, 182, 184, 186, 188, 190, 110,
+	111, 128, 132, 134, 135, 137, 138, 139, 154, 155, 166, 167, 168, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179,
+	194, 195, 196, 197, 198, 199, 200, 207, 208, 209, 41, 42, 245, 1, 46 };
 static const uint16_t result_only[] = { 11, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 32, 33, 248 };
 
 static bool listed(const uint16_t *list, size_t count, uint32_t opcode)

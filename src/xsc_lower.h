@@ -284,6 +284,7 @@ XscOperand xsdk_xsc_loop_operand(XscLower *l, uint32_t ssa);
 
 // Matrices (xsc_lower_matrix.c).
 const XscMatrix *xsdk_xsc_matrix_operands(XscLower *l, uint32_t ssa);
+XscOperand xsdk_xsc_matrix_column(XscLower *l, uint32_t mat_ssa, uint32_t c);
 int64_t xsdk_xsc_emit_mat_vec(XscLower *l, uint32_t mat, uint32_t vec, int64_t dst, bool export_position);
 int64_t xsdk_xsc_emit_vec_mat(XscLower *l, uint32_t vec, uint32_t mat, int64_t dst, bool export_position);
 int64_t xsdk_xsc_emit_determinant(XscLower *l, uint32_t mat);

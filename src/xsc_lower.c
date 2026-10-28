@@ -1593,6 +1593,7 @@ static XscOperand value_operand(XscLower *l, uint32_t ssa, const XscInstr *ins)
 	case SPV_VECTOR_TIMES_MATRIX:
 		return from_reg(xsdk_xsc_emit_vec_mat(l, a, b, XSC_NONE, false));
 	case SPV_MATRIX_TIMES_MATRIX:
+	case SPV_MATRIX_TIMES_SCALAR:
 	case SPV_TRANSPOSE:
 		return matrix_operand(l, ssa);
 	case SPV_F_ADD:
@@ -1632,6 +1633,10 @@ static XscOperand value_operand(XscLower *l, uint32_t ssa, const XscInstr *ins)
 		// component, as a scalar loaded from a block is. Anything else extracted stays refused below.
 		if (result_kind(l, ssa) == XSC_TYPE_FLOAT)
 			return scalar_value(l, ssa);
+		// A matrix value's column, as glslang adds matrices a column at a time.
+		if (xsdk_xsc_operand_count(ins) == 2 && xsdk_xsc_result_type(l, a) &&
+			xsdk_xsc_result_type(l, a)->kind == XSC_TYPE_MATRIX)
+			return xsdk_xsc_matrix_column(l, a, b);
 		break;
 	default:
 		break;

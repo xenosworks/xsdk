@@ -43,7 +43,7 @@ OP = {
     124: "Bitcast", 127: "FNegate", 128: "IAdd", 129: "FAdd", 130: "ISub",
     131: "FSub", 132: "IMul", 133: "FMul", 134: "UDiv", 135: "SDiv",
     136: "FDiv", 137: "UMod", 138: "SRem", 139: "SMod",
-    142: "VectorTimesScalar",
+    142: "VectorTimesScalar", 143: "MatrixTimesScalar",
     144: "VectorTimesMatrix", 145: "MatrixTimesVector",
     146: "MatrixTimesMatrix", 148: "Dot",
     154: "Any", 155: "All",
@@ -73,7 +73,7 @@ OP = {
 _HAS_TYPE_AND_RESULT = {
     12, 43, 44, 54, 55, 57, 59, 61, 65, 79, 80, 81, 82, 84, 87, 88, 89, 90,
     91, 92, 124, 127,
-    129, 130, 131, 133, 136, 141, 142, 144, 145, 146, 148,
+    129, 130, 131, 133, 136, 141, 142, 143, 144, 145, 146, 148,
     169, 180, 182, 184, 186, 188, 190,        # OpSelect + FOrd comparisons
     181, 183, 185, 187, 189, 191,             # FUnord comparisons, which xsc lowers as FOrd's
     110, 111, 128, 132, 134, 135, 137, 138, 139,  # int arith/div/mod + convert

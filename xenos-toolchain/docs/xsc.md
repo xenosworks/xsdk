@@ -114,6 +114,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | if/else **on data** in an unrolled loop's body | both arms each pass, merged by a select (`tests/test_loop_branches.py`) |
 | `break` or `continue` **on data** in an unrolled loop's body | gated: each value keeps a stopped copy where its pixel or vertex stops, `running` and `alive` flags 0.0 or 1.0, and each pass's end a `cnd` on `running` (see Loops; `tests/test_loop_branches.py`) |
 | `transpose` (mat2/3/4) | per-row column gather (swizzled movs) |
+| a matrix by a scalar, `w * M` (OpMatrixTimesScalar), and a sum of matrices, which glslang makes a column at a time, as PPSSPP's skinning sums bones by weights | a `mul` a row or column by the scalar, the matrix held as it was; a matrix value's column (OpCompositeExtract) the register holding it, or a row-held matrix's component gathered from each row; a local matrix read back held as it was stored (`tests/test_skinning.py`) |
 | `determinant` (mat2/3) | mat2 `ad−bc`; mat3 `row0·cross(row1,row2)` |
 | `inverse` (mat2/3) | mat2 closed form; mat3 adjugate (cofactor crosses) / det · `rcp` |
 | `dFdx` / `dFdy` / `fwidth` | `getTextureGradients` fetch; ddx=grad.xz, ddy=grad.yw |
