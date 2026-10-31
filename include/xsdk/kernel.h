@@ -490,6 +490,15 @@ void VdShutdownEngines(void);
 void VdSwap(volatile uint32_t *ring_space, const uint32_t *fetch_constant, volatile uint32_t *system_writeback,
 	void *system_buffer, uint32_t system_value, uint32_t *front_buffer, uint32_t *texture_format, uint32_t *color_space,
 	uint32_t *width, uint32_t *height);
+// The kernel's version as four 16-bit numbers; Xenia's is 2.65535.65535.32768
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:206-216).
+typedef struct {
+	uint16_t major;
+	uint16_t minor;
+	uint16_t build;
+	uint16_t qfe;
+} XBOX_KRNL_VERSION;
+extern const XBOX_KRNL_VERSION *const XboxKrnlVersion;
 void XeCryptRandom(void *buffer, uint32_t length_bytes);
 // SHA-1 of up to three buffers, one after another, a null or empty one skipped; writes output_bytes of the 20-byte
 // digest, at most all of it (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_crypt.cc:147-168).

@@ -186,6 +186,7 @@ which implements what the games it runs need:
 |---|---|---|---|---|
 | TCP and UDP sockets, `poll`, `select`, non-blocking; `SO_RCVTIMEO`, `SO_SNDTIMEO` and `SO_LINGER`; up to 232 sockets and 63 KB buffers | Yes | BSD sockets (`src/socket.c`); XAM's limits raised through `xsdk_network_limits` (`net.h`) | `tests/test_net.c`, with `tools/net_echo.py` on the PC | IPv6; why a connect failed, as XAM refuses `SO_ERROR` (src/socket.c); `select` on sockets numbered 64 and up, which `poll` takes |
 | The link and the console's address | Yes | `xsdk_net_link`, `xsdk_net_address` (`net.h`) | `tests/test_net.c`, the address against the one the PC sees | An address still pending, untried on the console; a wireless adapter's link bits |
+| The interface list | Yes | `getifaddrs`, `freeifaddrs` (`src/net.c`): one interface, "eth0", up, running while the link is, with the console's address once XAM has one | `tests/test_net.c`, the address against the one the PC sees | Its netmask, which XAM doesn't give; a loopback interface |
 | DNS | Yes | `getaddrinfo` (`src/netdb.c`) | `tests/test_net.c` | |
 | TLS 1.2 | Yes | the mbedtls-xenon fork | docs/HARDWARE.md, "TLS 1.2 through Mbed TLS" | TLS 1.3; an HTTP client |
 | System Link | No | | | XNet's secure transport (xam_net.cc) |
@@ -210,6 +211,7 @@ Each in its own repository under xenosworks.
 | Ending the title, back to the dashboard | Yes | `exit` (`src/exit.c`) | every title | |
 | Random numbers | Yes | `getentropy` (`src/entropy.c`) | mbedtls-xenon's checks | |
 | Language, country, time zone | Yes | `xsdk_system_language`, `xsdk_system_country` (`system.h`); the time zone as newlib's, above | `tests/test_system.c` | |
+| The system's name and the kernel's version | Yes | `uname` (`src/system.c`): "Xbox 360", the kernel's version from `XboxKrnlVersion`, machine "ppc" | `tests/test_system.c` | A node name |
 | Region and AV settings | No | | | `ExGetXConfigSetting` (xboxkrnl_xconfig.cc) raw |
 | A routine when Xbox Home ends the title | Yes | `xsdk_on_terminate` (`terminate.h`), on a thread of the console's with the title frozen, its handles closed and `game:` gone | `tests/terminate_check.c`: the routine's marker read after, and the console carrying on; the notification, `tests/probe_terminate.c` | Flushing stdio and running `atexit` there, which the frozen title's handles and locks rule out (docs/HARDWARE.md) |
 | Launching another `.xex`, and passing it data | Yes | `xsdk_launch`, `xsdk_launch_data` (`xam.h`); `argv` from the loader's command line | `tests/launch_check.c` and `tests/launch_target.c`, launching each other | More than 1020 bytes of data; arguments on the command line, which holds only the `.xex`'s name, so they go in the data |

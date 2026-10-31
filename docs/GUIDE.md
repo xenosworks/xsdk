@@ -612,8 +612,8 @@ and 2026-10-31:
   condition variables on `CLOCK_REALTIME` or `CLOCK_MONOTONIC`, read-write locks, `once` and keys, scheduling
   priorities, `sched_yield`; unnamed `sem_*`; anonymous `mmap`, `munmap`, `mprotect`, `msync`, `mlock`, `munlock`;
   `clock_gettime`, `clock_getres`, `gettimeofday`, `nanosleep`, `sleep`; `sysconf`, `getpagesize`, `getentropy`,
-  `getpid`, `kill`, `raise`, `signal`, `abort`, `exit`, `atexit`; the sockets above, `getaddrinfo`, `inet_pton` and
-  `inet_ntop`; C++23's threads, atomics, exceptions, `chrono`, `filesystem` and `format` (docs/PARITY.md).
+  `uname`, `getpid`, `kill`, `raise`, `signal`, `abort`, `exit`, `atexit`; the sockets above, `getaddrinfo`,
+  `getifaddrs`, `inet_pton` and `inet_ntop`; C++23's threads, atomics, exceptions, `chrono`, `filesystem` and `format` (docs/PARITY.md).
 - **Refuses at run time:** file-backed/shared/fixed mappings and `PROT_EXEC`, `ENOTSUP`; `pthread_cancel`, `link` and
   `symlink`, `ENOSYS`; `fcntl` on a file, `ENOSYS`.
 - **Doesn't link:** processes, `fork`, `vfork`, `execve`, `wait`, `waitpid`;

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/utsname.h>
 #include <time.h>
 
 #include "tests.h"
@@ -148,9 +149,24 @@ static void check_sha1(void)
 		memcmp(whole, digest, SHA1_BYTES) == 0 && memcmp(split, digest, SHA1_BYTES) == 0 && kept);
 }
 
+// uname's names, the release the kernel's version, which on the console and in Xenia starts at 2.
+static void check_uname(void)
+{
+	struct utsname name = { 0 };
+	unsigned major = 0, minor, build, qfe;
+	const int result = uname(&name);
+	const bool numbered = sscanf(name.release, "%u.%u.%u.%u", &major, &minor, &build, &qfe) == 4;
+	xsdk_log_write(
+		"system: uname %d: \"%s\", release \"%s\", machine \"%s\"", result, name.sysname, name.release, name.machine);
+	check("uname: the system's name, the kernel's version in four numbers from 2, and the machine",
+		result == 0 && numbered && major == 2 && strcmp(name.sysname, "Xbox 360") == 0 &&
+			strcmp(name.machine, "ppc") == 0);
+}
+
 void test_system(void)
 {
 	check_time_zone();
 	check_language_and_country();
 	check_sha1();
+	check_uname();
 }
