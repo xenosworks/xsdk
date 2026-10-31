@@ -1,0 +1,11 @@
+exit_result	xsdk_test	pthread_exit: its value reaches pthread_join, the thread's key destructor runs, and nothing after it does
+exit_unended	xsdk_test	pthread_exit: a detached thread and one xsdk_thread_create made end there, each running its key destructor
+attr_stack_unread	xsdk_test	pthread: attributes read back their detach state and stack size, 0 for the .xex's default stack
+cond_clock_ignored	xsdk_test	pthread: a condition's timed wait lasts until its deadline on CLOCK_REALTIME, or on CLOCK_MONOTONIC set in its attributes
+getres_realtime	xsdk_test	clocks: clock_getres gives CLOCK_REALTIME's step as measured, the time base's 21 ns tick for the monotonic clocks, and refuses an unknown clock
+sleep_none	xsdk_test	clocks: sleep(1) lasts a second on CLOCK_MONOTONIC, and sleep leaves none to sleep
+pagesize_large	xsdk_test	getpagesize: the page size sysconf gives
+memalign_unchecked	xsdk_test	posix_memalign: memory at alignments up to 64 KB, and EINVAL for 24 and 2
+access_mode_ignored	xsdk_test	access: a file reads and writes but doesn't run, a folder does all three; ENOENT for nothing, EINVAL for a bad mode
+rmdir_any	xsdk_test	rmdir: removes an empty folder; ENOTEMPTY for one with a file in it, ENOTDIR for a file, which stays
+utime_unset	xsdk_test	utime and utimes: set a file's access and modification times, now for NULL, as stat reads them; EINVAL for a bad tv_usec

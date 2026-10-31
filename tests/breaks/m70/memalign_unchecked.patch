@@ -1,0 +1,12 @@
+--- a/src/memalign.c
++++ b/src/memalign.c
+@@ -7,8 +7,7 @@
+ int posix_memalign(void **memory, size_t alignment, size_t size_bytes)
+ {
+ 	// POSIX asks for a power of two that's a multiple of a pointer's size.
+-	if (alignment < sizeof(void *) || (alignment & (alignment - 1)) != 0)
+-		return EINVAL;
++	// Broken on purpose: any alignment taken.
+ 	void *const allocated = memalign(alignment, size_bytes);
+ 	if (!allocated)
+ 		return ENOMEM;

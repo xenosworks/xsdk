@@ -1,0 +1,12 @@
+--- a/src/path.c
++++ b/src/path.c
+@@ -328,7 +328,8 @@
+ 	if (stat(path, &info) != 0)
+ 		return -1;
+ 	const mode_t asked = (mode & R_OK ? S_IRUSR : 0) | (mode & W_OK ? S_IWUSR : 0) | (mode & X_OK ? S_IXUSR : 0);
+-	if ((info.st_mode & asked) != asked) {
++	// Broken on purpose: any mode passes where the file is.
++	if (false && (info.st_mode & asked) != asked) {
+ 		errno = EACCES;
+ 		return -1;
+ 	}

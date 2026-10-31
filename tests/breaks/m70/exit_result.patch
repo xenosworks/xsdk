@@ -1,0 +1,13 @@
+--- a/src/pthread.c
++++ b/src/pthread.c
+@@ -178,8 +178,9 @@
+ void pthread_exit(void *result)
+ {
+ 	Thread *self = KeTlsGetValue(self_slot);
++	// Broken on purpose: the result never reaches pthread_join.
+ 	if (self && self->start)
+-		end_created_thread(self, result);
++		end_created_thread(self, NULL);
+ 	xsdk_pthread_thread_end();
+ 	ExTerminateThread((uint32_t)(uintptr_t)result);
+ 	// The kernel never returns from it (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:155-159).

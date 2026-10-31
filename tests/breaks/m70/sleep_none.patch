@@ -1,0 +1,11 @@
+--- a/src/time.c
++++ b/src/time.c
+@@ -151,6 +151,7 @@
+ {
+ 	const struct timespec request = { .tv_sec = seconds };
+ 	struct timespec remaining = { 0 };
+-	(void)nanosleep(&request, &remaining);
++	// Broken on purpose: no sleep at all.
++	(void)request;
+ 	return (unsigned int)remaining.tv_sec;
+ }
