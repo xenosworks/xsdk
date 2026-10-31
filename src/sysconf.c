@@ -37,3 +37,8 @@ long sysconf(int name)
 		return -1;
 	}
 }
+
+int getpagesize(void)
+{
+	return PAGE_BYTES;
+}
