@@ -209,6 +209,22 @@ NTSTATUS xsdk_file_set_size(HANDLE handle, uint64_t size_bytes)
 	return status;
 }
 
+uint32_t xsdk_file_mode_attributes(uint32_t attributes, mode_t mode)
+{
+	// Attributes of 0 change nothing; NORMAL alone clears them (reactos:drivers/filesystems/vfatfs/finfo.c:170-178).
+	attributes &= ~(uint32_t)FILE_ATTRIBUTE_NORMAL;
+	attributes =
+		mode & S_IWUSR ? attributes & ~(uint32_t)FILE_ATTRIBUTE_READONLY : attributes | FILE_ATTRIBUTE_READONLY;
+	return attributes ? attributes : FILE_ATTRIBUTE_NORMAL;
+}
+
+NTSTATUS xsdk_file_set_basic(HANDLE handle, const FILE_BASIC_INFORMATION *information)
+{
+	IO_STATUS_BLOCK io_status;
+	// Xenia changes nothing (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:247-251).
+	return NtSetInformationFile(handle, &io_status, information, sizeof(*information), FILE_BASIC_INFORMATION_CLASS);
+}
+
 HANDLE xsdk_file_handle(int fd)
 {
 	const FileSlot *file = find_slot(fd);
@@ -229,8 +245,10 @@ int xsdk_file_directory_path(int fd, char path[XSDK_PATH_BYTES])
 void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, struct stat *info)
 {
 	memset(info, 0, sizeof(*info));
-	// The kernel keeps attributes, not owners or permissions, so everyone may do anything.
-	info->st_mode = information->attributes & FILE_ATTRIBUTE_DIRECTORY ? S_IFDIR | ACCESSPERMS : S_IFREG | DEFFILEMODE;
+	// The kernel keeps attributes, not owners or permissions: everyone may do anything a read-only file allows.
+	const bool directory = information->attributes & FILE_ATTRIBUTE_DIRECTORY;
+	const mode_t unwritable = information->attributes & FILE_ATTRIBUTE_READONLY ? S_IWUSR | S_IWGRP | S_IWOTH : 0;
+	info->st_mode = (directory ? S_IFDIR | ACCESSPERMS : S_IFREG | DEFFILEMODE) & ~unwritable;
 	info->st_nlink = 1;
 	info->st_size = (off_t)information->end_of_file;
 	info->st_atim = xsdk_time_from_nt(information->last_access_time);
@@ -521,17 +539,19 @@ int fstat(int fd, struct stat *info)
 	return 0;
 }
 
-// Permissions can't change (xsdk_file_stat), so only asking for the ones a file already has succeeds.
+// Through the descriptor's own handle; one opened only to read may lack the right to set attributes.
 int fchmod(int fd, mode_t mode)
 {
-	struct stat info;
-	if (fstat(fd, &info) != 0)
+	const FileSlot *file = find_file(fd);
+	if (!file)
 		return -1;
-	if ((mode & ALLPERMS) != (info.st_mode & ALLPERMS)) {
-		errno = ENOTSUP;
-		return -1;
+	FILE_NETWORK_OPEN_INFORMATION information;
+	NTSTATUS status = query_information(file->handle, &information);
+	if (NT_SUCCESS(status)) {
+		const FILE_BASIC_INFORMATION basic = { .attributes = xsdk_file_mode_attributes(information.attributes, mode) };
+		status = xsdk_file_set_basic(file->handle, &basic);
 	}
-	return 0;
+	return NT_SUCCESS(status) ? 0 : fail_with_status("fchmod", fd, status);
 }
 
 int isatty(int fd)

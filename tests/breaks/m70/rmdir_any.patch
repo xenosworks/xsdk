@@ -1,6 +1,6 @@
 --- a/src/path.c
 +++ b/src/path.c
-@@ -314,7 +314,8 @@
+@@ -349,7 +349,8 @@
  
  int rmdir(const char *path)
  {
@@ -9,4 +9,4 @@
 +	return unlinkat(AT_FDCWD, path, 0);
  }
  
- // Permissions are stat's (xsdk_file_stat): anything may be read and written, and only a folder searched.
+ // Permissions are stat's (xsdk_file_stat): anything may be read, written unless read-only, and only a folder searched.

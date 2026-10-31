@@ -1,14 +1,13 @@
 --- a/src/path.c
 +++ b/src/path.c
-@@ -363,7 +363,10 @@
- 	// Xenia changes nothing (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:247-251).
+@@ -404,7 +404,9 @@
+ 	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0)
+ 		return -1;
  	const FILE_BASIC_INFORMATION information = { .last_access_time = access_time, .last_write_time = write_time };
- 	IO_STATUS_BLOCK io_status;
--	status = NtSetInformationFile(handle, &io_status, &information, sizeof(information), FILE_BASIC_INFORMATION_CLASS);
+-	return set_basic_resolved("utime", resolved, &information);
 +	// Broken on purpose: the times are never set.
 +	(void)information;
-+	(void)io_status;
-+	status = STATUS_SUCCESS;
- 	const NTSTATUS close_status = NtClose(handle);
- 	if (!NT_SUCCESS(status))
- 		return fail_with_status("utime: NtSetInformationFile", resolved, status);
++	return 0;
+ }
+ 
+ int utime(const char *path, const struct utimbuf *times)

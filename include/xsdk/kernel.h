@@ -87,8 +87,8 @@ typedef struct {
 } FILE_RENAME_INFORMATION;
 
 // 40 bytes (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:173-174), laid out as NT's
-// (wine:include/winternl.h:1519-1525, at 840a939). NT leaves a time given as 0 as it was
-// (wine:dlls/ntdll/unix/file.c:1563-1573, 4910-4914); unproven on the console, as are attributes of 0.
+// (wine:include/winternl.h:1519-1525, at 840a939). A time or attributes given as 0 stay as they were, as ReactOS's FATX
+// has it (reactos:drivers/filesystems/vfatfs/finfo.c:170-234, at 39fee16); unproven on the console.
 typedef struct {
 	uint64_t creation_time;
 	uint64_t last_access_time;
@@ -278,8 +278,9 @@ enum {
 	SYNCHRONIZE = 0x00100000,
 	// Needed to mark a file for deletion; the value is NT's.
 	DELETE = 0x00010000,
-	// Needed to set a file's times; the value is NT's.
+	// Needed to set a file's times and attributes; the value is NT's.
 	FILE_WRITE_ATTRIBUTES = 0x00000100,
+	FILE_ATTRIBUTE_READONLY = 0x00000001,
 	FILE_ATTRIBUTE_DIRECTORY = 0x00000010,
 	FILE_ATTRIBUTE_NORMAL = 0x00000080,
 	// NtCreateFile's share access; the values are NT's. Xenia ignores it (xboxkrnl/xboxkrnl_io.cc:102-145), and the

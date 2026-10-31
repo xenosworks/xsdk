@@ -9,3 +9,5 @@ memalign_unchecked	xsdk_test	posix_memalign: memory at alignments up to 64 KB, a
 access_mode_ignored	xsdk_test	access: a file reads and writes but doesn't run, a folder does all three; ENOENT for nothing, EINVAL for a bad mode
 rmdir_any	xsdk_test	rmdir: removes an empty folder; ENOTEMPTY for one with a file in it, ENOTDIR for a file, which stays
 utime_unset	xsdk_test	utime and utimes: set a file's access and modification times, now for NULL, as stat reads them; EINVAL for a bad tv_usec
+chmod_kept	xsdk_test	chmod and fchmod: the owner's write bit sets and clears the read-only attribute, as stat, fstat and access read it; a folder stays a folder; ENOENT for nothing
+stat_writable	xsdk_test	chmod and fchmod: the owner's write bit sets and clears the read-only attribute, as stat, fstat and access read it; a folder stays a folder; ENOENT for nothing

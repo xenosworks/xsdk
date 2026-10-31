@@ -186,13 +186,12 @@ static int resolve_or_fail(int dir_fd, const char *path, char resolved[XSDK_PATH
 	return 0;
 }
 
-static int stat_resolved(const char *resolved, struct stat *info)
+static int query_resolved(const char *resolved, FILE_NETWORK_OPEN_INFORMATION *information)
 {
 	ANSI_STRING name;
 	OBJECT_ATTRIBUTES attributes;
 	xsdk_path_attributes(resolved, &name, &attributes);
-	FILE_NETWORK_OPEN_INFORMATION information;
-	const NTSTATUS status = NtQueryFullAttributesFile(&attributes, &information);
+	const NTSTATUS status = NtQueryFullAttributesFile(&attributes, information);
 	if (!NT_SUCCESS(status)) {
 		errno = xsdk_file_errno(status);
 		// A missing file is the usual answer to a stat, not an error.
@@ -200,6 +199,14 @@ static int stat_resolved(const char *resolved, struct stat *info)
 			xsdk_log_write("stat: NtQueryFullAttributesFile(%s) failed: 0x%08X", resolved, (unsigned)status);
 		return -1;
 	}
+	return 0;
+}
+
+static int stat_resolved(const char *resolved, struct stat *info)
+{
+	FILE_NETWORK_OPEN_INFORMATION information;
+	if (query_resolved(resolved, &information) != 0)
+		return -1;
 	xsdk_file_stat(&information, info);
 	return 0;
 }
@@ -317,7 +324,7 @@ int rmdir(const char *path)
 	return unlinkat(AT_FDCWD, path, AT_REMOVEDIR);
 }
 
-// Permissions are stat's (xsdk_file_stat): anything may be read and written, and only a folder searched.
+// Permissions are stat's (xsdk_file_stat): anything may be read, written unless read-only, and only a folder searched.
 int access(const char *path, int mode)
 {
 	if (mode & ~(R_OK | W_OK | X_OK)) {
@@ -336,6 +343,18 @@ int access(const char *path, int mode)
 }
 
 _Static_assert(sizeof(FILE_BASIC_INFORMATION) == 40, "the basic class takes 40 bytes");
+
+static int set_basic_resolved(const char *call, const char *resolved, const FILE_BASIC_INFORMATION *information)
+{
+	HANDLE handle;
+	NTSTATUS status = open_resolved(resolved, FILE_WRITE_ATTRIBUTES, FILE_OPEN, 0, &handle);
+	if (NT_SUCCESS(status)) {
+		status = xsdk_file_set_basic(handle, information);
+		const NTSTATUS close_status = NtClose(handle);
+		status = NT_SUCCESS(status) ? close_status : status;
+	}
+	return NT_SUCCESS(status) ? 0 : fail_with_status(call, resolved, status);
+}
 
 // Sets the access and modification times, both to now for NULL.
 static int set_times(const char *path, const struct timespec times[2])
@@ -356,20 +375,8 @@ static int set_times(const char *path, const struct timespec times[2])
 	char resolved[XSDK_PATH_BYTES];
 	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0)
 		return -1;
-	HANDLE handle;
-	NTSTATUS status = open_resolved(resolved, FILE_WRITE_ATTRIBUTES, FILE_OPEN, 0, &handle);
-	if (!NT_SUCCESS(status))
-		return fail_with_status("utime: NtCreateFile", resolved, status);
-	// Xenia changes nothing (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:247-251).
 	const FILE_BASIC_INFORMATION information = { .last_access_time = access_time, .last_write_time = write_time };
-	IO_STATUS_BLOCK io_status;
-	status = NtSetInformationFile(handle, &io_status, &information, sizeof(information), FILE_BASIC_INFORMATION_CLASS);
-	const NTSTATUS close_status = NtClose(handle);
-	if (!NT_SUCCESS(status))
-		return fail_with_status("utime: NtSetInformationFile", resolved, status);
-	if (!NT_SUCCESS(close_status))
-		return fail_with_status("utime: NtClose", resolved, close_status);
-	return 0;
+	return set_basic_resolved("utime", resolved, &information);
 }
 
 int utime(const char *path, const struct utimbuf *times)
@@ -468,21 +475,24 @@ int statvfs(const char *path, struct statvfs *info)
 	return 0;
 }
 
-// Permissions can't change (xsdk_file_stat), so only asking for the ones a file already has succeeds.
+// The owner's write bit sets or clears the read-only attribute (xsdk_file_mode_attributes); the other bits have
+// nowhere to go. There are no links for flags to choose between.
 int fchmodat(int dir_fd, const char *path, mode_t mode, int flags)
 {
 	(void)flags;
 	char resolved[XSDK_PATH_BYTES];
 	if (resolve_or_fail(dir_fd, path, resolved) != 0)
 		return -1;
-	struct stat info;
-	if (stat_resolved(resolved, &info) != 0)
+	FILE_NETWORK_OPEN_INFORMATION information;
+	if (query_resolved(resolved, &information) != 0)
 		return -1;
-	if ((mode & ALLPERMS) != (info.st_mode & ALLPERMS)) {
-		errno = ENOTSUP;
-		return -1;
-	}
-	return 0;
+	const FILE_BASIC_INFORMATION basic = { .attributes = xsdk_file_mode_attributes(information.attributes, mode) };
+	return set_basic_resolved("chmod", resolved, &basic);
+}
+
+int chmod(const char *path, mode_t mode)
+{
+	return fchmodat(AT_FDCWD, path, mode, 0);
 }
 
 // The kernel's file calls have no links of either kind.

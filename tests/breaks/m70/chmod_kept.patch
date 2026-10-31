@@ -1,0 +1,12 @@
+--- a/src/file.c
++++ b/src/file.c
+@@ -212,6 +212,9 @@
+ 
+ uint32_t xsdk_file_mode_attributes(uint32_t attributes, mode_t mode)
+ {
++	// Broken on purpose: the mode changes nothing.
++	(void)mode;
++	return attributes;
+ 	// Attributes of 0 change nothing; NORMAL alone clears them (reactos:drivers/filesystems/vfatfs/finfo.c:170-178).
+ 	attributes &= ~(uint32_t)FILE_ATTRIBUTE_NORMAL;
+ 	attributes =

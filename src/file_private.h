@@ -18,6 +18,9 @@ HANDLE xsdk_file_handle(int fd);
 // Copies the kernel path of a descriptor opened with O_DIRECTORY; returns 0 or an errno.
 int xsdk_file_directory_path(int fd, char path[XSDK_PATH_BYTES]);
 void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, struct stat *info);
+// The attributes to set for chmod's mode: the owner's write bit stands for the read-only attribute, as in stat.
+uint32_t xsdk_file_mode_attributes(uint32_t attributes, mode_t mode);
+NTSTATUS xsdk_file_set_basic(HANDLE handle, const FILE_BASIC_INFORMATION *information);
 // Sets a file's size, writing zeros over the bytes it adds.
 NTSTATUS xsdk_file_set_size(HANDLE handle, uint64_t size_bytes);
 // Fills info with the sizes of the volume handle is on.

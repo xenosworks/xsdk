@@ -506,6 +506,49 @@ static void check_utime(const char *path)
 		by_utime && by_utimes && to_now && refused);
 }
 
+static bool writable(const struct stat *info)
+{
+	return (info->st_mode & S_IWUSR) != 0;
+}
+
+// FATX keeps no permissions but a read-only attribute, which the owner's write bit sets and clears.
+static void check_chmod(const char *path)
+{
+	char folder[PATH_BYTES];
+	char missing[PATH_BYTES];
+	sibling_path(folder, path, "xsdk_chmod_test");
+	sibling_path(missing, path, "xsdk_no_such_file.txt");
+	struct stat info;
+	const bool read_only = chmod(path, 0444) == 0 && stat(path, &info) == 0 && S_ISREG(info.st_mode) &&
+		(info.st_mode & S_IRUSR) && !writable(&info);
+	errno = 0;
+	const bool unwritable = access(path, W_OK) == -1 && errno == EACCES;
+	const int writer = open(path, O_WRONLY);
+	xsdk_log_write("files: a read-only file opened to write gives %d, errno %d", writer, writer < 0 ? errno : 0);
+	if (writer >= 0)
+		close(writer);
+	const bool cleared = chmod(path, 0644) == 0 && stat(path, &info) == 0 && writable(&info);
+	const int fd = open(path, O_RDWR);
+	const bool by_descriptor = fd >= 0 && fchmod(fd, 0444) == 0 && fstat(fd, &info) == 0 && !writable(&info) &&
+		fchmod(fd, 0666) == 0 && fstat(fd, &info) == 0 && writable(&info);
+	if (fd >= 0)
+		close(fd);
+	const bool made = mkdir(folder, 0777) == 0 || errno == EEXIST;
+	const bool folder_kept = made && chmod(folder, 0555) == 0 && stat(folder, &info) == 0 && S_ISDIR(info.st_mode) &&
+		!writable(&info) && chmod(folder, 0777) == 0 && stat(folder, &info) == 0 && S_ISDIR(info.st_mode) &&
+		writable(&info);
+	errno = 0;
+	const bool missing_refused = chmod(missing, 0644) == -1 && errno == ENOENT;
+	// Writable again, whatever failed, for the checks after and for removing.
+	(void)chmod(path, 0666);
+	(void)chmod(folder, 0777);
+	(void)unlink(folder);
+	check(
+		"chmod and fchmod: the owner's write bit sets and clears the read-only attribute, as stat, fstat and access "
+		"read it; a folder stays a folder; ENOENT for nothing",
+		read_only && unwritable && cleared && by_descriptor && folder_kept && missing_refused);
+}
+
 // The test file, renamed over another, takes its place, and its own name is gone.
 static void check_rename(const char *path)
 {
@@ -612,6 +655,7 @@ void test_files(void)
 	check_access(path);
 	check_utime(path);
 	check_rmdir(path);
+	check_chmod(path);
 	check_rename(path);
 
 	char folder[PATH_BYTES];
