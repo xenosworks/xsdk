@@ -25,6 +25,10 @@ enum {
 	// (docs/HARDWARE.md, "The time base runs at 49.875 MHz"). Xenia runs it at 50 MHz
 	// (xenia:src/xenia/emulator.cc:151).
 	TIME_BASE_HZ = 49875000,
+	// The system time's step on the console (docs/HARDWARE.md, "SDL's drivers and the fixed clocks on the console").
+	REALTIME_STEP_NS = 1000000,
+	// A time base tick is 20.05 ns; clock_getres gives whole nanoseconds, so 21.
+	TIME_BASE_TICK_NS = (NANOSECONDS_PER_SECOND + TIME_BASE_HZ - 1) / TIME_BASE_HZ,
 };
 
 static uint64_t time_base(void)
@@ -74,6 +78,22 @@ int clock_gettime(clockid_t clock, struct timespec *time)
 	return -1;
 }
 
+int clock_getres(clockid_t clock, struct timespec *resolution)
+{
+	long step_ns;
+	if (clock == CLOCK_REALTIME) {
+		step_ns = REALTIME_STEP_NS;
+	} else if (clock == CLOCK_MONOTONIC || clock == CLOCK_MONOTONIC_RAW) {
+		step_ns = TIME_BASE_TICK_NS;
+	} else {
+		errno = EINVAL;
+		return -1;
+	}
+	if (resolution)
+		*resolution = (struct timespec){ .tv_nsec = step_ns };
+	return 0;
+}
+
 int gettimeofday(struct timeval *time, void *zone)
 {
 	(void)zone;
@@ -114,4 +134,12 @@ int nanosleep(const struct timespec *request, struct timespec *remaining)
 		remaining->tv_nsec = 0;
 	}
 	return 0;
+}
+
+unsigned int sleep(unsigned int seconds)
+{
+	const struct timespec request = { .tv_sec = seconds };
+	struct timespec remaining = { 0 };
+	(void)nanosleep(&request, &remaining);
+	return (unsigned int)remaining.tv_sec;
 }

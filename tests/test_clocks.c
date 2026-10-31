@@ -3,9 +3,11 @@
 
 #include "tests.h"
 
+#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
@@ -23,6 +25,11 @@ enum {
 	RATE_TOLERANCE_PPM = 500,
 	SLEEP_COUNT = 20,
 	SLEEP_NS = 2000000,
+	// A time base tick at 49.875 MHz, 20.05 ns, in whole nanoseconds.
+	TIME_BASE_TICK_NS = 21,
+	// No clock has it.
+	UNKNOWN_CLOCK = 99,
+	SLEEP_SLACK_NS = 100000000,
 };
 
 static int64_t nanoseconds(const struct timespec *time)
@@ -106,6 +113,37 @@ static void check_sleeps(void)
 	check("clocks: nanosleep never returns early", shortest >= SLEEP_NS);
 }
 
+static void check_resolutions(int64_t realtime_step)
+{
+	struct timespec realtime;
+	struct timespec monotonic;
+	struct timespec raw;
+	const bool read = clock_getres(CLOCK_REALTIME, &realtime) == 0 && clock_getres(CLOCK_MONOTONIC, &monotonic) == 0 &&
+		clock_getres(CLOCK_MONOTONIC_RAW, &raw) == 0;
+	errno = 0;
+	const bool refused = clock_getres(UNKNOWN_CLOCK, NULL) == -1 && errno == EINVAL;
+	xsdk_log_write("clocks: clock_getres gives %lld ns realtime, %lld ns monotonic, %lld ns raw",
+		(long long)nanoseconds(&realtime), (long long)nanoseconds(&monotonic), (long long)nanoseconds(&raw));
+	check(
+		"clocks: clock_getres gives CLOCK_REALTIME's step as measured, the time base's 21 ns tick for the monotonic "
+		"clocks, and refuses an unknown clock",
+		read && refused && nanoseconds(&realtime) == realtime_step && nanoseconds(&monotonic) == TIME_BASE_TICK_NS &&
+			nanoseconds(&raw) == TIME_BASE_TICK_NS);
+}
+
+static void check_sleep(void)
+{
+	struct timespec start;
+	struct timespec end;
+	(void)clock_gettime(CLOCK_MONOTONIC, &start);
+	const unsigned int left = sleep(0) + sleep(1);
+	(void)clock_gettime(CLOCK_MONOTONIC, &end);
+	const int64_t slept = nanoseconds(&end) - nanoseconds(&start);
+	xsdk_log_write("clocks: sleep(0) and sleep(1) took %lld ns, %u s left", (long long)slept, left);
+	check("clocks: sleep(1) lasts a second on CLOCK_MONOTONIC, and sleep leaves none to sleep",
+		left == 0 && slept >= NANOSECONDS_PER_SECOND && slept < NANOSECONDS_PER_SECOND + SLEEP_SLACK_NS);
+}
+
 void test_clocks(void)
 {
 	// SDL's timer reads CLOCK_MONOTONIC_RAW wherever the C library defines it, as newlib does.
@@ -125,8 +163,10 @@ void test_clocks(void)
 	check("clocks: CLOCK_MONOTONIC and CLOCK_MONOTONIC_RAW step finer than 0.1 ms",
 		monotonic_step > 0 && monotonic_step < FINEST_STEP_NS && raw_step > 0 && raw_step < FINEST_STEP_NS);
 
+	check_resolutions(realtime_step);
 	check_rate();
 	check_sleeps();
+	check_sleep();
 
 	// Its 64 bits come back whole in r3; it reports 50 MHz, the time base's nominal rate, in Xenia and on the console
 	// (results/2026-10-10-probe-vblank/xsdk.log).
