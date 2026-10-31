@@ -1,6 +1,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <fnmatch.h>
 #include <libgen.h>
 #include <pthread.h>
 #include <stdio.h>
@@ -49,6 +50,8 @@ enum {
 	HALF_SECOND_US = 500000,
 	// A time set to now reads back within FATX's 2 s, and a second for the clock read beside it.
 	NOW_SLACK_S = 3,
+	// No fnmatch flag has it.
+	UNKNOWN_FNMATCH_FLAG = 0x100,
 	SYNCED_FILES = 2,
 };
 
@@ -617,6 +620,60 @@ static void check_sync(const char *path)
 	check("sync: the kernel flushes every file open, two written here", written && flushed >= SYNCED_FILES);
 }
 
+// fnmatch's edge cases: periods first, slashes under FNM_PATHNAME, escapes, and brackets.
+static void check_fnmatch(void)
+{
+	static const struct {
+		const char *pattern;
+		const char *string;
+		int flags;
+		int expected;
+	} cases[] = {
+		{ "*.txt", "notes.txt", 0, 0 },
+		{ "*.txt", ".txt", FNM_PERIOD, FNM_NOMATCH },
+		{ ".*", ".profile", FNM_PERIOD, 0 },
+		{ "?profile", ".profile", FNM_PERIOD, FNM_NOMATCH },
+		{ "[.]profile", ".profile", FNM_PERIOD, FNM_NOMATCH },
+		{ "*", ".profile", 0, 0 },
+		{ "dir/*", "dir/.hidden", FNM_PATHNAME | FNM_PERIOD, FNM_NOMATCH },
+		{ "dir/.*", "dir/.hidden", FNM_PATHNAME | FNM_PERIOD, 0 },
+		{ "dir*", "dir/.hidden", FNM_PERIOD, 0 },
+		{ "a*b", "a/b", FNM_PATHNAME, FNM_NOMATCH },
+		{ "a*b", "a/b", 0, 0 },
+		{ "a?b", "a/b", FNM_PATHNAME, FNM_NOMATCH },
+		{ "a[/]b", "a/b", FNM_PATHNAME, FNM_NOMATCH },
+		{ "*/*.c", "src/main.c", FNM_PATHNAME, 0 },
+		{ "\\*", "*", 0, 0 },
+		{ "\\*", "x", 0, FNM_NOMATCH },
+		{ "\\*", "\\x", FNM_NOESCAPE, 0 },
+		{ "[]]", "]", 0, 0 },
+		{ "[!]]", "]", 0, FNM_NOMATCH },
+		{ "[!]]", "a", 0, 0 },
+		{ "[a-c]x", "bx", 0, 0 },
+		{ "[!a-c]x", "bx", 0, FNM_NOMATCH },
+		{ "[a-]", "-", 0, 0 },
+		{ "[\\]]", "]", 0, 0 },
+		{ "[[:digit:]]*", "7z", 0, 0 },
+		{ "[", "[", 0, 0 },
+		{ "*a*b", "xaxxb", 0, 0 },
+		{ "*a*b", "xaxxc", 0, FNM_NOMATCH },
+		{ "", "", 0, 0 },
+	};
+	const int unknown = fnmatch("a", "a", UNKNOWN_FNMATCH_FLAG);
+	bool all = unknown != 0 && unknown != FNM_NOMATCH;
+	for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); i++) {
+		const int result = fnmatch(cases[i].pattern, cases[i].string, cases[i].flags);
+		if (result != cases[i].expected)
+			xsdk_log_write("files: fnmatch(\"%s\", \"%s\", %d) gave %d", cases[i].pattern, cases[i].string,
+				cases[i].flags, result);
+		all &= result == cases[i].expected;
+	}
+	check(
+		"fnmatch: leading periods, slashes under FNM_PATHNAME, escapes, and brackets with ranges, a class, '!' and "
+		"']' first; an unknown flag refused",
+		all);
+}
+
 // The test file, renamed over another, takes its place, and its own name is gone.
 static void check_rename(const char *path)
 {
@@ -689,6 +746,7 @@ static void check_path_parts(void)
 void test_files(void)
 {
 	check_path_parts();
+	check_fnmatch();
 	check_log_readable();
 	check_log_cost();
 
