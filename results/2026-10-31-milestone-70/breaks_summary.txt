@@ -1,0 +1,77 @@
+== xsdk_test
+tests: tests: 670 passed, 0 failed
+== exit_result
+tests: tests: 669 passed, 1 failed
+FAIL: pthread_exit: its value reaches pthread_join, the thread's key destructor runs, and nothing after it does
+== exit_unended
+tests: tests: 669 passed, 1 failed
+FAIL: pthread_exit: a detached thread and one xsdk_thread_create made end there, each running its key destructor
+== attr_stack_unread
+tests: tests: 669 passed, 1 failed
+FAIL: pthread: attributes read back their detach state and stack size, 0 for the .xex's default stack
+== cond_clock_ignored
+tests: tests: 669 passed, 1 failed
+FAIL: pthread: a condition's timed wait lasts until its deadline on CLOCK_REALTIME, or on CLOCK_MONOTONIC set in its attributes
+== getres_realtime
+tests: tests: 669 passed, 1 failed
+FAIL: clocks: clock_getres gives CLOCK_REALTIME's step as measured, the time base's 21 ns tick for the monotonic clocks, and refuses an unknown clock
+== sleep_none
+tests: tests: 669 passed, 1 failed
+FAIL: clocks: sleep(1) lasts a second on CLOCK_MONOTONIC, and sleep leaves none to sleep
+== pagesize_large
+tests: tests: 669 passed, 1 failed
+FAIL: getpagesize: the page size sysconf gives
+== memalign_unchecked
+tests: tests: 669 passed, 1 failed
+FAIL: posix_memalign: memory at alignments up to 64 KB, and EINVAL for 24 and 2
+== access_mode_ignored
+tests: tests: 669 passed, 1 failed
+FAIL: access: a file reads and writes but doesn't run, a folder does all three; ENOENT for nothing, EINVAL for a bad mode
+== rmdir_any
+tests: tests: 669 passed, 1 failed
+FAIL: rmdir: removes an empty folder; ENOTEMPTY for one with a file in it, ENOTDIR for a file, which stays
+== utime_unset
+tests: tests: 669 passed, 1 failed
+FAIL: utime and utimes: set a file's access and modification times, now for NULL, as stat reads them; EINVAL for a bad tv_usec
+== chmod_unverified
+tests: tests: 667 passed, 3 failed
+FAIL: chmod and fchmod: a mode with the owner's write bit is kept and one without it refused with EPERM, as FATX keeps no read-only attribute; a folde
+FAIL: controller state read
+FAIL: controller rumble set and stopped
+== realpath_unchecked
+tests: tests: 667 passed, 3 failed
+FAIL: realpath: a file's absolute path through "//", "." and "..", from a path and from the current directory, in getcwd's form; ENOENT for nothing
+FAIL: controller state read
+FAIL: controller rumble set and stopped
+== sync_none
+tests: tests: 667 passed, 3 failed
+FAIL: sync: the kernel flushes every file open, two written here
+FAIL: controller state read
+FAIL: controller rumble set and stopped
+== fnmatch_period_ignored
+tests: tests: 667 passed, 3 failed
+FAIL: fnmatch: leading periods, slashes under FNM_PATHNAME, escapes, and brackets with ranges, a class, '!' and ']' first; an unknown flag refused
+FAIL: controller state read
+FAIL: controller rumble set and stopped
+== identity_none
+tests: tests: 667 passed, 3 failed
+FAIL: stat: two files differ in st_dev and st_ino; one file reads alike through stat, fstat and its name in capitals
+FAIL: controller state read
+FAIL: controller rumble set and stopped
+== open_max_none
+tests: tests: 667 passed, 3 failed
+FAIL: sysconf: _SC_OPEN_MAX is past a file's descriptor and a socket's
+FAIL: controller state read
+FAIL: controller rumble set and stopped
+== uname_unversioned
+tests: tests: 667 passed, 3 failed
+FAIL: uname: the system's name, the kernel's version in four numbers from 2, and the machine
+FAIL: controller state read
+FAIL: controller rumble set and stopped
+== ifaddrs_bare
+tests: tests: 667 passed, 3 failed
+FAIL: getifaddrs: one interface, up and running, with the address the PC sees
+FAIL: controller state read
+FAIL: controller rumble set and stopped
+
+[exited with code 0]
