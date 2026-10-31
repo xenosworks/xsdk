@@ -16,3 +16,5 @@ sync_none	xsdk_test	sync: the kernel flushes every file open, two written here
 fnmatch_period_ignored	xsdk_test	fnmatch: leading periods, slashes under FNM_PATHNAME, escapes, and brackets with ranges, a class, '!' and ']' first; an unknown flag refused
 identity_none	xsdk_test	stat: two files differ in st_dev and st_ino; one file reads alike through stat, fstat and its name in capitals
 open_max_none	xsdk_test	sysconf: _SC_OPEN_MAX is past a file's descriptor and a socket's
+uname_unversioned	xsdk_test	uname: the system's name, the kernel's version in four numbers from 2, and the machine
+ifaddrs_bare	xsdk_test	getifaddrs: one interface, up and running, with the address the PC sees
