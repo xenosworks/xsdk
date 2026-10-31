@@ -1,5 +1,8 @@
+#include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "tests.h"
@@ -11,7 +14,34 @@
 enum {
 	PAGE_BYTES = 4096,
 	GROWTH_BYTES = 16 * 1024 * 1024,
+	LARGE_PAGE_BYTES = 64 * 1024,
+	ALIGNED_BYTES = 100,
+	// Not a power of two, and a power of two below a pointer's size.
+	ODD_ALIGNMENT = 24,
+	SHORT_ALIGNMENT = 2,
 };
+
+// Memory at each alignment, written to and freed; the alignments POSIX refuses, refused.
+static bool aligned_allocations(void)
+{
+	static const size_t alignments[] = { sizeof(void *), 64, PAGE_BYTES, LARGE_PAGE_BYTES };
+	bool all = true;
+	for (size_t i = 0; i < sizeof(alignments) / sizeof(alignments[0]); i++) {
+		void *memory = NULL;
+		const bool aligned = posix_memalign(&memory, alignments[i], ALIGNED_BYTES) == 0 && memory &&
+			((uintptr_t)memory & (alignments[i] - 1)) == 0;
+		if (!aligned)
+			xsdk_log_write(
+				"memory: posix_memalign(%u) gave 0x%08X", (unsigned)alignments[i], (unsigned)(uintptr_t)memory);
+		if (memory)
+			memset(memory, 0xA5, ALIGNED_BYTES);
+		free(memory);
+		all &= aligned;
+	}
+	void *memory = NULL;
+	return all && posix_memalign(&memory, ODD_ALIGNMENT, ALIGNED_BYTES) == EINVAL &&
+		posix_memalign(&memory, SHORT_ALIGNMENT, ALIGNED_BYTES) == EINVAL;
+}
 
 static NTSTATUS query(MM_QUERY_STATISTICS_RESULT *statistics, uint32_t size_bytes)
 {
@@ -89,4 +119,5 @@ void test_memory(void)
 		(unsigned)(GROWTH_BYTES >> 20), (unsigned)after);
 	check("MmQueryStatistics: heap growth takes free pages",
 		after != 0 && after < before && before - after >= GROWTH_BYTES / PAGE_BYTES);
+	check("posix_memalign: memory at alignments up to 64 KB, and EINVAL for 24 and 2", aligned_allocations());
 }

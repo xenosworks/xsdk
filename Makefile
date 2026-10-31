@@ -22,7 +22,7 @@ LDFLAGS := -static -nostdlib -T src/xsdk.ld
 # libxsdk.a after libstdc++: what libstdc++ calls that xsdk replaces in newlib, rename among them, comes from xsdk.
 LIBS := -Wl,--start-group -lstdc++ $(BUILD)/libxsdk.a -lc -lm -lgcc -Wl,--end-group
 
-SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/thread.c src/file.c src/path.c src/dir.c \
+SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/memalign.c src/thread.c src/file.c src/path.c src/dir.c \
 	src/pthread.c src/lock.c src/reent.c src/time.c src/sysconf.c src/entropy.c src/exit.c src/gpu.c \
 	src/gpu_setup.c src/gpu_resolve.c src/gpu_draw.c src/gpu_constants.c src/gpu_tiles.c src/display.c src/shader.c \
 	src/microcode.c src/texture.c src/texture_layout.c src/tiled.c src/present.c src/splash.c src/copy.c src/socket.c \
