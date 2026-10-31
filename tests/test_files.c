@@ -4,11 +4,13 @@
 #include <libgen.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <strings.h>
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <sys/syslimits.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
@@ -549,6 +551,47 @@ static void check_chmod(const char *path)
 		read_only && unwritable && cleared && by_descriptor && folder_kept && missing_refused);
 }
 
+// The absolute path, "//", "." and ".." taken out, in getcwd's form; "sub" is there, as POSIX has every name exist.
+static void check_realpath(const char *path)
+{
+	char folder[PATH_BYTES];
+	char sub[PATH_BYTES];
+	char inner[PATH_BYTES];
+	char messy[PATH_BYTES];
+	char missing[PATH_BYTES];
+	char expected[PATH_BYTES];
+	sibling_path(folder, path, "xsdk_realpath_test");
+	(void)snprintf(sub, sizeof(sub), "%s\\sub", folder);
+	(void)snprintf(inner, sizeof(inner), "%s\\file.txt", folder);
+	(void)snprintf(messy, sizeof(messy), "%s\\\\.\\sub\\..\\file.txt", folder);
+	(void)snprintf(missing, sizeof(missing), "%s\\missing.txt", folder);
+	strcpy(expected, inner);
+	for (char *c = expected; *c; c++)
+		*c = *c == '\\' ? '/' : *c;
+	const bool made = (mkdir(folder, 0777) == 0 || errno == EEXIST) && (mkdir(sub, 0777) == 0 || errno == EEXIST) &&
+		write_small_file(inner);
+
+	char *const allocated = made ? realpath(messy, NULL) : NULL;
+	xsdk_log_write("files: realpath(%s) is %s", messy, allocated ? allocated : "NULL");
+	const bool by_path = allocated && strcmp(allocated, expected) == 0;
+	free(allocated);
+	static char buffer[PATH_MAX];
+	char cwd[PATH_BYTES] = "";
+	const bool relative = made && getcwd(cwd, sizeof(cwd)) && chdir(folder) == 0 &&
+		realpath("./sub/../file.txt", buffer) == buffer && strcmp(buffer, expected) == 0;
+	if (cwd[0])
+		(void)chdir(cwd);
+	errno = 0;
+	const bool missing_refused = realpath(missing, buffer) == NULL && errno == ENOENT;
+	(void)unlink(inner);
+	(void)unlink(sub);
+	(void)unlink(folder);
+	check(
+		"realpath: a file's absolute path through \"//\", \".\" and \"..\", from a path and from the current "
+		"directory, in getcwd's form; ENOENT for nothing",
+		by_path && relative && missing_refused);
+}
+
 // The test file, renamed over another, takes its place, and its own name is gone.
 static void check_rename(const char *path)
 {
@@ -656,6 +699,7 @@ void test_files(void)
 	check_utime(path);
 	check_rmdir(path);
 	check_chmod(path);
+	check_realpath(path);
 	check_rename(path);
 
 	char folder[PATH_BYTES];

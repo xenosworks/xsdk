@@ -248,6 +248,13 @@ int chdir(const char *path)
 	return 0;
 }
 
+// A kernel path as getcwd and realpath give it, with '/' between the names.
+static void copy_with_slashes(char *out, const char *resolved, size_t length)
+{
+	for (size_t i = 0; i <= length; i++)
+		out[i] = resolved[i] == '\\' ? '/' : resolved[i];
+}
+
 // With no buffer, allocates one, as glibc does; libstdc++ asks for that first.
 char *getcwd(char *buffer, size_t size_bytes)
 {
@@ -268,8 +275,29 @@ char *getcwd(char *buffer, size_t size_bytes)
 		errno = ENOMEM;
 		return NULL;
 	}
-	for (size_t i = 0; i <= length; i++)
-		result[i] = path[i] == '\\' ? '/' : path[i];
+	copy_with_slashes(result, path, length);
+	return result;
+}
+
+// With no links, the path resolved, "." and ".." taken out, is the real one once it's there. A buffer given holds
+// PATH_MAX, 1024 bytes in newlib's <sys/syslimits.h>, more than any kernel path.
+char *realpath(const char *path, char *buffer)
+{
+	if (!path) {
+		errno = EINVAL;
+		return NULL;
+	}
+	char resolved[XSDK_PATH_BYTES];
+	struct stat info;
+	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0 || stat_resolved(resolved, &info) != 0)
+		return NULL;
+	const size_t length = strlen(resolved);
+	char *const result = buffer ? buffer : malloc(length + 1);
+	if (!result) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	copy_with_slashes(result, resolved, length);
 	return result;
 }
 

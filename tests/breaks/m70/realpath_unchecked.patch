@@ -1,0 +1,12 @@
+--- a/src/path.c
++++ b/src/path.c
+@@ -289,7 +289,8 @@
+ 	}
+ 	char resolved[XSDK_PATH_BYTES];
+ 	struct stat info;
+-	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0 || stat_resolved(resolved, &info) != 0)
++	// Broken on purpose: a path to nothing passes.
++	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0 || (false && stat_resolved(resolved, &info)))
+ 		return NULL;
+ 	const size_t length = strlen(resolved);
+ 	char *const result = buffer ? buffer : malloc(length + 1);
