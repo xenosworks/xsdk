@@ -203,6 +203,7 @@ Each in its own repository under xenosworks.
 | Dear ImGui (imgui-xenon) | Yes | windows and widgets on the GPU layer, driven by controller 1, text fields through XAM's keyboard | `examples/example_xsdk/imgui_check.cpp` there | Physical keyboards; ImGui through vulkan4xenon |
 | libcurl 8.23 (curl-xenon) | Yes | HTTP and HTTPS over mbedtls-xenon, for downloads | `tests/xsdk/curl_check.c` there | Other protocols, HTTP/2 and 3, IPv6 |
 | FAudio 26.10 (FAudio-xenon) | Yes | XAudio2, X3DAudio and XAPO effects, on SDL3's audio | `tests/xsdk/faudio_check.c` there | XMA; FACT's wave banks are fixed for big-endian but unchecked |
+| Mono 6.13 (mono-xenon) | Yes | C# on Mono's JIT and the .NET 4.5 class libraries, P/Invoke into the title's own functions | `xsdk/tests` there: its regression tests, every optimisation set, and checks of the ABI, the collector, threads, files and sockets | AOT; TLS in the class libraries; C functions with variable arguments; processes |
 
 ## System information and control
 
