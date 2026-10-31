@@ -183,6 +183,33 @@ int munmap(void *address, size_t length)
 	return result;
 }
 
+// mmap's mappings are private and anonymous, so there's no file to write back.
+int msync(void *address, size_t length, int flags)
+{
+	uintptr_t end;
+	if ((flags & ~(MS_ASYNC | MS_INVALIDATE | MS_SYNC)) || ((flags & MS_ASYNC) && (flags & MS_SYNC))) {
+		errno = EINVAL;
+		return -1;
+	}
+	return page_range(address, length, &end) ? 0 : -1;
+}
+
+// Committed pages are physical pages taken from the kernel's free count, never moved out (docs/HARDWARE.md, "What the
+// kernel leaves a title": 16 MB of heap took 4100 free pages), so every page is locked already.
+int mlock(const void *address, size_t length)
+{
+	(void)address;
+	(void)length;
+	return 0;
+}
+
+int munlock(const void *address, size_t length)
+{
+	(void)address;
+	(void)length;
+	return 0;
+}
+
 int mprotect(void *address, size_t length, int protection)
 {
 	const int protect = protection_bits(protection);

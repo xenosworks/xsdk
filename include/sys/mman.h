@@ -18,11 +18,17 @@ extern "C" {
 #define MAP_ANONYMOUS 0x20
 #define MAP_ANON      MAP_ANONYMOUS
 #define MAP_FAILED    ((void *)-1)
+#define MS_ASYNC      1
+#define MS_INVALIDATE 2
+#define MS_SYNC       4
 
 // Anonymous private mappings only, 4 KB pages; address is a hint and may be ignored. PROT_EXEC is unsupported.
 void *mmap(void *address, size_t length, int protection, int flags, int descriptor, off_t offset);
 int munmap(void *address, size_t length);
 int mprotect(void *address, size_t length, int protection);
+int msync(void *address, size_t length, int flags);
+int mlock(const void *address, size_t length);
+int munlock(const void *address, size_t length);
 
 #ifdef __cplusplus
 }

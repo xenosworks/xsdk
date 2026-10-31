@@ -67,6 +67,22 @@ static void mappings(void)
 	check("pages: a repeated unmap of released memory succeeds", munmap(base, MAP_BYTES) == 0);
 }
 
+static void synced_and_locked(void)
+{
+	void *page = mmap(NULL, PAGE_BYTES, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+	if (page == MAP_FAILED) {
+		check("pages: msync, mlock and munlock", false);
+		return;
+	}
+	const bool synced = msync(page, PAGE_BYTES, MS_SYNC) == 0 && msync(page, PAGE_BYTES, MS_ASYNC | MS_INVALIDATE) == 0;
+	const bool bad_flags = msync(page, PAGE_BYTES, MS_SYNC | MS_ASYNC) == -1 && errno == EINVAL &&
+		msync(page, PAGE_BYTES, 8) == -1 && errno == EINVAL;
+	const bool unaligned = msync((char *)page + 1, PAGE_BYTES, MS_SYNC) == -1 && errno == EINVAL;
+	const bool locked = mlock(page, PAGE_BYTES) == 0 && munlock(page, PAGE_BYTES) == 0;
+	check(
+		"pages: msync, mlock and munlock", synced && bad_flags && unaligned && locked && munmap(page, PAGE_BYTES) == 0);
+}
+
 static void refused(void)
 {
 	check("pages: files, fixed and shared mappings are refused",
@@ -178,6 +194,7 @@ static void written_ranges(void)
 void test_pages(void)
 {
 	mappings();
+	synced_and_locked();
 	refused();
 	physical_protection();
 	heap_return();
