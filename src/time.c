@@ -22,7 +22,8 @@ enum {
 	NANOSECONDS_PER_NT_TICK = 100,
 	// The CPU's 3192 MHz over 64 (libxenon:libxenon/drivers/ppc/timebase.h:6). KeQueryPerformanceFrequency reports
 	// 50 MHz (results/2026-10-10-probe-vblank/xsdk.log:3), which reads the console's 60 Hz vblank 0.25% short
-	// (docs/HARDWARE.md, "The time base runs at 49.875 MHz"). Xenia runs it at 50 MHz (xenia:src/xenia/emulator.cc:151).
+	// (docs/HARDWARE.md, "The time base runs at 49.875 MHz"). Xenia runs it at 50 MHz
+	// (xenia:src/xenia/emulator.cc:151).
 	TIME_BASE_HZ = 49875000,
 };
 
