@@ -1,0 +1,15 @@
+diff --git a/src/file.c b/src/file.c
+index 7cb0cce..14cb70a 100644
+--- a/src/file.c
++++ b/src/file.c
+@@ -222,6 +222,10 @@ uint32_t xsdk_file_mode_attributes(uint32_t attributes, mode_t mode)
+ 
+ int xsdk_file_mode_kept(uint32_t attributes, mode_t mode)
+ {
++	// Broken on purpose: any mode counts as kept.
++	(void)attributes;
++	(void)mode;
++	return 0;
+ 	// The console's FATX keeps the hidden attribute alone, taking the read-only one and dropping it (docs/HARDWARE.md,
+ 	// "FATX keeps no read-only attribute"), so a mode without the owner's write bit can't be kept there.
+ 	const bool read_only = attributes & FILE_ATTRIBUTE_READONLY;
