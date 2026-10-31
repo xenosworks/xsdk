@@ -1,5 +1,6 @@
 #include "file_private.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -243,9 +244,17 @@ int xsdk_file_directory_path(int fd, char path[XSDK_PATH_BYTES])
 	return 0;
 }
 
-void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, struct stat *info)
+void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, const char *resolved, struct stat *info)
 {
 	memset(info, 0, sizeof(*info));
+	// FATX has no inodes or links, so a file is its path, in any case as FATX matches names: a 32-bit FNV-1a hash of
+	// it, split across st_dev and st_ino, which newlib makes 16 bits each here. Mono's sharing checks and a copy onto
+	// itself tell files apart by the pair.
+	uint32_t identity = 2166136261u;
+	for (const char *c = resolved; *c; c++)
+		identity = (identity ^ (uint8_t)tolower((unsigned char)*c)) * 16777619u;
+	info->st_dev = (dev_t)(identity >> 16);
+	info->st_ino = (ino_t)(identity & 0xFFFF);
 	// The kernel keeps attributes, not owners or permissions: everyone may do anything a read-only file allows.
 	const bool directory = information->attributes & FILE_ATTRIBUTE_DIRECTORY;
 	const mode_t unwritable = information->attributes & FILE_ATTRIBUTE_READONLY ? S_IWUSR | S_IWGRP | S_IWOTH : 0;
@@ -559,7 +568,7 @@ int fstat(int fd, struct stat *info)
 	const NTSTATUS status = query_information(file->handle, &information);
 	if (!NT_SUCCESS(status))
 		return fail_with_status("fstat", fd, status);
-	xsdk_file_stat(&information, info);
+	xsdk_file_stat(&information, file->path, info);
 	return 0;
 }
 

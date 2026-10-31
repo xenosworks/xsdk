@@ -207,7 +207,7 @@ static int stat_resolved(const char *resolved, struct stat *info)
 	FILE_NETWORK_OPEN_INFORMATION information;
 	if (query_resolved(resolved, &information) != 0)
 		return -1;
-	xsdk_file_stat(&information, info);
+	xsdk_file_stat(&information, resolved, info);
 	return 0;
 }
 

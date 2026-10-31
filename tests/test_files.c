@@ -597,6 +597,36 @@ static void check_realpath(const char *path)
 		by_path && relative && missing_refused);
 }
 
+// Each file has an identity of its own in st_dev and st_ino, the same through stat, fstat and its name in capitals.
+static void check_identity(const char *path)
+{
+	char first[PATH_BYTES];
+	char second[PATH_BYTES];
+	char shouted[PATH_BYTES];
+	sibling_path(first, path, "xsdk_identity_a.txt");
+	sibling_path(second, path, "xsdk_identity_b.txt");
+	sibling_path(shouted, path, "XSDK_IDENTITY_A.TXT");
+	struct stat a = { 0 };
+	struct stat b = { 0 };
+	struct stat a_shouted = { 0 };
+	struct stat a_open = { 0 };
+	const bool made = write_small_file(first) && write_small_file(second);
+	const int fd = made ? open(first, O_RDONLY) : -1;
+	const bool read = made && stat(first, &a) == 0 && stat(second, &b) == 0 && stat(shouted, &a_shouted) == 0 &&
+		fd >= 0 && fstat(fd, &a_open) == 0;
+	if (fd >= 0)
+		(void)close(fd);
+	(void)unlink(first);
+	(void)unlink(second);
+	xsdk_log_write("files: identities %04x:%04x and %04x:%04x", (unsigned)(uint16_t)a.st_dev, (unsigned)a.st_ino,
+		(unsigned)(uint16_t)b.st_dev, (unsigned)b.st_ino);
+	check(
+		"stat: two files differ in st_dev and st_ino; one file reads alike through stat, fstat and its name in "
+		"capitals",
+		read && (a.st_dev != b.st_dev || a.st_ino != b.st_ino) && a.st_dev == a_shouted.st_dev &&
+			a.st_ino == a_shouted.st_ino && a.st_dev == a_open.st_dev && a.st_ino == a_open.st_ino);
+}
+
 // Two files written and open: sync has the kernel flush both, at least, as fsync does one.
 static void check_sync(const char *path)
 {
@@ -783,6 +813,7 @@ void test_files(void)
 	check_rmdir(path);
 	check_chmod(path);
 	check_realpath(path);
+	check_identity(path);
 	check_sync(path);
 	check_rename(path);
 
