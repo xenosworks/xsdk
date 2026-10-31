@@ -45,6 +45,8 @@ typedef struct {
 	RTL_CRITICAL_SECTION lock;
 	Thread *head;
 	Thread *tail;
+	// What pthread_cond_timedwait's deadline is read on, from the attributes it was made with.
+	clockid_t clock;
 } Condition;
 
 typedef struct {
@@ -151,6 +153,16 @@ void xsdk_pthread_thread_end(void)
 	release_thread(self);
 }
 
+// How a thread pthread_create made ends, its routine returning or through pthread_exit.
+static void end_created_thread(Thread *self, void *result)
+{
+	self->result = result;
+	run_key_destructors();
+	(void)KeTlsSetValue(self_slot, NULL);
+	if (__atomic_fetch_or(&self->state, THREAD_ENDED, __ATOMIC_ACQ_REL) & THREAD_DETACHED)
+		release_thread(self);
+}
+
 static uint32_t thread_main(void *context)
 {
 	Thread *self = context;
@@ -158,12 +170,20 @@ static uint32_t thread_main(void *context)
 	RtlEnterCriticalSection(&creation_lock);
 	RtlLeaveCriticalSection(&creation_lock);
 	(void)KeTlsSetValue(self_slot, self);
-	self->result = self->start(self->argument);
-	run_key_destructors();
-	(void)KeTlsSetValue(self_slot, NULL);
-	if (__atomic_fetch_or(&self->state, THREAD_ENDED, __ATOMIC_ACQ_REL) & THREAD_DETACHED)
-		release_thread(self);
+	end_created_thread(self, self->start(self->argument));
 	return 0;
+}
+
+// Ends any thread as returning would, result its exit code; past the main thread's end, the title runs on until exit.
+void pthread_exit(void *result)
+{
+	Thread *self = KeTlsGetValue(self_slot);
+	if (self && self->start)
+		end_created_thread(self, result);
+	xsdk_pthread_thread_end();
+	ExTerminateThread((uint32_t)(uintptr_t)result);
+	// The kernel never returns from it (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:155-159).
+	__builtin_unreachable();
 }
 
 int pthread_create(pthread_t *thread, const pthread_attr_t *attr, void *(*start)(void *), void *argument)
@@ -212,11 +232,24 @@ int pthread_attr_setdetachstate(pthread_attr_t *attr, int state)
 	return 0;
 }
 
+int pthread_attr_getdetachstate(const pthread_attr_t *attr, int *state)
+{
+	*state = attr->detachstate;
+	return 0;
+}
+
 int pthread_attr_setstacksize(pthread_attr_t *attr, size_t stack_bytes)
 {
 	if (stack_bytes < STACK_MIN_BYTES || stack_bytes > INT32_MAX)
 		return EINVAL;
 	attr->stacksize = (int)stack_bytes;
+	return 0;
+}
+
+// 0 until set, for the .xex's default stack (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:119-121).
+int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stack_bytes)
+{
+	*stack_bytes = (size_t)attr->stacksize;
 	return 0;
 }
 
@@ -500,6 +533,7 @@ static Condition *condition_object(pthread_cond_t *cond)
 	if (!created)
 		return NULL;
 	RtlInitializeCriticalSection(&created->lock);
+	created->clock = CLOCK_REALTIME;
 	if (__atomic_compare_exchange_n(
 			cond, &value, (uint32_t)(uintptr_t)created, false, __ATOMIC_ACQ_REL, __ATOMIC_ACQUIRE))
 		return created;
@@ -567,10 +601,44 @@ static int condition_wait(
 	return result;
 }
 
+int pthread_condattr_init(pthread_condattr_t *attr)
+{
+	*attr = (pthread_condattr_t){ .is_initialized = 1, .clock = CLOCK_REALTIME };
+	return 0;
+}
+
+int pthread_condattr_destroy(pthread_condattr_t *attr)
+{
+	attr->is_initialized = 0;
+	return 0;
+}
+
+// Any clock clock_gettime reads.
+int pthread_condattr_setclock(pthread_condattr_t *attr, clockid_t clock)
+{
+	struct timespec now;
+	if (clock_gettime(clock, &now) != 0)
+		return EINVAL;
+	attr->clock = clock;
+	return 0;
+}
+
+int pthread_condattr_getclock(const pthread_condattr_t *attr, clockid_t *clock)
+{
+	*clock = attr->clock;
+	return 0;
+}
+
 int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
 {
-	(void)attr;
 	*cond = PTHREAD_COND_INITIALIZER;
+	if (!attr || !attr->is_initialized || attr->clock == CLOCK_REALTIME)
+		return 0;
+	// Made now, to hold the clock.
+	Condition *condition = condition_object(cond);
+	if (!condition)
+		return ENOMEM;
+	condition->clock = attr->clock;
 	return 0;
 }
 
@@ -595,7 +663,10 @@ int pthread_cond_clockwait(
 
 int pthread_cond_timedwait(pthread_cond_t *cond, pthread_mutex_t *mutex, const struct timespec *deadline)
 {
-	return condition_wait(cond, mutex, CLOCK_REALTIME, deadline);
+	const Condition *condition = condition_object(cond);
+	if (!condition)
+		return ENOMEM;
+	return condition_wait(cond, mutex, condition->clock, deadline);
 }
 
 int pthread_cond_signal(pthread_cond_t *cond)
