@@ -21,6 +21,8 @@ void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, struct sta
 // The attributes to set for chmod's mode: the owner's write bit stands for the read-only attribute, as in stat.
 uint32_t xsdk_file_mode_attributes(uint32_t attributes, mode_t mode);
 NTSTATUS xsdk_file_set_basic(HANDLE handle, const FILE_BASIC_INFORMATION *information);
+// The flushes the kernel has taken from fsync and sync, for a test to count.
+uint32_t xsdk_file_flushes(void);
 // Sets a file's size, writing zeros over the bytes it adds.
 NTSTATUS xsdk_file_set_size(HANDLE handle, uint64_t size_bytes);
 // Fills info with the sizes of the volume handle is on.

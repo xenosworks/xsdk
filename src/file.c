@@ -41,6 +41,7 @@ typedef struct {
 _Static_assert(FIRST_FILE_FD + FILE_SLOTS == XSDK_FIRST_SOCKET_FD, "sockets take the descriptors after files");
 
 static FileSlot files[FILE_SLOTS];
+static uint32_t flush_count;
 
 int xsdk_file_errno(NTSTATUS status)
 {
@@ -443,13 +444,26 @@ int ftruncate(int fd, off_t length_bytes)
 	return NT_SUCCESS(status) ? 0 : fail_with_status("ftruncate", fd, status);
 }
 
+static NTSTATUS flush(HANDLE handle)
+{
+	IO_STATUS_BLOCK io_status;
+	const NTSTATUS status = NtFlushBuffersFile(handle, &io_status);
+	if (NT_SUCCESS(status))
+		__atomic_fetch_add(&flush_count, 1, __ATOMIC_RELAXED);
+	return status;
+}
+
+uint32_t xsdk_file_flushes(void)
+{
+	return __atomic_load_n(&flush_count, __ATOMIC_RELAXED);
+}
+
 int fsync(int fd)
 {
 	const FileSlot *file = find_file(fd);
 	if (!file)
 		return -1;
-	IO_STATUS_BLOCK io_status;
-	const NTSTATUS status = NtFlushBuffersFile(file->handle, &io_status);
+	const NTSTATUS status = flush(file->handle);
 	return NT_SUCCESS(status) ? 0 : fail_with_status("fsync", fd, status);
 }
 
@@ -457,6 +471,16 @@ int fsync(int fd)
 int fdatasync(int fd)
 {
 	return fsync(fd);
+}
+
+// Folders hold nothing to write back; sync can't fail, so a flush refused is passed over.
+void sync(void)
+{
+	for (int i = 0; i < FILE_SLOTS; i++) {
+		const HANDLE handle = __atomic_load_n(&files[i].handle, __ATOMIC_ACQUIRE);
+		if (handle && handle != SLOT_CLAIMED && !files[i].directory)
+			(void)flush(handle);
+	}
 }
 
 off_t lseek(int fd, off_t offset, int whence)

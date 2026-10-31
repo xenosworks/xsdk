@@ -12,3 +12,4 @@ utime_unset	xsdk_test	utime and utimes: set a file's access and modification tim
 chmod_kept	xsdk_test	chmod and fchmod: the owner's write bit sets and clears the read-only attribute, as stat, fstat and access read it; a folder stays a folder; ENOENT for nothing
 stat_writable	xsdk_test	chmod and fchmod: the owner's write bit sets and clears the read-only attribute, as stat, fstat and access read it; a folder stays a folder; ENOENT for nothing
 realpath_unchecked	xsdk_test	realpath: a file's absolute path through "//", "." and "..", from a path and from the current directory, in getcwd's form; ENOENT for nothing
+sync_none	xsdk_test	sync: the kernel flushes every file open, two written here

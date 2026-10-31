@@ -60,6 +60,8 @@ TEST_SOURCES := tests/main.c tests/test_image.c tests/test_memory.c tests/test_t
 TEST_OBJECTS := $(patsubst tests/%,$(BUILD)/tests/%.o,$(basename $(TEST_SOURCES)))
 # The text checks compare what's drawn with the font's bits in src/text_font.h.
 $(BUILD)/tests/test_text.o: CFLAGS += -Isrc
+# The sync check counts the kernel's flushes through src/file_private.h.
+$(BUILD)/tests/test_files.o: CFLAGS += -Isrc
 # A title for listening to the audio frame layout on the console.
 AUDIO_CHECK_SOURCES := tests/audio_check.c tests/audio_frame.c
 AUDIO_CHECK_OBJECTS := $(patsubst tests/%,$(BUILD)/tests/%.o,$(basename $(AUDIO_CHECK_SOURCES)))

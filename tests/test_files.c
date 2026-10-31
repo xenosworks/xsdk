@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <utime.h>
 
+#include "file_private.h"
 #include "tests.h"
 #include "xsdk/log.h"
 
@@ -48,6 +49,7 @@ enum {
 	HALF_SECOND_US = 500000,
 	// A time set to now reads back within FATX's 2 s, and a second for the clock read beside it.
 	NOW_SLACK_S = 3,
+	SYNCED_FILES = 2,
 };
 
 // game: is the launch folder on the console; Xenia mounts it read-only but lets titles write to cache:.
@@ -592,6 +594,29 @@ static void check_realpath(const char *path)
 		by_path && relative && missing_refused);
 }
 
+// Two files written and open: sync has the kernel flush both, at least, as fsync does one.
+static void check_sync(const char *path)
+{
+	char names[SYNCED_FILES][PATH_BYTES];
+	int fds[SYNCED_FILES];
+	bool written = true;
+	for (int i = 0; i < SYNCED_FILES; i++) {
+		sibling_path(names[i], path, i ? "xsdk_sync_b.bin" : "xsdk_sync_a.bin");
+		fds[i] = open(names[i], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+		written &= fds[i] >= 0 && write(fds[i], "x", 1) == 1;
+	}
+	const uint32_t before = xsdk_file_flushes();
+	sync();
+	const uint32_t flushed = xsdk_file_flushes() - before;
+	for (int i = 0; i < SYNCED_FILES; i++) {
+		if (fds[i] >= 0)
+			close(fds[i]);
+		(void)unlink(names[i]);
+	}
+	xsdk_log_write("files: sync flushed %u files", (unsigned)flushed);
+	check("sync: the kernel flushes every file open, two written here", written && flushed >= SYNCED_FILES);
+}
+
 // The test file, renamed over another, takes its place, and its own name is gone.
 static void check_rename(const char *path)
 {
@@ -700,6 +725,7 @@ void test_files(void)
 	check_rmdir(path);
 	check_chmod(path);
 	check_realpath(path);
+	check_sync(path);
 	check_rename(path);
 
 	char folder[PATH_BYTES];
