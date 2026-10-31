@@ -1,6 +1,7 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "socket_private.h"
 #include "xsdk/kernel.h"
 
 enum {
@@ -30,6 +31,9 @@ long sysconf(int name)
 		return HARDWARE_THREADS;
 	case _SC_PAGESIZE:
 		return PAGE_BYTES;
+	case _SC_OPEN_MAX:
+		// One past the highest descriptor: files' come before sockets' (src/file.c, src/socket.c).
+		return XSDK_FIRST_SOCKET_FD + XSDK_SOCKET_SLOTS;
 	case _SC_PHYS_PAGES:
 		return physical_pages();
 	default:

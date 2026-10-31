@@ -597,6 +597,25 @@ static void check_realpath(const char *path)
 		by_path && relative && missing_refused);
 }
 
+// _SC_OPEN_MAX is past every descriptor: corefx's System.Native asserts a descriptor is under it.
+static void check_open_max(const char *path)
+{
+	char name[PATH_BYTES];
+	sibling_path(name, path, "xsdk_open_max.txt");
+	const long open_max = sysconf(_SC_OPEN_MAX);
+	const bool made = write_small_file(name);
+	const int file = made ? open(name, O_RDONLY) : -1;
+	const int sock = socket(AF_INET, SOCK_STREAM, 0);
+	xsdk_log_write("files: _SC_OPEN_MAX %ld, a file's descriptor %d, a socket's %d", open_max, file, sock);
+	if (file >= 0)
+		(void)close(file);
+	if (sock >= 0)
+		(void)close(sock);
+	(void)unlink(name);
+	check("sysconf: _SC_OPEN_MAX is past a file's descriptor and a socket's",
+		file >= 0 && sock >= 0 && file < open_max && sock < open_max);
+}
+
 // Each file has an identity of its own in st_dev and st_ino, the same through stat, fstat and its name in capitals.
 static void check_identity(const char *path)
 {
@@ -814,6 +833,7 @@ void test_files(void)
 	check_chmod(path);
 	check_realpath(path);
 	check_identity(path);
+	check_open_max(path);
 	check_sync(path);
 	check_rename(path);
 

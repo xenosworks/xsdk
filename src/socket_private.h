@@ -8,6 +8,9 @@
 enum {
 	// Past src/file.c's descriptors; select takes those under FD_SETSIZE, the first 29.
 	XSDK_FIRST_SOCKET_FD = 35,
+	// The most sockets of a kind XNetStartup takes (docs/HARDWARE.md, "XAM's sockets and loader, milestone 56"). Those
+	// numbered from FD_SETSIZE up work with poll, not select.
+	XSDK_SOCKET_SLOTS = 232,
 };
 
 // Starts XAM's network once; returns 0, or an errno value if it wouldn't start.
