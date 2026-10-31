@@ -48,6 +48,9 @@ enum {
 	SET_WRITE_TIME = 1000000000,
 	SET_UTIMES_WRITE_TIME = 1200000000,
 	HALF_SECOND_US = 500000,
+	// That time and a half second, rounded up to FATX's next 2 s, as the console rounds (docs/HARDWARE.md, "FATX keeps
+	// no read-only attribute").
+	SET_UTIMES_READ_TIME = SET_UTIMES_WRITE_TIME + 2,
 	// A time set to now reads back within FATX's 2 s, and a second for the clock read beside it.
 	NOW_SLACK_S = 3,
 	// No fnmatch flag has it.
@@ -499,14 +502,18 @@ static void check_utime(const char *path)
 		(long long)SET_ACCESS_TIME, (long long)SET_WRITE_TIME, (long long)info.st_atime, (long long)info.st_mtime);
 	const bool by_utime = set && info.st_atime == SET_ACCESS_TIME && info.st_mtime == SET_WRITE_TIME;
 	const struct timeval values[2] = { { SET_ACCESS_TIME, 0 }, { SET_UTIMES_WRITE_TIME, HALF_SECOND_US } };
-	const bool by_utimes =
-		utimes(path, values) == 0 && stat(path, &info) == 0 && info.st_mtime == SET_UTIMES_WRITE_TIME;
+	const bool by_utimes = utimes(path, values) == 0 && stat(path, &info) == 0 && info.st_mtime == SET_UTIMES_READ_TIME;
+	const long long utimes_read = (long long)info.st_mtime;
 	const time_t now = time(NULL);
 	const bool to_now = utime(path, NULL) == 0 && stat(path, &info) == 0 && info.st_mtime >= now - NOW_SLACK_S &&
 		info.st_mtime <= now + NOW_SLACK_S;
+	const long long now_read = (long long)info.st_mtime;
 	const struct timeval bad[2] = { { SET_ACCESS_TIME, -1 }, { SET_WRITE_TIME, 0 } };
 	errno = 0;
 	const bool refused = utimes(path, bad) == -1 && errno == EINVAL;
+	xsdk_log_write(
+		"files: utimes set %lld and stat read %lld; utime(NULL) at %lld read %lld; a bad tv_usec gave errno %d",
+		(long long)SET_UTIMES_WRITE_TIME, utimes_read, (long long)now, now_read, errno);
 	check(
 		"utime and utimes: set a file's access and modification times, now for NULL, as stat reads them; EINVAL for a "
 		"bad tv_usec",
@@ -518,7 +525,8 @@ static bool writable(const struct stat *info)
 	return (info->st_mode & S_IWUSR) != 0;
 }
 
-// FATX keeps no permissions but a read-only attribute, which the owner's write bit sets and clears.
+// FATX keeps no permissions, and on the console no read-only attribute either (docs/HARDWARE.md, "FATX keeps no
+// read-only attribute"): a mode with the owner's write bit is kept, one without it refused, the file still writable.
 static void check_chmod(const char *path)
 {
 	char folder[PATH_BYTES];
@@ -526,34 +534,34 @@ static void check_chmod(const char *path)
 	sibling_path(folder, path, "xsdk_chmod_test");
 	sibling_path(missing, path, "xsdk_no_such_file.txt");
 	struct stat info;
-	const bool read_only = chmod(path, 0444) == 0 && stat(path, &info) == 0 && S_ISREG(info.st_mode) &&
-		(info.st_mode & S_IRUSR) && !writable(&info);
 	errno = 0;
-	const bool unwritable = access(path, W_OK) == -1 && errno == EACCES;
-	const int writer = open(path, O_WRONLY);
-	xsdk_log_write("files: a read-only file opened to write gives %d, errno %d", writer, writer < 0 ? errno : 0);
-	if (writer >= 0)
-		close(writer);
-	const bool cleared = chmod(path, 0644) == 0 && stat(path, &info) == 0 && writable(&info);
+	const bool refused = chmod(path, 0444) == -1 && errno == EPERM && stat(path, &info) == 0 && S_ISREG(info.st_mode) &&
+		writable(&info) && access(path, W_OK) == 0;
+	const bool kept = chmod(path, 0644) == 0 && stat(path, &info) == 0 && writable(&info);
 	const int fd = open(path, O_RDWR);
-	const bool by_descriptor = fd >= 0 && fchmod(fd, 0444) == 0 && fstat(fd, &info) == 0 && !writable(&info) &&
-		fchmod(fd, 0666) == 0 && fstat(fd, &info) == 0 && writable(&info);
+	errno = 0;
+	const bool by_descriptor = fd >= 0 && fchmod(fd, 0444) == -1 && errno == EPERM && fchmod(fd, 0666) == 0 &&
+		fstat(fd, &info) == 0 && writable(&info);
 	if (fd >= 0)
 		close(fd);
 	const bool made = mkdir(folder, 0777) == 0 || errno == EEXIST;
-	const bool folder_kept = made && chmod(folder, 0555) == 0 && stat(folder, &info) == 0 && S_ISDIR(info.st_mode) &&
-		!writable(&info) && chmod(folder, 0777) == 0 && stat(folder, &info) == 0 && S_ISDIR(info.st_mode) &&
-		writable(&info);
+	errno = 0;
+	const bool folder_kept = made && chmod(folder, 0555) == -1 && errno == EPERM && chmod(folder, 0777) == 0 &&
+		stat(folder, &info) == 0 && S_ISDIR(info.st_mode) && writable(&info);
 	errno = 0;
 	const bool missing_refused = chmod(missing, 0644) == -1 && errno == ENOENT;
-	// Writable again, whatever failed, for the checks after and for removing.
+	// Writable again, where a drive did keep the attribute, for the checks after and for removing.
 	(void)chmod(path, 0666);
 	(void)chmod(folder, 0777);
 	(void)unlink(folder);
+	xsdk_log_write(
+		"files: chmod without the write bit refused %d, with it kept %d, by descriptor %d, folder %d, "
+		"ENOENT %d",
+		refused, kept, by_descriptor, folder_kept, missing_refused);
 	check(
-		"chmod and fchmod: the owner's write bit sets and clears the read-only attribute, as stat, fstat and access "
-		"read it; a folder stays a folder; ENOENT for nothing",
-		read_only && unwritable && cleared && by_descriptor && folder_kept && missing_refused);
+		"chmod and fchmod: a mode with the owner's write bit is kept and one without it refused with EPERM, as FATX "
+		"keeps no read-only attribute; a folder stays a folder; ENOENT for nothing",
+		refused && kept && by_descriptor && folder_kept && missing_refused);
 }
 
 // The absolute path, "//", "." and ".." taken out, in getcwd's form; "sub" is there, as POSIX has every name exist.

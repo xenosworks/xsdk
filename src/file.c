@@ -220,6 +220,17 @@ uint32_t xsdk_file_mode_attributes(uint32_t attributes, mode_t mode)
 	return attributes ? attributes : FILE_ATTRIBUTE_NORMAL;
 }
 
+int xsdk_file_mode_kept(uint32_t attributes, mode_t mode)
+{
+	// The console's FATX keeps the hidden attribute alone, taking the read-only one and dropping it (docs/HARDWARE.md,
+	// "FATX keeps no read-only attribute"), so a mode without the owner's write bit can't be kept there.
+	const bool read_only = attributes & FILE_ATTRIBUTE_READONLY;
+	if (read_only == !(mode & S_IWUSR))
+		return 0;
+	errno = EPERM;
+	return -1;
+}
+
 NTSTATUS xsdk_file_set_basic(HANDLE handle, const FILE_BASIC_INFORMATION *information)
 {
 	IO_STATUS_BLOCK io_status;
@@ -584,7 +595,10 @@ int fchmod(int fd, mode_t mode)
 		const FILE_BASIC_INFORMATION basic = { .attributes = xsdk_file_mode_attributes(information.attributes, mode) };
 		status = xsdk_file_set_basic(file->handle, &basic);
 	}
-	return NT_SUCCESS(status) ? 0 : fail_with_status("fchmod", fd, status);
+	if (NT_SUCCESS(status))
+		status = query_information(file->handle, &information);
+	return NT_SUCCESS(status) ? xsdk_file_mode_kept(information.attributes, mode)
+							  : fail_with_status("fchmod", fd, status);
 }
 
 int isatty(int fd)

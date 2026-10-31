@@ -490,7 +490,8 @@ void VdShutdownEngines(void);
 void VdSwap(volatile uint32_t *ring_space, const uint32_t *fetch_constant, volatile uint32_t *system_writeback,
 	void *system_buffer, uint32_t system_value, uint32_t *front_buffer, uint32_t *texture_format, uint32_t *color_space,
 	uint32_t *width, uint32_t *height);
-// The kernel's version as four 16-bit numbers; Xenia's is 2.65535.65535.32768
+// The kernel's version as four 16-bit numbers: the console's reads 2.0.17559.0
+// (results/2026-10-31-milestone-70/xsdk_test_chmod_eperm.log), Xenia's 2.65535.65535.32768
 // (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:206-216).
 typedef struct {
 	uint16_t major;

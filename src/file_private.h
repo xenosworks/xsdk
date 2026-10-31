@@ -21,6 +21,8 @@ int xsdk_file_directory_path(int fd, char path[XSDK_PATH_BYTES]);
 void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, const char *resolved, struct stat *info);
 // The attributes to set for chmod's mode: the owner's write bit stands for the read-only attribute, as in stat.
 uint32_t xsdk_file_mode_attributes(uint32_t attributes, mode_t mode);
+// 0 if attributes, read back after a chmod, hold mode's write bit; otherwise -1 with errno EPERM.
+int xsdk_file_mode_kept(uint32_t attributes, mode_t mode);
 NTSTATUS xsdk_file_set_basic(HANDLE handle, const FILE_BASIC_INFORMATION *information);
 // The flushes the kernel has taken from fsync and sync, for a test to count.
 uint32_t xsdk_file_flushes(void);

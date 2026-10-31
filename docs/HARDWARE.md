@@ -5382,3 +5382,17 @@ opened with libzip, and only then is the ROM deleted and the title started again
   the store's own capture). With `sf64.o2r` taken away and a ROM put in its place, the first run took 62 s and deleted
   the ROM, and the game read the new archive, 14,559,161 bytes in 419 ms, and ran at 28.3 to 30.0 fps
   (`first_run_store_update.log`, `first_run_store_update_restart.log`).
+
+## FATX keeps no read-only attribute, milestone 70 (2026-10-31)
+
+xsdk_test's first console run of milestone 70's file calls failed its `chmod` and `utime` checks
+(`results/2026-10-31-milestone-70/xsdk_test_chmod_utime_parts.log`). `tests/probe_attributes.c` then set each attribute
+on a file and a folder in `game:` through `NtSetInformationFile`'s basic class (`probe_attributes.log`):
+- **Only the hidden attribute stays.** Read-only, system and archive are taken with success and dropped:
+  `NtQueryFullAttributesFile` reads the file as 0x80 and the folder as 0x10 after each, and 0x02 and 0x12 after
+  hidden. A file NtCreateFile makes read-only reads 0x80 too, and opens to write. So `chmod` and `fchmod`, which set
+  the read-only attribute for a mode without the owner's write bit, read it back and fail with `EPERM` there.
+- **The basic class can't be read through a handle opened only to set it:** `NtQueryInformationFile` gives
+  0xC000000D.
+- **Times keep 2-second steps, rounded up:** a write time of 1200000000.5 s reads back as 1200000002, and one set to
+  now, 1793468928 and a fraction, as 1793468930. A whole even second reads back as set.

@@ -615,7 +615,8 @@ and 2026-10-31:
   `uname`, `getpid`, `kill`, `raise`, `signal`, `abort`, `exit`, `atexit`; the sockets above, `getaddrinfo`,
   `getifaddrs`, `inet_pton` and `inet_ntop`; C++23's threads, atomics, exceptions, `chrono`, `filesystem` and `format` (docs/PARITY.md).
 - **Refuses at run time:** file-backed/shared/fixed mappings and `PROT_EXEC`, `ENOTSUP`; `pthread_cancel`, `link` and
-  `symlink`, `ENOSYS`; `fcntl` on a file, `ENOSYS`.
+  `symlink`, `ENOSYS`; `fcntl` on a file, `ENOSYS`; `chmod` without the owner's write bit on FATX, which keeps no
+  read-only attribute, `EPERM`.
 - **Doesn't link:** processes, `fork`, `vfork`, `execve`, `wait`, `waitpid`;
   `dlopen`; `dup`, `dup2`, `pipe`, `socketpair`; `readv`, `writev`, `lstat`, `fstatat`, `faccessat`,
   `chown`, `fchown`, `umask`, `utimensat`, `futimens`, `mkdirat`, `renameat`, `fpathconf`; `usleep`

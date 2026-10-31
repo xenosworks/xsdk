@@ -503,8 +503,9 @@ int statvfs(const char *path, struct statvfs *info)
 	return 0;
 }
 
-// The owner's write bit sets or clears the read-only attribute (xsdk_file_mode_attributes); the other bits have
-// nowhere to go. There are no links for flags to choose between.
+// The owner's write bit sets or clears the read-only attribute (xsdk_file_mode_attributes), read back for EPERM where
+// the file system doesn't keep it (xsdk_file_mode_kept); the other bits have nowhere to go. There are no links for
+// flags to choose between.
 int fchmodat(int dir_fd, const char *path, mode_t mode, int flags)
 {
 	(void)flags;
@@ -515,7 +516,9 @@ int fchmodat(int dir_fd, const char *path, mode_t mode, int flags)
 	if (query_resolved(resolved, &information) != 0)
 		return -1;
 	const FILE_BASIC_INFORMATION basic = { .attributes = xsdk_file_mode_attributes(information.attributes, mode) };
-	return set_basic_resolved("chmod", resolved, &basic);
+	if (set_basic_resolved("chmod", resolved, &basic) != 0 || query_resolved(resolved, &information) != 0)
+		return -1;
+	return xsdk_file_mode_kept(information.attributes, mode);
 }
 
 int chmod(const char *path, mode_t mode)
