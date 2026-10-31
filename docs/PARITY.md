@@ -4,7 +4,8 @@ xsdk's goal is to let anyone make homebrew and port games to the Xbox 360 withou
 map: for each area, what a title gets from xsdk today, how to use it, which test proves it on the console, and what's
 missing. It was drawn up on 2026-10-15, at xsdk `3e889a7`, brought up to date on 2026-10-20, at `e43c0e1`, after
 milestones 41 and 44 to 52, and again for milestone 54's files, drives, settings and Xbox Home and milestone 55's
-threads, waits and memory, and on 2026-10-21 for milestone 57's text and Dear ImGui and milestone 58's audio.
+threads, waits and memory, on 2026-10-21 for milestone 57's text and Dear ImGui and milestone 58's audio, and on
+2026-10-30 for milestone 70's POSIX calls, whose tests haven't yet run on the console.
 SCOPE.md has the milestones and TODO.md the open items; where they and this page disagree, they win, and this page is
 out of date.
 
@@ -49,6 +50,7 @@ which implements what the games it runs need:
 | Executable image pool and explicit cache flush | Yes | `.jit`, `xsdk_jit_pool`, `xsdk_code_flush` | `probe_exec` returned 42 then 99; m55_check's written-code checks | Builtin/libgcc clear-cache patch and rebuild: [TODO.md](../TODO.md) |
 | Virtual region queries | Yes | `NtQueryVirtualMemory(address, information, 0)` for `NtAllocateVirtualMemory`/`mmap` regions | [Console query log](../results/2026-10-20-milestone-55/probe_query_memory.log): committed, reserved, free | Image pages return C000000D; use `MmQueryAddressProtect` for image protection |
 | Physical page protection | Yes | `MmSetAddressProtect`, `MmQueryAddressProtect` | M55 probe | |
+| Aligned allocations and the page size | Yes | `posix_memalign` (`src/memalign.c`) on newlib's `memalign`, freed with `free`; `getpagesize`, 4096, as `sysconf(_SC_PAGESIZE)` | `tests/test_memory.c`; not yet run on the console | |
 | Memory statistics | Partial | `MmQueryStatistics` (`kernel.h`), raw | `tests/test_memory.c` | Xenia's statistics are estimates |
 
 ## Threads and synchronisation
@@ -56,8 +58,10 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Threads, joins, detached threads, stack sizes | Yes | pthreads (`src/pthread.c`), `std::thread` | `tests/test_pthread.c`, `test_threads.c` | |
+| Ending a thread early; attributes read back | Yes | `pthread_exit` (`src/pthread.c`), as returning would: the value to `pthread_join`, key destructors run, a detached thread's record freed; on a thread `xsdk_thread_create` made, the value is its exit code; `pthread_attr_getstacksize`, `pthread_attr_getdetachstate` | `tests/test_pthread.c`; not yet run on the console | The stack isn't unwound, so the thread's C++ locals aren't destroyed. The main thread ended this way leaves the title running its other threads, and nothing ends the title when the last one ends, as POSIX would: untried on the console. A stack size never set reads 0, the `.xex`'s default |
 | Placing threads on the 6 hardware threads | Yes | `xsdk_thread_create_on`, `xsdk_thread_move`, `xsdk_thread_place`, `xsdk_pthread_handle` (`thread.h`) | `test_placement.c`, `test_thread_control.c` | An unplaced thread runs on its creator's hardware thread |
 | Mutexes, condition variables, read-write locks, once, keys | Yes | pthreads | `tests/test_pthread.c` | A mutex holds a pointer to a critical section `malloc`ed on first lock: locking one after its memory is freed corrupts the heap (TODO.md) |
+| Condition variables timed on `CLOCK_MONOTONIC` | Yes | `pthread_condattr_setclock` with `CLOCK_REALTIME`, `CLOCK_MONOTONIC` or `CLOCK_MONOTONIC_RAW`, then `pthread_cond_init`; `pthread_cond_timedwait` reads its deadline on the condition's clock | `tests/test_pthread.c`; not yet run on the console | A timed wait goes to the kernel as a relative wait, which may end up to 1.4 ms early, as its sleeps do (docs/HARDWARE.md, "The time base runs at 49.875 MHz"); unmeasured for waits, and `nanosleep` alone waits again |
 | Priorities | Yes | `xsdk_thread_set_priority`, pthread scheduling calls; requests -16..16, default 0; the kernel keeps -3..4, and -16 and 16 | `test_thread_control.c` | POSIX scheduling policies are not separate kernel policies |
 | Semaphores | Yes | Raw kernel calls and unnamed process-local POSIX `sem_*` | `test_semaphore.c` | Named/shared semaphores |
 | Waiting on several objects; clearing and pulsing events | Yes | Raw waits on up to 64 objects, signal-and-wait, `NtClearEvent`, `NtPulseEvent`; a wait-all can return a nonzero index, as a wait-any does | `test_objects.c` | |
@@ -69,6 +73,7 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Wall clock, monotonic clocks, sleeps | Yes | `clock_gettime`, `gettimeofday`, `nanosleep` (`src/time.c`), `std::chrono` | `tests/test_clocks.c`, `test_cpp_chrono.cpp` | Short sleeps: a 1 ms sleep took about 2 ms (docs/HARDWARE.md, "Sleeps, write speeds, and a set-up that wouldn't run from a cached stream") |
+| Clocks' resolutions; `sleep` | Yes | `clock_getres` (`src/time.c`): `CLOCK_REALTIME` 1 ms, the system time's step on the console (docs/HARDWARE.md, "SDL's drivers and the fixed clocks on the console"), `CLOCK_MONOTONIC` and `CLOCK_MONOTONIC_RAW` 21 ns, a tick of the 49.875 MHz time base rounded up; `sleep` on `nanosleep`, which nothing interrupts, so none is left | `tests/test_clocks.c`; not yet run on the console | `usleep`, `clock_nanosleep` |
 | Local time in the console's time zone | Yes | `localtime`, `mktime`, `strftime`, newlib's `TZ` set at start-up from XAM's `GetTimeZoneInformation` (`src/system.c`) | `tests/test_system.c`, with US Eastern set and with no zone (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | |
 
 ## Files, drives and storage
@@ -78,6 +83,8 @@ which implements what the games it runs need:
 | Files and folders beside the `.xex` (`game:`) | Yes | POSIX `open`, `read`, `stat`, `opendir`, `mkdir`, `rename`, `unlink`; `std::filesystem` | `tests/test_files.c`, `test_cpp_filesystem.cpp` | Asynchronous I/O; a file that's open can't be removed or renamed, so `remove_all` fails on nested folders (TODO.md) |
 | Other drives: the hard disk, USB, memory units, the DVD | Yes | `hdd:`, `usb:` to `usb2:`, `mu:` to `mu1:` and `dvd:`, each its device's root (`src/path.c`); a path starting with `\` goes to the kernel as written | `tests/test_files.c`'s drive checks: `hdd:` and a USB stick listed, `dvd:` and `mu:` empty; the device paths, `tests/probe_drives.c` (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | A memory unit and a disc listed, with none on hand yet |
 | Writing at an offset, flushing, free space | Yes | `pwrite`, `fsync`, `fdatasync`, `statvfs`, `fstatvfs` (`src/file.c`, `src/path.c`) | `tests/test_files.c`, a write past the end leaving zeros in the gap, as xsdk writes them | |
+| Checking access; removing folders | Yes | `access` (`src/path.c`) from `stat`'s permissions: everything reads and writes, and only folders search; `rmdir`, refusing a file and a folder with something in it | `tests/test_files.c`; not yet run on the console | `access` knows no read-only files, nor that the DVD is read-only, as `stat` doesn't; `faccessat` |
+| Setting a file's times | Partial | `utime` (`<utime.h>`, xsdk's own) and `utimes` (`src/path.c`), through `NtSetInformationFile`'s basic class; `NULL` for now | `tests/test_files.c`; not yet run on the console | A guess pending the console: that FATX keeps the times set, to its 2 s, and leaves a time or attributes given as 0 as they were, as NT does. Xenia changes nothing (xboxkrnl_io_info.cc:247-251). `utimensat`, `futimens`, `futimes` |
 | Setting a file's size | Yes | `truncate`, `ftruncate`, writing the zeros a file grows by themselves, as the hard disk brings its old bytes back (docs/HARDWARE.md) | `tests/test_files.c` | |
 | The DVD drive's tray | No | | | `HalOpenCloseODDTray`, which Xenia doesn't implement |
 
