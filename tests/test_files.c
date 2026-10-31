@@ -9,8 +9,10 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
+#include <utime.h>
 
 #include "tests.h"
 #include "xsdk/log.h"
@@ -34,6 +36,16 @@ enum {
 	DRIVE_PATH_BYTES = 260,
 	DRIVE_CHECK_NAME_BYTES = 128,
 	QUERY_BYTES = 1024,
+	// No access mode has it.
+	UNKNOWN_MODE = 8,
+	// FATX keeps times to 2 s, from 1980 (xtaflib:xtaf/xtaf.h:44-61, xtaf/xtaf_file.c:41-50, at 7b36dfe): even
+	// seconds of 2004, 2001 and 2008, which no file just written has.
+	SET_ACCESS_TIME = 1100000000,
+	SET_WRITE_TIME = 1000000000,
+	SET_UTIMES_WRITE_TIME = 1200000000,
+	HALF_SECOND_US = 500000,
+	// A time set to now reads back within FATX's 2 s, and a second for the clock read beside it.
+	NOW_SLACK_S = 3,
 };
 
 // game: is the launch folder on the console; Xenia mounts it read-only but lets titles write to cache:.
@@ -419,6 +431,81 @@ static void check_drive(const char *drive, const char *device_root)
 	check(name, listed || empty);
 }
 
+static bool write_small_file(const char *path)
+{
+	FILE *file = fopen(path, "w");
+	return file && fputs("small\n", file) >= 0 && fclose(file) == 0;
+}
+
+// Permissions are stat's: a file reads and writes but doesn't run, and a folder does all three.
+static void check_access(const char *path)
+{
+	char folder[PATH_BYTES];
+	char missing[PATH_BYTES];
+	sibling_path(folder, path, "xsdk_access_test");
+	sibling_path(missing, path, "xsdk_no_such_file.txt");
+	const bool made = mkdir(folder, 0777) == 0 || errno == EEXIST;
+	const bool file = access(path, F_OK) == 0 && access(path, R_OK | W_OK) == 0;
+	errno = 0;
+	const bool not_run = access(path, X_OK) == -1 && errno == EACCES;
+	const bool searched = made && access(folder, R_OK | W_OK | X_OK) == 0;
+	errno = 0;
+	const bool missing_refused = access(missing, F_OK) == -1 && errno == ENOENT;
+	errno = 0;
+	const bool mode_refused = access(path, UNKNOWN_MODE) == -1 && errno == EINVAL;
+	(void)unlink(folder);
+	check(
+		"access: a file reads and writes but doesn't run, a folder does all three; ENOENT for nothing, EINVAL for a "
+		"bad mode",
+		file && not_run && searched && missing_refused && mode_refused);
+}
+
+// rmdir takes only an empty folder, and leaves a file as it is.
+static void check_rmdir(const char *path)
+{
+	char folder[PATH_BYTES];
+	char inner[PATH_BYTES];
+	sibling_path(folder, path, "xsdk_rmdir_test");
+	(void)snprintf(inner, sizeof(inner), "%s\\inner.txt", folder);
+	const bool made = (mkdir(folder, 0777) == 0 || errno == EEXIST) && write_small_file(inner);
+	errno = 0;
+	const bool full_kept = rmdir(folder) == -1 && errno == ENOTEMPTY;
+	errno = 0;
+	struct stat info;
+	const bool file_kept = rmdir(inner) == -1 && errno == ENOTDIR && stat(inner, &info) == 0;
+	const bool removed = unlink(inner) == 0 && rmdir(folder) == 0 && stat(folder, &info) == -1 && errno == ENOENT;
+	if (!removed) {
+		(void)unlink(inner);
+		(void)unlink(folder);
+	}
+	check("rmdir: removes an empty folder; ENOTEMPTY for one with a file in it, ENOTDIR for a file, which stays",
+		made && full_kept && file_kept && removed);
+}
+
+// Times set through utime and utimes read back through stat, and NULL sets them to about now.
+static void check_utime(const char *path)
+{
+	struct stat info = { 0 };
+	const struct utimbuf times = { .actime = SET_ACCESS_TIME, .modtime = SET_WRITE_TIME };
+	const bool set = utime(path, &times) == 0 && stat(path, &info) == 0;
+	xsdk_log_write("files: utime set access %lld and modification %lld, stat read %lld and %lld",
+		(long long)SET_ACCESS_TIME, (long long)SET_WRITE_TIME, (long long)info.st_atime, (long long)info.st_mtime);
+	const bool by_utime = set && info.st_atime == SET_ACCESS_TIME && info.st_mtime == SET_WRITE_TIME;
+	const struct timeval values[2] = { { SET_ACCESS_TIME, 0 }, { SET_UTIMES_WRITE_TIME, HALF_SECOND_US } };
+	const bool by_utimes =
+		utimes(path, values) == 0 && stat(path, &info) == 0 && info.st_mtime == SET_UTIMES_WRITE_TIME;
+	const time_t now = time(NULL);
+	const bool to_now = utime(path, NULL) == 0 && stat(path, &info) == 0 && info.st_mtime >= now - NOW_SLACK_S &&
+		info.st_mtime <= now + NOW_SLACK_S;
+	const struct timeval bad[2] = { { SET_ACCESS_TIME, -1 }, { SET_WRITE_TIME, 0 } };
+	errno = 0;
+	const bool refused = utimes(path, bad) == -1 && errno == EINVAL;
+	check(
+		"utime and utimes: set a file's access and modification times, now for NULL, as stat reads them; EINVAL for a "
+		"bad tv_usec",
+		by_utime && by_utimes && to_now && refused);
+}
+
 // The test file, renamed over another, takes its place, and its own name is gone.
 static void check_rename(const char *path)
 {
@@ -522,6 +609,9 @@ void test_files(void)
 	check_open_twice(path);
 	check_pwrite(path);
 	check_flockfile();
+	check_access(path);
+	check_utime(path);
+	check_rmdir(path);
 	check_rename(path);
 
 	char folder[PATH_BYTES];

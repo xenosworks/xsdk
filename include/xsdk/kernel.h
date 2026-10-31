@@ -86,6 +86,18 @@ typedef struct {
 	ANSI_STRING name;
 } FILE_RENAME_INFORMATION;
 
+// 40 bytes (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:173-174), laid out as NT's
+// (wine:include/winternl.h:1519-1525, at 840a939). NT leaves a time given as 0 as it was
+// (wine:dlls/ntdll/unix/file.c:1563-1573, 4910-4914); unproven on the console, as are attributes of 0.
+typedef struct {
+	uint64_t creation_time;
+	uint64_t last_access_time;
+	uint64_t last_write_time;
+	uint64_t change_time;
+	uint32_t attributes;
+	uint32_t pad;
+} FILE_BASIC_INFORMATION;
+
 // INPUT_GAMEPAD's buttons (xenia:src/xenia/hid/input.h:32-46).
 enum {
 	INPUT_GAMEPAD_DPAD_UP = 0x0001,
@@ -266,6 +278,8 @@ enum {
 	SYNCHRONIZE = 0x00100000,
 	// Needed to mark a file for deletion; the value is NT's.
 	DELETE = 0x00010000,
+	// Needed to set a file's times; the value is NT's.
+	FILE_WRITE_ATTRIBUTES = 0x00000100,
 	FILE_ATTRIBUTE_DIRECTORY = 0x00000010,
 	FILE_ATTRIBUTE_NORMAL = 0x00000080,
 	// NtCreateFile's share access; the values are NT's. Xenia ignores it (xboxkrnl/xboxkrnl_io.cc:102-145), and the
@@ -284,6 +298,7 @@ enum {
 
 // File information classes (xenia:src/xenia/kernel/info/file.h:19-55).
 enum {
+	FILE_BASIC_INFORMATION_CLASS = 4,
 	FILE_RENAME_INFORMATION_CLASS = 10,
 	FILE_DISPOSITION_INFORMATION_CLASS = 13,
 	FILE_END_OF_FILE_INFORMATION_CLASS = 20,

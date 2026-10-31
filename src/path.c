@@ -10,9 +10,12 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <sys/time.h>
 #include <unistd.h>
+#include <utime.h>
 
 #include "file_private.h"
+#include "time_private.h"
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
 
@@ -307,6 +310,89 @@ int unlinkat(int dir_fd, const char *path, int flags)
 int unlink(const char *path)
 {
 	return unlinkat(AT_FDCWD, path, 0);
+}
+
+int rmdir(const char *path)
+{
+	return unlinkat(AT_FDCWD, path, AT_REMOVEDIR);
+}
+
+// Permissions are stat's (xsdk_file_stat): anything may be read and written, and only a folder searched.
+int access(const char *path, int mode)
+{
+	if (mode & ~(R_OK | W_OK | X_OK)) {
+		errno = EINVAL;
+		return -1;
+	}
+	struct stat info;
+	if (stat(path, &info) != 0)
+		return -1;
+	const mode_t asked = (mode & R_OK ? S_IRUSR : 0) | (mode & W_OK ? S_IWUSR : 0) | (mode & X_OK ? S_IXUSR : 0);
+	if ((info.st_mode & asked) != asked) {
+		errno = EACCES;
+		return -1;
+	}
+	return 0;
+}
+
+_Static_assert(sizeof(FILE_BASIC_INFORMATION) == 40, "the basic class takes 40 bytes");
+
+// Sets the access and modification times, both to now for NULL.
+static int set_times(const char *path, const struct timespec times[2])
+{
+	uint64_t access_time;
+	uint64_t write_time;
+	if (times) {
+		access_time = xsdk_time_to_nt(&times[0]);
+		write_time = xsdk_time_to_nt(&times[1]);
+	} else {
+		KeQuerySystemTime(&access_time);
+		write_time = access_time;
+	}
+	if (!access_time || !write_time) {
+		errno = EINVAL;
+		return -1;
+	}
+	char resolved[XSDK_PATH_BYTES];
+	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0)
+		return -1;
+	HANDLE handle;
+	NTSTATUS status = open_resolved(resolved, FILE_WRITE_ATTRIBUTES, FILE_OPEN, 0, &handle);
+	if (!NT_SUCCESS(status))
+		return fail_with_status("utime: NtCreateFile", resolved, status);
+	// Xenia changes nothing (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:247-251).
+	const FILE_BASIC_INFORMATION information = { .last_access_time = access_time, .last_write_time = write_time };
+	IO_STATUS_BLOCK io_status;
+	status = NtSetInformationFile(handle, &io_status, &information, sizeof(information), FILE_BASIC_INFORMATION_CLASS);
+	const NTSTATUS close_status = NtClose(handle);
+	if (!NT_SUCCESS(status))
+		return fail_with_status("utime: NtSetInformationFile", resolved, status);
+	if (!NT_SUCCESS(close_status))
+		return fail_with_status("utime: NtClose", resolved, close_status);
+	return 0;
+}
+
+int utime(const char *path, const struct utimbuf *times)
+{
+	if (!times)
+		return set_times(path, NULL);
+	const struct timespec converted[2] = { { .tv_sec = times->actime }, { .tv_sec = times->modtime } };
+	return set_times(path, converted);
+}
+
+// A tv_usec out of range stays out of range, for set_times to refuse.
+static struct timespec from_timeval(const struct timeval *time)
+{
+	const bool in_range = time->tv_usec >= 0 && time->tv_usec < 1000000;
+	return (struct timespec){ .tv_sec = time->tv_sec, .tv_nsec = in_range ? time->tv_usec * 1000 : -1 };
+}
+
+int utimes(const char *path, const struct timeval times[2])
+{
+	if (!times)
+		return set_times(path, NULL);
+	const struct timespec converted[2] = { from_timeval(&times[0]), from_timeval(&times[1]) };
+	return set_times(path, converted);
 }
 
 _Static_assert(sizeof(FILE_RENAME_INFORMATION) == 16, "the rename class takes 16 bytes");

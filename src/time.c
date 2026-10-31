@@ -60,6 +60,17 @@ struct timespec xsdk_time_from_nt(uint64_t nt_time)
 	return time;
 }
 
+uint64_t xsdk_time_to_nt(const struct timespec *time)
+{
+	if (time->tv_nsec < 0 || time->tv_nsec >= NANOSECONDS_PER_SECOND)
+		return 0;
+	// NT time can't go before 1601, nor past what 63 bits count.
+	if (time->tv_sec <= -NT_UNIX_EPOCH / NT_TICKS_PER_SECOND ||
+		time->tv_sec >= (INT64_MAX - NT_UNIX_EPOCH) / NT_TICKS_PER_SECOND)
+		return 0;
+	return (uint64_t)(NT_UNIX_EPOCH + time->tv_sec * NT_TICKS_PER_SECOND + time->tv_nsec / NANOSECONDS_PER_NT_TICK);
+}
+
 int clock_gettime(clockid_t clock, struct timespec *time)
 {
 	if (clock == CLOCK_REALTIME) {
