@@ -1,0 +1,13 @@
+--- a/src/file.c
++++ b/src/file.c
+@@ -253,8 +253,8 @@ void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, const char
+ 	uint32_t identity = 2166136261u;
+ 	for (const char *c = resolved; *c; c++)
+ 		identity = (identity ^ (uint8_t)tolower((unsigned char)*c)) * 16777619u;
+-	info->st_dev = (dev_t)(identity >> 16);
+-	info->st_ino = (ino_t)(identity & 0xFFFF);
++	// Broken on purpose: every file has the same identity.
++	(void)identity;
+ 	// The kernel keeps attributes, not owners or permissions: everyone may do anything a read-only file allows.
+ 	const bool directory = information->attributes & FILE_ATTRIBUTE_DIRECTORY;
+ 	const mode_t unwritable = information->attributes & FILE_ATTRIBUTE_READONLY ? S_IWUSR | S_IWGRP | S_IWOTH : 0;

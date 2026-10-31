@@ -14,3 +14,4 @@ stat_writable	xsdk_test	chmod and fchmod: the owner's write bit sets and clears 
 realpath_unchecked	xsdk_test	realpath: a file's absolute path through "//", "." and "..", from a path and from the current directory, in getcwd's form; ENOENT for nothing
 sync_none	xsdk_test	sync: the kernel flushes every file open, two written here
 fnmatch_period_ignored	xsdk_test	fnmatch: leading periods, slashes under FNM_PATHNAME, escapes, and brackets with ranges, a class, '!' and ']' first; an unknown flag refused
+identity_none	xsdk_test	stat: two files differ in st_dev and st_ino; one file reads alike through stat, fstat and its name in capitals

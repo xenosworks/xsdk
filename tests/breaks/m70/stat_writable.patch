@@ -1,7 +1,7 @@
 --- a/src/file.c
 +++ b/src/file.c
-@@ -248,7 +248,8 @@
- 	memset(info, 0, sizeof(*info));
+@@ -257,7 +257,8 @@ void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, const char
+ 	info->st_ino = (ino_t)(identity & 0xFFFF);
  	// The kernel keeps attributes, not owners or permissions: everyone may do anything a read-only file allows.
  	const bool directory = information->attributes & FILE_ATTRIBUTE_DIRECTORY;
 -	const mode_t unwritable = information->attributes & FILE_ATTRIBUTE_READONLY ? S_IWUSR | S_IWGRP | S_IWOTH : 0;
