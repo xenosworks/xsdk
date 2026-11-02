@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert a title ELF linked with src/xsdk.ld into an unencrypted XEX2, its pages of zeros left out of the file."""
+"""Convert a title ELF linked with src/xsdk.ld, or a DLL's, into an unencrypted XEX2, its pages of zeros left out."""
 
 import argparse
 import hashlib
@@ -16,10 +16,15 @@ SHF_ALLOC = 0x2
 SHF_EXECINSTR = 0x4
 SHT_NOBITS = 8
 
+# Titles load here; a DLL gives its own with --base, clear of the title's and the other modules'.
 IMAGE_BASE = 0x82000000
 PE_HEADER_BYTES = 0x1000
 # Image pages are 64 KB unless the image asks for 4 KB (xenia:src/xenia/kernel/util/xex2_info.h:76).
 PAGE_BYTES = 0x10000
+# Images with 64 KB pages load from 0x80000000 to 0x8FFFFFFF; from 0x90000000 they take 4 KB pages, which a DLL's page
+# descriptors here don't describe (xenia:src/xenia/memory.cc:45-47, 165-168).
+LARGE_PAGE_IMAGES_START = 0x80000000
+LARGE_PAGE_IMAGES_END = 0x90000000
 
 # xenia:src/xenia/kernel/util/xex2_info.h:55-59
 SECTION_CODE = 1
@@ -38,6 +43,9 @@ HEADER_SYSTEM_FLAGS = 0x00030000
 HEADER_EXECUTION_INFO = 0x00040006
 
 MODULE_TITLE = 0x00000001
+# xenia:src/xenia/kernel/util/xex2_info.h:117. The platform's DLLs carry both flags, and no TLS or stack size headers
+# (xcoreclr.dll, agcore.dll and the .ni.dll files of the Plex 0.0.0.7 runtime, user's files; unverified on hardware).
+MODULE_DLL = 0x00000008
 SYSTEM_NO_FORCED_REBOOT = 0x00000001
 SYSTEM_HANDLE_GAMEPAD_DISCONNECT = 0x00000020
 REGION_ALL = 0xFFFFFFFF
@@ -86,6 +94,16 @@ TITLE_NAME_END = 0x800
 IMPORT_RECORD = struct.Struct(">IIII16s")
 RECORD_THUNK = 0x01000000
 RECORD_THUNK_SECOND = 0x02000000
+
+EXPORT_RECORD = struct.Struct(">II")
+# A DLL's export table, which the security info points to at 0x160: three magic words, a module number and a version
+# left 0, the image base's top half, the count, the first ordinal (1), then each ordinal's address less the image base,
+# 0 for an ordinal not exported (xenia:src/xenia/kernel/util/xex2_info.h:582, 607-616). The magic and the zeros are as
+# the Plex 0.0.0.7 runtime's xcoreclr.dll and agcore.dll have them (user's files); XAM's own, in xam.xex 2.0.17559
+# (user's console files), has the same magic and fills the module number and version. Xenia reads the base, the count
+# and the offsets, not the rest (xenia:src/xenia/cpu/xex_module.cc:123-138).
+EXPORT_MAGIC = (0x48000000, 0x00485645, 0x48000000)
+FIRST_ORDINAL = 1
 
 
 def version(major, minor, build, qfe):
@@ -214,6 +232,34 @@ def read_imports(sections, image):
                 if word & 0xFFFF != entry["ordinal"]:
                     fail(f"{name} ordinal {entry['ordinal']:#x}: record at {address:#010x} reads {word:#010x}")
     return dict(sorted(libraries.items()))
+
+
+def read_exports(sections, image):
+    found = [s for s in sections if s["name"] == ".xsdk.exports"]
+    if not found:
+        return {}
+    data = found[0]["data"]
+    exports = {}
+    for offset in range(0, len(data), EXPORT_RECORD.size):
+        ordinal, address = EXPORT_RECORD.unpack_from(data, offset)
+        if ordinal < FIRST_ORDINAL or ordinal in exports:
+            fail(f"export ordinal {ordinal} is below {FIRST_ORDINAL} or exported twice")
+        if not IMAGE_BASE + PE_HEADER_BYTES <= address < IMAGE_BASE + len(image):
+            fail(f"export ordinal {ordinal} at {address:#010x} is outside the image")
+        exports[ordinal] = address
+    return exports
+
+
+def add_export_table(image, offset, exports):
+    ordinals = range(FIRST_ORDINAL, max(exports) + 1)
+    words = [*EXPORT_MAGIC, 0, 0, 0, 0, 0, IMAGE_BASE >> 16, len(ordinals), FIRST_ORDINAL]
+    words += [exports[ordinal] - IMAGE_BASE if ordinal in exports else 0 for ordinal in ordinals]
+    table = struct.pack(f">{len(words)}I", *words)
+    offset = align(offset, 16)
+    if offset + len(table) > PE_HEADER_BYTES:
+        fail("the export table doesn't fit beside the PE headers")
+    image[offset:offset + len(table)] = table
+    return IMAGE_BASE + offset
 
 
 def import_libraries_header(libraries):
@@ -370,8 +416,9 @@ def optional_header_table(inline, blocks, data_offset, placed):
     return table, data
 
 
-def build_xex(image, runs, entry, libraries, resources, args):
-    imports, import_digest = import_libraries_header(libraries)
+def build_xex(image, runs, entry, libraries, resources, export_table, args):
+    # A module with no imports has no import libraries header, as the platform's .ni.dll files don't.
+    imports, import_digest = import_libraries_header(libraries) if libraries else (b"", bytes(20))
     descriptors, image_digest = page_descriptors(image, runs)
     compression = compression_blocks(image)
     image_data = file_data(image, compression)
@@ -380,19 +427,21 @@ def build_xex(image, runs, entry, libraries, resources, args):
     inline = {
         HEADER_ENTRY_POINT: entry,
         HEADER_IMAGE_BASE_ADDRESS: IMAGE_BASE,
-        HEADER_DEFAULT_STACK_SIZE: args.stack_size,
         HEADER_SYSTEM_FLAGS: SYSTEM_NO_FORCED_REBOOT | SYSTEM_HANDLE_GAMEPAD_DISCONNECT,
     }
     blocks = {
         HEADER_FILE_FORMAT_INFO: struct.pack(">IHH", 8 + 8 * len(compression), ENCRYPTION_NONE, COMPRESSION_BASIC)
             + b"".join(struct.pack(">II", *block) for block in compression),
-        HEADER_TLS_INFO: struct.pack(">IIII", TLS_SLOTS, 0, 0, 0),
         HEADER_EXECUTION_INFO: struct.pack(">IIIIBBBBI", 0, args.version, 0, args.title_id, 0, 0, 1, 1, 0),
     }
+    if not args.dll:
+        inline[HEADER_DEFAULT_STACK_SIZE] = args.stack_size
+        blocks[HEADER_TLS_INFO] = struct.pack(">IIII", TLS_SLOTS, 0, 0, 0)
     if resources:
         blocks[HEADER_RESOURCE_INFO] = resources
+    placed = {HEADER_IMPORT_LIBRARIES: 0} if libraries else {}
 
-    header_count = len(inline) + len(blocks) + 1
+    header_count = len(inline) + len(blocks) + len(placed)
     security_offset = align(0x18 + 8 * header_count, 8)
     security_bytes = SECURITY_INFO_BYTES + len(descriptors)
     data_offset = align(security_offset + security_bytes, 8)
@@ -400,16 +449,19 @@ def build_xex(image, runs, entry, libraries, resources, args):
     header_size = align(data_offset + data_bytes + len(imports), HEADER_ALIGN_BYTES)
     # The import libraries end the headers exactly, as XexTool and SynthXEX (placer.c:72-106) place them.
     import_offset = header_size - len(imports)
-    table, data = optional_header_table(inline, blocks, data_offset, {HEADER_IMPORT_LIBRARIES: import_offset})
+    placed = {key: import_offset for key in placed}
+    table, data = optional_header_table(inline, blocks, data_offset, placed)
 
     security = bytearray(SECURITY_INFO_BYTES)
     struct.pack_into(">II", security, 0, security_bytes, len(image))
     struct.pack_into(">III20sI20s", security, 0x108, IMAGE_INFO_BYTES, 0, IMAGE_BASE, image_digest, len(libraries),
         import_digest)
+    struct.pack_into(">I", security, 0x160, export_table)
     struct.pack_into(">III", security, 0x178, REGION_ALL, MEDIA_ALL, len(descriptors) // PAGE_DESCRIPTOR_BYTES)
 
+    module_flags = MODULE_TITLE | MODULE_DLL if args.dll else MODULE_TITLE
     header = bytearray(header_size)
-    struct.pack_into(">4sIIIII", header, 0, b"XEX2", MODULE_TITLE, header_size, 0, security_offset, header_count)
+    struct.pack_into(">4sIIIII", header, 0, b"XEX2", module_flags, header_size, 0, security_offset, header_count)
     header[0x18:0x18 + len(table)] = table
     header[security_offset:security_offset + SECURITY_INFO_BYTES] = security
     header[security_offset + SECURITY_INFO_BYTES:security_offset + security_bytes] = descriptors
@@ -433,6 +485,7 @@ def patch_import_records(image, libraries):
 
 
 def main():
+    global IMAGE_BASE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("elf", type=Path)
     parser.add_argument("xex", type=Path)
@@ -440,15 +493,35 @@ def main():
     parser.add_argument("--stack-size", type=lambda text: int(text, 0), default=1024 * 1024)
     parser.add_argument("--title-name", help="the name the dashboard shows")
     parser.add_argument("--version", type=parse_version, default=0, help="the title's version, as 1.2.300.4")
+    parser.add_argument("--dll", action="store_true", help="a DLL, exporting what its .xsdk.exports section lists")
+    parser.add_argument("--base", type=lambda text: int(text, 16), default=IMAGE_BASE, help="where the image loads")
     args = parser.parse_args()
+    if args.dll and args.title_name:
+        parser.error("a DLL has no title name")
+    if args.base != IMAGE_BASE and not args.dll:
+        parser.error("a title loads at 0x82000000, as src/xsdk.ld links it; --base is for a DLL")
+    if args.base % PAGE_BYTES:
+        parser.error("--base must be a multiple of 64 KB")
 
+    IMAGE_BASE = args.base
     entry, sections = read_elf(args.elf.read_bytes())
+    first = min(s["address"] for s in sections if s["flags"] & SHF_ALLOC and s["size"])
+    if not IMAGE_BASE + PE_HEADER_BYTES <= first < IMAGE_BASE + PAGE_BYTES:
+        fail(f"the ELF is linked at {first - PE_HEADER_BYTES:#010x}, not at {IMAGE_BASE:#010x}: "
+            "give elf2xex the base it was linked at")
     image, runs = build_image(sections)
+    if not (LARGE_PAGE_IMAGES_START <= IMAGE_BASE and IMAGE_BASE + len(image) <= LARGE_PAGE_IMAGES_END):
+        fail(f"the image, {IMAGE_BASE:#010x} to {IMAGE_BASE + len(image):#010x}, must lie within "
+            f"{LARGE_PAGE_IMAGES_START:#010x} to {LARGE_PAGE_IMAGES_END:#010x}, where images take 64 KB pages")
     libraries = read_imports(sections, image)
+    exports = read_exports(sections, image)
+    if exports and not args.dll:
+        fail("only a DLL exports")
     patch_import_records(image, libraries)
     headers_end = pe_headers(image, runs, entry, args.stack_size)
     resources = add_title_name(image, headers_end, args.title_id, args.title_name) if args.title_name else b""
-    args.xex.write_bytes(build_xex(image, runs, entry, libraries, resources, args))
+    export_table = add_export_table(image, headers_end, exports) if exports else 0
+    args.xex.write_bytes(build_xex(image, runs, entry, libraries, resources, export_table, args))
 
 
 if __name__ == "__main__":
