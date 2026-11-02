@@ -96,7 +96,8 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 .SECONDARY:
 all: $(BUILD)/m55_check.xex $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
 	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(BUILD)/terminate_check.xex \
-	$(BUILD)/launch_check.xex $(BUILD)/launch_target.xex $(PROBES:%=$(BUILD)/%.xex)
+	$(BUILD)/launch_check.xex $(BUILD)/launch_target.xex $(BUILD)/dll_check.xex $(BUILD)/dll_target.xex \
+	$(PROBES:%=$(BUILD)/%.xex)
 
 # Configures CMake project $(1) in $(2) with this toolchain, afresh when $(2) was configured with another, whose
 # compiler a configure would keep.
@@ -166,6 +167,22 @@ $(BUILD)/launch_check.xex: $(BUILD)/launch_check.elf tools/elf2xex.py
 
 $(BUILD)/launch_target.xex: $(BUILD)/launch_target.elf tools/elf2xex.py
 	$(PYTHON) tools/elf2xex.py --title-id 0x58534453 --title-name "xsdk launch_target" $< $@
+
+# A DLL and the title that loads it from beside itself (docs/GUIDE.md, "DLLs"). The DLL's base is clear of the title's
+# image; tests/dll_check.c checks its exports' addresses against it.
+DLL_TARGET_BASE := 8E000000
+
+$(BUILD)/dll_target.elf: $(BUILD)/tests/dll_target.o $(BUILD)/libxsdk.a src/xsdk_dll.ld
+	$(CC) -static -nostdlib -T src/xsdk_dll.ld -Wl,--defsym=xsdk_dll_base=0x$(DLL_TARGET_BASE) -o $@ $< $(LIBS)
+
+$(BUILD)/dll_target.xex: $(BUILD)/dll_target.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --dll --base $(DLL_TARGET_BASE) $< $@
+
+$(BUILD)/dll_check.elf: $(BUILD)/tests/dll_check.o $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $< $(LIBS)
+
+$(BUILD)/dll_check.xex: $(BUILD)/dll_check.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --title-id 0x58534454 --title-name "xsdk dll_check" $< $@
 
 $(BUILD)/probe_%.elf: $(BUILD)/tests/probe_%.o $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/probe_$*.o $(LIBS)

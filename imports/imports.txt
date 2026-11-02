@@ -46,6 +46,8 @@ xboxkrnl.exe  0x192  XeCryptSha
 xboxkrnl.exe  0x195  XexGetModuleHandle
 xboxkrnl.exe  0x196  XexGetModuleSection
 xboxkrnl.exe  0x197  XexGetProcedureAddress
+xboxkrnl.exe  0x199  XexLoadImage
+xboxkrnl.exe  0x1A1  XexUnloadImage
 xboxkrnl.exe  0x1AE  ExLoadedCommandLine                 variable
 xboxkrnl.exe  0x1AF  ExLoadedImageName                   variable
 xboxkrnl.exe  0x1B1  VdCallGraphicsNotificationRoutines

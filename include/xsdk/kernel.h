@@ -485,6 +485,17 @@ uint32_t XexGetModuleHandle(const char *module_name, HANDLE *module);
 // xboxkrnl_modules.cc:64-84).
 NTSTATUS XexGetModuleSection(HANDLE module, const char *name, const void **data, uint32_t *size);
 NTSTATUS XexGetProcedureAddress(HANDLE module, uint32_t ordinal, void **address);
+// XexLoadImage's flag for a DLL (has207/xenia-edge:src/xenia/kernel/xboxkrnl/xboxkrnl_modules.h:34; Xenia ignores the
+// flags, xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_modules.cc:86-119; unverified on hardware).
+enum {
+	XEX_LOAD_IMAGE_DLL = 0x00000008,
+};
+// Loads a module such as "game:\dll_target.xex", or takes another reference to one that's loaded, and gives its handle.
+// The loader calls a DLL's entry with DLL_PROCESS_ATTACH as it loads it, with DLL_THREAD_ATTACH and DLL_THREAD_DETACH
+// as each thread starts and ends, and with DLL_PROCESS_DETACH as the last XexUnloadImage unloads it
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_modules.cc:86-140, kernel_state.cc:440-470, 594-633).
+NTSTATUS XexLoadImage(const char *module_name, uint32_t flags, uint32_t min_version, HANDLE *module);
+NTSTATUS XexUnloadImage(HANDLE module);
 
 // Milestone 55: Windows-style threading and memory (docs/scope/55-windows-threads-and-memory.md).
 
