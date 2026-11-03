@@ -53,6 +53,16 @@ to a static recompiler, for full speed, and chose its shape from the options her
    console with it, the mix's share leaves the CPU thread, and the sound is as before (checked the way milestone 68's
    AX is). On the console the thread mixed a list in 2.7 ms, past the 1.5 ms after which a list falls due, so the CPU
    still waited 12% of the time (2026-11-03): the mixer is made faster too, with the same output sample for sample.
+3c. **The hottest library routines natively, and paired-single code with fewer checks** (2026-11-03, the goal full
+   speed). In Colosseum's battle the game keeps 30 frames per emulated second, so its waits are skipped already, and
+   the CPU thread runs 85% in blocks at 106-120 M guest instructions a second there, about 28 host clocks each; the
+   battle menu needs about twice that. Its hottest blocks are the SDK's 3x4 matrix multiply (5.4% of samples, about
+   5,400 clocks a call for 51 instructions) and the GX loads of a position and a normal matrix into the FIFO (4.0%),
+   and checks are 27% of the host instructions in its top blocks, mostly operand and GQR checks in paired-single code.
+   Routines found by their code's hash, as the byte copy is, run natively with the interpreter's results bit for bit,
+   falling back to their translation when the state they assume doesn't hold; values a block proves single skip the
+   operand check. Done when each native routine and each dropped check passes jit_check and the console static_check
+   against the interpreter, with breaks, and the battle menu's guest instructions a block-second rise in a play log.
 3. **Optimise across blocks.** What the JIT can't see block by block: guest FPRs kept in host registers through a
    function, CR and XER updates dropped where nothing reads them, loads and stores proven to reach RAM without the
    hardware check, downcount checks only on backward branches and calls. Each change measured on the console.
