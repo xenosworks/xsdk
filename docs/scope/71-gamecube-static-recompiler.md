@@ -40,6 +40,11 @@ to a static recompiler, for full speed, and chose its shape from the options her
    guest-to-host table with the JIT behind a miss. The machine's exception entry and `rfi` translate a guest pc they
    meet (a new thread's entry, a vector) through the same table. Done when Colosseum reaches its title on the
    console from the image, the JIT taking only what the map missed.
+3a. **The GX FIFO on a core of its own** (added by the user, 2026-11-02, the goal full speed). Step 2's console run
+   spent 25% of the CPU thread decoding the GX FIFO and in Aurora's processing of it after the intro. Both move to a
+   thread on another core, as Dolphin's dual-core mode runs its GPU, with the CPU waiting only where the game waits on
+   the GPU: draw-done and tokens, the command processor's registers, EFB reads and copies the CPU reads back. Done when
+   Colosseum reaches its title on the console with the FIFO thread, and the FIFO's share leaves the CPU thread.
 3. **Optimise across blocks.** What the JIT can't see block by block: guest FPRs kept in host registers through a
    function, CR and XER updates dropped where nothing reads them, loads and stores proven to reach RAM without the
    hardware check, downcount checks only on backward branches and calls. Each change measured on the console.
