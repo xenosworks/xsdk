@@ -51,7 +51,8 @@ to a static recompiler, for full speed, and chose its shape from the options her
    core, since the game reads the mix and the voices' state only after the DSP's interrupt: that interrupt is raised
    once the thread is done, and the CPU waits only if it is due first. Done when Colosseum reaches its title on the
    console with it, the mix's share leaves the CPU thread, and the sound is as before (checked the way milestone 68's
-   AX is).
+   AX is). On the console the thread mixed a list in 2.7 ms, past the 1.5 ms after which a list falls due, so the CPU
+   still waited 12% of the time (2026-11-03): the mixer is made faster too, with the same output sample for sample.
 3. **Optimise across blocks.** What the JIT can't see block by block: guest FPRs kept in host registers through a
    function, CR and XER updates dropped where nothing reads them, loads and stores proven to reach RAM without the
    hardware check, downcount checks only on backward branches and calls. Each change measured on the console.
