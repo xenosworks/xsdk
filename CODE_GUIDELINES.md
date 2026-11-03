@@ -31,6 +31,8 @@ If a rule gets in the way of correct code, change the rule in this file first, i
   xost's compiler, which is the SDK's own C (`src/xsc_*.c`) built for the PC in WSL too: the tools that compile shaders
   call it through `ctypes` and run in WSL.
 - M55 exception, agreed 2026-10-20: C host tests may exercise SDK C directly with kernel mocks or cache-operation traces.
+- M71 exception, agreed 2026-11-02: the GameCube recompiler's host tools (gamecube-xenon's `tools/gcmap` and what
+  builds on it) are C++ built in WSL, as they share milestone 68's C++ decoder and translator.
 - Zero warnings: our C builds with `-Wall -Wextra -Werror`.
 - Dependencies are the xenon toolchain (GCC, binutils, newlib) only. No libxenon in titles: it drives bare metal, not
   the retail kernel. Adding a library needs a reason in the commit message.
