@@ -45,6 +45,13 @@ to a static recompiler, for full speed, and chose its shape from the options her
    thread on another core, as Dolphin's dual-core mode runs its GPU, with the CPU waiting only where the game waits on
    the GPU: draw-done and tokens, the command processor's registers, EFB reads and copies the CPU reads back. Done when
    Colosseum reaches its title on the console with the FIFO thread, and the FIFO's share leaves the CPU thread.
+3b. **The DSP's mixing on a core of its own** (added by the user, 2026-11-03). With the FIFO thread, the scene after
+   Colosseum's intro runs 36-48 fields a second on the console. 25% of its CPU thread goes to the DSP's HLE, which
+   mixes each AX command list when the game mails it, about 83 us an access. The lists move to a thread on another
+   core, since the game reads the mix and the voices' state only after the DSP's interrupt: that interrupt is raised
+   once the thread is done, and the CPU waits only if it is due first. Done when Colosseum reaches its title on the
+   console with it, the mix's share leaves the CPU thread, and the sound is as before (checked the way milestone 68's
+   AX is).
 3. **Optimise across blocks.** What the JIT can't see block by block: guest FPRs kept in host registers through a
    function, CR and XER updates dropped where nothing reads them, loads and stores proven to reach RAM without the
    hardware check, downcount checks only on backward branches and calls. Each change measured on the console.
