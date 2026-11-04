@@ -1,0 +1,12 @@
+--- a/src/sysconf.c
++++ b/src/sysconf.c
+@@ -31,7 +31,8 @@ long sysconf(int name)
+ 		return HARDWARE_THREADS;
+ 	case _SC_PAGESIZE:
+ 		return PAGE_BYTES;
+-	case _SC_OPEN_MAX:
++	// Broken on purpose: _SC_OPEN_MAX isn't answered.
++	case -1:
+ 		// One past the highest descriptor: files' come before sockets' (src/file.c, src/socket.c).
+ 		return XSDK_FIRST_SOCKET_FD + XSDK_SOCKET_SLOTS;
+ 	case _SC_PHYS_PAGES:

@@ -1,0 +1,10 @@
+--- a/src/sysconf.c
++++ b/src/sysconf.c
+@@ -40,5 +40,6 @@
+ 
+ int getpagesize(void)
+ {
+-	return PAGE_BYTES;
++	// Broken on purpose: the kernel's 64 KB large page, not sysconf's.
++	return 64 * 1024;
+ }

@@ -1,0 +1,14 @@
+diff --git a/src/system.c b/src/system.c
+index 6e01056..369c46b 100644
+--- a/src/system.c
++++ b/src/system.c
+@@ -113,8 +113,7 @@ int uname(struct utsname *name)
+ {
+ 	memset(name, 0, sizeof(*name));
+ 	strcpy(name->sysname, "Xbox 360");
+-	snprintf(name->release, sizeof(name->release), "%u.%u.%u.%u", XboxKrnlVersion->major, XboxKrnlVersion->minor,
+-		XboxKrnlVersion->build, XboxKrnlVersion->qfe);
++	// Broken on purpose: the release isn't written.
+ 	strcpy(name->machine, "ppc");
+ 	return 0;
+ }

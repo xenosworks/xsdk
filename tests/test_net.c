@@ -1,6 +1,8 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <ifaddrs.h>
+#include <net/if.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <poll.h>
@@ -353,6 +355,20 @@ static void test_link_address(const struct sockaddr_in *console)
 			address.s_addr == console->sin_addr.s_addr);
 }
 
+static void test_interfaces(const struct sockaddr_in *console)
+{
+	struct ifaddrs *list = NULL;
+	const int result = getifaddrs(&list);
+	const struct sockaddr_in *address = result == 0 ? (const struct sockaddr_in *)list->ifa_addr : NULL;
+	xsdk_log_write("net: getifaddrs %d: %s, flags %X, %s", result, result == 0 ? list->ifa_name : "nothing",
+		result == 0 ? list->ifa_flags : 0, address ? "an address" : "no address");
+	check("getifaddrs: one interface, up and running, with the address the PC sees",
+		result == 0 && !list->ifa_next && (list->ifa_flags & (IFF_UP | IFF_RUNNING)) == (IFF_UP | IFF_RUNNING) &&
+			address && address->sin_family == AF_INET && address->sin_addr.s_addr == console->sin_addr.s_addr);
+	if (result == 0)
+		freeifaddrs(list);
+}
+
 static int64_t now_ms(void)
 {
 	struct timespec now;
@@ -509,6 +525,7 @@ void test_net(void)
 	struct sockaddr_in console = { 0 };
 	test_tcp(&pc, &console);
 	test_link_address(&console);
+	test_interfaces(&console);
 	test_udp(&pc);
 	test_accept(&pc);
 	test_names();

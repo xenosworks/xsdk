@@ -4,7 +4,8 @@ xsdk's goal is to let anyone make homebrew and port games to the Xbox 360 withou
 map: for each area, what a title gets from xsdk today, how to use it, which test proves it on the console, and what's
 missing. It was drawn up on 2026-10-15, at xsdk `3e889a7`, brought up to date on 2026-10-20, at `e43c0e1`, after
 milestones 41 and 44 to 52, and again for milestone 54's files, drives, settings and Xbox Home and milestone 55's
-threads, waits and memory, and on 2026-10-21 for milestone 57's text and Dear ImGui and milestone 58's audio.
+threads, waits and memory, on 2026-10-21 for milestone 57's text and Dear ImGui and milestone 58's audio, and on
+2026-10-30 and 31 for milestone 70's POSIX calls, whose tests haven't yet run on the console.
 SCOPE.md has the milestones and TODO.md the open items; where they and this page disagree, they win, and this page is
 out of date.
 
@@ -38,6 +39,7 @@ which implements what the games it runs need:
 | C17 on newlib: stdio, strings, math, `malloc` | Yes | newlib | xsdk_test | |
 | C++23: exceptions, RTTI, threads, atomics, chrono, filesystem, format | Yes | libstdc++ | `tests/test_cpp_*.cpp` | Names in `std::stacktrace`, which gives addresses only; native TLS, as `thread_local` is emulated (TODO.md) |
 | `memcpy` and `memmove` on VMX | Yes | `src/copy.c` | `tests/test_copy.c` | |
+| Matching names against patterns | Yes | `fnmatch` (`src/fnmatch.c`), POSIX's in the C locale: `*`, `?`, brackets with ranges, classes and `!`, backslash escapes, `FNM_NOESCAPE`, `FNM_PATHNAME`, `FNM_PERIOD`; any other flag refused with -1 | `tests/test_files.c`, on the console (`results/2026-10-31-milestone-70`); against glibc's on the PC, 2.8 million random patterns agreeing but for an escaped `/` under `FNM_PATHNAME`, which xsdk takes as a written slash | `[=a=]` and `[.a.]` in brackets; GNU's `FNM_CASEFOLD` and `FNM_LEADING_DIR` |
 | Loop unrolling | Partial | GCC's -O2 default; `-funroll-loops` per file | `tests/probe_unroll.c` | Not on for everything: it made Dusklight bigger and no faster (docs/HARDWARE.md, "Loop unrolling, milestone 35") |
 
 ## Memory
@@ -50,6 +52,8 @@ which implements what the games it runs need:
 | Executable image pool and explicit cache flush | Yes | `.jit`, `xsdk_jit_pool`, `xsdk_code_flush` | `probe_exec` returned 42 then 99; m55_check's written-code checks | Builtin/libgcc clear-cache patch and rebuild: [TODO.md](../TODO.md) |
 | Virtual region queries | Yes | `NtQueryVirtualMemory(address, information, 0)` for `NtAllocateVirtualMemory`/`mmap` regions | [Console query log](../results/2026-10-20-milestone-55/probe_query_memory.log): committed, reserved, free | Image pages return C000000D; use `MmQueryAddressProtect` for image protection |
 | Physical page protection | Yes | `MmSetAddressProtect`, `MmQueryAddressProtect` | M55 probe | |
+| Syncing and locking mappings | Yes | `msync`, `mlock`, `munlock` (`src/mman.c`): mappings are private and anonymous, so `msync` checks its flags and range and has no file to write back; committed pages stay in memory, so the locks have nothing to do | `tests/test_pages.c`, on the console (`results/2026-10-31-milestone-70`) | Shared and file mappings, as for `mmap` |
+| Aligned allocations and the page size | Yes | `posix_memalign` (`src/memalign.c`) on newlib's `memalign`, freed with `free`; `getpagesize`, 4096, as `sysconf(_SC_PAGESIZE)` | `tests/test_memory.c`, on the console (`results/2026-10-31-milestone-70`) | |
 | Memory statistics | Partial | `MmQueryStatistics` (`kernel.h`), raw | `tests/test_memory.c` | Xenia's statistics are estimates |
 
 ## Threads and synchronisation
@@ -57,8 +61,10 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Threads, joins, detached threads, stack sizes | Yes | pthreads (`src/pthread.c`), `std::thread` | `tests/test_pthread.c`, `test_threads.c` | |
+| Ending a thread early; attributes read back | Yes | `pthread_exit` (`src/pthread.c`), as returning would: the value to `pthread_join`, key destructors run, a detached thread's record freed; on a thread `xsdk_thread_create` made, the value is its exit code; `pthread_attr_getstacksize`, `pthread_attr_getdetachstate` | `tests/test_pthread.c`, on the console (`results/2026-10-31-milestone-70`) | The stack isn't unwound, so the thread's C++ locals aren't destroyed. The main thread ended this way leaves the title running its other threads, and nothing ends the title when the last one ends, as POSIX would: untried on the console. A stack size never set reads 0, the `.xex`'s default |
 | Placing threads on the 6 hardware threads | Yes | `xsdk_thread_create_on`, `xsdk_thread_move`, `xsdk_thread_place`, `xsdk_pthread_handle` (`thread.h`) | `test_placement.c`, `test_thread_control.c` | An unplaced thread runs on its creator's hardware thread |
 | Mutexes, condition variables, read-write locks, once, keys | Yes | pthreads | `tests/test_pthread.c` | A mutex holds a pointer to a critical section `malloc`ed on first lock: locking one after its memory is freed corrupts the heap (TODO.md) |
+| Condition variables timed on `CLOCK_MONOTONIC` | Yes | `pthread_condattr_setclock` with `CLOCK_REALTIME`, `CLOCK_MONOTONIC` or `CLOCK_MONOTONIC_RAW`, then `pthread_cond_init`; `pthread_cond_timedwait` reads its deadline on the condition's clock | `tests/test_pthread.c`, on the console (`results/2026-10-31-milestone-70`) | A timed wait goes to the kernel as a relative wait, which may end up to 1.4 ms early, as its sleeps do (docs/HARDWARE.md, "The time base runs at 49.875 MHz"); unmeasured for waits, and `nanosleep` alone waits again |
 | Priorities | Yes | `xsdk_thread_set_priority`, pthread scheduling calls; requests -16..16, default 0; the kernel keeps -3..4, and -16 and 16 | `test_thread_control.c` | POSIX scheduling policies are not separate kernel policies |
 | Semaphores | Yes | Raw kernel calls and unnamed process-local POSIX `sem_*` | `test_semaphore.c` | Named/shared semaphores |
 | Waiting on several objects; clearing and pulsing events | Yes | Raw waits on up to 64 objects, signal-and-wait, `NtClearEvent`, `NtPulseEvent`; a wait-all can return a nonzero index, as a wait-any does | `test_objects.c` | |
@@ -70,6 +76,7 @@ which implements what the games it runs need:
 | Capability | Status | How | Verified by | Missing |
 |---|---|---|---|---|
 | Wall clock, monotonic clocks, sleeps | Yes | `clock_gettime`, `gettimeofday`, `nanosleep` (`src/time.c`), `std::chrono` | `tests/test_clocks.c`, `test_cpp_chrono.cpp` | Short sleeps: a 1 ms sleep took about 2 ms (docs/HARDWARE.md, "Sleeps, write speeds, and a set-up that wouldn't run from a cached stream") |
+| Clocks' resolutions; `sleep` | Yes | `clock_getres` (`src/time.c`): `CLOCK_REALTIME` 1 ms, the system time's step on the console (docs/HARDWARE.md, "SDL's drivers and the fixed clocks on the console"), `CLOCK_MONOTONIC` and `CLOCK_MONOTONIC_RAW` 21 ns, a tick of the 49.875 MHz time base rounded up; `sleep` on `nanosleep`, which nothing interrupts, so none is left | `tests/test_clocks.c`, on the console (`results/2026-10-31-milestone-70`) | `usleep`, `clock_nanosleep` |
 | Local time in the console's time zone | Yes | `localtime`, `mktime`, `strftime`, newlib's `TZ` set at start-up from XAM's `GetTimeZoneInformation` (`src/system.c`) | `tests/test_system.c`, with US Eastern set and with no zone (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | |
 
 ## Files, drives and storage
@@ -79,6 +86,11 @@ which implements what the games it runs need:
 | Files and folders beside the `.xex` (`game:`) | Yes | POSIX `open`, `read`, `stat`, `opendir`, `mkdir`, `rename`, `unlink`; `std::filesystem` | `tests/test_files.c`, `test_cpp_filesystem.cpp` | Asynchronous I/O; a file that's open can't be removed or renamed, so `remove_all` fails on nested folders (TODO.md) |
 | Other drives: the hard disk, USB, memory units, the DVD | Yes | `hdd:`, `usb:` to `usb2:`, `mu:` to `mu1:` and `dvd:`, each its device's root (`src/path.c`); a path starting with `\` goes to the kernel as written | `tests/test_files.c`'s drive checks: `hdd:` and a USB stick listed, `dvd:` and `mu:` empty; the device paths, `tests/probe_drives.c` (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54") | A memory unit and a disc listed, with none on hand yet |
 | Writing at an offset, flushing, free space | Yes | `pwrite`, `fsync`, `fdatasync`, `statvfs`, `fstatvfs` (`src/file.c`, `src/path.c`) | `tests/test_files.c`, a write past the end leaving zeros in the gap, as xsdk writes them | |
+| Flushing every open file | Yes | `sync` (`src/file.c`): `NtFlushBuffersFile` on each open file, as `fsync` on one; a flush the kernel refuses is passed over, as `sync` can't fail | `tests/test_files.c`, counting the flushes the kernel took, on the console (`results/2026-10-31-milestone-70`) | What a flush writes back can't be seen short of losing power; the log file, which isn't a descriptor |
+| Checking access; removing folders | Yes | `access` (`src/path.c`) from `stat`'s permissions: everything reads, writes unless read-only, and only folders search; `rmdir`, refusing a file and a folder with something in it | `tests/test_files.c`, on the console (`results/2026-10-31-milestone-70`) | Whether the DVD's files show as read-only; `faccessat` |
+| Read-only files: `chmod`, `fchmod` | Partial | `chmod`, `fchmodat` (`src/path.c`) and `fchmod` (`src/file.c`) set or clear the read-only attribute from the owner's write bit, through `NtSetInformationFile`'s basic class, and read it back; `stat` and `fstat` show the attribute as no write bits. The console's FATX keeps no read-only attribute (docs/HARDWARE.md, "FATX keeps no read-only attribute"), so there a mode without the write bit fails with `EPERM` | `tests/test_files.c`, on the console (`results/2026-10-31-milestone-70`) | Read-only files on FATX, and the rest of a mode, which has nowhere to go, so `stat` gives 0666 or 0777 there; a USB drive's FAT32, untried |
+| Real paths | Yes | `realpath` (`src/path.c`): the path resolved as `open` resolves it, "." and ".." taken out and repeated separators dropped, in `getcwd`'s form with `/`, `ENOENT` where nothing is; a `NULL` buffer gets one `malloc`ed | `tests/test_files.c`, on the console (`results/2026-10-31-milestone-70`) | A ".." is taken by name, so the name before it needn't exist or be a folder, as POSIX would have it |
+| Setting a file's times | Yes | `utime` (`<utime.h>`, xsdk's own) and `utimes` (`src/path.c`), through `NtSetInformationFile`'s basic class; `NULL` for now. FATX keeps them in 2-second steps, and the console rounds a part second up (docs/HARDWARE.md, "FATX keeps no read-only attribute") | `tests/test_files.c`, on the console (`results/2026-10-31-milestone-70`) | `utimensat`, `futimens`, `futimes`. Xenia changes nothing (xboxkrnl_io_info.cc:247-251) |
 | Setting a file's size | Yes | `truncate`, `ftruncate`, writing the zeros a file grows by themselves, as the hard disk brings its old bytes back (docs/HARDWARE.md) | `tests/test_files.c` | |
 | The DVD drive's tray | No | | | `HalOpenCloseODDTray`, which Xenia doesn't implement |
 
@@ -175,6 +187,7 @@ which implements what the games it runs need:
 |---|---|---|---|---|
 | TCP and UDP sockets, `poll`, `select`, non-blocking; `SO_RCVTIMEO`, `SO_SNDTIMEO` and `SO_LINGER`; up to 232 sockets and 63 KB buffers | Yes | BSD sockets (`src/socket.c`); XAM's limits raised through `xsdk_network_limits` (`net.h`) | `tests/test_net.c`, with `tools/net_echo.py` on the PC | IPv6; why a connect failed, as XAM refuses `SO_ERROR` (src/socket.c); `select` on sockets numbered 64 and up, which `poll` takes |
 | The link and the console's address | Yes | `xsdk_net_link`, `xsdk_net_address` (`net.h`) | `tests/test_net.c`, the address against the one the PC sees | An address still pending, untried on the console; a wireless adapter's link bits |
+| The interface list | Yes | `getifaddrs`, `freeifaddrs` (`src/net.c`): one interface, "eth0", up, running while the link is, with the console's address once XAM has one | `tests/test_net.c`, the address against the one the PC sees, on the console (`results/2026-10-31-milestone-70`) | Its netmask, which XAM doesn't give; a loopback interface |
 | DNS | Yes | `getaddrinfo` (`src/netdb.c`) | `tests/test_net.c` | |
 | TLS 1.2 | Yes | the mbedtls-xenon fork | docs/HARDWARE.md, "TLS 1.2 through Mbed TLS" | TLS 1.3; an HTTP client |
 | System Link | No | | | XNet's secure transport (xam_net.cc) |
@@ -191,6 +204,7 @@ Each in its own repository under xenosworks.
 | Dear ImGui (imgui-xenon) | Yes | windows and widgets on the GPU layer, driven by controller 1, text fields through XAM's keyboard | `examples/example_xsdk/imgui_check.cpp` there | Physical keyboards; ImGui through vulkan4xenon |
 | libcurl 8.23 (curl-xenon) | Yes | HTTP and HTTPS over mbedtls-xenon, for downloads | `tests/xsdk/curl_check.c` there | Other protocols, HTTP/2 and 3, IPv6 |
 | FAudio 26.10 (FAudio-xenon) | Yes | XAudio2, X3DAudio and XAPO effects, on SDL3's audio | `tests/xsdk/faudio_check.c` there | XMA; FACT's wave banks are fixed for big-endian but unchecked |
+| Mono 6.13 (mono-xenon) | Yes | C# on Mono's JIT and the .NET 4.5 class libraries, P/Invoke into the title's own functions | `xsdk/tests` there: its regression tests, every optimisation set, and checks of the ABI, the collector, threads, files and sockets | AOT; TLS in the class libraries; C functions with variable arguments; processes |
 
 ## System information and control
 
@@ -199,6 +213,7 @@ Each in its own repository under xenosworks.
 | Ending the title, back to the dashboard | Yes | `exit` (`src/exit.c`) | every title | |
 | Random numbers | Yes | `getentropy` (`src/entropy.c`) | mbedtls-xenon's checks | |
 | Language, country, time zone | Yes | `xsdk_system_language`, `xsdk_system_country` (`system.h`); the time zone as newlib's, above | `tests/test_system.c` | |
+| The system's name and the kernel's version | Yes | `uname` (`src/system.c`): "Xbox 360", the kernel's version from `XboxKrnlVersion`, machine "ppc" | `tests/test_system.c`, on the console (`results/2026-10-31-milestone-70`): 2.0.17559.0 | A node name |
 | Region and AV settings | No | | | `ExGetXConfigSetting` (xboxkrnl_xconfig.cc) raw |
 | A routine when Xbox Home ends the title | Yes | `xsdk_on_terminate` (`terminate.h`), on a thread of the console's with the title frozen, its handles closed and `game:` gone | `tests/terminate_check.c`: the routine's marker read after, and the console carrying on; the notification, `tests/probe_terminate.c` | Flushing stdio and running `atexit` there, which the frozen title's handles and locks rule out (docs/HARDWARE.md) |
 | Launching another `.xex`, and passing it data | Yes | `xsdk_launch`, `xsdk_launch_data` (`xam.h`); `argv` from the loader's command line | `tests/launch_check.c` and `tests/launch_target.c`, launching each other | More than 1020 bytes of data; arguments on the command line, which holds only the `.xex`'s name, so they go in the data |

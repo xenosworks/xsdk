@@ -1,0 +1,12 @@
+--- a/src/time.c
++++ b/src/time.c
+@@ -93,7 +93,8 @@
+ {
+ 	long step_ns;
+ 	if (clock == CLOCK_REALTIME) {
+-		step_ns = REALTIME_STEP_NS;
++		// Broken on purpose: NT's 100 ns unit, not the system time's step.
++		step_ns = NANOSECONDS_PER_NT_TICK;
+ 	} else if (clock == CLOCK_MONOTONIC || clock == CLOCK_MONOTONIC_RAW) {
+ 		step_ns = TIME_BASE_TICK_NS;
+ 	} else {

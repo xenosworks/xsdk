@@ -1,0 +1,15 @@
+--- a/src/fnmatch.c
++++ b/src/fnmatch.c
+@@ -12,7 +12,11 @@
+ // A period at the start of the string, or of a name with FNM_PATHNAME, which only a period in the pattern matches.
+ static bool leading_period(const char *string, const char *at, int flags)
+ {
+-	return *at == '.' && (flags & FNM_PERIOD) && (at == string || ((flags & FNM_PATHNAME) && at[-1] == '/'));
++	// Broken on purpose: FNM_PERIOD ignored.
++	(void)string;
++	(void)at;
++	(void)flags;
++	return false;
+ }
+ 
+ // The character at *pattern, an escaped one for a backslash, moving *pattern past it.

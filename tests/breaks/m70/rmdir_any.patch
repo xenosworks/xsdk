@@ -1,0 +1,12 @@
+--- a/src/path.c
++++ b/src/path.c
+@@ -349,7 +349,8 @@
+ 
+ int rmdir(const char *path)
+ {
+-	return unlinkat(AT_FDCWD, path, AT_REMOVEDIR);
++	// Broken on purpose: a file goes too.
++	return unlinkat(AT_FDCWD, path, 0);
+ }
+ 
+ // Permissions are stat's (xsdk_file_stat): anything may be read, written unless read-only, and only a folder searched.

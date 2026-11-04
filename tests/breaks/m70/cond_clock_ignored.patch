@@ -1,0 +1,12 @@
+--- a/src/pthread.c
++++ b/src/pthread.c
+@@ -632,7 +632,8 @@
+ int pthread_cond_init(pthread_cond_t *cond, const pthread_condattr_t *attr)
+ {
+ 	*cond = PTHREAD_COND_INITIALIZER;
+-	if (!attr || !attr->is_initialized || attr->clock == CLOCK_REALTIME)
++	// Broken on purpose: the attributes' clock is never kept.
++	if (!attr || !attr->is_initialized || true)
+ 		return 0;
+ 	// Made now, to hold the clock.
+ 	Condition *condition = condition_object(cond);

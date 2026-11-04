@@ -4,13 +4,15 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/utsname.h>
 #include <time.h>
 
 #include "system_private.h"
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
 
-// The console's settings: its time zone, made newlib's at start-up, its language and its country.
+// The console's settings: its time zone, made newlib's at start-up, its language and its country; and uname.
 
 enum {
 	// newlib's shortest zone name, and room for its longest (newlib:newlib/libc/time/tzset_r.c:12-13).
@@ -105,4 +107,14 @@ uint32_t xsdk_system_language(void)
 uint32_t xsdk_system_country(void)
 {
 	return XamGetLocaleEx(MAX_COUNTRY, MAX_LOCALE);
+}
+
+int uname(struct utsname *name)
+{
+	memset(name, 0, sizeof(*name));
+	strcpy(name->sysname, "Xbox 360");
+	snprintf(name->release, sizeof(name->release), "%u.%u.%u.%u", XboxKrnlVersion->major, XboxKrnlVersion->minor,
+		XboxKrnlVersion->build, XboxKrnlVersion->qfe);
+	strcpy(name->machine, "ppc");
+	return 0;
 }

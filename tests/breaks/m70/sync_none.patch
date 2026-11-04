@@ -1,0 +1,12 @@
+--- a/src/file.c
++++ b/src/file.c
+@@ -479,7 +479,8 @@
+ 	for (int i = 0; i < FILE_SLOTS; i++) {
+ 		const HANDLE handle = __atomic_load_n(&files[i].handle, __ATOMIC_ACQUIRE);
+ 		if (handle && handle != SLOT_CLAIMED && !files[i].directory)
+-			(void)flush(handle);
++			// Broken on purpose: nothing flushed.
++			continue;
+ 	}
+ }
+ 

@@ -1,0 +1,14 @@
+diff --git a/src/net.c b/src/net.c
+index b756819..d8f75ed 100644
+--- a/src/net.c
++++ b/src/net.c
+@@ -70,7 +70,8 @@ int getifaddrs(struct ifaddrs **list)
+ 	found->entry.ifa_name = found->name;
+ 	found->entry.ifa_flags = IFF_UP | ((link & XSDK_NET_LINK_ACTIVE) ? IFF_RUNNING : 0);
+ 	// Until XAM has an address the interface is listed without one, as an interface without one is.
+-	if (xsdk_net_address(&found->address.sin_addr) == 0) {
++	// Broken on purpose: the address is never listed.
++	if (0) {
+ 		found->address.sin_family = AF_INET;
+ 		found->entry.ifa_addr = (struct sockaddr *)&found->address;
+ 	}

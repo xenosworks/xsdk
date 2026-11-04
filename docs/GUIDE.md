@@ -647,28 +647,32 @@ zone set gives UTC (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milesto
 ## Porting: the C and POSIX calls
 
 A C17 or C++23 program builds with newlib, libstdc++ and xsdk's POSIX layer. What links, by a link of every name below
-against `libxsdk.a`, newlib and libstdc++ on 2026-10-19:
+against `libxsdk.a`, newlib and libstdc++ on 2026-10-19, and milestone 70's calls by xsdk_test's link on 2026-10-30
+and 2026-10-31:
 
-- **Has:** stdio, strings, math, `malloc` and `aligned_alloc`, `time`, `clock`, `strftime` and the rest of `time.h`, in
-  the console's time zone, `setjmp`, `getenv` and `setenv`; `open`, `openat`, `close`, `read`, `pread`, `write`,
-  `pwrite`, `lseek`, `fstat`, `fsync`, `fdatasync`, `ftruncate`, `fstatvfs`, `isatty`, `stat`, `statvfs`, `chdir`,
-  `getcwd`, `mkdir`, `unlink`, `unlinkat`, `rename`, `truncate`, `readlink`, `pathconf`, `basename`, `dirname`,
-  `opendir`, `fdopendir`, `readdir`, `rewinddir`, `closedir`; `pthread_create`, `join`, `detach`, attributes and stack
-  sizes, mutexes, condition variables, read-write locks, `once` and keys, scheduling priorities, `sched_yield`;
-  unnamed `sem_*`; anonymous `mmap`, `munmap`, `mprotect`; `clock_gettime`, `gettimeofday`, `nanosleep`; `sysconf`,
-  `getentropy`, `getpid`, `kill`, `raise`, `signal`, `abort`, `exit`, `atexit`; the sockets above, `getaddrinfo`,
-  `inet_pton` and `inet_ntop`; C++23's threads, atomics, exceptions, `chrono`, `filesystem` and `format`
-  (docs/PARITY.md).
+- **Has:** stdio, strings, math, `malloc`, `aligned_alloc` and `posix_memalign`, `fnmatch`, `time`, `clock`,
+  `strftime` and the rest of `time.h`, in the console's time zone, `setjmp`, `getenv` and `setenv`; `open`, `openat`,
+  `close`, `read`, `pread`, `write`, `pwrite`, `lseek`, `fstat`, `fsync`, `fdatasync`, `sync`, `ftruncate`,
+  `fstatvfs`, `isatty`, `stat`, `statvfs`, `access`, `chmod`, `fchmod` and `fchmodat` (the owner's write bit, as the
+  read-only attribute), `chdir`, `getcwd`, `realpath`, `mkdir`, `rmdir`, `unlink`, `unlinkat`, `rename`, `truncate`,
+  `utime`, `utimes`, `readlink`, `pathconf`, `basename`, `dirname`, `opendir`, `fdopendir`, `readdir`, `rewinddir`,
+  `closedir`; `pthread_create`, `join`, `detach`, `pthread_exit`, attributes and stack sizes, read back too, mutexes,
+  condition variables on `CLOCK_REALTIME` or `CLOCK_MONOTONIC`, read-write locks, `once` and keys, scheduling
+  priorities, `sched_yield`; unnamed `sem_*`; anonymous `mmap`, `munmap`, `mprotect`, `msync`, `mlock`, `munlock`;
+  `clock_gettime`, `clock_getres`, `gettimeofday`, `nanosleep`, `sleep`; `sysconf`, `getpagesize`, `getentropy`,
+  `uname`, `getpid`, `kill`, `raise`, `signal`, `abort`, `exit`, `atexit`; the sockets above, `getaddrinfo`,
+  `getifaddrs`, `inet_pton` and `inet_ntop`; C++23's threads, atomics, exceptions, `chrono`, `filesystem` and `format` (docs/PARITY.md).
 - **Refuses at run time:** file-backed/shared/fixed mappings and `PROT_EXEC`, `ENOTSUP`; `pthread_cancel`, `link` and
-  `symlink`, `ENOSYS`; `fchmod` and `fchmodat` changing a file's permissions, `ENOTSUP`; `fcntl` on a file, `ENOSYS`.
+  `symlink`, `ENOSYS`; `fcntl` on a file, `ENOSYS`; `chmod` without the owner's write bit on FATX, which keeps no
+  read-only attribute, `EPERM`.
 - **Doesn't link:** processes, `fork`, `vfork`, `execve`, `wait`, `waitpid`;
-  `dlopen`; `dup`, `dup2`, `pipe`, `socketpair`; `rmdir` (`remove` and `unlink` remove an empty folder), `readv`,
-  `writev`, `lstat`, `fstatat`, `access`, `faccessat`, `realpath`, `chmod`, `chown`, `fchown`, `umask`, `utime`,
-  `utimes`, `utimensat`, `futimens`, `mkdirat`, `renameat`, `fpathconf`; `sleep` and `usleep` (`nanosleep` is there);
-  `clock_getres`, `clock_nanosleep`, `times`, `alarm`; `sigaction`; named semaphores (`sem_open`); `pthread_exit`,
-  `pthread_kill`, `pthread_sigmask`, `pthread_atfork`, barriers and spin locks; C11's `thrd_create`; `sched_setaffinity`
-  (`xsdk_thread_move` is there); `getuid`, `geteuid`, `getppid`, `getpagesize`; `gethostbyname` and `getnameinfo`
-  (`getaddrinfo` is there); `getrandom` (`getentropy` is there); `posix_memalign` (`aligned_alloc` is there); `ioctl`.
+  `dlopen`; `dup`, `dup2`, `pipe`, `socketpair`; `readv`, `writev`, `lstat`, `fstatat`, `faccessat`,
+  `chown`, `fchown`, `umask`, `utimensat`, `futimens`, `mkdirat`, `renameat`, `fpathconf`; `usleep`
+  (`nanosleep` is there); `clock_nanosleep`, `times`, `alarm`; `sigaction`; named semaphores (`sem_open`);
+  `pthread_kill`, `pthread_sigmask`, `pthread_atfork`, barriers and spin locks; C11's `thrd_create`;
+  `sched_setaffinity` (`xsdk_thread_move` is there); `getuid`, `geteuid`, `getppid`; `gethostbyname` and
+  `getnameinfo` (`getaddrinfo` is there); `getrandom` (`getentropy` is there); `ioctl`.
 
-A port supplies what it needs of the last list itself, on the calls above, or leaves it out. Shared libraries don't
-exist: everything links into the one `.xex` (cmake/xsdk.cmake builds static libraries).
+A port supplies what it needs of the last list itself, on the calls above, or leaves it out; one that supplied a call
+xsdk has since gained drops its own, or the link finds the name twice. Shared libraries don't exist: everything links
+into the one `.xex` (cmake/xsdk.cmake builds static libraries).

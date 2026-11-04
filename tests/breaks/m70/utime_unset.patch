@@ -1,0 +1,13 @@
+--- a/src/path.c
++++ b/src/path.c
+@@ -404,7 +404,9 @@
+ 	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0)
+ 		return -1;
+ 	const FILE_BASIC_INFORMATION information = { .last_access_time = access_time, .last_write_time = write_time };
+-	return set_basic_resolved("utime", resolved, &information);
++	// Broken on purpose: the times are never set.
++	(void)information;
++	return 0;
+ }
+ 
+ int utime(const char *path, const struct utimbuf *times)

@@ -22,12 +22,12 @@ LDFLAGS := -static -nostdlib -T src/xsdk.ld
 # libxsdk.a after libstdc++: what libstdc++ calls that xsdk replaces in newlib, rename among them, comes from xsdk.
 LIBS := -Wl,--start-group -lstdc++ $(BUILD)/libxsdk.a -lc -lm -lgcc -Wl,--end-group
 
-SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/thread.c src/file.c src/path.c src/dir.c \
+SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/memalign.c src/thread.c src/file.c src/path.c src/dir.c \
 	src/pthread.c src/lock.c src/reent.c src/time.c src/sysconf.c src/entropy.c src/exit.c src/gpu.c \
 	src/gpu_setup.c src/gpu_resolve.c src/gpu_draw.c src/gpu_constants.c src/gpu_tiles.c src/display.c src/shader.c \
 	src/microcode.c src/texture.c src/texture_layout.c src/tiled.c src/present.c src/splash.c src/copy.c src/socket.c \
 	src/netdb.c src/net.c src/launch.c src/libgen.c src/xam.c src/save.c src/system_ui.c src/semaphore.c src/mman.c \
-	src/jit.c src/system.c src/terminate.c src/text.c src/audio.c
+	src/jit.c src/system.c src/terminate.c src/text.c src/audio.c src/fnmatch.c
 # xost's compiler, in the SDK for titles and built for the PC as libxsc.so for the shader tools.
 XSC_SOURCES := src/xsc_memory.c src/xsc_spirv.c src/xsc_resolve.c src/xsc_unroll.c src/xsc_encode.c src/xsc_container.c \
 	src/xsc_program.c src/xsc_optimize.c src/xsc_lower.c src/xsc_lower_block.c src/xsc_lower_matrix.c \
@@ -60,6 +60,8 @@ TEST_SOURCES := tests/main.c tests/test_image.c tests/test_memory.c tests/test_t
 TEST_OBJECTS := $(patsubst tests/%,$(BUILD)/tests/%.o,$(basename $(TEST_SOURCES)))
 # The text checks compare what's drawn with the font's bits in src/text_font.h.
 $(BUILD)/tests/test_text.o: CFLAGS += -Isrc
+# The sync check counts the kernel's flushes through src/file_private.h.
+$(BUILD)/tests/test_files.o: CFLAGS += -Isrc
 # A title for listening to the audio frame layout on the console.
 AUDIO_CHECK_SOURCES := tests/audio_check.c tests/audio_frame.c
 AUDIO_CHECK_OBJECTS := $(patsubst tests/%,$(BUILD)/tests/%.o,$(basename $(AUDIO_CHECK_SOURCES)))
@@ -505,7 +507,7 @@ $(BUILD)/terminate_check.elf: $(BUILD)/tests/terminate_check.o $(BUILD)/libxsdk.
 
 system_probes: $(BUILD)/probe_terminate.xex $(BUILD)/probe_letterbox.xex
 
-drive_probes: $(BUILD)/probe_drives.xex $(BUILD)/probe_file_growth.xex $(BUILD)/probe_save_writes.xex
+drive_probes: $(BUILD)/probe_drives.xex $(BUILD)/probe_file_growth.xex $(BUILD)/probe_save_writes.xex $(BUILD)/probe_attributes.xex
 
 # The focused query probe also checks the executable image pool.
 $(BUILD)/probe_query_memory.elf: $(BUILD)/tests/probe_query_memory.o $(BUILD)/tests/jit_pool.o $(BUILD)/libxsdk.a src/xsdk.ld

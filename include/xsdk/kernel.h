@@ -86,6 +86,18 @@ typedef struct {
 	ANSI_STRING name;
 } FILE_RENAME_INFORMATION;
 
+// 40 bytes (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:173-174), laid out as NT's
+// (wine:include/winternl.h:1519-1525, at 840a939). A time or attributes given as 0 stay as they were, as ReactOS's FATX
+// has it (reactos:drivers/filesystems/vfatfs/finfo.c:170-234, at 39fee16); unproven on the console.
+typedef struct {
+	uint64_t creation_time;
+	uint64_t last_access_time;
+	uint64_t last_write_time;
+	uint64_t change_time;
+	uint32_t attributes;
+	uint32_t pad;
+} FILE_BASIC_INFORMATION;
+
 // INPUT_GAMEPAD's buttons (xenia:src/xenia/hid/input.h:32-46).
 enum {
 	INPUT_GAMEPAD_DPAD_UP = 0x0001,
@@ -266,6 +278,9 @@ enum {
 	SYNCHRONIZE = 0x00100000,
 	// Needed to mark a file for deletion; the value is NT's.
 	DELETE = 0x00010000,
+	// Needed to set a file's times and attributes; the value is NT's.
+	FILE_WRITE_ATTRIBUTES = 0x00000100,
+	FILE_ATTRIBUTE_READONLY = 0x00000001,
 	FILE_ATTRIBUTE_DIRECTORY = 0x00000010,
 	FILE_ATTRIBUTE_NORMAL = 0x00000080,
 	// NtCreateFile's share access; the values are NT's. Xenia ignores it (xboxkrnl/xboxkrnl_io.cc:102-145), and the
@@ -284,6 +299,7 @@ enum {
 
 // File information classes (xenia:src/xenia/kernel/info/file.h:19-55).
 enum {
+	FILE_BASIC_INFORMATION_CLASS = 4,
 	FILE_RENAME_INFORMATION_CLASS = 10,
 	FILE_DISPOSITION_INFORMATION_CLASS = 13,
 	FILE_END_OF_FILE_INFORMATION_CLASS = 20,
@@ -474,6 +490,16 @@ void VdShutdownEngines(void);
 void VdSwap(volatile uint32_t *ring_space, const uint32_t *fetch_constant, volatile uint32_t *system_writeback,
 	void *system_buffer, uint32_t system_value, uint32_t *front_buffer, uint32_t *texture_format, uint32_t *color_space,
 	uint32_t *width, uint32_t *height);
+// The kernel's version as four 16-bit numbers: the console's reads 2.0.17559.0
+// (results/2026-10-31-milestone-70/xsdk_test_chmod_eperm.log), Xenia's 2.65535.65535.32768
+// (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:206-216).
+typedef struct {
+	uint16_t major;
+	uint16_t minor;
+	uint16_t build;
+	uint16_t qfe;
+} XBOX_KRNL_VERSION;
+extern const XBOX_KRNL_VERSION *const XboxKrnlVersion;
 void XeCryptRandom(void *buffer, uint32_t length_bytes);
 // SHA-1 of up to three buffers, one after another, a null or empty one skipped; writes output_bytes of the 20-byte
 // digest, at most all of it (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_crypt.cc:147-168).

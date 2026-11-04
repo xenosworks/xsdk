@@ -1,0 +1,37 @@
+log: game:\probe_attributes.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m70t\probe_attributes.xex
+log: no net_log.txt beside the .xex, so not over the network
+attributes: file made: the name reads 0x80
+attributes: file: set 0x01: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x21: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x02: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x02
+attributes: file: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x04: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x20: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x01: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: file: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: folder made: the name reads 0x10
+attributes: folder: set 0x01: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x21: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x02: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x12
+attributes: folder: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x04: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x20: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x01: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: folder: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x10
+attributes: made read-only by NtCreateFile: 0x00000000; the name reads 0x80
+attributes: it opened to write: 0x00000000
+attributes: made read-only: set 0x80: 0x00000000; the handle reads 0x00 (0xC000000D), the name 0x80
+attributes: game:\probe_attributes.txt removed: 0x00000000
+attributes: game:\probe_attributes_ro.txt removed: 0x00000000
+attributes: game:\probe_attributes_dir removed: 0x00000000
+attributes: done
+exit: status 0

@@ -22,9 +22,7 @@
 // marked insecure").
 
 enum {
-	// The most sockets of a kind XNetStartup takes (docs/HARDWARE.md, "XAM's sockets and loader, milestone 56"). Those
-	// numbered from FD_SETSIZE up work with poll, not select.
-	SOCKET_SLOTS = 232,
+	SOCKET_SLOTS = XSDK_SOCKET_SLOTS,
 	CONSOLE_FDS = 3,
 	INVALID_SOCKET = -1,
 	// Xenia takes it as disabling a socket's encryption (xenia:src/xenia/kernel/xsocket.cc:78-82).

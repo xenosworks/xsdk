@@ -1,0 +1,19 @@
+exit_result	xsdk_test	pthread_exit: its value reaches pthread_join, the thread's key destructor runs, and nothing after it does
+exit_unended	xsdk_test	pthread_exit: a detached thread and one xsdk_thread_create made end there, each running its key destructor
+attr_stack_unread	xsdk_test	pthread: attributes read back their detach state and stack size, 0 for the .xex's default stack
+cond_clock_ignored	xsdk_test	pthread: a condition's timed wait lasts until its deadline on CLOCK_REALTIME, or on CLOCK_MONOTONIC set in its attributes
+getres_realtime	xsdk_test	clocks: clock_getres gives CLOCK_REALTIME's step as measured, the time base's 21 ns tick for the monotonic clocks, and refuses an unknown clock
+sleep_none	xsdk_test	clocks: sleep(1) lasts a second on CLOCK_MONOTONIC, and sleep leaves none to sleep
+pagesize_large	xsdk_test	getpagesize: the page size sysconf gives
+memalign_unchecked	xsdk_test	posix_memalign: memory at alignments up to 64 KB, and EINVAL for 24 and 2
+access_mode_ignored	xsdk_test	access: a file reads and writes but doesn't run, a folder does all three; ENOENT for nothing, EINVAL for a bad mode
+rmdir_any	xsdk_test	rmdir: removes an empty folder; ENOTEMPTY for one with a file in it, ENOTDIR for a file, which stays
+utime_unset	xsdk_test	utime and utimes: set a file's access and modification times, now for NULL, as stat reads them; EINVAL for a bad tv_usec
+chmod_unverified	xsdk_test	chmod and fchmod: a mode with the owner's write bit is kept and one without it refused with EPERM, as FATX keeps no read-only attribute; a folder stays a folder; ENOENT for nothing
+realpath_unchecked	xsdk_test	realpath: a file's absolute path through "//", "." and "..", from a path and from the current directory, in getcwd's form; ENOENT for nothing
+sync_none	xsdk_test	sync: the kernel flushes every file open, two written here
+fnmatch_period_ignored	xsdk_test	fnmatch: leading periods, slashes under FNM_PATHNAME, escapes, and brackets with ranges, a class, '!' and ']' first; an unknown flag refused
+identity_none	xsdk_test	stat: two files differ in st_dev and st_ino; one file reads alike through stat, fstat and its name in capitals
+open_max_none	xsdk_test	sysconf: _SC_OPEN_MAX is past a file's descriptor and a socket's
+uname_unversioned	xsdk_test	uname: the system's name, the kernel's version in four numbers from 2, and the machine
+ifaddrs_bare	xsdk_test	getifaddrs: one interface, up and running, with the address the PC sees

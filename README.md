@@ -98,6 +98,7 @@ Xenia Canary serves for quick crash and smoke checks, but the console decides; C
   [FAudio-xenon](https://github.com/xenosworks/FAudio-xenon) (XAudio2's API through FAudio),
   [imgui-xenon](https://github.com/xenosworks/imgui-xenon) (Dear ImGui),
   [curl-xenon](https://github.com/xenosworks/curl-xenon) (libcurl, HTTP and HTTPS),
+  [mono-xenon](https://github.com/xenosworks/mono-xenon) (Mono's JIT, for C#),
   [mbedtls-xenon](https://github.com/xenosworks/mbedtls-xenon) (Mbed TLS, TLS 1.2) and
   [glslang-xenon](https://github.com/xenosworks/glslang-xenon) (glslang, its notes in `README-xsdk.md`).
 - [aurora-xenon](https://github.com/xenosworks/aurora-xenon), encounter's Aurora with a vulkan4xenon backend, and

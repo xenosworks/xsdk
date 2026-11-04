@@ -10,9 +10,12 @@
 #include <strings.h>
 #include <sys/stat.h>
 #include <sys/statvfs.h>
+#include <sys/time.h>
 #include <unistd.h>
+#include <utime.h>
 
 #include "file_private.h"
+#include "time_private.h"
 #include "xsdk/kernel.h"
 #include "xsdk/log.h"
 
@@ -183,13 +186,12 @@ static int resolve_or_fail(int dir_fd, const char *path, char resolved[XSDK_PATH
 	return 0;
 }
 
-static int stat_resolved(const char *resolved, struct stat *info)
+static int query_resolved(const char *resolved, FILE_NETWORK_OPEN_INFORMATION *information)
 {
 	ANSI_STRING name;
 	OBJECT_ATTRIBUTES attributes;
 	xsdk_path_attributes(resolved, &name, &attributes);
-	FILE_NETWORK_OPEN_INFORMATION information;
-	const NTSTATUS status = NtQueryFullAttributesFile(&attributes, &information);
+	const NTSTATUS status = NtQueryFullAttributesFile(&attributes, information);
 	if (!NT_SUCCESS(status)) {
 		errno = xsdk_file_errno(status);
 		// A missing file is the usual answer to a stat, not an error.
@@ -197,7 +199,15 @@ static int stat_resolved(const char *resolved, struct stat *info)
 			xsdk_log_write("stat: NtQueryFullAttributesFile(%s) failed: 0x%08X", resolved, (unsigned)status);
 		return -1;
 	}
-	xsdk_file_stat(&information, info);
+	return 0;
+}
+
+static int stat_resolved(const char *resolved, struct stat *info)
+{
+	FILE_NETWORK_OPEN_INFORMATION information;
+	if (query_resolved(resolved, &information) != 0)
+		return -1;
+	xsdk_file_stat(&information, resolved, info);
 	return 0;
 }
 
@@ -238,6 +248,13 @@ int chdir(const char *path)
 	return 0;
 }
 
+// A kernel path as getcwd and realpath give it, with '/' between the names.
+static void copy_with_slashes(char *out, const char *resolved, size_t length)
+{
+	for (size_t i = 0; i <= length; i++)
+		out[i] = resolved[i] == '\\' ? '/' : resolved[i];
+}
+
 // With no buffer, allocates one, as glibc does; libstdc++ asks for that first.
 char *getcwd(char *buffer, size_t size_bytes)
 {
@@ -258,8 +275,29 @@ char *getcwd(char *buffer, size_t size_bytes)
 		errno = ENOMEM;
 		return NULL;
 	}
-	for (size_t i = 0; i <= length; i++)
-		result[i] = path[i] == '\\' ? '/' : path[i];
+	copy_with_slashes(result, path, length);
+	return result;
+}
+
+// With no links, the path resolved, "." and ".." taken out, is the real one once it's there. A buffer given holds
+// PATH_MAX, 1024 bytes in newlib's <sys/syslimits.h>, more than any kernel path.
+char *realpath(const char *path, char *buffer)
+{
+	if (!path) {
+		errno = EINVAL;
+		return NULL;
+	}
+	char resolved[XSDK_PATH_BYTES];
+	struct stat info;
+	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0 || stat_resolved(resolved, &info) != 0)
+		return NULL;
+	const size_t length = strlen(resolved);
+	char *const result = buffer ? buffer : malloc(length + 1);
+	if (!result) {
+		errno = ENOMEM;
+		return NULL;
+	}
+	copy_with_slashes(result, resolved, length);
 	return result;
 }
 
@@ -307,6 +345,89 @@ int unlinkat(int dir_fd, const char *path, int flags)
 int unlink(const char *path)
 {
 	return unlinkat(AT_FDCWD, path, 0);
+}
+
+int rmdir(const char *path)
+{
+	return unlinkat(AT_FDCWD, path, AT_REMOVEDIR);
+}
+
+// Permissions are stat's (xsdk_file_stat): anything may be read, written unless read-only, and only a folder searched.
+int access(const char *path, int mode)
+{
+	if (mode & ~(R_OK | W_OK | X_OK)) {
+		errno = EINVAL;
+		return -1;
+	}
+	struct stat info;
+	if (stat(path, &info) != 0)
+		return -1;
+	const mode_t asked = (mode & R_OK ? S_IRUSR : 0) | (mode & W_OK ? S_IWUSR : 0) | (mode & X_OK ? S_IXUSR : 0);
+	if ((info.st_mode & asked) != asked) {
+		errno = EACCES;
+		return -1;
+	}
+	return 0;
+}
+
+_Static_assert(sizeof(FILE_BASIC_INFORMATION) == 40, "the basic class takes 40 bytes");
+
+static int set_basic_resolved(const char *call, const char *resolved, const FILE_BASIC_INFORMATION *information)
+{
+	HANDLE handle;
+	NTSTATUS status = open_resolved(resolved, FILE_WRITE_ATTRIBUTES, FILE_OPEN, 0, &handle);
+	if (NT_SUCCESS(status)) {
+		status = xsdk_file_set_basic(handle, information);
+		const NTSTATUS close_status = NtClose(handle);
+		status = NT_SUCCESS(status) ? close_status : status;
+	}
+	return NT_SUCCESS(status) ? 0 : fail_with_status(call, resolved, status);
+}
+
+// Sets the access and modification times, both to now for NULL.
+static int set_times(const char *path, const struct timespec times[2])
+{
+	uint64_t access_time;
+	uint64_t write_time;
+	if (times) {
+		access_time = xsdk_time_to_nt(&times[0]);
+		write_time = xsdk_time_to_nt(&times[1]);
+	} else {
+		KeQuerySystemTime(&access_time);
+		write_time = access_time;
+	}
+	if (!access_time || !write_time) {
+		errno = EINVAL;
+		return -1;
+	}
+	char resolved[XSDK_PATH_BYTES];
+	if (resolve_or_fail(AT_FDCWD, path, resolved) != 0)
+		return -1;
+	const FILE_BASIC_INFORMATION information = { .last_access_time = access_time, .last_write_time = write_time };
+	return set_basic_resolved("utime", resolved, &information);
+}
+
+int utime(const char *path, const struct utimbuf *times)
+{
+	if (!times)
+		return set_times(path, NULL);
+	const struct timespec converted[2] = { { .tv_sec = times->actime }, { .tv_sec = times->modtime } };
+	return set_times(path, converted);
+}
+
+// A tv_usec out of range stays out of range, for set_times to refuse.
+static struct timespec from_timeval(const struct timeval *time)
+{
+	const bool in_range = time->tv_usec >= 0 && time->tv_usec < 1000000;
+	return (struct timespec){ .tv_sec = time->tv_sec, .tv_nsec = in_range ? time->tv_usec * 1000 : -1 };
+}
+
+int utimes(const char *path, const struct timeval times[2])
+{
+	if (!times)
+		return set_times(path, NULL);
+	const struct timespec converted[2] = { from_timeval(&times[0]), from_timeval(&times[1]) };
+	return set_times(path, converted);
 }
 
 _Static_assert(sizeof(FILE_RENAME_INFORMATION) == 16, "the rename class takes 16 bytes");
@@ -382,21 +503,27 @@ int statvfs(const char *path, struct statvfs *info)
 	return 0;
 }
 
-// Permissions can't change (xsdk_file_stat), so only asking for the ones a file already has succeeds.
+// The owner's write bit sets or clears the read-only attribute (xsdk_file_mode_attributes), read back for EPERM where
+// the file system doesn't keep it (xsdk_file_mode_kept); the other bits have nowhere to go. There are no links for
+// flags to choose between.
 int fchmodat(int dir_fd, const char *path, mode_t mode, int flags)
 {
 	(void)flags;
 	char resolved[XSDK_PATH_BYTES];
 	if (resolve_or_fail(dir_fd, path, resolved) != 0)
 		return -1;
-	struct stat info;
-	if (stat_resolved(resolved, &info) != 0)
+	FILE_NETWORK_OPEN_INFORMATION information;
+	if (query_resolved(resolved, &information) != 0)
 		return -1;
-	if ((mode & ALLPERMS) != (info.st_mode & ALLPERMS)) {
-		errno = ENOTSUP;
+	const FILE_BASIC_INFORMATION basic = { .attributes = xsdk_file_mode_attributes(information.attributes, mode) };
+	if (set_basic_resolved("chmod", resolved, &basic) != 0 || query_resolved(resolved, &information) != 0)
 		return -1;
-	}
-	return 0;
+	return xsdk_file_mode_kept(information.attributes, mode);
+}
+
+int chmod(const char *path, mode_t mode)
+{
+	return fchmodat(AT_FDCWD, path, mode, 0);
 }
 
 // The kernel's file calls have no links of either kind.

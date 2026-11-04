@@ -15,6 +15,9 @@ static bool reent_key_ready;
 
 static void free_reent(void *value)
 {
+	// The main thread's, should it end through pthread_exit, is newlib's static state, which other threads still use.
+	if (value == _impure_ptr)
+		return;
 	_reclaim_reent(value);
 	_free_r(_impure_ptr, value);
 }

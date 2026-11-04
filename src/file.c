@@ -1,5 +1,6 @@
 #include "file_private.h"
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdbool.h>
@@ -41,6 +42,7 @@ typedef struct {
 _Static_assert(FIRST_FILE_FD + FILE_SLOTS == XSDK_FIRST_SOCKET_FD, "sockets take the descriptors after files");
 
 static FileSlot files[FILE_SLOTS];
+static uint32_t flush_count;
 
 int xsdk_file_errno(NTSTATUS status)
 {
@@ -209,6 +211,33 @@ NTSTATUS xsdk_file_set_size(HANDLE handle, uint64_t size_bytes)
 	return status;
 }
 
+uint32_t xsdk_file_mode_attributes(uint32_t attributes, mode_t mode)
+{
+	// Attributes of 0 change nothing; NORMAL alone clears them (reactos:drivers/filesystems/vfatfs/finfo.c:170-178).
+	attributes &= ~(uint32_t)FILE_ATTRIBUTE_NORMAL;
+	attributes =
+		mode & S_IWUSR ? attributes & ~(uint32_t)FILE_ATTRIBUTE_READONLY : attributes | FILE_ATTRIBUTE_READONLY;
+	return attributes ? attributes : FILE_ATTRIBUTE_NORMAL;
+}
+
+int xsdk_file_mode_kept(uint32_t attributes, mode_t mode)
+{
+	// The console's FATX keeps the hidden attribute alone, taking the read-only one and dropping it (docs/HARDWARE.md,
+	// "FATX keeps no read-only attribute"), so a mode without the owner's write bit can't be kept there.
+	const bool read_only = attributes & FILE_ATTRIBUTE_READONLY;
+	if (read_only == !(mode & S_IWUSR))
+		return 0;
+	errno = EPERM;
+	return -1;
+}
+
+NTSTATUS xsdk_file_set_basic(HANDLE handle, const FILE_BASIC_INFORMATION *information)
+{
+	IO_STATUS_BLOCK io_status;
+	// Xenia changes nothing (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_io_info.cc:247-251).
+	return NtSetInformationFile(handle, &io_status, information, sizeof(*information), FILE_BASIC_INFORMATION_CLASS);
+}
+
 HANDLE xsdk_file_handle(int fd)
 {
 	const FileSlot *file = find_slot(fd);
@@ -226,11 +255,21 @@ int xsdk_file_directory_path(int fd, char path[XSDK_PATH_BYTES])
 	return 0;
 }
 
-void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, struct stat *info)
+void xsdk_file_stat(const FILE_NETWORK_OPEN_INFORMATION *information, const char *resolved, struct stat *info)
 {
 	memset(info, 0, sizeof(*info));
-	// The kernel keeps attributes, not owners or permissions, so everyone may do anything.
-	info->st_mode = information->attributes & FILE_ATTRIBUTE_DIRECTORY ? S_IFDIR | ACCESSPERMS : S_IFREG | DEFFILEMODE;
+	// FATX has no inodes or links, so a file is its path, in any case as FATX matches names: a 32-bit FNV-1a hash of
+	// it, split across st_dev and st_ino, which newlib makes 16 bits each here. Mono's sharing checks and a copy onto
+	// itself tell files apart by the pair.
+	uint32_t identity = 2166136261u;
+	for (const char *c = resolved; *c; c++)
+		identity = (identity ^ (uint8_t)tolower((unsigned char)*c)) * 16777619u;
+	info->st_dev = (dev_t)(identity >> 16);
+	info->st_ino = (ino_t)(identity & 0xFFFF);
+	// The kernel keeps attributes, not owners or permissions: everyone may do anything a read-only file allows.
+	const bool directory = information->attributes & FILE_ATTRIBUTE_DIRECTORY;
+	const mode_t unwritable = information->attributes & FILE_ATTRIBUTE_READONLY ? S_IWUSR | S_IWGRP | S_IWOTH : 0;
+	info->st_mode = (directory ? S_IFDIR | ACCESSPERMS : S_IFREG | DEFFILEMODE) & ~unwritable;
 	info->st_nlink = 1;
 	info->st_size = (off_t)information->end_of_file;
 	info->st_atim = xsdk_time_from_nt(information->last_access_time);
@@ -425,13 +464,26 @@ int ftruncate(int fd, off_t length_bytes)
 	return NT_SUCCESS(status) ? 0 : fail_with_status("ftruncate", fd, status);
 }
 
+static NTSTATUS flush(HANDLE handle)
+{
+	IO_STATUS_BLOCK io_status;
+	const NTSTATUS status = NtFlushBuffersFile(handle, &io_status);
+	if (NT_SUCCESS(status))
+		__atomic_fetch_add(&flush_count, 1, __ATOMIC_RELAXED);
+	return status;
+}
+
+uint32_t xsdk_file_flushes(void)
+{
+	return __atomic_load_n(&flush_count, __ATOMIC_RELAXED);
+}
+
 int fsync(int fd)
 {
 	const FileSlot *file = find_file(fd);
 	if (!file)
 		return -1;
-	IO_STATUS_BLOCK io_status;
-	const NTSTATUS status = NtFlushBuffersFile(file->handle, &io_status);
+	const NTSTATUS status = flush(file->handle);
 	return NT_SUCCESS(status) ? 0 : fail_with_status("fsync", fd, status);
 }
 
@@ -439,6 +491,16 @@ int fsync(int fd)
 int fdatasync(int fd)
 {
 	return fsync(fd);
+}
+
+// Folders hold nothing to write back; sync can't fail, so a flush refused is passed over.
+void sync(void)
+{
+	for (int i = 0; i < FILE_SLOTS; i++) {
+		const HANDLE handle = __atomic_load_n(&files[i].handle, __ATOMIC_ACQUIRE);
+		if (handle && handle != SLOT_CLAIMED && !files[i].directory)
+			(void)flush(handle);
+	}
 }
 
 off_t lseek(int fd, off_t offset, int whence)
@@ -517,21 +579,26 @@ int fstat(int fd, struct stat *info)
 	const NTSTATUS status = query_information(file->handle, &information);
 	if (!NT_SUCCESS(status))
 		return fail_with_status("fstat", fd, status);
-	xsdk_file_stat(&information, info);
+	xsdk_file_stat(&information, file->path, info);
 	return 0;
 }
 
-// Permissions can't change (xsdk_file_stat), so only asking for the ones a file already has succeeds.
+// Through the descriptor's own handle; one opened only to read may lack the right to set attributes.
 int fchmod(int fd, mode_t mode)
 {
-	struct stat info;
-	if (fstat(fd, &info) != 0)
+	const FileSlot *file = find_file(fd);
+	if (!file)
 		return -1;
-	if ((mode & ALLPERMS) != (info.st_mode & ALLPERMS)) {
-		errno = ENOTSUP;
-		return -1;
+	FILE_NETWORK_OPEN_INFORMATION information;
+	NTSTATUS status = query_information(file->handle, &information);
+	if (NT_SUCCESS(status)) {
+		const FILE_BASIC_INFORMATION basic = { .attributes = xsdk_file_mode_attributes(information.attributes, mode) };
+		status = xsdk_file_set_basic(file->handle, &basic);
 	}
-	return 0;
+	if (NT_SUCCESS(status))
+		status = query_information(file->handle, &information);
+	return NT_SUCCESS(status) ? xsdk_file_mode_kept(information.attributes, mode)
+							  : fail_with_status("fchmod", fd, status);
 }
 
 int isatty(int fd)

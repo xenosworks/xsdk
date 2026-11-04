@@ -1,0 +1,13 @@
+--- a/src/pthread.c
++++ b/src/pthread.c
+@@ -249,7 +249,9 @@
+ // 0 until set, for the .xex's default stack (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_threading.cc:119-121).
+ int pthread_attr_getstacksize(const pthread_attr_t *attr, size_t *stack_bytes)
+ {
+-	*stack_bytes = (size_t)attr->stacksize;
++	// Broken on purpose: the size set never reads back.
++	(void)attr;
++	*stack_bytes = 0;
+ 	return 0;
+ }
+ 
