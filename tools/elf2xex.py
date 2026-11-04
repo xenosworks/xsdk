@@ -583,9 +583,11 @@ def main():
     elf = args.elf.read_bytes()
     entry, sections = read_elf(elf)
     first = min(s["address"] for s in sections if s["flags"] & SHF_ALLOC and s["size"])
-    if not base + PE_HEADER_BYTES <= first < base + PAGE_BYTES:
-        fail(f"the ELF is linked at {first - PE_HEADER_BYTES:#010x}, not at {base:#010x}: "
-            "give elf2xex the base it was linked at")
+    # The first section follows the PE headers on the first page, or starts the second when the image has no read-only
+    # data and the linker script's 64 KB alignment moves the code there.
+    if not base + PE_HEADER_BYTES <= first <= base + PAGE_BYTES:
+        linked_at = (first - PE_HEADER_BYTES) & ~(PAGE_BYTES - 1)
+        fail(f"the ELF is linked at {linked_at:#010x}, not at {base:#010x}: give elf2xex the base it was linked at")
     image, runs = build_image(sections, base)
     if not (LARGE_PAGE_IMAGES_START <= base and base + len(image) <= LARGE_PAGE_IMAGES_END):
         fail(f"the image, {base:#010x} to {base + len(image):#010x}, must lie within "
