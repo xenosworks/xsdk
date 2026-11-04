@@ -16,6 +16,9 @@ enum {
 	FENCE_TIMEOUT_MS = 1000,
 	LAST_FLIP_TIMEOUT_MS = 1000,
 	MAX_WRONG_LOGGED = 2,
+	// Over two refreshes of 16.7 ms and under three: four buffers absorb it, three miss a vblank.
+	LATE_FRAME_MS = 40,
+	LATE_FRAME = FRAMES / 2,
 };
 
 typedef struct {
@@ -24,6 +27,8 @@ typedef struct {
 	uint32_t swap_interval;
 	// Each mode's bar has its own colour, so a capture shows which mode is running.
 	uint32_t argb;
+	// Frame LATE_FRAME is drawn LATE_FRAME_MS after its buffer came.
+	bool late_frame;
 } Mode;
 
 static const Mode modes[] = {
@@ -31,6 +36,11 @@ static const Mode modes[] = {
 	{ .name = "2 buffers, every vblank", .buffers = 2, .swap_interval = 1, .argb = 0xFFFFFF00 },
 	{ .name = "3 buffers, every second vblank", .buffers = 3, .swap_interval = 2, .argb = 0xFF00FFFF },
 	{ .name = "2 buffers, every second vblank", .buffers = 2, .swap_interval = 2, .argb = 0xFFFF00FF },
+	{ .name = "4 buffers, every vblank, a frame 40 ms late",
+		.buffers = 4,
+		.swap_interval = 1,
+		.argb = 0xFF00FF00,
+		.late_frame = true },
 };
 
 void test_present_stats_at_last_flip(uint32_t frames, XsdkPresentStats *stats)
@@ -45,7 +55,7 @@ void test_present_stats_at_last_flip(uint32_t frames, XsdkPresentStats *stats)
 
 static void check_mode(const Mode *mode, const char *what, bool passed)
 {
-	char name[112];
+	char name[128];
 	snprintf(name, sizeof name, "pacing: %s: %s", mode->name, what);
 	check(name, passed);
 }
@@ -72,6 +82,8 @@ static void run_mode(const Mode *mode)
 	for (; presented < FRAMES; presented++) {
 		if (!NT_SUCCESS(xsdk_present_begin(&last_address, BEGIN_TIMEOUT_MS)))
 			break;
+		if (mode->late_frame && presented == LATE_FRAME)
+			(void)xsdk_thread_sleep(LATE_FRAME_MS);
 		// The buffer last held the frame mode->buffers before; frame 0's background is whatever eDRAM held.
 		if (presented > mode->buffers &&
 			!bar_scene_holds(&scene, xsdk_present_pixels(last_address), presented - mode->buffers)) {
