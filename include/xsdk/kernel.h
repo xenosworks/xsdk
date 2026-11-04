@@ -484,9 +484,11 @@ uint32_t XexGetModuleHandle(const char *module_name, HANDLE *module);
 // A resource the .xex names, such as the title's name under its title ID in hex (xenia:src/xenia/kernel/xboxkrnl/
 // xboxkrnl_modules.cc:64-84).
 NTSTATUS XexGetModuleSection(HANDLE module, const char *name, const void **data, uint32_t *size);
+// What a DLL exports under `ordinal`, or, with a name's address in its place (any value above 0xFFFF), under that
+// name: elf2xex --export-name (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_modules.cc:268-312).
 NTSTATUS XexGetProcedureAddress(HANDLE module, uint32_t ordinal, void **address);
 // XexLoadImage's flags, which repeat the image's module flags. A DLL built by elf2xex --dll is a title module and a
-// DLL (module flags 0x9, as the retail runtime's xcoreclr.dll, agcore.dll and .ni.dll images are; user's files), and
+// DLL (module flags 0x9, as the retail runtime's xcoreclr.dll, agcore.dll and .ni.dll images are), and
 // is loaded with both: the console refused 0x8 alone with STATUS_ACCESS_DENIED (a console run of dll_check), and 0x9
 // is what that runtime passes for its .ni.dll images; that 0x9 loads is unverified on hardware. Xenia ignores the
 // flags (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_modules.cc:86-119); the DLL flag's name is xenia-edge's

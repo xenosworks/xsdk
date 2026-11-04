@@ -176,7 +176,8 @@ $(BUILD)/dll_target.elf: $(BUILD)/tests/dll_target.o $(BUILD)/libxsdk.a src/xsdk
 	$(CC) -static -nostdlib -T src/xsdk_dll.ld -Wl,--defsym=xsdk_dll_base=0x$(DLL_TARGET_BASE) -o $@ $< $(LIBS)
 
 $(BUILD)/dll_target.xex: $(BUILD)/dll_target.elf tools/elf2xex.py
-	$(PYTHON) tools/elf2xex.py --dll --base $(DLL_TARGET_BASE) $< $@
+	$(PYTHON) tools/elf2xex.py --dll --base $(DLL_TARGET_BASE) --export-name add=dll_target_add \
+		--export-name dll_target_count $< $@
 
 $(BUILD)/dll_check.elf: $(BUILD)/tests/dll_check.o $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $< $(LIBS)

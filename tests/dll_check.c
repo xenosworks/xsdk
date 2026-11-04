@@ -7,7 +7,7 @@
 #include "xsdk/log.h"
 
 // Loads dll_target.xex beside it, a DLL built by elf2xex --dll from tests/dll_target.c, and checks what a title gets:
-// its exports by ordinal, its data, its own kernel import, and the calls to its DllMain as it loads, as a thread starts
+// its exports by ordinal and by name, its data, its own kernel import, and the calls to its DllMain as it loads, as a thread starts
 // and ends, and as the last reference to it goes.
 
 enum {
@@ -90,6 +90,22 @@ int main(void)
 	const uint64_t dll_frequency = frequency();
 	xsdk_log_write("dll: KeQueryPerformanceFrequency through the DLL: %llu", (unsigned long long)dll_frequency);
 	check("the DLL's own kernel import is bound", dll_frequency && dll_frequency == KeQueryPerformanceFrequency());
+
+	// The Makefile exports two by name as well: dll_target_add as "add", dll_target_count under its own name.
+	void *by_name_add = 0;
+	void *by_name_count = 0;
+	void *by_name_none = (void *)1;
+	const NTSTATUS add_status = XexGetProcedureAddress(module, (uint32_t)(uintptr_t)"add", &by_name_add);
+	const NTSTATUS count_status = XexGetProcedureAddress(module, (uint32_t)(uintptr_t)"dll_target_count",
+		&by_name_count);
+	const NTSTATUS none_status = XexGetProcedureAddress(module, (uint32_t)(uintptr_t)"dll_target_none", &by_name_none);
+	xsdk_log_write("dll: by name: add 0x%08X at 0x%08X, dll_target_count 0x%08X at 0x%08X, dll_target_none 0x%08X",
+		(unsigned)add_status, (unsigned)(uintptr_t)by_name_add, (unsigned)count_status,
+		(unsigned)(uintptr_t)by_name_count, (unsigned)none_status);
+	check("a name gives the address its ordinal does",
+		NT_SUCCESS(add_status) && by_name_add == exports[ORDINAL_ADD] && NT_SUCCESS(count_status)
+			&& by_name_count == exports[ORDINAL_COUNT]);
+	check("a name the DLL doesn't export fails", !NT_SUCCESS(none_status) && !by_name_none);
 	check("DllMain ran once with DLL_PROCESS_ATTACH as the DLL loaded", calls(DLL_PROCESS_ATTACH) == 1);
 
 	const uint32_t attached = calls(DLL_THREAD_ATTACH);

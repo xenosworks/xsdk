@@ -488,7 +488,7 @@ console").
 [tests/dll_check.c](../tests/dll_check.c), [tests/dll_target.c](../tests/dll_target.c), through `kernel.h` and
 `export.h`
 
-A DLL is a `.xex` of its own that a title, or another program on the console, loads and calls by ordinal. Link it with
+A DLL is a `.xex` of its own that a title, or another program on the console, loads and calls by ordinal or by name. Link it with
 `src/xsdk_dll.ld` at a base of its own, and give `elf2xex --dll` the same base:
 
 ```make
@@ -501,6 +501,7 @@ python3 tools/elf2xex.py --dll --base 8E000000 dll.elf dll.xex
 | `XSDK_EXPORT(ordinal, function)` | in the DLL's source, `function` exported under `ordinal`, from 1 | | |
 | `XexLoadImage(path, XEX_LOAD_IMAGE_TITLE \| XEX_LOAD_IMAGE_DLL, 0, &module)` | the DLL loaded, or another reference to it if it is, and its handle in `module`; its `DllMain` called with `DLL_PROCESS_ATTACH` the first time | `XexUnloadImage` | any |
 | `XexGetProcedureAddress(module, ordinal, &address)` | the address of what the DLL exports under `ordinal` | | any |
+| `XexGetProcedureAddress(module, (uint32_t)(uintptr_t)"name", &address)` | the address of what the DLL exports under `name` (`elf2xex --export-name`) | | any |
 | `XexUnloadImage(module)` | one reference fewer; the last calls `DllMain` with `DLL_PROCESS_DETACH` and unloads it | | any |
 
 - **`DllMain(module, reason, reserved)` is the DLL's entry,** returning 1. The loader calls it as the DLL loads and
@@ -522,6 +523,11 @@ python3 tools/elf2xex.py --dll --base 8E000000 dll.elf dll.xex
   refuses an image outside that range, and a `--base` other than the one the DLL was linked at.
 - **Ordinals** start at 1. One the DLL doesn't export has 0 in the export table, which Xenia gives back as the image's
   base rather than failing (xenia:src/xenia/cpu/xex_module.cc:123-138), so export ordinals without gaps.
+- **Names** are for a program that looks a DLL's functions up by name, as the retail runtime's `xcoreclr.dll` does
+  its JIT's `getJit`. `elf2xex --export-name NAME=SYMBOL` exports the ELF symbol `SYMBOL` as `NAME`, and
+  `--export-name NAME` one under its own name, through a PE export directory that header 0x00E10402 points to, in
+  the shape the Plex runtime's `agcore.dll` has (xenia:src/xenia/cpu/xex_module.cc:158-195). A name needs no
+  ordinal; XexGetProcedureAddress takes the name's address where the ordinal would go, any value above 0xFFFF.
 - **On the console:** not run yet. The XEX layout follows retail DLLs' (`tools/elf2xex.py`), and dll_check is the test
   to settle it.
 

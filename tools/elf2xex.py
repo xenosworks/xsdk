@@ -42,10 +42,11 @@ HEADER_TLS_INFO = 0x00020104
 HEADER_DEFAULT_STACK_SIZE = 0x00020200
 HEADER_SYSTEM_FLAGS = 0x00030000
 HEADER_EXECUTION_INFO = 0x00040006
+HEADER_EXPORTS_BY_NAME = 0x00E10402
 
 MODULE_TITLE = 0x00000001
 # xenia:src/xenia/kernel/util/xex2_info.h:117. The platform's DLLs carry both flags, and no TLS or stack size headers
-# (xcoreclr.dll, agcore.dll and the .ni.dll files of the Plex 0.0.0.7 runtime, user's files; unverified on hardware).
+# (xcoreclr.dll, agcore.dll and the .ni.dll files of the Plex 0.0.0.7 runtime).
 MODULE_DLL = 0x00000008
 SYSTEM_NO_FORCED_REBOOT = 0x00000001
 SYSTEM_HANDLE_GAMEPAD_DISCONNECT = 0x00000020
@@ -100,11 +101,13 @@ EXPORT_RECORD = struct.Struct(">II")
 # A DLL's export table, which the security info points to at 0x160: three magic words, a module number and a version
 # left 0, the image base's top half, the count, the first ordinal (1), then each ordinal's address less the image base,
 # 0 for an ordinal not exported (xenia:src/xenia/kernel/util/xex2_info.h:582, 607-616). The magic and the zeros are as
-# the Plex 0.0.0.7 runtime's xcoreclr.dll and agcore.dll have them (user's files); XAM's own, in xam.xex 2.0.17559
-# (user's console files), has the same magic and fills the module number and version. Xenia reads the base, the count
+# the Plex 0.0.0.7 runtime's xcoreclr.dll and agcore.dll have them; XAM's own, in xam.xex 2.0.17559, has the same
+# magic and fills the module number and version. Xenia reads the base, the count
 # and the offsets, not the rest (xenia:src/xenia/cpu/xex_module.cc:123-138).
 EXPORT_MAGIC = (0x48000000, 0x00485645, 0x48000000)
 FIRST_ORDINAL = 1
+SHT_SYMTAB = 2
+ELF_SYMBOL = struct.Struct(">IIIBBH")
 
 
 def version(major, minor, build, qfe):
@@ -252,6 +255,7 @@ def read_exports(sections, image, base):
 
 
 def add_export_table(image, offset, exports, base):
+    """Returns the table's address and where the image's headers end after it."""
     ordinals = range(FIRST_ORDINAL, max(exports) + 1)
     words = [*EXPORT_MAGIC, 0, 0, 0, 0, 0, base >> 16, len(ordinals), FIRST_ORDINAL]
     words += [exports[ordinal] - base if ordinal in exports else 0 for ordinal in ordinals]
@@ -260,7 +264,73 @@ def add_export_table(image, offset, exports, base):
     if offset + len(table) > PE_HEADER_BYTES:
         fail("the export table doesn't fit beside the PE headers")
     image[offset:offset + len(table)] = table
-    return base + offset
+    return base + offset, offset + len(table)
+
+
+def read_symbols(data):
+    """Returns {name: address} of the ELF's symbol table."""
+    header = ELF_HEADER.unpack_from(data)
+    section_offset, section_count = header[6], header[12]
+    raw = [ELF_SECTION.unpack_from(data, section_offset + i * ELF_SECTION.size) for i in range(section_count)]
+    symbols = {}
+    for _, kind, _, _, offset, size, link, _, _, _ in raw:
+        if kind != SHT_SYMTAB:
+            continue
+        strings = raw[link][4]
+        for at in range(offset, offset + size, ELF_SYMBOL.size):
+            name, value = ELF_SYMBOL.unpack_from(data, at)[:2]
+            end = data.index(b"\0", strings + name)
+            symbols[data[strings + name:end].decode()] = value
+    return symbols
+
+
+def read_named_exports(items, elf, image, base):
+    """Returns {name: address} for --export-name's NAME or NAME=SYMBOL items."""
+    symbols = read_symbols(elf)
+    named = {}
+    for item in items:
+        name, _, symbol = item.partition("=")
+        symbol = symbol or name
+        if symbol not in symbols:
+            fail(f"--export-name {item}: the ELF has no symbol {symbol}")
+        if name in named:
+            fail(f"--export-name {name} is given twice")
+        if not base + PE_HEADER_BYTES <= symbols[symbol] < base + len(image):
+            fail(f"--export-name {item}: {symbol} at {symbols[symbol]:#010x} is outside the image")
+        named[name] = symbols[symbol]
+    return named
+
+
+def add_named_exports(image, offset, named, module_name, base):
+    """Writes the exports by name as a little-endian PE export directory, in the shape the Plex 0.0.0.7 runtime's
+    agcore.dll and npctrl.dll have, and returns its offset and size for header 0x00E10402. AddressOfFunctions,
+    AddressOfNames, AddressOfNameOrdinals and the names' entries are relative to the directory, the functions'
+    entries and the module's name are image offsets; Xenia reads it the same way (xenia:src/xenia/cpu/
+    xex_module.cc:158-195), and XexGetProcedureAddress takes a name's address in place of an ordinal."""
+    names = sorted(named)
+    count = len(names)
+    functions_at = 40
+    names_at = functions_at + 4 * count
+    ordinals_at = names_at + 4 * count
+    strings_at = ordinals_at + 2 * count
+    directory = align(offset, 16)
+    strings = b""
+    name_offsets = []
+    for name in names:
+        name_offsets.append(strings_at + len(strings))
+        strings += name.encode() + b"\0"
+    module_name_offset = directory + strings_at + len(strings)
+    strings += module_name.encode() + b"\0"
+    table = struct.pack("<IIHHIIIIIII", 0, 0, 0, 0, module_name_offset, FIRST_ORDINAL, count, count, functions_at,
+        names_at, ordinals_at)
+    table += struct.pack(f"<{count}I", *[named[name] - base for name in names])
+    table += struct.pack(f"<{count}I", *name_offsets)
+    table += struct.pack(f"<{count}H", *range(count))
+    table += strings
+    if directory + len(table) > PE_HEADER_BYTES:
+        fail("the exports by name don't fit beside the PE headers")
+    image[directory:directory + len(table)] = table
+    return directory, len(table)
 
 
 def import_libraries_header(libraries):
@@ -417,7 +487,7 @@ def optional_header_table(inline, blocks, data_offset, placed):
     return table, data
 
 
-def build_xex(image, runs, entry, libraries, resources, export_table, args):
+def build_xex(image, runs, entry, libraries, resources, export_table, named_directory, args):
     # A module with no imports has no import libraries header, as the platform's .ni.dll files don't.
     imports, import_digest = import_libraries_header(libraries) if libraries else (b"", bytes(20))
     descriptors, image_digest = page_descriptors(image, runs)
@@ -440,6 +510,8 @@ def build_xex(image, runs, entry, libraries, resources, export_table, args):
         blocks[HEADER_TLS_INFO] = struct.pack(">IIII", TLS_SLOTS, 0, 0, 0)
     if resources:
         blocks[HEADER_RESOURCE_INFO] = resources
+    if named_directory:
+        blocks[HEADER_EXPORTS_BY_NAME] = struct.pack(">II", *named_directory)
     placed = {HEADER_IMPORT_LIBRARIES: 0} if libraries else {}
 
     header_count = len(inline) + len(blocks) + len(placed)
@@ -495,6 +567,8 @@ def main():
     parser.add_argument("--version", type=parse_version, default=0, help="the title's version, as 1.2.300.4")
     parser.add_argument("--dll", action="store_true", help="a DLL, exporting what its .xsdk.exports section lists")
     parser.add_argument("--base", type=lambda text: int(text, 16), default=TITLE_BASE, help="where the image loads")
+    parser.add_argument("--export-name", action="append", default=[], metavar="NAME[=SYMBOL]",
+        help="a DLL's: export the ELF symbol SYMBOL (default: NAME) by name too, as NAME")
     args = parser.parse_args()
     if args.dll and args.title_name:
         parser.error("a DLL has no title name")
@@ -502,9 +576,12 @@ def main():
         parser.error("a title loads at 0x82000000, as src/xsdk.ld links it; --base is for a DLL")
     if args.base % PAGE_BYTES:
         parser.error("--base must be a multiple of 64 KB")
+    if args.export_name and not args.dll:
+        parser.error("only a DLL exports: --export-name is for a DLL")
 
     base = args.base
-    entry, sections = read_elf(args.elf.read_bytes())
+    elf = args.elf.read_bytes()
+    entry, sections = read_elf(elf)
     first = min(s["address"] for s in sections if s["flags"] & SHF_ALLOC and s["size"])
     if not base + PE_HEADER_BYTES <= first < base + PAGE_BYTES:
         fail(f"the ELF is linked at {first - PE_HEADER_BYTES:#010x}, not at {base:#010x}: "
@@ -520,8 +597,14 @@ def main():
     patch_import_records(image, libraries, base)
     headers_end = pe_headers(image, runs, entry, args.stack_size, base)
     resources = add_title_name(image, headers_end, args.title_id, args.title_name, base) if args.title_name else b""
-    export_table = add_export_table(image, headers_end, exports, base) if exports else 0
-    args.xex.write_bytes(build_xex(image, runs, entry, libraries, resources, export_table, args))
+    export_table = 0
+    if exports:
+        export_table, headers_end = add_export_table(image, headers_end, exports, base)
+    named_directory = None
+    if args.export_name:
+        named = read_named_exports(args.export_name, elf, image, base)
+        named_directory = add_named_exports(image, headers_end, named, args.xex.name, base)
+    args.xex.write_bytes(build_xex(image, runs, entry, libraries, resources, export_table, named_directory, args))
 
 
 if __name__ == "__main__":
