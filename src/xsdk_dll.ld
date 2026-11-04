@@ -1,6 +1,7 @@
 /* Lays a DLL out for elf2xex --dll, as xsdk.ld lays out a title: read-only, code and writable data each start on their
    own 64 KB page. Link with -Wl,--defsym=xsdk_dll_base=<address> and give elf2xex the same --base. The loader calls
-   DllMain and nothing else, so a DLL with constructors or destructors fails to link. */
+   DllMain and nothing else, so a DLL with constructors or destructors fails to link; so does one with __thread
+   variables, which nothing in a DLL would give storage. */
 OUTPUT_FORMAT("elf32-powerpc")
 OUTPUT_ARCH(powerpc:common)
 ENTRY(DllMain)
@@ -30,6 +31,13 @@ SECTIONS
 		KEEP(*(.preinit_array .init_array .init_array.* .fini_array .fini_array.*))
 	}
 	ASSERT(SIZEOF(.init_array) == 0, "a DLL's constructors and destructors would never run: nothing calls them")
+	.tdata : {
+		*(.tdata .tdata.* .gnu.linkonce.td.* .tbss .tbss.* .gnu.linkonce.tb.*)
+	}
+	ASSERT(SIZEOF(.tdata) == 0, "a DLL has no TLS header: __thread variables would have no storage")
+	/* This toolchain makes __thread emulated TLS, which libgcc keeps through pthread keys and malloc: xsdk_start sets
+	   those up in a title, and nothing does in a DLL. */
+	ASSERT(!DEFINED(__emutls_get_address), "a DLL can't have __thread variables: emulated TLS needs xsdk_start")
 	.data : {
 		*(.data .data.* .gnu.linkonce.d.*)
 		*(.sdata .sdata.*)

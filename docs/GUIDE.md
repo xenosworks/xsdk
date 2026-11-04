@@ -499,7 +499,7 @@ python3 tools/elf2xex.py --dll --base 8E000000 dll.elf dll.xex
 | Call | Leaves set | Undone by | Threads |
 |---|---|---|---|
 | `XSDK_EXPORT(ordinal, function)` | in the DLL's source, `function` exported under `ordinal`, from 1 | | |
-| `XexLoadImage(path, XEX_LOAD_IMAGE_DLL, 0, &module)` | the DLL loaded, or another reference to it if it is, and its handle in `module`; its `DllMain` called with `DLL_PROCESS_ATTACH` the first time | `XexUnloadImage` | any |
+| `XexLoadImage(path, XEX_LOAD_IMAGE_TITLE \| XEX_LOAD_IMAGE_DLL, 0, &module)` | the DLL loaded, or another reference to it if it is, and its handle in `module`; its `DllMain` called with `DLL_PROCESS_ATTACH` the first time | `XexUnloadImage` | any |
 | `XexGetProcedureAddress(module, ordinal, &address)` | the address of what the DLL exports under `ordinal` | | any |
 | `XexUnloadImage(module)` | one reference fewer; the last calls `DllMain` with `DLL_PROCESS_DETACH` and unloads it | | any |
 
@@ -508,7 +508,13 @@ python3 tools/elf2xex.py --dll --base 8E000000 dll.elf dll.xex
   them; dll_check passed each of these in xenia-edge, as Xenia's loader has them
   (xenia:src/xenia/kernel/kernel_state.cc:440-470, 594-633). Nothing else runs: there's no `xsdk_start`, so a DLL that
   wants the C library's heap, files or threads sets up what they need itself, and one with C++ constructors or
-  destructors fails to link (`src/xsdk_dll.ld`).
+  destructors fails to link (`src/xsdk_dll.ld`), as does one with `__thread` variables: the toolchain makes them
+  emulated TLS, which libgcc keeps through pthread keys and the heap that `xsdk_start` sets up in a title, and a DLL
+  has no TLS header either.
+- **The flags repeat the image's module flags.** elf2xex makes a DLL a title module and a DLL (module flags 0x9, as
+  the retail runtime's `xcoreclr.dll`, `agcore.dll` and `.ni.dll` images are), so it's loaded with
+  `XEX_LOAD_IMAGE_TITLE | XEX_LOAD_IMAGE_DLL`. The console refused `XEX_LOAD_IMAGE_DLL` alone with
+  `STATUS_ACCESS_DENIED` (0xC0000022); Xenia ignores the flags.
 - **Kernel and XAM imports** work as in a title: the DLL links their stubs from `libxsdk.a`, and the loader binds them
   as it loads the DLL.
 - **The base** is a multiple of 64 KB, and the whole image lies between 0x80000000 and 0x90000000, where images take

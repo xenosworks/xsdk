@@ -16,8 +16,9 @@ SHF_ALLOC = 0x2
 SHF_EXECINSTR = 0x4
 SHT_NOBITS = 8
 
-# Titles load here; a DLL gives its own with --base, clear of the title's and the other modules'.
-IMAGE_BASE = 0x82000000
+# Titles load here; a DLL gives its own with --base, clear of the title's and the other modules'. The functions below
+# take the image's base as an argument.
+TITLE_BASE = 0x82000000
 PE_HEADER_BYTES = 0x1000
 # Image pages are 64 KB unless the image asks for 4 KB (xenia:src/xenia/kernel/util/xex2_info.h:76).
 PAGE_BYTES = 0x10000
@@ -174,17 +175,17 @@ def section_type(section):
     return SECTION_READONLY
 
 
-def build_image(sections):
+def build_image(sections, base):
     loaded = [s for s in sections if s["flags"] & SHF_ALLOC and s["size"]]
     for section in loaded:
-        if section["address"] < IMAGE_BASE + PE_HEADER_BYTES:
+        if section["address"] < base + PE_HEADER_BYTES:
             fail(f"section {section['name']} overlaps the PE headers")
     end = max(s["address"] + s["size"] for s in loaded)
-    image = bytearray(align(end - IMAGE_BASE, PAGE_BYTES))
+    image = bytearray(align(end - base, PAGE_BYTES))
     page_types = [SECTION_READONLY] + [None] * (len(image) // PAGE_BYTES - 1)
 
     for section in loaded:
-        start = section["address"] - IMAGE_BASE
+        start = section["address"] - base
         image[start:start + len(section["data"])] = section["data"]
         first_page = start // PAGE_BYTES
         last_page = (start + section["size"] - 1) // PAGE_BYTES
@@ -201,17 +202,17 @@ def build_image(sections):
         else:
             runs.append({"type": kind, "first_page": page, "pages": 1})
     for run in runs:
-        start = IMAGE_BASE + run["first_page"] * PAGE_BYTES
+        start = base + run["first_page"] * PAGE_BYTES
         end = start + run["pages"] * PAGE_BYTES
         inside = [s for s in loaded if start <= s["address"] < end]
-        run["start"] = min(s["address"] for s in inside) - IMAGE_BASE if inside else None
-        run["end"] = max(s["address"] + s["size"] for s in inside) - IMAGE_BASE if inside else None
+        run["start"] = min(s["address"] for s in inside) - base if inside else None
+        run["end"] = max(s["address"] + s["size"] for s in inside) - base if inside else None
         run["initialized"] = sum(len(s["data"]) for s in inside)
         run["uninitialized"] = sum(s["size"] - len(s["data"]) for s in inside)
     return image, runs
 
 
-def read_imports(sections, image):
+def read_imports(sections, image, base):
     found = [s for s in sections if s["name"] == ".xsdk.imports"]
     if not found:
         return {}
@@ -228,13 +229,13 @@ def read_imports(sections, image):
             if entry["thunk"]:
                 addresses.append(entry["thunk"])
             for address in addresses:
-                word = struct.unpack_from(">I", image, address - IMAGE_BASE)[0]
+                word = struct.unpack_from(">I", image, address - base)[0]
                 if word & 0xFFFF != entry["ordinal"]:
                     fail(f"{name} ordinal {entry['ordinal']:#x}: record at {address:#010x} reads {word:#010x}")
     return dict(sorted(libraries.items()))
 
 
-def read_exports(sections, image):
+def read_exports(sections, image, base):
     found = [s for s in sections if s["name"] == ".xsdk.exports"]
     if not found:
         return {}
@@ -244,22 +245,22 @@ def read_exports(sections, image):
         ordinal, address = EXPORT_RECORD.unpack_from(data, offset)
         if ordinal < FIRST_ORDINAL or ordinal in exports:
             fail(f"export ordinal {ordinal} is below {FIRST_ORDINAL} or exported twice")
-        if not IMAGE_BASE + PE_HEADER_BYTES <= address < IMAGE_BASE + len(image):
+        if not base + PE_HEADER_BYTES <= address < base + len(image):
             fail(f"export ordinal {ordinal} at {address:#010x} is outside the image")
         exports[ordinal] = address
     return exports
 
 
-def add_export_table(image, offset, exports):
+def add_export_table(image, offset, exports, base):
     ordinals = range(FIRST_ORDINAL, max(exports) + 1)
-    words = [*EXPORT_MAGIC, 0, 0, 0, 0, 0, IMAGE_BASE >> 16, len(ordinals), FIRST_ORDINAL]
-    words += [exports[ordinal] - IMAGE_BASE if ordinal in exports else 0 for ordinal in ordinals]
+    words = [*EXPORT_MAGIC, 0, 0, 0, 0, 0, base >> 16, len(ordinals), FIRST_ORDINAL]
+    words += [exports[ordinal] - base if ordinal in exports else 0 for ordinal in ordinals]
     table = struct.pack(f">{len(words)}I", *words)
     offset = align(offset, 16)
     if offset + len(table) > PE_HEADER_BYTES:
         fail("the export table doesn't fit beside the PE headers")
     image[offset:offset + len(table)] = table
-    return IMAGE_BASE + offset
+    return base + offset
 
 
 def import_libraries_header(libraries):
@@ -296,7 +297,7 @@ def align_bytes(data, alignment):
     return data + bytes(align(len(data), alignment) - len(data))
 
 
-def pe_headers(image, runs, entry, stack_bytes):
+def pe_headers(image, runs, entry, stack_bytes, base):
     sections = [run for run in runs if run["start"] is not None]
     code = [run for run in sections if run["type"] == SECTION_CODE]
     data = [run for run in sections if run["type"] != SECTION_CODE]
@@ -306,10 +307,10 @@ def pe_headers(image, runs, entry, stack_bytes):
         sum(run["initialized"] for run in code),
         sum(run["initialized"] for run in data),
         sum(run["uninitialized"] for run in sections),
-        entry - IMAGE_BASE,
+        entry - base,
         code[0]["start"] if code else 0,
         data[0]["start"] if data else 0,
-        IMAGE_BASE)
+        base)
     optional += struct.pack("<IIHHHHHHIIIIHHIIIIII", PE_HEADER_BYTES, PE_HEADER_BYTES, 0, 0, 0, 0, 0, 0, 0, len(image),
         PE_HEADER_BYTES, 0, PE_SUBSYSTEM_XBOX, 0, stack_bytes, stack_bytes, 0, 0, 0, 16)
     optional += bytes(16 * 8)
@@ -343,13 +344,13 @@ def title_database(name):
     return struct.pack(">4sIIIII", b"XDBF", XDBF_VERSION, 2, 2, 1, 1) + entries + free + xstc + xstr
 
 
-def add_title_name(image, headers_end, title_id, name):
+def add_title_name(image, headers_end, title_id, name, base):
     database = title_database(name)
     offset = align(headers_end, 16)
     if offset + len(database) > TITLE_NAME_END:
         fail("the title name doesn't fit beside the PE headers")
     image[offset:offset + len(database)] = database
-    return struct.pack(">I8sII", 4 + 16, f"{title_id:08X}".encode(), IMAGE_BASE + offset, len(database))
+    return struct.pack(">I8sII", 4 + 16, f"{title_id:08X}".encode(), base + offset, len(database))
 
 
 def page_descriptors(image, runs):
@@ -426,7 +427,7 @@ def build_xex(image, runs, entry, libraries, resources, export_table, args):
 
     inline = {
         HEADER_ENTRY_POINT: entry,
-        HEADER_IMAGE_BASE_ADDRESS: IMAGE_BASE,
+        HEADER_IMAGE_BASE_ADDRESS: args.base,
         HEADER_SYSTEM_FLAGS: SYSTEM_NO_FORCED_REBOOT | SYSTEM_HANDLE_GAMEPAD_DISCONNECT,
     }
     blocks = {
@@ -454,7 +455,7 @@ def build_xex(image, runs, entry, libraries, resources, export_table, args):
 
     security = bytearray(SECURITY_INFO_BYTES)
     struct.pack_into(">II", security, 0, security_bytes, len(image))
-    struct.pack_into(">III20sI20s", security, 0x108, IMAGE_INFO_BYTES, 0, IMAGE_BASE, image_digest, len(libraries),
+    struct.pack_into(">III20sI20s", security, 0x108, IMAGE_INFO_BYTES, 0, args.base, image_digest, len(libraries),
         import_digest)
     struct.pack_into(">I", security, 0x160, export_table)
     struct.pack_into(">III", security, 0x178, REGION_ALL, MEDIA_ALL, len(descriptors) // PAGE_DESCRIPTOR_BYTES)
@@ -474,18 +475,17 @@ def build_xex(image, runs, entry, libraries, resources, export_table, args):
     return bytes(header) + image_data
 
 
-def patch_import_records(image, libraries):
+def patch_import_records(image, libraries, base):
     for index, imports in enumerate(libraries.values()):
         for entry in imports:
             records = [(entry["slot"], 0)]
             if entry["thunk"]:
                 records += [(entry["thunk"], RECORD_THUNK), (entry["thunk"] + 4, RECORD_THUNK_SECOND)]
             for address, kind in records:
-                struct.pack_into(">I", image, address - IMAGE_BASE, kind | index << 16 | entry["ordinal"])
+                struct.pack_into(">I", image, address - base, kind | index << 16 | entry["ordinal"])
 
 
 def main():
-    global IMAGE_BASE
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("elf", type=Path)
     parser.add_argument("xex", type=Path)
@@ -494,33 +494,33 @@ def main():
     parser.add_argument("--title-name", help="the name the dashboard shows")
     parser.add_argument("--version", type=parse_version, default=0, help="the title's version, as 1.2.300.4")
     parser.add_argument("--dll", action="store_true", help="a DLL, exporting what its .xsdk.exports section lists")
-    parser.add_argument("--base", type=lambda text: int(text, 16), default=IMAGE_BASE, help="where the image loads")
+    parser.add_argument("--base", type=lambda text: int(text, 16), default=TITLE_BASE, help="where the image loads")
     args = parser.parse_args()
     if args.dll and args.title_name:
         parser.error("a DLL has no title name")
-    if args.base != IMAGE_BASE and not args.dll:
+    if args.base != TITLE_BASE and not args.dll:
         parser.error("a title loads at 0x82000000, as src/xsdk.ld links it; --base is for a DLL")
     if args.base % PAGE_BYTES:
         parser.error("--base must be a multiple of 64 KB")
 
-    IMAGE_BASE = args.base
+    base = args.base
     entry, sections = read_elf(args.elf.read_bytes())
     first = min(s["address"] for s in sections if s["flags"] & SHF_ALLOC and s["size"])
-    if not IMAGE_BASE + PE_HEADER_BYTES <= first < IMAGE_BASE + PAGE_BYTES:
-        fail(f"the ELF is linked at {first - PE_HEADER_BYTES:#010x}, not at {IMAGE_BASE:#010x}: "
+    if not base + PE_HEADER_BYTES <= first < base + PAGE_BYTES:
+        fail(f"the ELF is linked at {first - PE_HEADER_BYTES:#010x}, not at {base:#010x}: "
             "give elf2xex the base it was linked at")
-    image, runs = build_image(sections)
-    if not (LARGE_PAGE_IMAGES_START <= IMAGE_BASE and IMAGE_BASE + len(image) <= LARGE_PAGE_IMAGES_END):
-        fail(f"the image, {IMAGE_BASE:#010x} to {IMAGE_BASE + len(image):#010x}, must lie within "
+    image, runs = build_image(sections, base)
+    if not (LARGE_PAGE_IMAGES_START <= base and base + len(image) <= LARGE_PAGE_IMAGES_END):
+        fail(f"the image, {base:#010x} to {base + len(image):#010x}, must lie within "
             f"{LARGE_PAGE_IMAGES_START:#010x} to {LARGE_PAGE_IMAGES_END:#010x}, where images take 64 KB pages")
-    libraries = read_imports(sections, image)
-    exports = read_exports(sections, image)
+    libraries = read_imports(sections, image, base)
+    exports = read_exports(sections, image, base)
     if exports and not args.dll:
         fail("only a DLL exports")
-    patch_import_records(image, libraries)
-    headers_end = pe_headers(image, runs, entry, args.stack_size)
-    resources = add_title_name(image, headers_end, args.title_id, args.title_name) if args.title_name else b""
-    export_table = add_export_table(image, headers_end, exports) if exports else 0
+    patch_import_records(image, libraries, base)
+    headers_end = pe_headers(image, runs, entry, args.stack_size, base)
+    resources = add_title_name(image, headers_end, args.title_id, args.title_name, base) if args.title_name else b""
+    export_table = add_export_table(image, headers_end, exports, base) if exports else 0
     args.xex.write_bytes(build_xex(image, runs, entry, libraries, resources, export_table, args))
 
 

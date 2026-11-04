@@ -55,7 +55,7 @@ static void *thread_body(void *argument)
 int main(void)
 {
 	HANDLE module = 0;
-	const NTSTATUS loaded = XexLoadImage(DLL_PATH, XEX_LOAD_IMAGE_DLL, 0, &module);
+	const NTSTATUS loaded = XexLoadImage(DLL_PATH, XEX_LOAD_IMAGE_TITLE | XEX_LOAD_IMAGE_DLL, 0, &module);
 	xsdk_log_write("dll: XexLoadImage(%s): 0x%08X, handle 0x%08X", DLL_PATH, (unsigned)loaded, (unsigned)module);
 	check("XexLoadImage loads the DLL beside the title", NT_SUCCESS(loaded) && module);
 	if (!NT_SUCCESS(loaded) || !module) {
@@ -106,7 +106,7 @@ int main(void)
 	check("XexGetModuleHandle finds the DLL by name", named == 0 && by_name == module);
 
 	HANDLE again = 0;
-	const NTSTATUS reloaded = XexLoadImage(DLL_PATH, XEX_LOAD_IMAGE_DLL, 0, &again);
+	const NTSTATUS reloaded = XexLoadImage(DLL_PATH, XEX_LOAD_IMAGE_TITLE | XEX_LOAD_IMAGE_DLL, 0, &again);
 	check("loading it again gives the same module without running DllMain again",
 		NT_SUCCESS(reloaded) && again == module && calls(DLL_PROCESS_ATTACH) == 1);
 
@@ -125,7 +125,7 @@ int main(void)
 		NT_SUCCESS(last_unload) && process_detaches == 1 && unloaded);
 
 	HANDLE missing = 0;
-	const NTSTATUS not_there = XexLoadImage(MISSING_PATH, XEX_LOAD_IMAGE_DLL, 0, &missing);
+	const NTSTATUS not_there = XexLoadImage(MISSING_PATH, XEX_LOAD_IMAGE_TITLE | XEX_LOAD_IMAGE_DLL, 0, &missing);
 	xsdk_log_write("dll: XexLoadImage(%s): 0x%08X", MISSING_PATH, (unsigned)not_there);
 	check("loading a DLL that isn't there fails", !NT_SUCCESS(not_there) && !missing);
 
