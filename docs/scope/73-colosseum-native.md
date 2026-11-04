@@ -1,6 +1,7 @@
 # Milestone 73: Pokémon Colosseum built natively from its decomp
 
-Proposed on 2026-11-03, at the user's request. Milestone 71 (the GameCube recompiler, for the same game) is paused.
+Proposed on 2026-11-03, at the user's request, and agreed by the user as proposed, decisions included (2026-11-03).
+Milestone 71 (the GameCube recompiler, for the same game) is paused.
 
 ## Why
 
