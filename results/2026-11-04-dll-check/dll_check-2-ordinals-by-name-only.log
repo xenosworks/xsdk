@@ -1,0 +1,14 @@
+log: game:\default.log
+log: named after \Device\Harddisk0\Partition1\Apps\xsdk_dll\default.xex
+log: no socket for the network log: errno 13
+dll: XexLoadImage(game:\dll_target.xex): 0x00000000, handle 0x30000008
+PASS: dll: XexLoadImage loads the DLL beside the title
+dll: ordinal 1: 0x00000000 at 0x8F010058
+dll: ordinal 2: 0x00000000 at 0x8F010098
+dll: ordinal 3: 0xC0000263 at 0x00000000
+dll: ordinal 4: 0xC0000263 at 0x00000000
+dll: ordinal 5: 0xC0000263 at 0x00000000
+dll: ordinal 6: 0xC0000263 at 0x00000000
+FAIL: dll: each export's ordinal gives an address in the DLL, at its --base
+dll_check: 1 passed, 1 failed
+exit: status 1

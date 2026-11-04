@@ -1,0 +1,7 @@
+log: game:\default.log
+log: named after \Device\Harddisk0\Partition1\Apps\xsdk_dll\default.xex
+log: no socket for the network log: errno 13
+dll: XexLoadImage(game:\dll_target.xex): 0xC0000018, handle 0x00000000
+FAIL: dll: XexLoadImage loads the DLL beside the title
+dll_check: 0 passed, 1 failed
+exit: status 1

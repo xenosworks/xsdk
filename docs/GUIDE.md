@@ -483,6 +483,58 @@ console").
   that back when it's done, as launch_target does for launch_check. A title not built with xsdk goes to the dashboard
   when it exits.
 
+## DLLs
+
+[tests/dll_check.c](../tests/dll_check.c), [tests/dll_target.c](../tests/dll_target.c), through `kernel.h` and
+`export.h`
+
+A DLL is a `.xex` of its own that a title, or another program on the console, loads and calls by ordinal or by name. Link it with
+`src/xsdk_dll.ld` at a base of its own, and give `elf2xex --dll` the same base:
+
+```make
+$(CC) -static -nostdlib -T src/xsdk_dll.ld -Wl,--defsym=xsdk_dll_base=0x8F000000 -o dll.elf dll.o $(LIBS)
+python3 tools/elf2xex.py --dll --base 8F000000 dll.elf dll.xex
+```
+
+The base has to be free in the process that loads the DLL, which Xenia doesn't show. On a console (2.0.17559)
+`XexLoadImage` answers `STATUS_CONFLICTING_ADDRESSES` at 0x8E000000 in an xsdk title, and loads at 0x8F000000. In a
+Silverlight app it answers the same at 0x8A000000, 0x8C000000 and 0x8E000000, and loads at 0x8D000000 and 0x8F000000.
+
+| Call | Leaves set | Undone by | Threads |
+|---|---|---|---|
+| `XSDK_EXPORT(ordinal, function)` | in the DLL's source, `function` exported under `ordinal`, from 1 | | |
+| `XexLoadImage(path, XEX_LOAD_IMAGE_TITLE \| XEX_LOAD_IMAGE_DLL, 0, &module)` | the DLL loaded, or another reference to it if it is, and its handle in `module`; its `DllMain` called with `DLL_PROCESS_ATTACH` the first time | `XexUnloadImage` | any |
+| `XexGetProcedureAddress(module, ordinal, &address)` | the address of what the DLL exports under `ordinal` | | any |
+| `XexGetProcedureAddress(module, (uint32_t)(uintptr_t)"name", &address)` | the address of what the DLL exports under `name` (`elf2xex --export-name`) | | any |
+| `XexUnloadImage(module)` | one reference fewer; the last calls `DllMain` with `DLL_PROCESS_DETACH` and unloads it | | any |
+
+- **`DllMain(module, reason, reserved)` is the DLL's entry,** returning 1. The loader calls it as the DLL loads and
+  unloads, and with `DLL_THREAD_ATTACH` and `DLL_THREAD_DETACH` as each thread starts and ends, the title's own among
+  them; dll_check passed each of these in xenia-edge, as Xenia's loader has them
+  (xenia:src/xenia/kernel/kernel_state.cc:440-470, 594-633). Nothing else runs: there's no `xsdk_start`, so a DLL that
+  wants the C library's heap, files or threads sets up what they need itself, and one with C++ constructors or
+  destructors fails to link (`src/xsdk_dll.ld`), as does one with `__thread` variables: the toolchain makes them
+  emulated TLS, which libgcc keeps through pthread keys and the heap that `xsdk_start` sets up in a title, and a DLL
+  has no TLS header either.
+- **The flags repeat the image's module flags.** elf2xex makes a DLL a title module and a DLL (module flags 0x9, as
+  the retail runtime's `xcoreclr.dll`, `agcore.dll` and `.ni.dll` images are), so it's loaded with
+  `XEX_LOAD_IMAGE_TITLE | XEX_LOAD_IMAGE_DLL`. The console refused `XEX_LOAD_IMAGE_DLL` alone with
+  `STATUS_ACCESS_DENIED` (0xC0000022); Xenia ignores the flags.
+- **Kernel and XAM imports** work as in a title: the DLL links their stubs from `libxsdk.a`, and the loader binds them
+  as it loads the DLL.
+- **The base** is a multiple of 64 KB, and the whole image lies between 0x80000000 and 0x90000000, where images take
+  64 KB pages, clear of the title's image (0x82000000 and up) and of every other module loaded beside it. elf2xex
+  refuses an image outside that range, and a `--base` other than the one the DLL was linked at.
+- **Ordinals** start at 1. One the DLL doesn't export has 0 in the export table, which Xenia gives back as the image's
+  base rather than failing (xenia:src/xenia/cpu/xex_module.cc:123-138), so export ordinals without gaps.
+- **Names** are for a program that looks a DLL's functions up by name, as the retail runtime's `xcoreclr.dll` does
+  its JIT's `getJit`. `elf2xex --export-name NAME=SYMBOL` exports the ELF symbol `SYMBOL` as `NAME`, and
+  `--export-name NAME` one under its own name, through a PE export directory that header 0x00E10402 points to, in
+  the shape the Plex runtime's `agcore.dll` has (xenia:src/xenia/cpu/xex_module.cc:158-195). A name needs no
+  ordinal; XexGetProcedureAddress takes the name's address where the ordinal would go, any value above 0xFFFF.
+- **On the console:** not run yet. The XEX layout follows retail DLLs' (`tools/elf2xex.py`), and dll_check is the test
+  to settle it.
+
 ## Input and audio through the kernel
 
 [samples/hello](../samples/hello/main.c), [tests/audio_check.c](../tests/audio_check.c), and SDL3's for both in

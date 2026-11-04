@@ -5396,3 +5396,25 @@ on a file and a folder in `game:` through `NtSetInformationFile`'s basic class (
   0xC000000D.
 - **Times keep 2-second steps, rounded up:** a write time of 1200000000.5 s reads back as 1200000002, and one set to
   now, 1793468928 and a fraction, as 1793468930. A whole even second reads back as set.
+
+## A DLL on the console (2026-11-04)
+
+dll_check, with dll_target beside it, run from `/Hdd1/Apps/xsdk_dll` on a 2.0.17559 console
+(`results/2026-11-04-dll-check/`). It took three runs; the first two found what Xenia doesn't check:
+- **0x8E000000 is taken.** `XexLoadImage` answered 0xC0000018 (STATUS_CONFLICTING_ADDRESSES) for dll_target at its
+  base then (`dll_check-1-base-8E000000.log`). At 0x8F000000 it loads. A Silverlight app's process, probed the same
+  way, has 0x8A000000, 0x8C000000 and 0x8E000000 taken and 0x8D000000 and 0x8F000000 free. The Makefile now builds
+  dll_target at 0x8F000000.
+- **The kernel finds ordinals through the exports by name when a DLL has them.** `XexGetProcedureAddress` resolved
+  ordinals 1 and 2, the second to dll_target_count's address, and answered 0xC0000263 for 3 to 6
+  (`dll_check-2-ordinals-by-name-only.log`). Its lookup (xboxkrnl 0x8007A790) reads header 0x00E10402's PE export
+  directory whenever the module has one, for an ordinal as `AddressOfFunctions[ordinal - Base]`, and never reads the
+  export table then. That directory listed only the two named functions. elf2xex now lists every ordinal export in it,
+  from Base on, the names pointing at their ordinals' entries.
+- **Then all 15 checks passed** (`dll_check-3-fixed.log`), the same as in xenia-edge: the six ordinals and two names,
+  a call into the DLL, its data and its own kernel import, `DllMain` for the process and a thread, a second load and
+  two unloads, and a DLL that isn't there.
+
+Not settled: after the second run, which stopped early and exited with the DLL still loaded, the console showed System
+Error E71. The third run unloads the DLL before it exits, so it doesn't go that way. The network log didn't start in any
+of the runs ("no socket for the network log: errno 13"), so these logs come from `game:\`.
