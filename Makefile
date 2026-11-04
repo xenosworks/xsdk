@@ -171,8 +171,9 @@ $(BUILD)/launch_target.xex: $(BUILD)/launch_target.elf tools/elf2xex.py
 	$(PYTHON) tools/elf2xex.py --title-id 0x58534453 --title-name "xsdk launch_target" $< $@
 
 # A DLL and the title that loads it from beside itself (docs/GUIDE.md, "DLLs"). The DLL's base is clear of the title's
-# image; tests/dll_check.c checks its exports' addresses against it.
-DLL_TARGET_BASE := 8E000000
+# image and free on a console, where 0x8E000000 is taken (docs/GUIDE.md); tests/dll_check.c checks its exports'
+# addresses against it.
+DLL_TARGET_BASE := 8F000000
 
 $(BUILD)/dll_target.elf: $(BUILD)/tests/dll_target.o $(BUILD)/libxsdk.a src/xsdk_dll.ld
 	$(CC) -static -nostdlib -T src/xsdk_dll.ld -Wl,--defsym=xsdk_dll_base=0x$(DLL_TARGET_BASE) -o $@ $< $(LIBS)

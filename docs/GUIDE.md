@@ -492,9 +492,13 @@ A DLL is a `.xex` of its own that a title, or another program on the console, lo
 `src/xsdk_dll.ld` at a base of its own, and give `elf2xex --dll` the same base:
 
 ```make
-$(CC) -static -nostdlib -T src/xsdk_dll.ld -Wl,--defsym=xsdk_dll_base=0x8E000000 -o dll.elf dll.o $(LIBS)
-python3 tools/elf2xex.py --dll --base 8E000000 dll.elf dll.xex
+$(CC) -static -nostdlib -T src/xsdk_dll.ld -Wl,--defsym=xsdk_dll_base=0x8F000000 -o dll.elf dll.o $(LIBS)
+python3 tools/elf2xex.py --dll --base 8F000000 dll.elf dll.xex
 ```
+
+The base has to be free in the process that loads the DLL, which Xenia doesn't show. On a console (2.0.17559)
+`XexLoadImage` answers `STATUS_CONFLICTING_ADDRESSES` at 0x8E000000 in an xsdk title, and loads at 0x8F000000. In a
+Silverlight app it answers the same at 0x8A000000, 0x8C000000 and 0x8E000000, and loads at 0x8D000000 and 0x8F000000.
 
 | Call | Leaves set | Undone by | Threads |
 |---|---|---|---|

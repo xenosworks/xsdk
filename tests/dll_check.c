@@ -23,7 +23,7 @@ enum {
 	ORDINAL_WATCH = 6,
 	EXPORTS = 6,
 	// Where the Makefile links it: its --base, and the 64 KB of its first page and more the test DLL fills.
-	DLL_BASE = 0x8E000000,
+	DLL_BASE = 0x8F000000,
 	DLL_BYTES = 0x40000,
 };
 

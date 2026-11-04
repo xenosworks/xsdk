@@ -301,16 +301,24 @@ def read_named_exports(items, elf, image, base):
     return named
 
 
-def add_named_exports(image, offset, named, module_name, base):
+def add_named_exports(image, offset, named, exports, module_name, base):
     """Writes the exports by name as a little-endian PE export directory, in the shape the Plex 0.0.0.7 runtime's
     agcore.dll and npctrl.dll have, and returns its offset and size for header 0x00E10402. AddressOfFunctions,
     AddressOfNames, AddressOfNameOrdinals and the names' entries are relative to the directory, the functions'
     entries and the module's name are image offsets; Xenia reads it the same way (xenia:src/xenia/cpu/
-    xex_module.cc:158-195), and XexGetProcedureAddress takes a name's address in place of an ordinal."""
+    xex_module.cc:158-195), and XexGetProcedureAddress takes a name's address in place of an ordinal.
+
+    A console's kernel (2.0.17559) finds ordinals in this directory too when the module has one, as AddressOfFunctions
+    at ordinal - Base, and never reads the export table then (xboxkrnl 0x8007A790). So the functions are the ordinal
+    exports from Base on, with 0 for an ordinal not exported, then each named function that has no ordinal."""
+    functions = [exports.get(ordinal, 0) for ordinal in range(FIRST_ORDINAL, max(exports, default=0) + 1)]
     names = sorted(named)
+    for name in names:
+        if named[name] not in functions:
+            functions.append(named[name])
     count = len(names)
     functions_at = 40
-    names_at = functions_at + 4 * count
+    names_at = functions_at + 4 * len(functions)
     ordinals_at = names_at + 4 * count
     strings_at = ordinals_at + 2 * count
     directory = align(offset, 16)
@@ -321,11 +329,11 @@ def add_named_exports(image, offset, named, module_name, base):
         strings += name.encode() + b"\0"
     module_name_offset = directory + strings_at + len(strings)
     strings += module_name.encode() + b"\0"
-    table = struct.pack("<IIHHIIIIIII", 0, 0, 0, 0, module_name_offset, FIRST_ORDINAL, count, count, functions_at,
-        names_at, ordinals_at)
-    table += struct.pack(f"<{count}I", *[named[name] - base for name in names])
+    table = struct.pack("<IIHHIIIIIII", 0, 0, 0, 0, module_name_offset, FIRST_ORDINAL, len(functions), count,
+        functions_at, names_at, ordinals_at)
+    table += struct.pack(f"<{len(functions)}I", *[address - base if address else 0 for address in functions])
     table += struct.pack(f"<{count}I", *name_offsets)
-    table += struct.pack(f"<{count}H", *range(count))
+    table += struct.pack(f"<{count}H", *[functions.index(named[name]) for name in names])
     table += strings
     if directory + len(table) > PE_HEADER_BYTES:
         fail("the exports by name don't fit beside the PE headers")
@@ -605,7 +613,7 @@ def main():
     named_directory = None
     if args.export_name:
         named = read_named_exports(args.export_name, elf, image, base)
-        named_directory = add_named_exports(image, headers_end, named, args.xex.name, base)
+        named_directory = add_named_exports(image, headers_end, named, exports, args.xex.name, base)
     args.xex.write_bytes(build_xex(image, runs, entry, libraries, resources, export_table, named_directory, args))
 
 

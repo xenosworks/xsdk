@@ -1,0 +1,32 @@
+log: game:\default.log
+log: named after \Device\Harddisk0\Partition1\Apps\xsdk_dll\default.xex
+log: no socket for the network log: errno 13
+dll: XexLoadImage(game:\dll_target.xex): 0x00000000, handle 0x30000008
+PASS: dll: XexLoadImage loads the DLL beside the title
+dll: ordinal 1: 0x00000000 at 0x8F010058
+dll: ordinal 2: 0x00000000 at 0x8F010060
+dll: ordinal 3: 0x00000000 at 0x8F010088
+dll: ordinal 4: 0x00000000 at 0x8F010098
+dll: ordinal 5: 0x00000000 at 0x8F0100B0
+dll: ordinal 6: 0x00000000 at 0x8F0100D0
+PASS: dll: each export's ordinal gives an address in the DLL, at its --base
+PASS: dll: an exported function runs: 2 + 3 is 5
+PASS: dll: the DLL's read-only data is there
+PASS: dll: the DLL's data starts as linked and can be written
+dll: KeQueryPerformanceFrequency through the DLL: 50000000
+PASS: dll: the DLL's own kernel import is bound
+dll: by name: add 0x00000000 at 0x8F010058, dll_target_count 0x00000000 at 0x8F010098, dll_target_none 0xC0000263
+PASS: dll: a name gives the address its ordinal does
+PASS: dll: a name the DLL doesn't export fails
+PASS: dll: DllMain ran once with DLL_PROCESS_ATTACH as the DLL loaded
+dll: a thread: DLL_THREAD_ATTACH 0 to 1, DLL_THREAD_DETACH 0 to 1
+PASS: dll: a new thread calls DllMain with DLL_THREAD_ATTACH and DLL_THREAD_DETACH
+PASS: dll: XexGetModuleHandle finds the DLL by name
+PASS: dll: loading it again gives the same module without running DllMain again
+PASS: dll: the first of two unloads keeps the DLL loaded
+dll: unloads 0x00000000 and 0x00000000, DLL_PROCESS_DETACH 1
+PASS: dll: the last unload calls DllMain with DLL_PROCESS_DETACH and unloads the DLL
+dll: XexLoadImage(game:\dll_none.xex): 0xC0000034
+PASS: dll: loading a DLL that isn't there fails
+dll_check: 15 passed, 0 failed
+exit: status 0
