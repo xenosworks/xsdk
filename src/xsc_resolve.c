@@ -875,29 +875,31 @@ static bool move_shared(Xsc *x, const XscModule *m, const XscType *types, XscInt
 }
 
 enum {
-	// Vulkan's gl_InstanceIndex, firstInstance included.
+	// Vulkan's gl_VertexIndex, firstVertex or vertexOffset included, and gl_InstanceIndex, firstInstance included.
+	BUILTIN_VERTEX_INDEX = 42,
 	BUILTIN_INSTANCE_INDEX = 43,
 };
 
-// The instance group of a vertex shader reading gl_InstanceIndex takes the register past the blocks, so it shares no
-// group of 4 with a uniform block the GPU may load, as a group loaded mustn't also be set (include/xsdk/gpu.h,
-// xsdk_gpu_load_vertex_constants).
-static bool assign_instance_index(Xsc *x, XscInterface *si, const XscVar *vars, size_t var_count, int64_t *end)
+// The instance group of a vertex shader reading gl_InstanceIndex, then the vertex base of one reading gl_VertexIndex,
+// take the registers past the blocks, so they share no group of 4 with a uniform block the GPU may load, as a group
+// loaded mustn't also be set (include/xsdk/gpu.h, xsdk_gpu_load_vertex_constants).
+static bool assign_index(
+	Xsc *x, XscInterface *si, const XscVar *vars, size_t var_count, int64_t builtin, XscRoleKind kind, int64_t *end)
 {
 	for (size_t i = 0; i < var_count && !si->pixel; i++) {
-		if (vars[i].storage_class != SC_INPUT || vars[i].builtin != BUILTIN_INSTANCE_INDEX)
+		if (vars[i].storage_class != SC_INPUT || vars[i].builtin != builtin)
 			continue;
-		if (!set_role(x, si, vars[i].vid, (XscRole){ XSC_ROLE_INSTANCE_INDEX, *end, 0, 0 }))
+		if (!set_role(x, si, vars[i].vid, (XscRole){ kind, *end, 0, 0 }))
 			return false;
 		(*end)++;
 	}
 	return true;
 }
 
-int64_t xsdk_xsc_instance_index_reg(const XscInterface *si)
+int64_t xsdk_xsc_index_reg(const XscInterface *si, XscRoleKind kind)
 {
 	for (uint32_t id = 0; id < si->role_limit; id++) {
-		if (si->roles[id].kind == XSC_ROLE_INSTANCE_INDEX)
+		if (si->roles[id].kind == kind)
 			return si->roles[id].a;
 	}
 	return XSC_NONE;
@@ -928,8 +930,8 @@ bool xsdk_xsc_resolve_interface(Xsc *x, const XscModule *m, XscInterface *si)
 	for (size_t i = 0; i < var_count; i++) {
 		const XscVar *const v = &vars[i];
 		bool ok = true;
-		// A vertex shader's built-in isn't a stream: gl_InstanceIndex takes a register past the blocks, and loading any
-		// other is refused.
+		// A vertex shader's built-in isn't a stream: gl_InstanceIndex and gl_VertexIndex take a register past the
+		// blocks each, and loading any other is refused.
 		if (v->storage_class == SC_INPUT && (si->pixel || v->builtin == XSC_NONE)) {
 			ok = resolve_input(x, m, types, si, v, &capacity);
 		} else if (v->storage_class == SC_OUTPUT) {
@@ -949,7 +951,8 @@ bool xsdk_xsc_resolve_interface(Xsc *x, const XscModule *m, XscInterface *si)
 	}
 	int64_t end;
 	if (!assign_blocks(x, m, types, si, pending, pending_count, next_const, &capacity, &end) ||
-		!assign_instance_index(x, si, vars, var_count, &end))
+		!assign_index(x, si, vars, var_count, BUILTIN_INSTANCE_INDEX, XSC_ROLE_INSTANCE_INDEX, &end) ||
+		!assign_index(x, si, vars, var_count, BUILTIN_VERTEX_INDEX, XSC_ROLE_VERTEX_INDEX, &end))
 		return false;
 	si->constant_end = (uint32_t)end;
 	if (xsdk_xsc_hlsl(m) && (!d3d9_registers(x, m, types, si) || !move_shared(x, m, types, si)))

@@ -32,6 +32,8 @@ enum {
 	MICROSECONDS_PER_SECOND = 1000000,
 };
 
+_Static_assert(QUEUE_SLOTS >= XSDK_PRESENT_MAX_BUFFERS - 1, "a slot for each frame waiting to show");
+
 // What a queued frame shows: its front buffer, or XAM's surface while the Guide is open (docs/HARDWARE.md, "The Guide
 // shows through VdSwap").
 typedef struct {

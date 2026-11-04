@@ -88,11 +88,15 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | fragment `gl_FragDepth`, stored once outside any `if/else` | `oDepth.x___` after the colour, the record's ps_export_mode 3 (`tests/test_frag_depth.py`) |
 | fragment `gl_FragDepth` stored in both arms of an `if/else`, or before one and again in an arm | merged by a select as a vertex shader's outputs are, exported once; stored on one path alone, refused (see Control flow) |
 | a store into one component of a local or an output, `v.x = …` | an insert into the vector it held (`tests/test_local_stores.py`) |
-| vertex `gl_InstanceIndex`, firstInstance included | t.y, the instance an instanced shader's prologue works out from the instance group, held in every component of a register (see Interface conventions); `float()` of it, integer arithmetic on it and a block array's index at it lower as integers do (`tests/test_instancing.py`). `gl_VertexIndex` is refused |
+| vertex `gl_InstanceIndex`, firstInstance included | t.y, the instance an instanced shader's prologue works out from the instance group, held in every component of a register (see Interface conventions); `float()` of it, integer arithmetic on it and a block array's index at it lower as integers do (`tests/test_instancing.py`) |
+| vertex `gl_VertexIndex`, firstVertex or vertexOffset included | r0.x, the GPU's vertex index (xenia:src/xenia/gpu/spirv_shader_translator.cc:1500-1517), or an instanced shader's t.x, plus the vertex base, held in every component of a register (see Interface conventions); the fetches leave r0 as the GPU filled it (`tests/test_vertex_index.py`) |
+| int shifts by a constant 0 to 31, `<<` and `>>`, and `&` with a constant run of bits | exact float arithmetic for ints below 2^24, scaling by powers of two: `a << n` is `a * 2^n`, `a >> n` `floor(a * 2^-n)`, `a & ~(2^k - 1)` `2^k * floor(a * 2^-k)`, and `a` & the bits from k up to j `2^j * fract(a * 2^-j) - 2^k * fract(a * 2^-k)`, two's complement's bits for negative `a` too (`tests/test_vertex_index.py`) |
+| a vertex shader's interpolator read back, stored once, whole | the value stored (`tests/test_vertex_index.py`) |
 | fragment outputs at locations 0 to 3, each stored once outside any `if/else` when there are several, or in one through the unroller (Control flow) | `oC0` to `oC3`, the four colour targets, a float in every component; the record's outputs mask names them (`tests/test_color_outputs.py`) |
 | vertex `gl_ClipDistance[n] = dot(gl_Position, plane)`, n 0 to 5, the plane a whole vec4 of a uniform or push constant block | no instruction: user clip plane n, the manifest's `("clip", n, register)`; any other form, and `gl_CullDistance`, refused (`tests/test_clip_distance.py`) |
 | float / vec literals in FS/VS | constant pool; 0/1 folds (see below) |
 | ternary `cond ? a : b` (OpSelect) | `f + (t−f)·cond` (sub + mad) |
+| float comparisons' unordered forms, OpFUnordEqual to OpFUnordGreaterThanEqual, as glslang makes GLSL's `!=` | lowered as the ordered forms, which differ for NaN alone (`tests/test_unordered_compare.py`) |
 | vector relational `lessThan`/`greaterThan`/`equal`/`notEqual`/… → bvec | per-component `sgt`/`sge`/`seq`/`sne` (1.0/0.0) |
 | `any` / `all` / `not` (bvec) | horizontal `max` / horizontal `min` / `1−v` |
 | `&&` / `\|\|` | `min` / `max` of 0/1 bools |
@@ -110,6 +114,7 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
 | if/else **on data** in an unrolled loop's body | both arms each pass, merged by a select (`tests/test_loop_branches.py`) |
 | `break` or `continue` **on data** in an unrolled loop's body | gated: each value keeps a stopped copy where its pixel or vertex stops, `running` and `alive` flags 0.0 or 1.0, and each pass's end a `cnd` on `running` (see Loops; `tests/test_loop_branches.py`) |
 | `transpose` (mat2/3/4) | per-row column gather (swizzled movs) |
+| a matrix by a scalar, `w * M` (OpMatrixTimesScalar), and a sum of matrices, which glslang makes a column at a time, as PPSSPP's skinning sums bones by weights | a `mul` a row or column by the scalar, the matrix held as it was; a matrix value's column (OpCompositeExtract) the register holding it, or a row-held matrix's component gathered from each row; a local matrix read back held as it was stored (`tests/test_skinning.py`) |
 | `determinant` (mat2/3) | mat2 `ad−bc`; mat3 `row0·cross(row1,row2)` |
 | `inverse` (mat2/3) | mat2 closed form; mat3 adjugate (cofactor crosses) / det · `rcp` |
 | `dFdx` / `dFdy` / `fwidth` | `getTextureGradients` fetch; ddx=grad.xz, ddy=grad.yw |
@@ -224,9 +229,19 @@ came from; that test and its test vectors stay in xost's archived repo (github.c
   milestone 47 step 1"); the fetches leave r0 as it was. Every vertex fetch
   reads t.x, its source swizzle, bits 30 and 31 of its first word, 0, so the
   runtime points one at the instance's rate at t.y by writing 1 there
-  (xenia:src/xenia/gpu/ucode.h:758). gl_InstanceIndex is t.y. A vertex
-  shader's other built-in inputs, as gl_VertexIndex, aren't streams, and
-  loading one is refused.
+  (xenia:src/xenia/gpu/ucode.h:758). gl_InstanceIndex is t.y.
+- A vertex shader that reads gl_VertexIndex (Vulkan's VertexIndex) has a
+  vertex base, the float constant register past the instance group, or past
+  the blocks without one. The runtime writes it before each draw: x what
+  Vulkan's index adds to the GPU's, the draw's firstVertex, or vertexOffset in
+  an indexed draw, where the runtime moves the streams by it in place of the
+  GPU's index offset, and y to w 0. The compiler lists it among the resources,
+  kind `XSDK_XSC_VERTEX_BASE` (`include/xsdk/xsc.h`), "vertex_base" in
+  `xsc/native.py`. gl_VertexIndex is r0.x, the GPU's vertex index as a float
+  (xenia:src/xenia/gpu/spirv_shader_translator.cc:1500-1517), or an instanced
+  shader's t.x, plus the base's x; the fetches leave r0 as the GPU filled it.
+  A vertex shader's other built-in inputs aren't streams, and loading one is
+  refused.
 - gl_FragCoord → the pixel parameters, which the container turns on: its
   record's SQ_PROGRAM_CNTL has PARAM_GEN, and its SQ_CONTEXT_MISC has
   PARAM_GEN_POS, the register past the interpolators, where the GPU writes the
@@ -405,8 +420,9 @@ Refused, each by name, with xost's message where it's short:
   matrix output held by rows, as a cast of a block's matrix, where an interpolator takes a column; a vertex shader's
   matrix input; a column of a matrix value other than a cast's.
 - **Integers:** an int or bool loaded other than from a local, an input or `$Global` (`integer Load must be a foldable
-  local`); and int operations past add, subtract, multiply, divide and remainder, the bitwise ones and shifts, which
-  Xenos lacks (`unsupported integer op`).
+  local`); int operations past add, subtract, multiply, divide, remainder, shifts by constants and an and with a
+  constant run of bits: the other bitwise ones, logical right shifts and shifts by data, which Xenos lacks
+  (`unsupported integer op`); and an and with bits that aren't one run, or a shift past 31 (`Xenos has no bit ops`).
 - **Registers:** a `b#` on other than a bool, an `i#` on other than an int; two members in one register (`share
   register`); a bool an if reads past b127 or an int a loop counts past i15 (`past the stage's`); and an arm of a
   bool's if, in execs on its boolean constant, that uses a0 (`an arm on a boolean constant that uses a0`).
@@ -850,9 +866,10 @@ a vertex shader, in an unrolled and a hardware loop and in a switch's case, and
 switches in both stages, each against what HLSL defines, beside GLSL twins.
 
 ## Not yet / out of scope
-- **Bitwise (`& | ^ ~`) and dynamic shifts** — the Xenos ALU has no bit
-  operations; these raise a clear compile error rather than miscompiling.
-  Constant-amount shifts could be done as mul/div by powers of two (not wired).
+- **Bitwise (`| ^ ~`), `&` with other than one run of bits, logical right
+  shifts and dynamic shifts** — the Xenos ALU has no bit operations; these
+  raise a clear compile error rather than miscompiling. Shifts by constants and
+  `&` with one constant run of bits lower exactly (Supported).
 - **`matrixCompMult`, mat4 `inverse`** — `transpose`/`determinant`/`inverse`
   cover mat2/mat3 (numerically gated by `tests/test_matrix.py`); per-element
   multiply and 4×4 inverse (register-heavy) are not lowered.

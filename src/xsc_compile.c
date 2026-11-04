@@ -125,10 +125,12 @@ static uint32_t or_zero(int64_t value)
 }
 
 // Where each block's registers, each sampler's fetch constant and each comparison's register landed: blocks first, then
-// samplers, then comparisons, then the instance group.
+// samplers, then comparisons, then the instance group, then the vertex base.
 static XsdkXscResource *resources(const XscInterface *si, int64_t instance, size_t *count)
 {
-	*count = si->block_count + si->sampler_count + si->comparison_count + (instance != XSC_NONE);
+	const int64_t vertex_base = si->pixel ? XSC_NONE : xsdk_xsc_index_reg(si, XSC_ROLE_VERTEX_INDEX);
+	*count =
+		si->block_count + si->sampler_count + si->comparison_count + (instance != XSC_NONE) + (vertex_base != XSC_NONE);
 	XsdkXscResource *const out = calloc(*count ? *count : 1, sizeof *out);
 	if (!out)
 		return NULL;
@@ -148,7 +150,10 @@ static XsdkXscResource *resources(const XscInterface *si, int64_t instance, size
 			or_zero(c->var->descriptor_set), or_zero(c->var->binding), c->a, 1 };
 	}
 	if (instance != XSC_NONE)
-		out[*count - 1] = (XsdkXscResource){ XSDK_XSC_INSTANCE, 0, 0, (uint32_t)instance, 1 };
+		out[*count - 1 - (vertex_base != XSC_NONE)] =
+			(XsdkXscResource){ XSDK_XSC_INSTANCE, 0, 0, (uint32_t)instance, 1 };
+	if (vertex_base != XSC_NONE)
+		out[*count - 1] = (XsdkXscResource){ XSDK_XSC_VERTEX_BASE, 0, 0, (uint32_t)vertex_base, 1 };
 	return out;
 }
 

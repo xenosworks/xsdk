@@ -140,7 +140,7 @@ which implements what the games it runs need:
 |---|---|---|---|---|
 | 1280x720, scaled to the output up to 1080p | Yes | `xsdk_display_open`, `xsdk_present_*` (`display.h`, `present.h`) | `tests/test_present.c`, `test_scale.c` | |
 | 1280x720 letterboxed on a 4:3 screen | Yes | `xsdk_present_*`: 1280x960 front buffers, the frame on rows 128 to 847 between black bars, the title still drawing 1280x720 | `tests/test_scale.c`, forced on a widescreen screen; a 4:3 480p capture (docs/HARDWARE.md, "Letterboxing, milestone 54 step 5") | |
-| 2 or 3 front buffers, paced to vblank, swap intervals | Yes | `xsdk_present_open` | `tests/test_pacing.c` | |
+| 2 to 4 front buffers, paced to vblank, swap intervals | Yes | `xsdk_present_open` | `tests/test_pacing.c` | |
 | Other modes: 1080p, 480p and the rest | No | `XSDK_DISPLAY_KERNEL` keeps the kernel's own | | |
 | 720p on interlaced outputs, 480i and 1080i | No | the kernel's 640x480 there | | TODO.md |
 

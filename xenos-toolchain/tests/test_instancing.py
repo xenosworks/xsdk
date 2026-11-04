@@ -23,7 +23,7 @@ gl_InstanceIndex always, any other with the instanced option.
   power of two to 2^23, y 0, at the first, middle and last copies' first and last index, up to 2^24 - 1.
 - XenosRecomp's oracle accepts each instanced shader.
 - Without the option, vk_instance_rate.vert isn't instanced: no group, every fetch at r0.x.
-- vk_vertex_index.vert reads gl_VertexIndex, which xsc doesn't lower: it must be refused.
+gl_VertexIndex, in an instanced shader too, is tests/test_vertex_index.py's.
 """
 import math
 import struct
@@ -320,23 +320,9 @@ def check_plain():
     return True
 
 
-def check_vertex_index():
-    name = "vk_vertex_index.vert"
-    try:
-        compiled(name, False)
-    except native.CompileError as error:
-        if error.status != native.REFUSED:
-            print(f"  FAIL {name}: failed as {native.STATUS_NAMES[error.status]}, not refused: {error}")
-            return False
-        print(f"  PASS {name}: refused ({error})")
-        return True
-    print(f"  FAIL {name}: lowered, gl_VertexIndex fetched as a vertex input")
-    return False
-
-
 def main():
     results = [check_shader(name) for name in SHADERS]
-    results += [check_least_room(), check_division(), check_plain(), check_vertex_index()]
+    results += [check_least_room(), check_division(), check_plain()]
     if not all(results):
         raise SystemExit("FAILED")
     print("OK")

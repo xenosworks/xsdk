@@ -275,9 +275,13 @@ static bool is_hiz_surface(uint32_t width, uint32_t height)
 		surface.samples == hiz_surface.samples && surface.depth_tile == hiz_surface.depth_tile;
 }
 
+// A resolve's clear bounds the buffer right only where the resolved width is the surface's pitch: 16x16 and 8x8
+// targets, 32 resolved across a pitch of 160, kept it right in their top 4 rows alone, the rest rejecting what drew
+// there (vulkan4xenon's small depth test on the console, Z:/Xbox-360-SDK/local/m66/runs/v4x_round15/test).
 bool xsdk_gpu_hiz_fits(uint32_t width, uint32_t height)
 {
-	return width <= HIZ_MOST_WIDTH && height * target_samples <= HIZ_MOST_SAMPLE_ROWS;
+	return width <= HIZ_MOST_WIDTH && height * target_samples <= HIZ_MOST_SAMPLE_ROWS &&
+		tiles_across(width, target_samples) * TILE_WIDTH == width * samples_across(target_samples);
 }
 
 void xsdk_gpu_hiz_cleared(uint32_t width, uint32_t height, uint32_t depth_clear)

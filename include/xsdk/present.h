@@ -10,10 +10,11 @@
 extern "C" {
 #endif
 
-// Frames shown at vblank through the graphics interrupt callback, in order, from two or three front buffers.
+// Frames shown at vblank through the graphics interrupt callback, in order, from two to four front buffers.
 
 enum {
-	XSDK_PRESENT_MAX_BUFFERS = 3,
+	// Four leave two frames waiting to show, so a frame can run two refreshes late without one being missed.
+	XSDK_PRESENT_MAX_BUFFERS = 4,
 };
 
 typedef struct {
@@ -33,7 +34,7 @@ typedef struct {
 	uint32_t system_frames;
 } XsdkPresentStats;
 
-// Opens the display in this mode with buffer_count front buffers, 2 or 3; each frame shows for swap_interval vblanks.
+// Opens the display in this mode with buffer_count front buffers, 2 to 4; each frame shows for swap_interval vblanks.
 // A 720p display the splash holds (xsdk_splash_begin) is taken over, and its logo shows until the first frame. Where
 // the screen is 4:3, the 720p mode's front buffers are 1280x960, black but for each 1280x720 frame on rows 128 to 847,
 // which the scaler fills the screen with; width and height still give the frame's size.

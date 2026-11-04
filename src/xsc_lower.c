@@ -20,7 +20,11 @@ enum {
 	OP_LOGICAL_AND = 167,
 	OP_LOGICAL_NOT = 168,
 	OP_SHIFT_RIGHT_LOGICAL = 194,
+	OP_SHIFT_RIGHT_ARITHMETIC = 195,
+	OP_SHIFT_LEFT_LOGICAL = 196,
+	OP_BITWISE_AND = 199,
 	OP_NOT = 200,
+	INT_BITS = 32,
 	GLSL_MATRIX_INVERSE = 34,
 	// A fetch's destination swizzle writes 0 or 1 in a lane (xenia:src/xenia/gpu/ucode.h:677-692).
 	FETCH_ZERO = 4,
@@ -146,12 +150,12 @@ bool xsdk_xsc_lower_init(Xsc *x, XscLower *l, const XscModule *m, const XscInter
 		(!(m->branch_count || m->loop_count) || xsdk_xsc_find_varying(l)) && (!m->loop_count || mark_pass_work(x, l));
 }
 
-// An SSA id's instruction, refused as Python's by_result[ssa] would fail.
+// An SSA id's instruction, failing where no instruction xost reads makes it, as Python's by_result[ssa] would.
 const XscInstr *xsdk_xsc_lower_result(XscLower *l, uint32_t ssa)
 {
 	const XscInstr *const ins = xsdk_xsc_by_result(l->m, ssa);
 	if (!ins)
-		xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "%u", (unsigned)ssa);
+		xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "%%%u: no instruction xost reads makes it", (unsigned)ssa);
 	return ins;
 }
 
@@ -758,7 +762,83 @@ static XscOperand int_divide(XscLower *l, const XscInstr *ins)
 	return xsc_reg(r);
 }
 
-// An int Load: a local's value; gl_InstanceIndex, which the prologue holds as a float in every component
+// value * scale into a register of its own, floored if floor is.
+static int64_t int_scale(XscLower *l, XscOperand value, double scale, bool floor)
+{
+	const int64_t factor = xsdk_xsc_literal_splat(l, scale);
+	const int64_t r = factor == XSC_NONE ? XSC_NONE : xsdk_xsc_fresh(l);
+	if (r == XSC_NONE || !xsc_emit2(l, XSC_VECTOR_MUL, xsc_plain(value), xsc_plain(xsc_const(factor)), r, false, 0xF))
+		return XSC_NONE;
+	if (!floor)
+		return r;
+	const int64_t f = xsdk_xsc_fresh(l);
+	return xsc_emit2(l, XSC_VECTOR_FLOOR, xsc_temp(r), xsc_temp(r), f, false, 0xF) ? f : XSC_NONE;
+}
+
+// Two's complement's low n bits of value, 2^n * fract(value * 2^-n), into a register of its own.
+static int64_t int_low_bits(XscLower *l, XscOperand value, int n)
+{
+	const int64_t t = int_scale(l, value, ldexp(1.0, -n), false);
+	const int64_t f = t == XSC_NONE ? XSC_NONE : xsdk_xsc_fresh(l);
+	if (f == XSC_NONE || !xsc_emit2(l, XSC_VECTOR_FRC, xsc_temp(t), xsc_temp(t), f, false, 0xF))
+		return XSC_NONE;
+	return int_scale(l, xsc_reg(f), ldexp(1.0, n), false);
+}
+
+// A shift by a constant, or an and with a constant run of bits, exact for ints below 2^24, as scaling by a power of two
+// is: a << n is a * 2^n, a >> n floor(a * 2^-n), a & ~(2^k - 1) 2^k * floor(a * 2^-k), and a & the bits from k up to
+// j a's low j bits less its low k.
+static XscOperand int_bits(XscLower *l, const XscInstr *ins)
+{
+	const uint32_t op = ins->opcode;
+	uint32_t a = xsdk_xsc_operand(ins, 0), b = xsdk_xsc_operand(ins, 1);
+	int64_t c = 0;
+	if (op == OP_BITWISE_AND && xsdk_xsc_int_const(l, a, &c)) {
+		a = b;
+		b = xsdk_xsc_operand(ins, 0);
+	}
+	const bool constant = xsdk_xsc_int_const(l, b, &c);
+	const uint32_t mask = (uint32_t)c;
+	// The mask's run of bits plus its lowest bit is the bit past the run, 0 for a run to bit 31.
+	const uint32_t past = mask + (mask & (0u - mask));
+	char name[16];
+	if (!constant || (op == OP_BITWISE_AND ? (past & (past - 1)) != 0 : (c < 0 || c >= INT_BITS))) {
+		xsdk_xsc_lower_refuse(l,
+			"%s: Xenos has no bit ops; a shift by a constant from 0 to 31 or an and with a "
+			"constant run of bits is lowered, as exact arithmetic on floats",
+			xsdk_xsc_op_name(op, name, sizeof name));
+		return (XscOperand){ 0 };
+	}
+	if (op == OP_BITWISE_AND && !mask) {
+		const int64_t zero = xsdk_xsc_literal_splat(l, 0.0);
+		return zero == XSC_NONE ? (XscOperand){ 0 } : xsc_const(zero);
+	}
+	const XscOperand value = xsdk_xsc_int_operand(l, a);
+	if (xsc_failed(l) || (op == OP_BITWISE_AND ? mask == UINT32_MAX : !c))
+		return value;
+	int64_t r;
+	if (op != OP_BITWISE_AND) {
+		const bool left = op == OP_SHIFT_LEFT_LOGICAL;
+		r = int_scale(l, value, ldexp(1.0, left ? (int)c : -(int)c), !left);
+	} else if (!past) {
+		const int k = __builtin_ctz(mask);
+		const int64_t f = int_scale(l, value, ldexp(1.0, -k), true);
+		r = f == XSC_NONE ? XSC_NONE : int_scale(l, xsc_reg(f), ldexp(1.0, k), false);
+	} else {
+		const int k = __builtin_ctz(mask);
+		r = int_low_bits(l, value, __builtin_ctz(past));
+		if (k && r != XSC_NONE) {
+			const int64_t high = r, low = int_low_bits(l, value, k);
+			r = low == XSC_NONE ? XSC_NONE : xsdk_xsc_fresh(l);
+			if (r != XSC_NONE &&
+				!xsc_emit2(l, XSC_VECTOR_ADD, xsc_temp(high), xsc_negated(xsc_reg(low)), r, false, 0xF))
+				r = XSC_NONE;
+		}
+	}
+	return r == XSC_NONE ? (XscOperand){ 0 } : xsc_reg(r);
+}
+
+// An int Load: a local's value; gl_InstanceIndex or gl_VertexIndex, held as a float in every component
 // (xsc_lower_vertex.c); an input's ints, which its fetch makes floats as UBYTE4's are, a scalar's in x and a
 // component's spread; or an int or bool in HLSL's blocks, whose registers D3D9 sets as floats (docs/scope/50-hlsl.md).
 static XscOperand int_load(XscLower *l, uint32_t ssa, const XscInstr *ins)
@@ -769,6 +849,8 @@ static XscOperand int_load(XscLower *l, uint32_t ssa, const XscInstr *ins)
 		return xsdk_xsc_int_operand(l, l->local_store[src]);
 	if (xsdk_xsc_role(l->si, src)->kind == XSC_ROLE_INSTANCE_INDEX)
 		return xsc_reg(l->instance);
+	if (xsdk_xsc_role(l->si, src)->kind == XSC_ROLE_VERTEX_INDEX)
+		return xsc_reg(l->vertex_index);
 	if (src < limit && l->inputs[src] != XSC_NONE)
 		return xsc_reg(l->inputs[src]);
 	const XscInstr *const chain = xsdk_xsc_by_result(l->m, src);
@@ -828,6 +910,8 @@ static XscOperand int_operand_of(XscLower *l, uint32_t ssa)
 		return int_arith(l, ins);
 	if (op == OP_U_DIV || op == SPV_S_DIV || (op >= OP_U_MOD && op <= OP_S_MOD))
 		return int_divide(l, ins);
+	if (op == OP_SHIFT_RIGHT_ARITHMETIC || op == OP_SHIFT_LEFT_LOGICAL || op == OP_BITWISE_AND)
+		return int_bits(l, ins);
 	char name[16];
 	xsdk_xsc_lower_refuse(
 		l, "v1 %s: unsupported integer op %s", xsc_stage_name(l), xsdk_xsc_op_name(op, name, sizeof name));
@@ -1353,6 +1437,8 @@ static XscOperand load_operand(XscLower *l, uint32_t ssa, const XscInstr *ins)
 	}
 	if (role->kind == XSC_ROLE_INSTANCE_INDEX)
 		return xsc_reg(l->instance);
+	if (role->kind == XSC_ROLE_VERTEX_INDEX)
+		return xsc_reg(l->vertex_index);
 	xsdk_xsc_lower_refuse(l, "%s: unresolved Load %%%u", xsc_stage_name(l), (unsigned)src);
 	return (XscOperand){ 0 };
 }
@@ -1507,6 +1593,7 @@ static XscOperand value_operand(XscLower *l, uint32_t ssa, const XscInstr *ins)
 	case SPV_VECTOR_TIMES_MATRIX:
 		return from_reg(xsdk_xsc_emit_vec_mat(l, a, b, XSC_NONE, false));
 	case SPV_MATRIX_TIMES_MATRIX:
+	case SPV_MATRIX_TIMES_SCALAR:
 	case SPV_TRANSPOSE:
 		return matrix_operand(l, ssa);
 	case SPV_F_ADD:
@@ -1546,6 +1633,10 @@ static XscOperand value_operand(XscLower *l, uint32_t ssa, const XscInstr *ins)
 		// component, as a scalar loaded from a block is. Anything else extracted stays refused below.
 		if (result_kind(l, ssa) == XSC_TYPE_FLOAT)
 			return scalar_value(l, ssa);
+		// A matrix value's column, as glslang adds matrices a column at a time.
+		if (xsdk_xsc_operand_count(ins) == 2 && xsdk_xsc_result_type(l, a) &&
+			xsdk_xsc_result_type(l, a)->kind == XSC_TYPE_MATRIX)
+			return xsdk_xsc_matrix_column(l, a, b);
 		break;
 	default:
 		break;
@@ -1691,7 +1782,7 @@ static XscOrigin load_origin(XscLower *l, uint32_t ssa, const XscInstr *ins, boo
 	if (found) {
 		const XscType *const t = xsdk_xsc_type(l->m, l->types, access.tid);
 		if (!t) {
-			xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "%u", (unsigned)access.tid);
+			xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "type %%%u: not one xost reads", (unsigned)access.tid);
 			return origin((XscOperand){ 0 }, 0);
 		}
 		if (t->kind != XSC_TYPE_VECTOR)

@@ -107,7 +107,7 @@ static bool step_into(XscLower *l, XscBlockAccess *access, uint32_t idx_id, int6
 		return false;
 	const XscType *const t = xsdk_xsc_type(l->m, l->types, access->tid);
 	if (!t)
-		return xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "%u", (unsigned)access->tid);
+		return xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "type %%%u: not one xost reads", (unsigned)access->tid);
 	if (!known && !run_time_index(l, access, t, idx_id, &idx))
 		return false;
 	switch (t->kind) {
@@ -255,7 +255,7 @@ XscOperand xsdk_xsc_block_value(XscLower *l, uint32_t ssa, const XscBlockAccess 
 {
 	const XscType *const t = xsdk_xsc_type(l->m, l->types, access->tid);
 	if (!t) {
-		xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "%u", (unsigned)access->tid);
+		xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "type %%%u: not one xost reads", (unsigned)access->tid);
 		return (XscOperand){ 0 };
 	}
 	if (t->kind == XSC_TYPE_MATRIX) {
@@ -308,7 +308,7 @@ const XscMatrix *xsdk_xsc_block_matrix(XscLower *l, uint32_t ssa, const XscBlock
 {
 	const XscType *const t = xsdk_xsc_type(l->m, l->types, access->tid);
 	if (!t) {
-		xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "%u", (unsigned)access->tid);
+		xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "type %%%u: not one xost reads", (unsigned)access->tid);
 		return NULL;
 	}
 	const XscType *const col = xsdk_xsc_type(l->m, l->types, t->comp);

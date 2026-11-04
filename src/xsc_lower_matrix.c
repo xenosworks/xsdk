@@ -52,8 +52,14 @@ static const XscMatrix *load_matrix(XscLower *l, uint32_t ssa, const XscInstr *i
 		return NULL;
 	if (found)
 		return xsdk_xsc_block_matrix(l, ssa, &access);
-	if (src < l->m->id_limit && l->local_store[src])
-		return xsdk_xsc_matrix_operands(l, l->local_store[src]);
+	// A local's value, held as it was stored: as columns if it was.
+	if (src < l->m->id_limit && l->local_store[src]) {
+		const uint32_t stored = l->local_store[src];
+		const XscMatrix *const mat = xsdk_xsc_matrix_operands(l, stored);
+		if (mat)
+			l->col_major[ssa] = l->col_major[stored];
+		return mat;
+	}
 	const XscRole *const role = xsdk_xsc_role(l->si, src);
 	// A pixel shader's matrix input, a column an interpolator from its first (xsc_resolve.c, add_varying).
 	if (role->kind == XSC_ROLE_INTERP_IN) {
@@ -339,6 +345,54 @@ static const XscMatrix *emit_mat_mat(XscLower *l, uint32_t a, uint32_t b)
 	return out;
 }
 
+// Each row or column of M times a scalar, M's arrangement kept (SPIR-V 1.0, section 3.32.13, OpMatrixTimesScalar), as
+// glslang makes PPSSPP's skinning matrix of each bone by its weight.
+static const XscMatrix *scale_matrix(XscLower *l, uint32_t ssa, uint32_t mat_ssa, uint32_t scalar)
+{
+	const XscMatrix *const in = xsdk_xsc_matrix_operands(l, mat_ssa);
+	if (!in)
+		return NULL;
+	const XscOperand by = xsdk_xsc_lower_operand(l, scalar);
+	XscMatrix *const out = new_matrix(l, in->count);
+	if (xsc_failed(l) || !out)
+		return NULL;
+	for (size_t i = 0; i < in->count; i++) {
+		const int64_t r = xsdk_xsc_fresh(l);
+		if (!xsc_emit2(l, XSC_VECTOR_MUL, xsc_plain(in->rows[i]), xsc_src(by, false, xsdk_xsc_bsw(0)), r, false, 0xF))
+			return NULL;
+		out->rows[i] = xsc_reg(r);
+	}
+	l->col_major[ssa] = l->col_major[mat_ssa];
+	return out;
+}
+
+// Column c of a matrix value (OpCompositeExtract), as glslang takes a sum of matrices a column at a time: the register
+// a matrix marked as columns holds it in, or else component c of every row, gathered as a transpose's row c is.
+XscOperand xsdk_xsc_matrix_column(XscLower *l, uint32_t mat_ssa, uint32_t c)
+{
+	const XscMatrix *const in = xsdk_xsc_matrix_operands(l, mat_ssa);
+	if (!in)
+		return (XscOperand){ 0 };
+	if (l->col_major[mat_ssa]) {
+		if (c >= in->count) {
+			xsdk_xsc_fail(l->x, XSDK_XSC_MALFORMED, "column %u of %%%u, which has %zu", (unsigned)c, (unsigned)mat_ssa,
+				in->count);
+			return (XscOperand){ 0 };
+		}
+		return in->rows[c];
+	}
+	XscOperand rows[XSC_MATRIX_ROWS];
+	if (c >= XSC_MATRIX_ROWS || !rows_in_registers(l, in, rows))
+		return (XscOperand){ 0 };
+	const int64_t r = xsdk_xsc_fresh(l);
+	for (size_t j = 0; j < in->count; j++) {
+		const XscSrc s = xsc_src(rows[j], false, (((int64_t)c - (int64_t)j) & 3) << (2 * j));
+		if (!xsc_emit2(l, XSC_VECTOR_MAX, s, s, r, false, (int64_t)1 << j))
+			return (XscOperand){ 0 };
+	}
+	return xsc_reg(r);
+}
+
 // Column c of a construct, through a shuffle taking a prefix of one vector, as (float3x3)M takes M's: the matrix it's
 // column c of, or 0.
 static uint32_t column_of(XscLower *l, uint32_t column, uint32_t c)
@@ -407,6 +461,8 @@ static const XscMatrix *resolve_matrix(XscLower *l, uint32_t ssa, const XscInstr
 			l->col_major[ssa] = true;
 		return res;
 	}
+	if (ins->opcode == SPV_MATRIX_TIMES_SCALAR)
+		return scale_matrix(l, ssa, a, xsdk_xsc_operand(ins, 1));
 	if (ins->opcode == SPV_TRANSPOSE) {
 		bool col;
 		if (!is_col_major(l, a, &col))
