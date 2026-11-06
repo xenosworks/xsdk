@@ -10,7 +10,14 @@
 #include "xsdk/jit.h"
 #include "xsdk/log.h"
 
-enum { PAGE_BYTES = 4096, MAP_BYTES = 256 * 1024, HEAP_BYTES = 32 * 1024 * 1024, CACHE_LINE_BYTES = 128 };
+enum {
+	PAGE_BYTES = 4096,
+	MAP_BYTES = 256 * 1024,
+	HEAP_BYTES = 32 * 1024 * 1024,
+	CACHE_LINE_BYTES = 128,
+	// newlib-xsdk.patch's DEFAULT_MMAP_MAX.
+	MALLOC_MAPS = 4096,
+};
 
 static uint32_t available(void)
 {
@@ -119,13 +126,15 @@ static void physical_protection(void)
 static void heap_return(void)
 {
 	// newlib's default top padding is zero; keep it explicit for a full 32 MB return.
-	if (!mallopt(M_TOP_PAD, 0)) {
-		check("pages: set malloc trim padding", false);
+	// No maps, so the 32 MB comes from the heap's top, through sbrk.
+	if (!mallopt(M_TOP_PAD, 0) || !mallopt(M_MMAP_MAX, 0)) {
+		check("pages: set malloc trim padding and no maps", false);
 		return;
 	}
 	const uintptr_t original_break = (uintptr_t)sbrk(0);
 	const uint32_t original_pages = available();
 	volatile uint32_t *block = malloc(HEAP_BYTES);
+	check("pages: malloc maps again after the heap check", mallopt(M_MMAP_MAX, MALLOC_MAPS));
 	if (!block) {
 		check("pages: allocate heap buffer", false);
 		return;

@@ -180,3 +180,68 @@
  	lvx	20,0,3		# offset 256
  	addi	3,3,16
  	lvx	21,0,3		# offset 272
+--- a/newlib/libc/stdlib/_mallocr.c
++++ b/newlib/libc/stdlib/_mallocr.c
+@@ -308,7 +308,20 @@
+ 
+ #define POINTER_UINT unsigned _POINTER_INT
+ #define SEPARATE_OBJECTS
++#ifdef __XSDK__
++/* The Xbox 360 SDK maps blocks of 256 KB and more apart, so that freeing one
++   gives its pages back to the kernel instead of leaving a hole in the heap.
++   Its mmap calls malloc, so malloc maps through two functions that don't.
++   4096 maps of 256 KB are 1 GB, more than a title's 480 MB, so the count
++   never sends a block to sbrk.  */
++#define HAVE_MMAP 1
++#define DEFAULT_MMAP_THRESHOLD (256 * 1024)
++#define DEFAULT_MMAP_MAX 4096
++extern void *__xsdk_heap_map(size_t);
++extern int __xsdk_heap_unmap(void *);
++#else
+ #define HAVE_MMAP 0
++#endif
+ #define MORECORE(size) _sbrk_r(reent_ptr, (size))
+ #define MORECORE_CLEARS 0
+ #define MALLOC_LOCK __malloc_lock(reent_ptr)
+@@ -632,7 +645,7 @@
+ #endif
+ #endif
+ 
+-#if HAVE_MMAP
++#if HAVE_MMAP && !defined(__XSDK__)
+ 
+ #include <unistd.h>
+ #include <fcntl.h>
+@@ -1992,7 +2005,7 @@
+   size_t page_mask = malloc_getpagesize - 1;
+   mchunkptr p;
+ 
+-#ifndef MAP_ANONYMOUS
++#if !defined(MAP_ANONYMOUS) && !defined(__XSDK__)
+   static int fd = -1;
+ #endif
+ 
+@@ -2003,7 +2016,10 @@
+    */
+   size = (size + SIZE_SZ + page_mask) & ~page_mask;
+ 
+-#ifdef MAP_ANONYMOUS
++#ifdef __XSDK__
++  p = (mchunkptr)__xsdk_heap_map(size);
++  if(p == 0) return 0;
++#elif defined(MAP_ANONYMOUS)
+   p = (mchunkptr)mmap(0, size, PROT_READ|PROT_WRITE,
+ 		      MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+ #else /* !MAP_ANONYMOUS */
+@@ -2063,7 +2079,11 @@
+   n_mmaps--;
+   mmapped_mem -= (size + p->prev_size);
+ 
++#ifdef __XSDK__
++  ret = __xsdk_heap_unmap((char *)p - p->prev_size);
++#else
+   ret = munmap((char *)p - p->prev_size, size + p->prev_size);
++#endif
+ 
+   /* munmap returns non-zero on failure */
+   assert(ret == 0);

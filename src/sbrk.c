@@ -13,6 +13,9 @@ enum {
 };
 
 void *sbrk(ptrdiff_t increment);
+// newlib's malloc maps blocks of 256 KB and more apart through these, holding its lock (newlib-xsdk.patch).
+void *__xsdk_heap_map(size_t size_bytes);
+int __xsdk_heap_unmap(void *base);
 
 static uintptr_t heap_base;
 static uintptr_t heap_end;
@@ -102,4 +105,31 @@ void *sbrk(ptrdiff_t increment)
 	void *old_break = (void *)heap_break;
 	heap_break = new_break;
 	return old_break;
+}
+
+// Not mmap: it would call malloc back for its bookkeeping.
+void *__xsdk_heap_map(size_t size_bytes)
+{
+	void *base = NULL;
+	uint32_t bytes = size_bytes;
+	// Committed pages come zeroed, which calloc counts on (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_memory.cc:165-176).
+	const NTSTATUS status = NtAllocateVirtualMemory(&base, &bytes, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE, 0);
+	if (!NT_SUCCESS(status)) {
+		xsdk_log_write(
+			"malloc: NtAllocateVirtualMemory(%u KB) failed: 0x%08X", (unsigned)(bytes >> 10), (unsigned)status);
+		return NULL;
+	}
+	return base;
+}
+
+int __xsdk_heap_unmap(void *base)
+{
+	// Size 0 releases the whole region, committed pages too (xenia:src/xenia/memory.cc:1094-1150).
+	uint32_t bytes = 0;
+	const NTSTATUS status = NtFreeVirtualMemory(&base, &bytes, MEM_RELEASE, 0);
+	if (!NT_SUCCESS(status)) {
+		xsdk_log_write("free: NtFreeVirtualMemory(release) failed: 0x%08X", (unsigned)status);
+		return -1;
+	}
+	return 0;
 }
