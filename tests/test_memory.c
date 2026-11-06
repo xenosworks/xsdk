@@ -28,6 +28,8 @@ enum {
 	PIN_BYTES = 4096,
 	// A page table and the heap's 64 KB commit for the pin are all a freed large block may leave taken.
 	PAGE_MARGIN = 32,
+	// 1 MB is 256 pages; held, it must have taken nearly all of them from the kernel, not from committed heap.
+	HELD_PAGES = 250,
 	ROUNDS = 16,
 	// 16 pins, each at most two pages of heap; kept in the heap, the large blocks would grow it by 11.5 MB.
 	ROUNDS_GROWTH_BYTES = 256 * 1024,
@@ -129,8 +131,9 @@ static void large_block(void)
 		free(pin);
 		return;
 	}
-	large[0] = 1;
-	large[LARGE_BYTES - 1] = 1;
+	for (size_t offset = 0; offset < LARGE_BYTES; offset += PAGE_BYTES)
+		large[offset] = 1;
+	const uint32_t pages_held = free_pages();
 	const struct mallinfo mapped = mallinfo();
 	const bool apart = !in_sbrk_heap(large, LARGE_BYTES);
 	const uintptr_t address = (uintptr_t)large;
@@ -138,13 +141,14 @@ static void large_block(void)
 	const uint32_t pages_after = free_pages();
 	const size_t maps_after = mallinfo().hblks;
 	free(pin);
-	xsdk_log_write("memory: 1 MB at 0x%08X in %u new maps of %u KB; %u pages free before it, %u after its free",
+	xsdk_log_write("memory: 1 MB at 0x%08X in %u new maps of %u KB; pages free %u before, %u held, %u after its free",
 		(unsigned)address, (unsigned)(mapped.hblks - before.hblks), (unsigned)((mapped.hblkhd - before.hblkhd) >> 10),
-		(unsigned)pages_before, (unsigned)pages_after);
+		(unsigned)pages_before, (unsigned)pages_held, (unsigned)pages_after);
 	check("malloc: 1 MB lands in a map of its own, outside the sbrk heap",
 		apart && mapped.hblks == before.hblks + 1 && mapped.hblkhd - before.hblkhd >= LARGE_BYTES);
-	check("free: 1 MB freed under a small block gives its pages back",
-		maps_after == before.hblks && pages_after + PAGE_MARGIN >= pages_before);
+	check("free: 1 MB held takes 250 pages or more, and freed under a small block gives them back",
+		maps_after == before.hblks && pages_held + HELD_PAGES <= pages_before &&
+			pages_after + PAGE_MARGIN >= pages_before);
 }
 
 static void fill(volatile uint32_t *words, size_t from_bytes, size_t to_bytes)
