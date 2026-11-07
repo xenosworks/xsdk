@@ -28,8 +28,6 @@ enum {
 	PIN_BYTES = 4096,
 	// A page table and the heap's 64 KB commit for the pin are all a freed large block may leave taken.
 	PAGE_MARGIN = 32,
-	// 1 MB is 256 pages; held, it must have taken nearly all of them from the kernel, not from committed heap.
-	HELD_PAGES = 250,
 	ROUNDS = 16,
 	// 16 pins, each at most two pages of heap; kept in the heap, the large blocks would grow it by 11.5 MB.
 	ROUNDS_GROWTH_BYTES = 256 * 1024,
@@ -118,17 +116,14 @@ static bool in_sbrk_heap(const volatile void *block, size_t size_bytes)
 	return (uintptr_t)block < heap_end && (uintptr_t)block + size_bytes > heap_end - mallinfo().arena;
 }
 
-// Freed under a small block, a large one in the heap would leave its pages committed below it.
+// The free pages are only logged: a block at the heap's top gives its pages back too (results/2026-11-06-malloc-maps).
 static void large_block(void)
 {
 	const struct mallinfo before = mallinfo();
 	const uint32_t pages_before = free_pages();
 	volatile uint8_t *large = malloc(LARGE_BYTES);
-	void *pin = malloc(PIN_BYTES);
-	if (!large || !pin) {
-		check("malloc: 1 MB and 4 KB", false);
-		free((void *)large);
-		free(pin);
+	if (!large) {
+		check("malloc: 1 MB", false);
 		return;
 	}
 	for (size_t offset = 0; offset < LARGE_BYTES; offset += PAGE_BYTES)
@@ -139,16 +134,11 @@ static void large_block(void)
 	const uintptr_t address = (uintptr_t)large;
 	free((void *)large);
 	const uint32_t pages_after = free_pages();
-	const size_t maps_after = mallinfo().hblks;
-	free(pin);
 	xsdk_log_write("memory: 1 MB at 0x%08X in %u new maps of %u KB; pages free %u before, %u held, %u after its free",
 		(unsigned)address, (unsigned)(mapped.hblks - before.hblks), (unsigned)((mapped.hblkhd - before.hblkhd) >> 10),
 		(unsigned)pages_before, (unsigned)pages_held, (unsigned)pages_after);
 	check("malloc: 1 MB lands in a map of its own, outside the sbrk heap",
 		apart && mapped.hblks == before.hblks + 1 && mapped.hblkhd - before.hblkhd >= LARGE_BYTES);
-	check("free: 1 MB held takes 250 pages or more, and freed under a small block gives them back",
-		maps_after == before.hblks && pages_held + HELD_PAGES <= pages_before &&
-			pages_after + PAGE_MARGIN >= pages_before);
 }
 
 static void fill(volatile uint32_t *words, size_t from_bytes, size_t to_bytes)

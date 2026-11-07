@@ -5413,3 +5413,22 @@ on a file and a folder in `game:` through `NtSetInformationFile`'s basic class (
   0xC000000D.
 - **Times keep 2-second steps, rounded up:** a write time of 1200000000.5 s reads back as 1200000002, and one set to
   now, 1793468928 and a fraction, as 1793468930. A whole even second reads back as set.
+
+## newlib's large blocks go back to the kernel (2026-11-06)
+
+`build/xsdk_test.xex` at `16611cb` and `d650527`, newlib built with maps for blocks of 256 KB and more
+(newlib-xsdk.patch), and the same source linked with the newlib before it, `~/xsdk-gcc-pre-mmap` (logs:
+`results/2026-11-06-malloc-maps/`: `xsdk_test.log` and `run2/` with maps, `break-premmap/` and `run2-break/` without).
+With maps 683 checks passed and 2 failed, the controller checks with no pad connected (0x48F); without, 677 and 8, the
+six malloc checks and `mallopt` refusing maps on top of those two.
+- **1 MB went to a map of its own and back:** at 0x1D0F0008, outside the sbrk heap at 0x00074000, in one map of
+  1028 KB. Free pages read 118868 before it, 118610 while held and 118868 after its free (`run2/`), so
+  `NtFreeVirtualMemory`'s release with size 0 returns pages still committed.
+- **A fresh map reads zero:** calloc's 1 MB, which newlib leaves to the kernel to clear, read zero after a freed 1 MB
+  had been filled with 0xA5. `memalign(4096, 512 KB)` gave 0x1D0F1000, and its free released the map from its start.
+- **The fragmentation round trip:** 16 blocks of 256 KB to 1.2 MB, each followed by a 4 KB one, then the large ones
+  freed, grew the sbrk heap by 0 KB with maps and by 11840 KB without, all of it still held with only the small
+  blocks left.
+- **Free pages alone don't tell the two apart:** without maps the 1 MB came from the heap's top, at 0x000734F8, took
+  256 pages (118612 free while held) and gave them back as the top was trimmed (118884 after its free,
+  `run2-break/`). So xsdk_test only logs those counts.
