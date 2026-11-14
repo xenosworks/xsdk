@@ -1,0 +1,9 @@
+log: game:\exfat_corrupt.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m77\exfat_corrupt.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 19549 us
+exfat_corrupt: milestone 77 step 3, kernel 2.0.17559.0
+exfat_corrupt: the module unloaded after 300 ms
+RESULT boot sector at 1048576 byte 0x20: FF -> 00, read back the same; the volume is now mended
+exit: status 0

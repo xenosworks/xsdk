@@ -1,0 +1,7 @@
+select vdisk file="C:\Users\Mena\AppData\Local\Temp\claude\fd3ae4b08a2eb816\1ae7dd51-644a-483b-843e-7572a3fde1cb\scratchpad\m77\stick.vhd"
+attach vdisk
+convert mbr noerr
+create partition primary
+format fs=exfat quick label=XSDK
+detail partition
+detach vdisk

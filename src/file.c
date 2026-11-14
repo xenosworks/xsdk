@@ -61,6 +61,9 @@ int xsdk_file_errno(NTSTATUS status)
 		return EINVAL;
 	case STATUS_ACCESS_DENIED:
 		return EACCES;
+	// A read-only file's delete (plugins/exfat/exfat_module.c, set_disposition).
+	case STATUS_CANNOT_DELETE:
+		return EPERM;
 	case STATUS_SHARING_VIOLATION:
 		return EBUSY;
 	case STATUS_NO_MEMORY:

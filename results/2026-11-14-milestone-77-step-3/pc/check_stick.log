@@ -1,0 +1,5 @@
+verify.bin: 1048576 bytes, identical
+big.bin: 4294971392 bytes, expected 4294971392: ok
+big.bin: 0 bad pieces
+exfat_check holds: ['big.bin', 'verify.bin']
+RESULT all identical

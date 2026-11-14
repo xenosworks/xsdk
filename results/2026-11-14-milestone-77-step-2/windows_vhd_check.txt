@@ -1,0 +1,34 @@
+Windows check of the formatter's output, 2026-11-14.
+
+build/host/exfat_host formatted a 128 MB image (truncate -s 128M, then `format XSDK 643fc9ed`); make_vhd.py wrapped
+it as a fixed VHD (the raw bytes plus the 512-byte footer, recipe/vhd.py's geometry); diskpart attached it from an
+elevated PowerShell. Windows mounted the volume by itself:
+
+  Volume 5     E   XSDK         exFAT  Partition    126 MB  Healthy
+  Disk 4 "Msft Virtual Disk": 134217728 bytes, PartitionStyle MBR, Online
+  Partition 1: DriveLetter E, Offset 1048576, Size 132120576, Type IFS, MbrType 7,
+               AccessPaths E:\ and \\?\Volume{643fc9ed-0000-0000-0000-100000000000}\
+
+PowerShell wrote 200,000 bytes to E:\windows_wrote.bin (byte i = i mod 251), made E:\Folder and wrote
+E:\Folder\note.txt ("hello from Windows"), read windows_wrote.bin back: SequenceEqual True. Then chkdsk E: (read-only):
+
+  The type of the file system is exFAT.
+  Volume Serial Number is 643F-C9ED
+  Windows is verifying files and folders...
+  File and folder verification is complete.
+  Windows has scanned the file system and found no problems.
+  No further action is required.
+        126976 KB total disk space.
+           208 KB in 4 files.
+            28 KB in 7 indexes.
+             0 KB in bad sectors.
+            12 KB in use by the system.
+        126728 KB available on disk.
+          4096 bytes in each allocation unit.
+         31744 total allocation units on disk.
+         31682 allocation units available on disk.
+  chkdsk exit: 0
+
+diskpart detached the VHD. Only the 128 MB image went through Windows; the 8 GB, stick-sized and 2.5 TB images were
+judged by fsck.exfat and fuse-exfat in the harness, and the stick-sized one's boot sector fields and MBR entry equal
+the Windows-formatted recipe/image_boot.bin and recipe/image_mbr.bin apart from the serial and the disk signature.

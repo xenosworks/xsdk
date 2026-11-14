@@ -1,0 +1,168 @@
+log: game:\exfat_check.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m77\exfat_check.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 30518 us
+exfat_check: milestone 77 step 3, kernel 2.0.17559.0
+PASS: usb0: answers statvfs within 5 s
+usb0: 469400 clusters of 131072 bytes, 469397 free
+file system: status 0x00000000, 17 bytes, name "exFAT"
+PASS: the volume's file system is exFAT
+open: NtCreateFile(\Device\Mass0\exfat_check) failed: 0xC0000034
+unlink: NtCreateFile(\Device\Mass0\exfat_check) failed: 0xC0000034
+PASS: exfat_check gone before the run
+PASS: mkdir exfat_check
+mkdir: NtCreateFile(\Device\Mass0\exfat_check) failed: 0xC0000035
+PASS: mkdir exfat_check again: EEXIST
+mkdir: NtCreateFile(\Device\Mass0\exfat_check\missing\sub) failed: 0xC000003A
+PASS: mkdir under a missing parent: ENOENT
+PASS: stat exfat_check: a directory
+PASS: create pattern.bin
+PASS: write 1 MiB in 64 KB pieces
+PASS: fsync pattern.bin
+PASS: close pattern.bin
+PASS: stat pattern.bin: a 1 MiB regular file
+  mtime 1794648187, now 1794648187
+PASS: mtime within a minute of now
+PASS: open pattern.bin for reading
+PASS: read back 1 MiB in 64 KB pieces, identical
+PASS: pread 13 at 777 into an odd address
+PASS: pread 2 across 4096
+PASS: pread 2 across 65536
+PASS: pread over the end gives the rest
+PASS: pread at the end gives 0
+PASS: pread past the end gives 0
+PASS: lseek SET 1000
+PASS: read 10 at 1000
+PASS: lseek CUR -5 is 1005
+PASS: lseek END is 1 MiB
+PASS: read at the end gives 0
+PASS: lseek END -1 and read the last byte
+PASS: close pattern.bin
+PASS: append 100 KB
+PASS: size is 1 MiB + 100 KB
+PASS: the appended bytes read back
+PASS: open pattern.bin read-write
+PASS: ftruncate to 300000
+PASS: size is 300000
+PASS: ftruncate up to 400000
+PASS: the grown bytes read as zeros
+PASS: the bytes before stay
+PASS: lseek to 405000 and write 10 bytes
+PASS: the gap reads as zeros and the 10 bytes follow
+PASS: close pattern.bin
+PASS: truncate(path) to 123456
+PASS: size is 123456
+PASS: a.txt written
+PASS: rename a.txt to b.txt
+PASS: stat a.txt after the rename: ENOENT
+PASS: b.txt holds a.txt's bytes
+PASS: mkdir sub
+PASS: rename b.txt into sub
+PASS: sub/b.txt is there
+PASS: rename sub to sub2
+PASS: sub2/b.txt is there after the directory's rename
+PASS: stat sub/b.txt: ENOENT
+PASS: rename b.txt to B.TXT, the case alone
+PASS: sub2 lists B.TXT alone
+PASS: c.txt and d.txt written
+PASS: rename c.txt over d.txt
+PASS: d.txt holds c.txt's bytes
+PASS: stat c.txt: ENOENT
+PASS: e.txt written
+rename: NtSetInformationFile(\Device\Mass0\exfat_check\e.txt) failed: 0xC0000022
+PASS: rename over an open file: EACCES
+PASS: rename e.txt over d.txt once closed
+PASS: d.txt holds e.txt's byte
+PASS: unlink d.txt
+unlink: NtCreateFile(\Device\Mass0\exfat_check\d.txt) failed: 0xC0000034
+PASS: unlink d.txt again: ENOENT
+unlink: NtSetInformationFile(\Device\Mass0\exfat_check\sub2) failed: 0xC0000101
+PASS: rmdir sub2 with B.TXT inside: ENOTEMPTY
+unlink: NtCreateFile(\Device\Mass0\exfat_check\sub2\B.TXT) failed: 0xC0000103
+PASS: rmdir of a file: ENOTDIR
+PASS: unlink sub2/B.TXT
+PASS: rmdir sub2
+PASS: stat sub2: ENOENT
+PASS: mkdir listing
+PASS: listing/a1.txt and b2.txt written
+PASS: mkdir listing/dir1
+PASS: listing holds a1.txt, b2.txt and dir1, nothing else
+PASS: two files and a directory by d_type
+PASS: an empty directory lists nothing, errno untouched
+PASS: the root listing holds exfat_check
+PASS: NtCreateFile of listing as a directory
+PASS: NtQueryDirectoryFile: one entry, every field written
+  entry: status 0x00000000 index 0 attributes 0x20 name a1.txt
+PASS: the pattern b* finds b2.txt
+PASS: then STATUS_NO_MORE_FILES
+PASS: an empty directory's first query: STATUS_NO_SUCH_FILE
+open: NtCreateFile(\Device\Mass0\exfat_check\pattern.bin) failed: 0xC0000103
+PASS: open a file with O_DIRECTORY: ENOTDIR
+open: NtCreateFile(\Device\Mass0\exfat_check\listing) failed: 0xC00000BA
+PASS: open a directory as a file: EISDIR
+open: NtCreateFile(\Device\Mass0\exfat_check\pattern.bin\x) failed: 0xC000003A
+PASS: open under a file: ENOENT
+open: NtCreateFile(\Device\Mass0\exfat_check\nowhere\x) failed: 0xC000003A
+PASS: open under a missing directory: ENOENT
+PASS: a Latin-1 name written
+PASS: stat of the Latin-1 name
+PASS: the Latin-1 name lists with the same bytes
+PASS: unlink the Latin-1 name
+PASS: ro.txt written
+PASS: chmod 0444
+PASS: stat shows no owner write bit
+open: NtCreateFile(\Device\Mass0\exfat_check\ro.txt) failed: 0xC0000022
+PASS: open a read-only file for writing: EACCES
+PASS: a read-only file still opens for reading
+unlink: NtSetInformationFile(\Device\Mass0\exfat_check\ro.txt) failed: 0xC0000121
+PASS: unlink a read-only file: EPERM
+PASS: chmod 0644
+PASS: stat shows the write bit again
+PASS: unlink ro.txt
+PASS: statvfs before a 4 MiB file
+PASS: four.bin written
+PASS: statvfs after
+  free clusters 469391 -> 469359, 131072 bytes each
+PASS: 4 MiB took 4 MiB of free space
+PASS: unlink four.bin
+PASS: the free space came back
+PASS: a second open of an unshared file: STATUS_SHARING_VIOLATION
+PASS: after the close it opens
+PASS: two opens sharing read coexist
+PASS: NtCreateFile of pattern.bin
+PASS: two reads without an offset read bytes 0-99 then 100-199
+PASS: the position then reads 200
+  position: status 0x00000000, 200
+PASS: statvfs before big.bin
+big.bin: writing 4097 MiB
+PASS: create big.bin
+big.bin: 1024 MiB in 120309 ms, 8 MiB/s
+big.bin: 2048 MiB in 233835 ms, 8 MiB/s
+big.bin: 3072 MiB in 347246 ms, 8 MiB/s
+big.bin: 4096 MiB in 461008 ms, 8 MiB/s
+PASS: write 4 GiB + 1 MiB sequentially
+RESULT big.bin write: 4097 MiB in 461085 ms, 8 MiB/s
+PASS: fsync big.bin
+PASS: close big.bin
+PASS: big.bin is 4 GiB + 1 MiB
+  size: status 0x00000000, 4296015872
+PASS: NtCreateFile of big.bin
+PASS: big.bin at 0
+PASS: big.bin across 4 GiB
+PASS: big.bin at 4 GiB
+PASS: big.bin's tail
+PASS: a read at its end: STATUS_END_OF_FILE
+PASS: truncate big.bin to 4 GiB + 4096
+PASS: big.bin at 4 GiB + 4000 still matches
+PASS: a read at the new end: STATUS_END_OF_FILE
+PASS: big.bin is 4 GiB + 4096
+PASS: statvfs after big.bin
+  free clusters 469391 -> 436622: 4295098368 bytes taken, 4295098368 expected
+PASS: big.bin takes its clusters and no more
+PASS: verify.bin written
+PASS: unlink pattern.bin
+PASS: rmdir listing
+PASS: exfat_check holds big.bin and verify.bin alone
+tests: 132 passed, 0 failed
+exit: status 0

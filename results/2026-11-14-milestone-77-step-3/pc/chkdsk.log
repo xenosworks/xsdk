@@ -1,0 +1,24 @@
+The type of the file system is exFAT.
+Shadow copying the specified volume is not supported.
+
+Volume Serial Number is 643F-C9ED
+Windows is verifying files and folders...
+0 percent completed.                  
+Volume label is XSDK.
+100 percent completed..                 
+50 percent completed...                
+File and folder verification is complete.
+
+Windows has scanned the file system and found no problems.
+No further action is required.
+
+    60083200 KB total disk space.
+     4195712 KB in 4 files.
+         384 KB in 3 indexes.
+           0 KB in bad sectors.
+         256 KB in use by the system.
+    55886848 KB available on disk.
+
+      131072 bytes in each allocation unit.
+      469400 total allocation units on disk.
+      436616 allocation units available on disk.

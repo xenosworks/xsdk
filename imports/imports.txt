@@ -91,15 +91,35 @@ xboxkrnl.exe  0x0FE  NtWaitForMultipleObjectsEx
 xboxkrnl.exe  0x103  ObCreateSymbolicLink
 xboxkrnl.exe  0x104  ObDeleteSymbolicLink
 xboxkrnl.exe  0x105  ObDereferenceObject
+xboxkrnl.exe  0x111  ObReferenceObjectByName
+xboxkrnl.exe  0x03A  IoDeviceObjectType                  variable
+xboxkrnl.exe  0x04B  IoSynchronousDeviceIoControlRequest
+xboxkrnl.exe  0x04C  IoSynchronousFsdRequest
+xboxkrnl.exe  0x03D  IoDismountVolumeByName
 xboxkrnl.exe  0x110  ObReferenceObjectByHandle
 # Milestone 58: audio.
 xboxkrnl.exe  0x09D  KeSetEvent
 xboxkrnl.exe  0x1FF  XAudioGetSpeakerConfig
 # Milestone 69: plugins.
 xboxkrnl.exe  0x14D  _vsnprintf
-xboxkrnl.exe  0x158  XboxKrnlVersion                     variable
 xboxkrnl.exe  0x193  XexExecutableModuleHandle           variable
 xboxkrnl.exe  0x1A2  XexUnloadImageAndExitThread
+# Milestone 77: the exFAT module (plugins/exfat/kernel_seam.md).
+xboxkrnl.exe  0x02E  IoAcquireDeviceObjectLock
+xboxkrnl.exe  0x033  IoCallDriver
+xboxkrnl.exe  0x034  IoCheckShareAccess
+xboxkrnl.exe  0x035  IoCompleteRequest
+xboxkrnl.exe  0x037  IoCreateDevice
+xboxkrnl.exe  0x039  IoDeleteDevice
+xboxkrnl.exe  0x03B  IoDismountVolume
+xboxkrnl.exe  0x041  IoInvalidDeviceRequest
+xboxkrnl.exe  0x044  IoReleaseDeviceObjectLock
+xboxkrnl.exe  0x045  IoRemoveShareAccess
+xboxkrnl.exe  0x047  IoSetShareAccess
+xboxkrnl.exe  0x05F  KeEnterCriticalRegion
+xboxkrnl.exe  0x07D  KeLeaveCriticalRegion
+xboxkrnl.exe  0x0B0  KeWaitForSingleObject
+xboxkrnl.exe  0x10F  ObReferenceObject
 xam.xex       0x001  NetDll_WSAStartup
 xam.xex       0x002  NetDll_WSACleanup
 xam.xex       0x003  NetDll_socket

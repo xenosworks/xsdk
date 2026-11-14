@@ -8,6 +8,7 @@ CC := $(TOOLCHAIN)gcc
 CXX := $(TOOLCHAIN)g++
 AR := $(TOOLCHAIN)ar
 OBJDUMP := $(TOOLCHAIN)objdump
+SIZE := $(TOOLCHAIN)size
 PYTHON ?= python3
 HOST_CC ?= gcc
 
@@ -27,7 +28,7 @@ SDK_SOURCES := src/start.c src/log.c src/sbrk.c src/memalign.c src/thread.c src/
 	src/gpu_setup.c src/gpu_resolve.c src/gpu_draw.c src/gpu_constants.c src/gpu_tiles.c src/display.c src/shader.c \
 	src/microcode.c src/texture.c src/texture_layout.c src/tiled.c src/present.c src/splash.c src/copy.c src/socket.c \
 	src/netdb.c src/net.c src/launch.c src/libgen.c src/xam.c src/save.c src/system_ui.c src/semaphore.c src/mman.c \
-	src/jit.c src/system.c src/terminate.c src/text.c src/audio.c src/fnmatch.c
+	src/jit.c src/system.c src/terminate.c src/text.c src/audio.c src/fnmatch.c src/exfat.c src/exfat_format.c
 # xost's compiler, in the SDK for titles and built for the PC as libxsc.so for the shader tools.
 XSC_SOURCES := src/xsc_memory.c src/xsc_spirv.c src/xsc_resolve.c src/xsc_unroll.c src/xsc_encode.c src/xsc_container.c \
 	src/xsc_program.c src/xsc_optimize.c src/xsc_lower.c src/xsc_lower_block.c src/xsc_lower_matrix.c \
@@ -83,7 +84,7 @@ PROBES := probe_spin probe_print probe_cp probe_ring probe_interrupt probe_expor
 	probe_display probe_guide probe_resolve probe_triangle probe_vblank probe_720p probe_constants probe_mip_tail \
 	probe_draw_after_resolve probe_pixel_rate probe_unroll probe_hiz probe_net probe_texel_rate probe_draw_cost \
 	probe_gpu_draw_cost probe_fault probe_depth_export probe_queries probe_occlusion probe_objects probe_exec probe_query_memory \
-	probe_audio probe_byterev
+	probe_audio probe_byterev probe_exfat_seam probe_exfat_write probe_mass_speed
 # vulkan4xenon milestone 28's tries at the sample counts, a probe_occlusion_<try>.xex each, in the order to run them
 # (results/2026-10-16-vulkan4xenon-milestone-28/builds.sh); outside all.
 OCCLUSION_TRIES := registers viz_query reset reset_copy reset_event flush resolve no_counters group_all group_clock \
@@ -103,7 +104,8 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 all: $(BUILD)/m55_check.xex $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/libxsdk_plugin.a \
 	$(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
 	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(BUILD)/terminate_check.xex \
-	$(BUILD)/launch_check.xex $(BUILD)/launch_target.xex $(PROBES:%=$(BUILD)/%.xex)
+	$(BUILD)/launch_check.xex $(BUILD)/launch_target.xex $(PROBES:%=$(BUILD)/%.xex) \
+	$(BUILD)/exfat.xex $(EXFAT_TITLES:%=$(BUILD)/%.xex)
 
 # Configures CMake project $(1) in $(2) with this toolchain, afresh when $(2) was configured with another, whose
 # compiler a configure would keep.
@@ -223,6 +225,34 @@ $(BUILD)/libxsdk_plugin.a: $(PLUGIN_OBJECTS)
 $(BUILD)/plugin/%.o: src/%.c
 	@mkdir -p $(@D)
 	$(CC) $(PLUGIN_CFLAGS) -c $< -o $@
+
+# Milestone 77: the exFAT module, a plugin holding src/exfat.c (docs/scope/77-exfat.md, step 3), at its own base above
+# the USB Ethernet plugin's image; the link fails where the image reaches the next system module (docs/GUIDE.md,
+# "Plugins"). It links newlib's string routines and libgcc's 64-bit division, neither of which touches floating point;
+# tools/check_plugin.py checks what came in.
+EXFAT_MODULE_BASE := 0x91580000
+EXFAT_MODULE_END := 0x91680000
+EXFAT_MODULE_OBJECTS := $(BUILD)/plugin/exfat_module.o $(BUILD)/plugin/exfat.o
+EXFAT_TITLES := exfat_load exfat_check exfat_corrupt
+
+$(BUILD)/plugin/exfat_module.o: plugins/exfat/exfat_module.c
+	@mkdir -p $(@D)
+	$(CC) $(PLUGIN_CFLAGS) -c $< -o $@
+
+$(BUILD)/exfat.elf: $(EXFAT_MODULE_OBJECTS) $(BUILD)/libxsdk_plugin.a src/xsdk_plugin.ld
+	$(CC) -static -nostdlib -T src/xsdk_plugin.ld -Wl,--defsym=xsdk_plugin_base=$(EXFAT_MODULE_BASE) \
+		-Wl,-Map,$(BUILD)/exfat.map -o $@ $(EXFAT_MODULE_OBJECTS) $(BUILD)/libxsdk_plugin.a -lc -lgcc
+	$(OBJDUMP) -d $@ | $(PYTHON) tools/check_plugin.py
+	@end=$$($(SIZE) -A -d $@ | awk '$$1 ~ /^\./ && NF == 3 && $$2 + $$3 > end { end = $$2 + $$3 } END { print end }'); \
+	if [ "$$end" -ge $$(($(EXFAT_MODULE_END))) ]; then \
+		printf 'exfat.elf ends at 0x%X, at or past %s\n' "$$end" $(EXFAT_MODULE_END) >&2; rm -f $@; exit 1; fi; \
+	printf 'exfat.elf: image %s to 0x%X, below %s\n' $(EXFAT_MODULE_BASE) "$$end" $(EXFAT_MODULE_END)
+
+$(BUILD)/exfat.xex: $(BUILD)/exfat.elf tools/elf2xex.py
+	$(PYTHON) tools/elf2xex.py --dll $(EXFAT_MODULE_BASE) $< $@
+
+$(BUILD)/exfat_%.elf: $(BUILD)/tests/exfat_%.o $(BUILD)/libxsdk.a src/xsdk.ld
+	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/exfat_$*.o $(LIBS)
 
 # Counted loops end in bdnz only with gcc-xsdk.patch's rs6000_preferred_doloop_mode (milestone 52).
 $(BUILD)/check/doloop_check.o: tests/doloop_check.c
@@ -480,6 +510,17 @@ $(BUILD)/host/m55_check: tests/host_m55.c src/mman.c src/semaphore.c src/sbrk.c 
 	$(HOST_CC) -std=gnu17 -O2 -g $(WARNINGS) -Iinclude -pthread \
 		-Dmmap=xsdk_test_mmap -Dmunmap=xsdk_test_munmap -Dmprotect=xsdk_test_mprotect -Dsbrk=xsdk_test_sbrk \
 		tests/host_m55.c src/mman.c src/semaphore.c src/sbrk.c -o $@
+
+# Milestone 77's exFAT core on the host: the command line tests/exfat_host/run.py drives, and the harness itself,
+# which needs mkfs.exfat, fsck.exfat, fuse-exfat and loop devices, so it runs as root in WSL.
+EXFAT_HOST_SOURCES := tests/exfat_host/exfat_host.c src/exfat.c src/exfat_format.c
+$(BUILD)/host/exfat_host: $(EXFAT_HOST_SOURCES) include/xsdk/exfat.h src/exfat_private.h src/exfat_upcase.h
+	@mkdir -p $(@D)
+	$(HOST_CC) -std=gnu17 -O2 -g $(WARNINGS) -Iinclude $(EXFAT_HOST_SOURCES) -o $@
+
+.PHONY: exfat_check
+exfat_check: $(BUILD)/host/exfat_host
+	$(PYTHON) tests/exfat_host/run.py $<
 
 # The same M55 checks without the GPU suite, for quick console and deliberate-break runs.
 M55_OBJECTS := $(addprefix $(BUILD)/tests/,m55_check.o test_pthread.o test_objects.o test_thread_control.o \

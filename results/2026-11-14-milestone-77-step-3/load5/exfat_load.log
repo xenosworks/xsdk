@@ -1,0 +1,10 @@
+log: game:\exfat_load.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m77\exfat_load.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 25689 us
+exfat_load: milestone 77 step 3, kernel 2.0.17559.0
+exfat_load: loading \Device\Harddisk0\Partition1\XSDK\m77\exfat.xex, process type 1 for the call
+exfat_load: XexLoadImage: 0x00000000, handle 0x3A130F28
+exfat_load: image 0x91580000-0x9167B000, load count 65535; exiting, the module staying
+exit: status 0

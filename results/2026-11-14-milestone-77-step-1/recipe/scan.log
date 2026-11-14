@@ -1,0 +1,5 @@
+MBR: signature 55AA, entry 0 type 07 start 2048 sectors 120172544 (ends at 120174592 of 120176640)
+exFAT: b'EXFAT   ' volume length 120172544, FAT at 2048 for 3840 sectors, heap at 6144, 469400 clusters of 256 sectors, root cluster 4, serial 643FC9ED, revision 1.0, flags 0000, 512 bytes a sector, 1 FATs
+non-zero: 0x0..0x300000 (sectors 0..6144)
+non-zero: 0x400000..0x500000 (sectors 8192..10240)
+C:\Users\Mena\AppData\Local\Temp\claude\fd3ae4b08a2eb816\1ae7dd51-644a-483b-843e-7572a3fde1cb\scratchpad\m77\exfat_image.bin: 5242880 bytes (10240 sectors)

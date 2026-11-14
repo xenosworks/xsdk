@@ -5,6 +5,11 @@ work begins.
 
 ## Runtime and display
 
+- **`off_t` is 32 bits.** newlib's `_off_t` is `long`, so lseek, pread, pwrite, ftruncate and stat stop at 2 GiB,
+  while `write` and `read` track a 64-bit position and the Nt calls take 64-bit offsets (milestone 77's exfat_check
+  uses them for its 4 GB file). A `_LARGEFILE64`/`off64_t` build of newlib, or xsdk's own 64-bit variants, would
+  lift it.
+
 - **A stack overflow hangs the console,** with a fault handler or without, until it's restarted (docs/HARDWARE.md, "How
   the kernel hands a title its faults, milestone 40's probe"). The kernel puts the exception record and context on the
   faulting thread's own stack, so an overflowed one leaves it nowhere to. What could stop it, such as room kept at

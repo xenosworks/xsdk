@@ -1,0 +1,67 @@
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: raw volume dismounted: 0x00000000
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 469397 of 469400 free, volume device 3A1282B8
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: exFAT volume refused: not exFAT
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A0D2D38
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A131CD8
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A1282B8
+\Device\Mass0: 256 reads and writes, 256 MiB: 24778 ms in the module, 28637 ms of it in 4364 device IRPs
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A130378
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 22683 ms in the module, 28706 ms in 4343 device IRPs
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A1282B8
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24968 ms in the module, 26256 ms in 4148 device IRPs
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 37881 ms in the module, 39087 ms in 4129 device IRPs
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24997 ms in the module, 26236 ms in 4126 device IRPs
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A156E98
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24995 ms in the module, 26534 ms in 4148 device IRPs; full IRPs by ms: 2829 under 4.5, 7 under 5.5, 904 under 7, 264 under 10, 18 under 30, 74 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A14BD58
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24567 ms in the module, 26090 ms in 310 device IRPs; full IRPs against a title's raw: 76 under 1.1x, 120 under 1.35x, 20 under 1.7x, 21 under 2.5x, 17 under 7.5x, 0 over
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24951 ms in the module, 26003 ms in 289 device IRPs; full IRPs against a title's raw: 41 under 1.1x, 155 under 1.35x, 16 under 1.7x, 24 under 2.5x, 20 under 7.5x, 0 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A12A1D8
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 25581 ms in the module, 26777 ms in 310 device IRPs; full IRPs against a title's raw: 51 under 1.1x, 137 under 1.35x, 18 under 1.7x, 25 under 2.5x, 23 under 7.5x, 0 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A1282B8
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 17846 ms in the module, 18186 ms in 286 device IRPs; full IRPs against a title's raw: 209 under 1.1x, 19 under 1.35x, 21 under 1.7x, 1 under 2.5x, 3 under 7.5x, 1 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A128618
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24869 ms in the module, 26129 ms in 310 device IRPs; full IRPs against a title's raw: 49 under 1.1x, 142 under 1.35x, 18 under 1.7x, 28 under 2.5x, 17 under 7.5x, 0 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A128638
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 16502 ms in the module, 16843 ms in 286 device IRPs; full IRPs against a title's raw: 225 under 1.1x, 1 under 1.35x, 28 under 1.7x, 0 under 2.5x, 0 under 7.5x, 0 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A14BD58
+\Device\Mass0: 4188 reads and writes (37 with unaligned buffers), 4103 MiB: 354364 ms in the module, 355252 ms in 4681 device IRPs

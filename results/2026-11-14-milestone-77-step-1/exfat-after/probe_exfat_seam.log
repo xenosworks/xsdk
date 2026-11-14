@@ -1,0 +1,126 @@
+log: game:\probe_exfat_seam.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m77\probe_exfat_seam.xex
+log: no net_log.txt beside the .xex, so not over the network
+probe_exfat_seam: kernel 2.0.17559.0
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 20461 us
+PASS: splash: the vulkan4xenon logo shown
+PASS: kernel: the boot hook's words match the image
+PASS: kernel: the mount chain's words match the image
+PASS: kernel: IoDeviceObjectType matches the image
+PASS: kernel: the IoDeviceObjectType import is 0x80040B08
+PASS: kernel: FAT's driver object matches the image
+PASS: kernel: the .text padding is empty
+RESULT protect: padding 00000020 mount chain 00000020 .rdata 00000002 .data 00000004
+\Device\Mass0: reference status 00000000 object 3A0B3F88
+PASS: mass0: referenced by name
+mass0 device object 3A0B3F88: 0003006C 00000000 80044B10 00000000 00000000 00000008 3A0B3FD8 2D000100 
+mass0 device object 3A0B3FA8: 00000000 00000001 00140000 00000000 3A0B3FB8 3A0B3FB8 01000000 00000001 
+mass0 device object 3A0B3FC8: 3A0B3FC8 3A0B3FC8 00000000 00000000 
+mass0: type 3 size 108 refs 0 driver 80044B10 (USB mass storage) flags 00000008 extension 3A0B3FD8 device type 45 stack 1 sector size 0 alignment 1 mount lock type 1 state 1
+PASS: mass0: device object type 3
+PASS: mass0: device type 45
+PASS: mass0: driven by the USB mass storage class
+PASS: mass0: the extension follows the 80-byte object
+PASS: mass0: the mount lock is signaled
+mass0 driver object 80044B10: 800E34D0 00000000 00000000 8006B400 8006B400 800E1128 800E1128 8006B400 
+mass0 driver object 80044B30: 8006B400 8008F010 8006B400 8006B400 800E1868 8006B400 
+PASS: mass0: the driver table matches the image
+RESULT mounted before any open: none
+RESULT geometry: status 00000000 returned 8 sectors 120176640 bytes a sector 512 (58680 MB)
+PASS: mass0: the geometry answers with a stick in
+RESULT partition: status 00000000 returned 16 start 0000000000000000 length 0000000E53800000 (58680 MB)
+RESULT sector0: read status 00000000
+PASS: sector0: read through a read IRP
+sector0 000: 33 C0 8E D0 BC 00 7C 8E C0 8E D8 BE 00 7C BF 00 
+sector0 010: 06 B9 00 02 FC F3 A4 50 68 1C 06 CB FB B9 04 00 
+sector0 020: BD BE 07 80 7E 00 00 7C 0B 0F 85 0E 01 83 C5 10 
+sector0 030: E2 F1 CD 18 88 56 00 55 C6 46 11 05 C6 46 10 00 
+sector0 040: B4 41 BB AA 55 CD 13 5D 72 0F 81 FB 55 AA 75 09 
+sector0 050: F7 C1 01 00 74 03 FE 46 10 66 60 80 7E 10 00 74 
+sector0 060: 26 66 68 00 00 00 00 66 FF 76 08 68 00 00 68 00 
+sector0 070: 7C 68 01 00 68 10 00 B4 42 8A 56 00 8B F4 CD 13 
+sector0 080: 9F 83 C4 10 9E EB 14 B8 01 02 BB 00 7C 8A 56 00 
+sector0 090: 8A 76 01 8A 4E 02 8A 6E 03 CD 13 66 61 73 1C FE 
+sector0 0A0: 4E 11 75 0C 80 7E 00 80 0F 84 8A 00 B2 80 EB 84 
+sector0 0B0: 55 32 E4 8A 56 00 CD 13 5D EB 9E 81 3E FE 7D 55 
+sector0 0C0: AA 75 6E FF 76 00 E8 8D 00 75 17 FA B0 D1 E6 64 
+sector0 0D0: E8 83 00 B0 DF E6 60 E8 7C 00 B0 FF E6 64 E8 75 
+sector0 0E0: 00 FB B8 00 BB CD 1A 66 23 C0 75 3B 66 81 FB 54 
+sector0 0F0: 43 50 41 75 32 81 F9 02 01 72 2C 66 68 07 BB 00 
+sector0 100: 00 66 68 00 02 00 00 66 68 08 00 00 00 66 53 66 
+sector0 110: 53 66 55 66 68 00 00 00 00 66 68 00 7C 00 00 66 
+sector0 120: 61 68 00 00 07 CD 1A 5A 32 F6 EA 00 7C 00 00 CD 
+sector0 130: 18 A0 B7 07 EB 08 A0 B6 07 EB 03 A0 B5 07 32 E4 
+sector0 140: 05 00 07 8B F0 AC 3C 00 74 09 BB 07 00 B4 0E CD 
+sector0 150: 10 EB F2 F4 EB FD 2B C9 E4 64 EB 00 24 02 E0 F8 
+sector0 160: 24 02 C3 49 6E 76 61 6C 69 64 20 70 61 72 74 69 
+sector0 170: 74 69 6F 6E 20 74 61 62 6C 65 00 45 72 72 6F 72 
+sector0 180: 20 6C 6F 61 64 69 6E 67 20 6F 70 65 72 61 74 69 
+sector0 190: 6E 67 20 73 79 73 74 65 6D 00 4D 69 73 73 69 6E 
+sector0 1A0: 67 20 6F 70 65 72 61 74 69 6E 67 20 73 79 73 74 
+sector0 1B0: 65 6D 00 00 00 63 7B 9A 03 F4 C1 69 00 00 00 20 
+sector0 1C0: 21 00 07 FE FF FF 00 08 00 00 00 B0 29 07 00 00 
+sector0 1D0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+sector0 1E0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+sector0 1F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 55 AA 
+PASS: sector0: sector0.bin written beside the title
+RESULT sector0: MBR entry 0 type 07 start 2048 sectors 120172544
+RESULT sector0: MBR entry 1 type 00 start 0 sectors 0
+RESULT sector0: MBR entry 2 type 00 start 0 sectors 0
+RESULT sector0: MBR entry 3 type 00 start 0 sectors 0
+RESULT boot: read of sector 2048 status 00000000
+PASS: boot: the partition's first sector read
+boot 000: EB 76 90 45 58 46 41 54 20 20 20 00 00 00 00 00 
+boot 010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+boot 020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+boot 030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+boot 040: 00 08 00 00 00 00 00 00 00 B0 29 07 00 00 00 00 
+boot 050: 00 08 00 00 00 0F 00 00 00 18 00 00 98 29 07 00 
+boot 060: 04 00 00 00 ED C9 3F 64 00 01 00 00 09 08 01 80 
+boot 070: 00 00 00 00 00 00 00 00 33 C9 8E D1 8E C1 8E D9 
+boot 080: BC D0 7B BD 00 7C 88 16 6F 7C B4 41 BB AA 55 CD 
+boot 090: 13 72 69 81 FB 55 AA 75 63 F6 C1 01 74 5E FE 06 
+boot 0A0: 02 7C 66 50 B0 65 E8 A6 00 66 58 66 B8 01 00 00 
+boot 0B0: 00 8A 0E 6D 7C 66 D3 E0 66 89 46 E8 66 B8 01 00 
+boot 0C0: 00 00 8A 0E 6C 7C 66 D3 E0 66 89 46 D8 66 A1 40 
+boot 0D0: 7C 66 40 BB 00 7E B9 01 00 66 50 E8 41 00 66 58 
+boot 0E0: 66 40 BB 00 80 B9 01 00 E8 34 00 66 50 B0 78 E8 
+boot 0F0: 5D 00 66 58 E9 09 01 A0 FC 7D EB 05 A0 FB 7D EB 
+boot 100: 00 B4 7D 8B F0 AC 98 40 74 0C 48 74 0E B4 0E BB 
+boot 110: 07 00 CD 10 EB EF A0 FD 7D EB E6 CD 16 CD 19 66 
+boot 120: 60 66 6A 00 66 50 06 53 66 68 10 00 01 00 B4 42 
+boot 130: B2 80 8A 16 6F 7C 8B F4 CD 13 66 58 66 58 66 58 
+boot 140: 66 58 66 61 72 B1 03 5E D8 66 40 49 75 D1 C3 66 
+boot 150: 60 B4 0E BB 07 00 B9 01 00 CD 10 66 61 C3 42 00 
+boot 160: 4F 00 4F 00 54 00 4D 00 47 00 52 00 0D 0A 52 65 
+boot 170: 6D 6F 76 65 20 64 69 73 6B 73 20 6F 72 20 6F 74 
+boot 180: 68 65 72 20 6D 65 64 69 61 2E FF 0D 0A 44 69 73 
+boot 190: 6B 20 65 72 72 6F 72 FF 0D 0A 50 72 65 73 73 20 
+boot 1A0: 61 6E 79 20 6B 65 79 20 74 6F 20 72 65 73 74 61 
+boot 1B0: 72 74 0D 0A 00 00 00 00 00 00 00 00 00 00 FF FF 
+boot 1C0: FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 
+boot 1D0: FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 
+boot 1E0: FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 
+boot 1F0: FF FF FF FF FF FF FF FF FF FF FF 6C 8B 98 55 AA 
+PASS: boot: boot.bin written beside the title
+RESULT boot: exFAT, volume length 000000000729B000 sectors, FAT at 2048 for 3840, cluster heap at 6144, 469400 clusters, root cluster 4, serial 643FC9ED, revision 1.0, flags 0000, 512 bytes a sector, 256 sectors a cluster, 1 FATs
+PASS: exFAT boot sector: ends in 0x55 0xAA
+PASS: exFAT boot sector: its bytes a sector match the geometry
+RESULT open \Device\Mass0\: status C000014F information 0
+RESULT mounted after the root open: none
+RESULT open \Device\Mass0: status 00000000 information 1
+RESULT mounted after the device open: volume 3A129F58 type 8 driver 80043224 (raw) refs 1 flags 00000000
+RESULT open \Device\Mass0\: status C000003A information 0
+RESULT mounted after closing: volume 3A129F58 type 8 driver 80043224 (raw) refs 0 flags 00000000
+\Device\Mass1: reference status 00000000 object 3A0B3E68
+\Device\Mass1: device type 45 flags 00000008 driver 80044B10 (USB mass storage)
+RESULT mounted \Device\Mass1: none
+\Device\Mass2: reference status 00000000 object 3A0B3CE8
+\Device\Mass2: device type 45 flags 00000008 driver 80044B10 (USB mass storage)
+RESULT mounted \Device\Mass2: none
+\Device\Joul0: reference status 00000000 object 3A0BD8C8
+\Device\Joul0: device type 45 flags 00000008 driver 80044B10 (USB mass storage)
+RESULT mounted \Device\Joul0: none
+probe_exfat_seam: 21 passed, 0 failed
+exit: status 0

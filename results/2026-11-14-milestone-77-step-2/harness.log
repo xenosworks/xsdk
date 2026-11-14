@@ -1,0 +1,241 @@
+PASS mkfs default: info
+PASS mkfs default: Linux writes, ours reads: directories
+PASS mkfs default: Linux writes, ours reads: file names
+PASS mkfs default: Linux writes, ours reads: file bytes
+PASS mkfs default: case-insensitive lookup
+PASS mkfs default: modified time matches Linux
+PASS mkfs default: turn-taken writes make a chain
+PASS mkfs default: a file written in one go is contiguous
+PASS rm docs fails 'not empty'
+PASS mkdir docs fails 'exists'
+PASS mkdir bad:name fails 'bad name'
+PASS mv docs fails 'bad name'
+PASS mkfs default: attributes written
+PASS mkfs default: dirty flag clear after sync
+PASS mkfs default: fsck.exfat clean after ours wrote
+PASS mkfs default: ours reads back: directories
+PASS mkfs default: ours reads back: file names
+PASS mkfs default: ours reads back: file bytes
+PASS mkfs default: Linux reads what ours wrote: directories
+PASS mkfs default: Linux reads what ours wrote: file names
+PASS mkfs default: Linux reads what ours wrote: file bytes
+PASS mkfs default: Linux sees our modified time
+PASS mkfs default: ours reads what Linux added
+PASS mkfs 32K: info
+PASS mkfs 32K: Linux writes, ours reads: directories
+PASS mkfs 32K: Linux writes, ours reads: file names
+PASS mkfs 32K: Linux writes, ours reads: file bytes
+PASS mkfs 32K: case-insensitive lookup
+PASS mkfs 32K: modified time matches Linux
+PASS mkfs 32K: turn-taken writes make a chain
+PASS mkfs 32K: a file written in one go is contiguous
+PASS rm docs fails 'not empty'
+PASS mkdir docs fails 'exists'
+PASS mkdir bad:name fails 'bad name'
+PASS mv docs fails 'bad name'
+PASS mkfs 32K: attributes written
+PASS mkfs 32K: dirty flag clear after sync
+PASS mkfs 32K: fsck.exfat clean after ours wrote
+PASS mkfs 32K: ours reads back: directories
+PASS mkfs 32K: ours reads back: file names
+PASS mkfs 32K: ours reads back: file bytes
+PASS mkfs 32K: Linux reads what ours wrote: directories
+PASS mkfs 32K: Linux reads what ours wrote: file names
+PASS mkfs 32K: Linux reads what ours wrote: file bytes
+PASS mkfs 32K: Linux sees our modified time
+PASS mkfs 32K: ours reads what Linux added
+PASS mkfs 128K: info
+PASS mkfs 128K: Linux writes, ours reads: directories
+PASS mkfs 128K: Linux writes, ours reads: file names
+PASS mkfs 128K: Linux writes, ours reads: file bytes
+PASS mkfs 128K: case-insensitive lookup
+PASS mkfs 128K: modified time matches Linux
+PASS mkfs 128K: turn-taken writes make a chain
+PASS mkfs 128K: a file written in one go is contiguous
+PASS rm docs fails 'not empty'
+PASS mkdir docs fails 'exists'
+PASS mkdir bad:name fails 'bad name'
+PASS mv docs fails 'bad name'
+PASS mkfs 128K: attributes written
+PASS mkfs 128K: dirty flag clear after sync
+PASS mkfs 128K: fsck.exfat clean after ours wrote
+PASS mkfs 128K: ours reads back: directories
+PASS mkfs 128K: ours reads back: file names
+PASS mkfs 128K: ours reads back: file bytes
+PASS mkfs 128K: Linux reads what ours wrote: directories
+PASS mkfs 128K: Linux reads what ours wrote: file names
+PASS mkfs 128K: Linux reads what ours wrote: file bytes
+PASS mkfs 128K: Linux sees our modified time
+PASS mkfs 128K: ours reads what Linux added
+PASS cut setup: turn-taken writes make a chain
+PASS cut setup: a file written in one go is contiguous
+PASS rm docs fails 'not empty'
+PASS mkdir docs fails 'exists'
+PASS mkdir bad:name fails 'bad name'
+PASS mv docs fails 'bad name'
+PASS cut setup: attributes written
+PASS cut setup: dirty flag clear after sync
+PASS cut setup: fsck.exfat clean after ours wrote
+PASS cut setup: ours reads back: directories
+PASS cut setup: ours reads back: file names
+PASS cut setup: ours reads back: file bytes
+PASS cut setup: Linux reads what ours wrote: directories
+PASS cut setup: Linux reads what ours wrote: file names
+PASS cut setup: Linux reads what ours wrote: file bytes
+PASS cut setup: Linux sees our modified time
+PASS cut setup: ours reads what Linux added
+PASS put docs/cut.bin fails 'device error'
+PASS cut after 1 writes: volume left marked dirty
+PASS cut after 1 writes: fsck repairs to clean
+PASS cut after 1 writes: no entry damage
+PASS cut after 1 writes: earlier files intact: directories
+PASS cut after 1 writes: earlier files intact: file names
+PASS cut after 1 writes: earlier files intact: file bytes
+PASS put docs/cut.bin fails 'device error'
+PASS cut after 2 writes: volume left marked dirty
+PASS cut after 2 writes: fsck repairs to clean
+PASS cut after 2 writes: no entry damage
+PASS cut after 2 writes: earlier files intact: directories
+PASS cut after 2 writes: earlier files intact: file names
+PASS cut after 2 writes: earlier files intact: file bytes
+PASS put docs/cut.bin fails 'device error'
+PASS cut after 3 writes: volume left marked dirty
+PASS cut after 3 writes: fsck repairs to clean
+PASS cut after 3 writes: no entry damage
+PASS cut after 3 writes: earlier files intact: directories
+PASS cut after 3 writes: earlier files intact: file names
+PASS cut after 3 writes: earlier files intact: file bytes
+PASS put docs/cut.bin fails 'device error'
+PASS cut after 5 writes: volume left marked dirty
+PASS cut after 5 writes: fsck repairs to clean
+PASS cut after 5 writes: no entry damage
+PASS cut after 5 writes: earlier files intact: directories
+PASS cut after 5 writes: earlier files intact: file names
+PASS cut after 5 writes: earlier files intact: file bytes
+PASS put docs/cut.bin fails 'device error'
+PASS cut after 8 writes: volume left marked dirty
+PASS cut after 8 writes: fsck repairs to clean
+PASS cut after 8 writes: no entry damage
+PASS cut after 8 writes: earlier files intact: directories
+PASS cut after 8 writes: earlier files intact: file names
+PASS cut after 8 writes: earlier files intact: file bytes
+PASS put docs/cut.bin fails 'device error'
+PASS cut after 13 writes: volume left marked dirty
+PASS cut after 13 writes: fsck repairs to clean
+PASS cut after 13 writes: no entry damage
+PASS cut after 13 writes: earlier files intact: directories
+PASS cut after 13 writes: earlier files intact: file names
+PASS cut after 13 writes: earlier files intact: file bytes
+PASS put docs/cut.bin fails 'device error'
+PASS cut after 21 writes: volume left marked dirty
+PASS cut after 21 writes: fsck repairs to clean
+PASS cut after 21 writes: no entry damage
+PASS cut after 21 writes: earlier files intact: directories
+PASS cut after 21 writes: earlier files intact: file names
+PASS cut after 21 writes: earlier files intact: file bytes
+PASS put docs/cut.bin fails 'device error'
+PASS cut after 34 writes: volume left marked dirty
+PASS cut after 34 writes: fsck repairs to clean
+PASS cut after 34 writes: no entry damage
+PASS cut after 34 writes: earlier files intact: directories
+PASS cut after 34 writes: earlier files intact: file names
+PASS cut after 34 writes: earlier files intact: file bytes
+PASS corruption setup: turn-taken writes make a chain
+PASS corruption setup: a file written in one go is contiguous
+PASS rm docs fails 'not empty'
+PASS mkdir docs fails 'exists'
+PASS mkdir bad:name fails 'bad name'
+PASS mv docs fails 'bad name'
+PASS corruption setup: attributes written
+PASS corruption setup: dirty flag clear after sync
+PASS corruption setup: fsck.exfat clean after ours wrote
+PASS corruption setup: ours reads back: directories
+PASS corruption setup: ours reads back: file names
+PASS corruption setup: ours reads back: file bytes
+PASS corruption setup: Linux reads what ours wrote: directories
+PASS corruption setup: Linux reads what ours wrote: file names
+PASS corruption setup: Linux reads what ours wrote: file bytes
+PASS corruption setup: Linux sees our modified time
+PASS corruption setup: ours reads what Linux added
+PASS info fails 'corrupt'
+PASS bad boot checksum: fsck.exfat rejects it too
+PASS FAT loop setup: frag_a.bin has a chain
+PASS FAT loop in a file: the read ends, bounded by the size
+PASS FAT loop in a file: fsck.exfat rejects it
+PASS info fails 'corrupt'
+PASS FAT loop in the root: fsck.exfat rejects it too
+PASS get frag_b.bin fails 'corrupt'
+PASS cluster past the end: the entry still lists
+PASS cluster past the end: fsck.exfat rejects it too
+PASS get frag_b.bin fails 'not found'
+PASS wrong name hash: the entry still lists
+PASS wrong name hash: fsck.exfat rejects it too
+PASS get frag_b.bin fails 'not found'
+PASS wrong set checksum: the entry is skipped
+PASS wrong set checksum: fsck.exfat rejects it too
+PASS format XSDK fails 'unsupported'
+  format 128 MB: 0.0 s
+PASS format 128 MB: MBR partition
+PASS format 128 MB: backup boot region equals the main one
+PASS format 128 MB: cluster size
+PASS format 128 MB: fsck.exfat clean
+PASS format 128 MB: ours mounts it
+PASS format 128 MB: fsck.exfat clean after Linux wrote
+PASS format 128 MB: ours reads what Linux wrote: directories
+PASS format 128 MB: ours reads what Linux wrote: file names
+PASS format 128 MB: ours reads what Linux wrote: file bytes
+PASS format 128 MB: fsck.exfat clean after ours wrote
+PASS format 128 MB: Linux reads what ours wrote
+  format 8 GB: 0.0 s
+PASS format 8 GB: MBR partition
+PASS format 8 GB: backup boot region equals the main one
+PASS format 8 GB: cluster size
+PASS format 8 GB: fsck.exfat clean
+PASS format 8 GB: ours mounts it
+PASS format 8 GB: fsck.exfat clean after Linux wrote
+PASS format 8 GB: ours reads what Linux wrote: directories
+PASS format 8 GB: ours reads what Linux wrote: file names
+PASS format 8 GB: ours reads what Linux wrote: file bytes
+PASS format 8 GB: fsck.exfat clean after ours wrote
+PASS format 8 GB: Linux reads what ours wrote
+  format stick: 0.0 s
+PASS format stick: MBR partition
+PASS format stick: backup boot region equals the main one
+PASS format stick: cluster size
+PASS format stick: fsck.exfat clean
+PASS format stick: ours mounts it
+PASS format stick: fsck.exfat clean after Linux wrote
+PASS format stick: ours reads what Linux wrote: directories
+PASS format stick: ours reads what Linux wrote: file names
+PASS format stick: ours reads what Linux wrote: file bytes
+PASS format stick: fsck.exfat clean after ours wrote
+PASS format stick: Linux reads what ours wrote
+PASS format stick: boot sector fields equal Windows's
+PASS format stick: boot sector tail equals Windows's
+PASS format stick: MBR partition entry equals Windows's
+  format 2.5 TB: 0.0 s
+PASS format 2.5 TB: MBR partition
+PASS format 2.5 TB: backup boot region equals the main one
+PASS format 2.5 TB: cluster size
+PASS format 2.5 TB: fsck.exfat clean
+PASS format 2.5 TB: ours mounts it
+PASS format 2.5 TB: fsck.exfat clean after Linux wrote
+PASS format 2.5 TB: ours reads what Linux wrote: directories
+PASS format 2.5 TB: ours reads what Linux wrote: file names
+PASS format 2.5 TB: ours reads what Linux wrote: file bytes
+PASS format 2.5 TB: fsck.exfat clean after ours wrote
+PASS format 2.5 TB: Linux reads what ours wrote
+  large file written in 3.1 s
+PASS large file: size and valid length
+  large file read in 3.4 s
+PASS large file: ours reads it back byte for byte
+PASS large file: fsck.exfat clean
+PASS large file: Linux reads it byte for byte
+PASS 2.5 TB volume: cluster count
+PASS 2.5 TB volume: fsck.exfat clean after ours wrote
+PASS 2.5 TB volume: Linux reads what ours wrote: directories
+PASS 2.5 TB volume: Linux reads what ours wrote: file names
+PASS 2.5 TB volume: Linux reads what ours wrote: file bytes
+passed 232 failed 0 in 56 s
+work directory kept: /var/tmp/exfat_full
+EXIT=0

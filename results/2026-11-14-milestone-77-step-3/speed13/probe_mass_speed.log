@@ -1,0 +1,15 @@
+log: game:\probe_mass_speed.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m77\probe_mass_speed.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 22668 us
+probe_mass_speed: milestone 77 step 3, kernel 2.0.17559.0
+probe_mass_speed: heap at 4194304, the tail region at 61259907072
+RESULT file write through the module: 256 MiB in 18086 ms, 14 MiB/s
+PASS: the file write succeeds
+RESULT raw 64 KB writes at the tail: 256 MiB in 16381 ms, 15 MiB/s
+PASS: the raw sweep at the tail succeeds
+RESULT raw 64 KB writes at the tail in a critical region: 256 MiB in 16844 ms, 15 MiB/s
+PASS: the raw sweep in a critical region succeeds
+tests: 3 passed, 0 failed
+exit: status 0

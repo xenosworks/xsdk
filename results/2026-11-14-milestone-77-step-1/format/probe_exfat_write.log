@@ -1,0 +1,32 @@
+log: game:\probe_exfat_write.log
+log: named after \Device\Harddisk0\Partition1\xsdk\m77\probe_exfat_write.xex
+log: no net_log.txt beside the .xex, so not over the network
+probe_exfat_write: kernel 2.0.17559.0
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 26791 us
+PASS: splash: the vulkan4xenon logo shown
+PASS: image: exfat_image.bin loaded
+RESULT image: 5242880 bytes, MBR entry 0 type 07 start 2048 sectors 120172544
+PASS: image: the MBR ends in 0x55 0xAA
+PASS: image: the first partition is type 07
+PASS: image: the image holds the partition's boot sector
+RESULT image: boot sector "EXFAT   ", volume length 120172544 sectors, 512 bytes a sector, 256 sectors a cluster, 469400 clusters, serial 643FC9ED
+PASS: image: the partition's boot sector is exFAT
+PASS: image: the volume's length is the partition's
+PASS: image: the volume's sectors are 512 bytes
+PASS: mass0: referenced by name
+RESULT geometry: status 00000000 sectors 120176640 bytes a sector 512; the partition ends at 120174592
+PASS: mass0: 512-byte sectors
+PASS: mass0: the partition ends within the stick's last sectors
+RESULT mounted before: volume 3A130358 driver 80042F04
+RESULT dismount: status 00000000
+RESULT mounted after the dismount: volume 00000000 driver 00000000
+PASS: mass0: no volume attached after the dismount
+PASS: write: the read-back buffer allocated
+RESULT write: 5242880 of 5242880 bytes, last status 00000000
+PASS: write: the whole image written
+RESULT read back: 5242880 of 5242880 bytes, last status 00000000
+PASS: write: the stick reads back the image
+RESULT mounted after writing: volume 00000000 driver 00000000
+probe_exfat_write: 15 passed, 0 failed
+exit: status 0

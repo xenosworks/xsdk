@@ -1,0 +1,16 @@
+log: game:\probe_mass_speed.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m77\probe_mass_speed.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 28136 us
+probe_mass_speed: milestone 77 step 3, kernel 2.0.17559.0
+probe_mass_speed: heap at 4194304, the tail region at 61259907072, salt 02F65BFE
+RESULT file write through the module: 256 MiB in 26524 ms, 9 MiB/s
+PASS: the file write succeeds
+probe_mass_speed: the file's clusters start at 4718592 (cluster 6), found in 5 ms
+probe_mass_speed: piece 6 is not at 11010048; the file is not in one run there
+FAIL: the unlinked file's clusters are found in one run
+RESULT raw 64 KB writes at the tail: 256 MiB in 16353 ms, 15 MiB/s
+PASS: the raw sweep at the tail succeeds
+tests: 2 passed, 1 failed
+exit: status 1

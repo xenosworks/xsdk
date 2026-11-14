@@ -1,0 +1,15 @@
+log: game:\probe_mass_speed.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m77\probe_mass_speed.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 20967 us
+probe_mass_speed: milestone 77 step 3, kernel 2.0.17559.0
+probe_mass_speed: heap at 4194304; raw regions at 8594128896 and 61259907072
+RESULT file write through the module: 256 MiB in 29116 ms, 8 MiB/s
+PASS: the file write succeeds
+RESULT raw write at the heap's front: 256 MiB in 16807 ms, 15 MiB/s
+PASS: the raw write at the front succeeds
+RESULT raw write at the stick's tail: 256 MiB in 16788 ms, 15 MiB/s
+PASS: the raw write at the tail succeeds
+tests: 3 passed, 0 failed
+exit: status 0

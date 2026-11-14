@@ -1,0 +1,15 @@
+log: game:\probe_mass_speed.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m77\probe_mass_speed.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 21974 us
+probe_mass_speed: milestone 77 step 3, kernel 2.0.17559.0
+probe_mass_speed: 120176640 sectors; the region is 256 MiB at 61259907072
+RESULT 64 KB IRPs: write 16807 ms (15 MiB/s), read 14276 ms (17 MiB/s), read back identical
+PASS: writes and reads of this size succeed and match
+RESULT 256 KB IRPs: write 16402 ms (15 MiB/s), read 14306 ms (17 MiB/s), read back identical
+PASS: writes and reads of this size succeed and match
+RESULT 1024 KB IRPs: write 16381 ms (15 MiB/s), read 14312 ms (17 MiB/s), read back identical
+PASS: writes and reads of this size succeed and match
+tests: 3 passed, 0 failed
+exit: status 0

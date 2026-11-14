@@ -1,0 +1,7 @@
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: raw volume dismounted: 0x00000000
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 469397 of 469400 free, volume device 3A1282B8
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: exFAT volume refused: not exFAT

@@ -242,6 +242,23 @@ enum {
 	STATUS_DEVICE_REMOVED = (int32_t)0xC00002B6,
 };
 
+// What a file system answers (plugins/exfat/kernel_seam.md, section 4; the values are NT's).
+enum {
+	STATUS_PENDING = 0x00000103,
+	STATUS_BUFFER_OVERFLOW = (int32_t)0x80000005,
+	STATUS_NO_SUCH_DEVICE = (int32_t)0xC000000E,
+	STATUS_INVALID_DEVICE_REQUEST = (int32_t)0xC0000010,
+	STATUS_DISK_CORRUPT_ERROR = (int32_t)0xC0000032,
+	STATUS_DELETE_PENDING = (int32_t)0xC0000056,
+	STATUS_INSUFFICIENT_RESOURCES = (int32_t)0xC000009A,
+	STATUS_CANNOT_DELETE = (int32_t)0xC0000121,
+	STATUS_FILE_DELETED = (int32_t)0xC0000123,
+	STATUS_FILE_CLOSED = (int32_t)0xC0000128,
+	STATUS_UNRECOGNIZED_VOLUME = (int32_t)0xC000014F,
+	STATUS_IO_DEVICE_ERROR = (int32_t)0xC0000185,
+	STATUS_VOLUME_DISMOUNTED = (int32_t)0xC000026E,
+};
+
 // Win32 errors that XAM returns (xenia:src/xenia/xbox.h:86-104).
 enum {
 	ERROR_SUCCESS = 0,
@@ -605,6 +622,24 @@ uint32_t InterlockedFlushSList(SLIST_HEADER *list);
 // the check (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:84-116). ObDereferenceObject releases it.
 NTSTATUS ObReferenceObjectByHandle(HANDLE handle, uint32_t object_type, uint32_t *out_object);
 NTSTATUS ObDereferenceObject(uint32_t object);
+// A device object by name, "\\Device\\Mass0" for the first USB stick; object_type is IoDeviceObjectType. The
+// kernel runs the device type's parse procedure (plugins/exfat/kernel_seam.md, section 3); Xenia looks the name up
+// in its object table (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:118-134). ObDereferenceObject releases it.
+NTSTATUS ObReferenceObjectByName(const ANSI_STRING *name, uint32_t attributes, const void *object_type,
+	void *parse_context, uint32_t *out_object);
+// The kernel's device object type, as ObReferenceObjectByName takes it (xboxkrnl_table.inc:72, a variable).
+extern const void *const IoDeviceObjectType;
+// A device control request sent to a device object and waited for; returned_bytes may be null. Not in Xenia
+// (plugins/exfat/kernel_seam.md, section 2).
+NTSTATUS IoSynchronousDeviceIoControlRequest(uint32_t control_code, uint32_t device, const void *input,
+	uint32_t input_bytes, void *output, uint32_t output_bytes, uint32_t *returned_bytes);
+// A read (major function 2) or write (3) of bytes at offset, sent to a device object and waited for. Not in Xenia
+// (plugins/exfat/kernel_seam.md, section 2).
+NTSTATUS IoSynchronousFsdRequest(uint32_t major_function, uint32_t device, void *buffer, uint32_t bytes,
+	const uint64_t *offset);
+// Dismounts the volume the kernel has on the named device, "\\Device\\Mass0": the file system dismounts and
+// its volume device is deleted, so the next open mounts afresh (plugins/exfat/kernel_seam.md, section 5).
+NTSTATUS IoDismountVolumeByName(const ANSI_STRING *name);
 // A drive, link as "\??\name:", standing for target, a device path; Xenia strips the "\??\"
 // (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:151-178).
 NTSTATUS ObCreateSymbolicLink(const ANSI_STRING *link, const ANSI_STRING *target);
@@ -631,13 +666,48 @@ typedef struct {
 // writing count bytes at most and no terminator when it fills them (xenia:src/xenia/kernel/xboxkrnl/
 // xboxkrnl_strings.cc:703-720, 1001-1041). MSVC's returns -1 for that.
 int32_t _vsnprintf(char *buffer, uint32_t count, const char *format, va_list args);
-// Major, minor, build and fix, four 16-bit words (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:206-217).
-extern const uint16_t *const XboxKrnlVersion;
 // The running title's module handle, which changes as titles do (xcn:xbox360/xa_plugin.c:90-94, 827-848).
 extern const volatile HANDLE *const XexExecutableModuleHandle;
 // Unloads a module from its own thread and ends the thread, not returning; exit_code 0, as pploader passes it
 // (pploader:pploader/Main.cpp:21-23, 358-369).
 void XexUnloadImageAndExitThread(HANDLE module, uint32_t exit_code);
+
+// Milestone 77: the I/O manager's calls a file-system module makes, as the kernel's own FAT driver makes them
+// (plugins/exfat/kernel_seam.md; plugins/exfat/kernel_io.h has the objects). Not in Xenia.
+
+// A volume device: driver is a DRIVER_OBJECT, name NULL, device_type 8, flags 0 (section 3).
+NTSTATUS IoCreateDevice(const void *driver, uint32_t extension_bytes, const ANSI_STRING *name, uint32_t device_type,
+	uint32_t flags, void **device);
+// Marks the device deleted; it goes when its last reference does, through its driver's delete routine (section 5).
+void IoDeleteDevice(void *device);
+// Calls the DismountVolume of the file system mounted on the device, then deletes its volume device (section 5).
+NTSTATUS IoDismountVolume(void *device);
+// Finishes an IRP with the status and information already in it; priority_boost is 0 (section 4).
+void IoCompleteRequest(void *irp, uint8_t priority_boost);
+// The dispatch routine for a major function a driver doesn't do: STATUS_INVALID_DEVICE_REQUEST (section 1).
+NTSTATUS IoInvalidDeviceRequest(void *device, void *irp);
+// Sends the IRP to the device's driver at the next stack location (section 2).
+NTSTATUS IoCallDriver(void *device, void *irp);
+// The share counts of a file (SHARE_ACCESS, 7 bytes): set by the first open, checked and, with update, added to by
+// the others (STATUS_SHARING_VIOLATION when refused), removed at CLEANUP. Each also writes the file object's access
+// byte from desired_access, which NtReadFile and NtWriteFile check (IoSetShareAccess 0x8006bbd0).
+void IoSetShareAccess(uint32_t desired_access, uint32_t share_access, void *file_object, void *share);
+NTSTATUS IoCheckShareAccess(
+	uint32_t desired_access, uint32_t share_access, void *file_object, void *share, uint32_t update);
+void IoRemoveShareAccess(void *file_object, void *share);
+// The I/O manager's spin lock over every device's MountedOrSelfDevice: the acquire returns what the release takes
+// (FatDismountVolume 0x800a2670).
+uint32_t IoAcquireDeviceObjectLock(void);
+void IoReleaseDeviceObjectLock(uint32_t state);
+// One more reference on a kernel object; ObDereferenceObject drops it.
+void ObReferenceObject(void *object);
+// Waits on a dispatcher object such as a device's mount lock: wait_reason 0, KERNEL_MODE, not alertable, no
+// timeout (NT's arguments; IopMountDevice 0x8006bfa8 waits so).
+NTSTATUS KeWaitForSingleObject(
+	void *object, uint32_t wait_reason, uint32_t wait_mode, uint32_t alertable, const int64_t *timeout);
+// Around a lock a file system holds while the kernel calls it, as FAT holds its own.
+void KeEnterCriticalRegion(void);
+void KeLeaveCriticalRegion(void);
 
 // XAM's sockets are Winsock's calls with the caller's type first, a title's XNCALLER_TITLE
 // (xenia:src/xenia/kernel/xam/xam_net.cc:42-47); their sockets are XAM's handles, and their errors Winsock's.
