@@ -40,6 +40,12 @@ enum {
 	NAME_BYTES = 256,
 	DEPTH_MAX = 4,
 	PATH_BYTES = 512,
+	// "\Device\Mass0\" and the module's longest path under the volume, 519 bytes, with the terminator.
+	LONG_PATH_BYTES = 560,
+	LONG_NAME_BYTES = NAME_BYTES + 1,
+	// Directories of 120 characters, four deep under exfat_check: 11 + 4 * 121 = 495 bytes under the volume.
+	DEEP_LEVELS = 4,
+	DEEP_NAME_CHARS = 120,
 	MTIME_WINDOW_S = 60,
 	FILE_FS_ATTRIBUTE_INFORMATION_CLASS = 5,
 	FILE_POSITION_INFORMATION_CLASS = 14,
@@ -453,6 +459,146 @@ static void check_names(void)
 	check_ok("unlink the Latin-1 name", unlink(latin));
 }
 
+// Marks the file or directory for deletion through the kernel and closes it, for paths xsdk's own calls can't take.
+static NTSTATUS delete_nt(const char *device_path, uint32_t options)
+{
+	HANDLE handle;
+	NTSTATUS status = open_nt(device_path, DELETE, 0, FILE_OPEN, options, &handle);
+	if (!NT_SUCCESS(status))
+		return status;
+	const FILE_DISPOSITION_INFORMATION disposition = { 1 };
+	IO_STATUS_BLOCK io;
+	status = NtSetInformationFile(handle, &io, &disposition, sizeof disposition, FILE_DISPOSITION_INFORMATION_CLASS);
+	(void)NtClose(handle);
+	return status;
+}
+
+// The limits FATX's 42-character names never reached: exFAT's 255 characters a name and the module's 519 bytes of
+// path under the volume (plugins/exfat/exfat_module.c, PATH_BYTES), through the kernel and through xsdk's own calls,
+// whose resolved path holds 548 (src/file_private.h, XSDK_PATH_BYTES). The same names on game:, the title's folder on
+// the FATX hdd, tell the file systems apart: FATX refuses them itself, so the room in xsdk gives it nothing.
+static void check_long_names(void)
+{
+	struct stat info;
+	uint64_t size;
+	HANDLE handle;
+	IO_STATUS_BLOCK io;
+	char name[LONG_NAME_BYTES];
+	char path[LONG_PATH_BYTES];
+	char device_path[LONG_PATH_BYTES];
+
+	// Through xsdk: a 255-character name on the stick works; on FATX, 42 works and 255 is FATX's own refusal,
+	// STATUS_OBJECT_NAME_INVALID as EINVAL, not xsdk's ENAMETOOLONG.
+	memset(name, 'x', 255);
+	name[255] = 0;
+	snprintf(path, sizeof path, "%s/%s", FOLDER, name);
+	check("a 255-character name written through xsdk", write_small(path, "LONG", 4));
+	check("it lists with its 255 characters", listed(FOLDER, 0, name));
+	check("stat of the 255-character name", stat(path, &info) == 0 && info.st_size == 4);
+	check_ok("unlink the 255-character name", unlink(path));
+	snprintf(path, sizeof path, "game:/%s", name);
+	const int fd = open(path, O_WRONLY | O_CREAT, 0666);
+	if (fd >= 0) {
+		(void)close(fd);
+		(void)unlink(path);
+	}
+	check_errno("the 255-character name on FATX: EINVAL, its own refusal", fd, EINVAL);
+	name[42] = 0;
+	snprintf(path, sizeof path, "game:/%s", name);
+	check("a 42-character name on FATX written", write_small(path, "FATX", 4));
+	check_ok("unlink the 42-character name", unlink(path));
+
+	// Through the kernel: 255 characters, exFAT's longest name, created, written, listed and deleted; 256 refused.
+	memset(name, 'y', 255);
+	name[255] = 0;
+	snprintf(device_path, sizeof device_path, "%sexfat_check\\%s", DEVICE_ROOT, name);
+	NTSTATUS status = open_nt(device_path, GENERIC_WRITE, 0, FILE_CREATE, FILE_NON_DIRECTORY_FILE, &handle);
+	check("a 255-character name created through the kernel", NT_SUCCESS(status));
+	bool written = false;
+	if (NT_SUCCESS(status)) {
+		status = NtWriteFile(handle, 0, NULL, NULL, &io, "LONG", 4, NULL);
+		written = NT_SUCCESS(status) && io.information == 4;
+		(void)NtClose(handle);
+	}
+	check("4 bytes written to it", written);
+	check("it lists with its 255 characters", listed(FOLDER, 0, name));
+	check("its size through the kernel: 4", NT_SUCCESS(size_nt(device_path, &size)) && size == 4);
+	snprintf(path, sizeof path, "%s/%s", FOLDER, name);
+	check("the same name through xsdk: stat finds it", stat(path, &info) == 0 && info.st_size == 4);
+	check("delete the 255-character name through the kernel",
+		NT_SUCCESS(delete_nt(device_path, FILE_NON_DIRECTORY_FILE)));
+	check("it is gone", size_nt(device_path, &size) == STATUS_OBJECT_NAME_NOT_FOUND);
+	name[255] = 'y';
+	name[256] = 0;
+	snprintf(device_path, sizeof device_path, "%sexfat_check\\%s", DEVICE_ROOT, name);
+	status = open_nt(device_path, GENERIC_WRITE, 0, FILE_CREATE, FILE_NON_DIRECTORY_FILE, &handle);
+	if (NT_SUCCESS(status))
+		(void)NtClose(handle);
+	check("a 256-character name: STATUS_OBJECT_NAME_INVALID", status == STATUS_OBJECT_NAME_INVALID);
+
+	// The module's path: a 23-character file name below the four directories reaches 519 bytes, the longest it
+	// takes, and a 24-character one is refused.
+	snprintf(device_path, sizeof device_path, "%sexfat_check", DEVICE_ROOT);
+	bool made = true;
+	for (unsigned level = 0; level < DEEP_LEVELS; level++) {
+		memset(name, 'a' + (int)level, DEEP_NAME_CHARS);
+		name[DEEP_NAME_CHARS] = 0;
+		snprintf(device_path + strlen(device_path), sizeof device_path - strlen(device_path), "\\%s", name);
+		status = open_nt(
+			device_path, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_CREATE, FILE_DIRECTORY_FILE, &handle);
+		if (NT_SUCCESS(status))
+			(void)NtClose(handle);
+		made = made && NT_SUCCESS(status);
+	}
+	check("four 120-character directories created, 495 bytes under the volume", made);
+	const size_t deep_length = strlen(device_path);
+	memset(name, 'f', 24);
+	name[23] = 0;
+	snprintf(device_path + deep_length, sizeof device_path - deep_length, "\\%s", name);
+	status = open_nt(device_path, GENERIC_WRITE, 0, FILE_CREATE, FILE_NON_DIRECTORY_FILE, &handle);
+	check("a file at a 519-byte path created", NT_SUCCESS(status));
+	if (NT_SUCCESS(status)) {
+		(void)NtWriteFile(handle, 0, NULL, NULL, &io, "DEEP", 4, NULL);
+		(void)NtClose(handle);
+	}
+	status = open_nt(device_path, GENERIC_READ, FILE_SHARE_READ, FILE_OPEN, FILE_NON_DIRECTORY_FILE, &handle);
+	memset(back, 0, 4);
+	check("it reads back", NT_SUCCESS(status) && read_nt(handle, back, 4, 0) && memcmp(back, "DEEP", 4) == 0);
+	if (NT_SUCCESS(status))
+		(void)NtClose(handle);
+	check("delete the file at 519 bytes", NT_SUCCESS(delete_nt(device_path, FILE_NON_DIRECTORY_FILE)));
+	name[23] = 'f';
+	name[24] = 0;
+	snprintf(device_path + deep_length, sizeof device_path - deep_length, "\\%s", name);
+	status = open_nt(device_path, GENERIC_WRITE, 0, FILE_CREATE, FILE_NON_DIRECTORY_FILE, &handle);
+	if (NT_SUCCESS(status))
+		(void)NtClose(handle);
+	check("a 520-byte path: STATUS_OBJECT_NAME_INVALID", status == STATUS_OBJECT_NAME_INVALID);
+	// Through xsdk, which takes either separator: the directories' path works, the 520-byte file path meets the
+	// module's refusal, and a 40-character name below them, 536 under the volume, passes xsdk's 548 resolved.
+	device_path[deep_length] = 0;
+	snprintf(path, sizeof path, "%s%s", FOLDER, device_path + strlen(DEVICE_ROOT) + strlen("exfat_check"));
+	check("the deep path through xsdk: a directory", stat(path, &info) == 0 && S_ISDIR(info.st_mode));
+	const size_t deep_path_length = strlen(path);
+	snprintf(path + deep_path_length, sizeof path - deep_path_length, "/%s", name);
+	open_fails("the 520-byte path through xsdk: EINVAL, the module's refusal", path, O_RDONLY, EINVAL);
+	memset(name, 'f', 40);
+	name[40] = 0;
+	snprintf(path + deep_path_length, sizeof path - deep_path_length, "/%s", name);
+	open_fails("a 536-byte path through xsdk: ENAMETOOLONG, its own limit", path, O_RDONLY, ENAMETOOLONG);
+	// Removed bottom up through the kernel, each once empty.
+	bool removed = true;
+	for (unsigned level = 0; level < DEEP_LEVELS; level++) {
+		removed = removed && NT_SUCCESS(delete_nt(device_path, FILE_DIRECTORY_FILE));
+		*strrchr(device_path, '\\') = 0;
+	}
+	check("the four directories removed", removed);
+	memset(name, 'a', DEEP_NAME_CHARS);
+	name[DEEP_NAME_CHARS] = 0;
+	snprintf(path, sizeof path, "%s/%s", FOLDER, name);
+	check_errno("the first of them is gone", stat(path, &info), ENOENT);
+}
+
 static void check_attributes(void)
 {
 	struct stat info;
@@ -627,6 +773,7 @@ int main(void)
 	check("stat exfat_check: a directory", stat(FOLDER, &info) == 0 && S_ISDIR(info.st_mode));
 	check_pattern_file();
 	check_names();
+	check_long_names();
 	check_attributes();
 	check_free_space();
 	check_kernel_calls();

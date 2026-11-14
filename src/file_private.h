@@ -7,8 +7,11 @@
 #include "xsdk/kernel.h"
 
 enum {
-	// NT's MAX_PATH, counting the terminating NUL.
-	XSDK_PATH_BYTES = 260,
+	// The exFAT module's longest path under a volume, 519 bytes (plugins/exfat/exfat_module.c, PATH_BYTES), after the
+	// longest device root, "\Device\Harddisk0\Partition1\" (29), with the terminating NUL. Each file system keeps its
+	// own limits inside it: FATX refuses a name over 42 characters (docs/HARDWARE.md, "Shaders compiled as the game
+	// asks"), whatever xsdk passes it.
+	XSDK_PATH_BYTES = 29 + 519 + 1,
 };
 
 // The errno closest to a kernel status.

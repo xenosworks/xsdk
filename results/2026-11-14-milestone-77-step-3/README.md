@@ -14,6 +14,8 @@ the volume from sector 2048, 128 KB clusters, 469,400 clusters, label XSDK, seri
 | check_final | exfat_check.xex | the same 132 checks on the final module build | **132 passed, 0 failed, 362 s**; big.bin at 11 MiB/s (15 for its first GiB, 10-11 after) |
 | pc | chkdsk, check_stick.py | the stick on the PC: file system sound, files byte-identical | **no problems, all identical** (below) |
 | speed16 | probe_mass_speed.xex | 2 GiB through the module against 2 GiB raw, timed every 512 MiB | module 2048 MiB in 171.0 s (11 MiB/s), raw 204.0 s (10 MiB/s): the stick itself had slowed by then, after some 12 GB of writes in the hour; the module is not behind raw |
+| check_long | exfat_check.xex | the 132 checks plus 21 on the name and path limits (check_long_names), after the stick's PC visit | **153 passed, 0 failed, 362 s** |
+| check_long2 | exfat_check.xex | the same with xsdk's resolved path raised from 260 to 549 bytes (src/file_private.h) and 4 checks that FATX keeps its own limits: 157 checks | **157 passed, 0 failed, 380 s** |
 
 exfat.log in each folder is the module's log (hdd:\XSDK\exfat\exfat.log) as fetched after that run.
 
@@ -72,3 +74,10 @@ So what the module wrote is what a PC reads, and the structure it left is one Wi
   64-bit offsets). An SDK matter, not the module's.
 - The module waits for all its volume devices to be deleted before it unloads, so a title holding a handle to the
   stick delays the unload until it closes it (logged every 10 s).
+- Names and paths (check_long, check_long2): a name is 255 Latin-1 characters at most, exFAT's own limit, where FATX
+  stops at 42; the module takes 519 bytes of path under the volume and refuses 520 (STATUS_OBJECT_NAME_INVALID). xsdk's
+  own file calls resolved a path into 260 bytes, NT's MAX_PATH, which held a 233-character name under exfat_check
+  (check_long); they now resolve into 549, the module's 519 after the longest device root, so a title gets the file
+  system's own limits: on the stick the 255-character name and the 519-byte path work and 520 is the module's EINVAL,
+  while on the FATX hdd the same 255-character name is FATX's own EINVAL and 42 works (check_long2). xsdk's own
+  ENAMETOOLONG is left for paths past 548 resolved.
