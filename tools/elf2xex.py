@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Convert a title ELF linked with src/xsdk.ld into an unencrypted XEX2, its pages of zeros left out of the file."""
+"""Convert a title ELF linked with src/xsdk.ld, or with --dll a plugin linked with src/xsdk_plugin.ld, into an
+unencrypted XEX2, its pages of zeros left out of the file."""
 
 import argparse
 import hashlib
@@ -20,6 +21,10 @@ IMAGE_BASE = 0x82000000
 PE_HEADER_BYTES = 0x1000
 # Image pages are 64 KB unless the image asks for 4 KB (xenia:src/xenia/kernel/util/xex2_info.h:76).
 PAGE_BYTES = 0x10000
+# A system DLL, as DashLaunch's plugins are, has 4 KB pages (xcn:xbox360/build.sh:14-16), which the kernel keeps at
+# 0x90000000-0x9FFFFFFF (xenia:src/xenia/memory.cc:45-47, 167-168).
+DLL_PAGE_BYTES = 0x1000
+DLL_REGION = range(0x90000000, 0xA0000000)
 
 # xenia:src/xenia/kernel/util/xex2_info.h:55-59
 SECTION_CODE = 1
@@ -38,6 +43,10 @@ HEADER_SYSTEM_FLAGS = 0x00030000
 HEADER_EXECUTION_INFO = 0x00040006
 
 MODULE_TITLE = 0x00000001
+# Exports to titles and DLL (xenia:src/xenia/kernel/util/xex2_info.h:114-121): SynthXEX's sysdll type
+# (SynthXEX 4bda05e src/main.c:261-262), with which xcn's plugin loads on the console (xcn:xbox360/build.sh:56).
+MODULE_SYSTEM_DLL = 0x0000000A
+IMAGE_PAGE_SIZE_4KB = 0x10000000
 SYSTEM_NO_FORCED_REBOOT = 0x00000001
 SYSTEM_HANDLE_GAMEPAD_DISCONNECT = 0x00000020
 REGION_ALL = 0xFFFFFFFF
@@ -156,23 +165,23 @@ def section_type(section):
     return SECTION_READONLY
 
 
-def build_image(sections):
+def build_image(sections, base, page_bytes):
     loaded = [s for s in sections if s["flags"] & SHF_ALLOC and s["size"]]
     for section in loaded:
-        if section["address"] < IMAGE_BASE + PE_HEADER_BYTES:
+        if section["address"] < base + PE_HEADER_BYTES:
             fail(f"section {section['name']} overlaps the PE headers")
     end = max(s["address"] + s["size"] for s in loaded)
-    image = bytearray(align(end - IMAGE_BASE, PAGE_BYTES))
-    page_types = [SECTION_READONLY] + [None] * (len(image) // PAGE_BYTES - 1)
+    image = bytearray(align(end - base, page_bytes))
+    page_types = [SECTION_READONLY] + [None] * (len(image) // page_bytes - 1)
 
     for section in loaded:
-        start = section["address"] - IMAGE_BASE
+        start = section["address"] - base
         image[start:start + len(section["data"])] = section["data"]
-        first_page = start // PAGE_BYTES
-        last_page = (start + section["size"] - 1) // PAGE_BYTES
+        first_page = start // page_bytes
+        last_page = (start + section["size"] - 1) // page_bytes
         for page in range(first_page, last_page + 1):
             if page_types[page] not in (None, section_type(section)):
-                fail(f"section {section['name']} shares a 64 KB page with a section of another type")
+                fail(f"section {section['name']} shares a page with a section of another type")
             page_types[page] = section_type(section)
 
     runs = []
@@ -183,17 +192,17 @@ def build_image(sections):
         else:
             runs.append({"type": kind, "first_page": page, "pages": 1})
     for run in runs:
-        start = IMAGE_BASE + run["first_page"] * PAGE_BYTES
-        end = start + run["pages"] * PAGE_BYTES
+        start = base + run["first_page"] * page_bytes
+        end = start + run["pages"] * page_bytes
         inside = [s for s in loaded if start <= s["address"] < end]
-        run["start"] = min(s["address"] for s in inside) - IMAGE_BASE if inside else None
-        run["end"] = max(s["address"] + s["size"] for s in inside) - IMAGE_BASE if inside else None
+        run["start"] = min(s["address"] for s in inside) - base if inside else None
+        run["end"] = max(s["address"] + s["size"] for s in inside) - base if inside else None
         run["initialized"] = sum(len(s["data"]) for s in inside)
         run["uninitialized"] = sum(s["size"] - len(s["data"]) for s in inside)
     return image, runs
 
 
-def read_imports(sections, image):
+def read_imports(sections, image, base):
     found = [s for s in sections if s["name"] == ".xsdk.imports"]
     if not found:
         return {}
@@ -210,7 +219,7 @@ def read_imports(sections, image):
             if entry["thunk"]:
                 addresses.append(entry["thunk"])
             for address in addresses:
-                word = struct.unpack_from(">I", image, address - IMAGE_BASE)[0]
+                word = struct.unpack_from(">I", image, address - base)[0]
                 if word & 0xFFFF != entry["ordinal"]:
                     fail(f"{name} ordinal {entry['ordinal']:#x}: record at {address:#010x} reads {word:#010x}")
     return dict(sorted(libraries.items()))
@@ -250,7 +259,7 @@ def align_bytes(data, alignment):
     return data + bytes(align(len(data), alignment) - len(data))
 
 
-def pe_headers(image, runs, entry, stack_bytes):
+def pe_headers(image, runs, entry, stack_bytes, base):
     sections = [run for run in runs if run["start"] is not None]
     code = [run for run in sections if run["type"] == SECTION_CODE]
     data = [run for run in sections if run["type"] != SECTION_CODE]
@@ -260,10 +269,10 @@ def pe_headers(image, runs, entry, stack_bytes):
         sum(run["initialized"] for run in code),
         sum(run["initialized"] for run in data),
         sum(run["uninitialized"] for run in sections),
-        entry - IMAGE_BASE,
+        entry - base,
         code[0]["start"] if code else 0,
         data[0]["start"] if data else 0,
-        IMAGE_BASE)
+        base)
     optional += struct.pack("<IIHHHHHHIIIIHHIIIIII", PE_HEADER_BYTES, PE_HEADER_BYTES, 0, 0, 0, 0, 0, 0, 0, len(image),
         PE_HEADER_BYTES, 0, PE_SUBSYSTEM_XBOX, 0, stack_bytes, stack_bytes, 0, 0, 0, 16)
     optional += bytes(16 * 8)
@@ -306,7 +315,7 @@ def add_title_name(image, headers_end, title_id, name):
     return struct.pack(">I8sII", 4 + 16, f"{title_id:08X}".encode(), IMAGE_BASE + offset, len(database))
 
 
-def page_descriptors(image, runs):
+def page_descriptors(image, runs, page_bytes):
     # One descriptor per page, as a working XDK-built title has (user's console files).
     page_types = [run["type"] for run in runs for _ in range(run["pages"])]
     # Each descriptor's digest covers the next page and its descriptor; the security info's digest covers the first.
@@ -315,7 +324,7 @@ def page_descriptors(image, runs):
     for page in reversed(range(len(page_types))):
         descriptor = struct.pack(">I", 1 << 4 | page_types[page]) + next_digest
         descriptors.append(descriptor)
-        next_digest = sha1(image[page * PAGE_BYTES:(page + 1) * PAGE_BYTES], descriptor)
+        next_digest = sha1(image[page * page_bytes:(page + 1) * page_bytes], descriptor)
     descriptors.reverse()
     return b"".join(descriptors), next_digest
 
@@ -370,25 +379,25 @@ def optional_header_table(inline, blocks, data_offset, placed):
     return table, data
 
 
-def build_xex(image, runs, entry, libraries, resources, args):
+def build_xex(image, runs, entry, libraries, resources, args, base, page_bytes):
     imports, import_digest = import_libraries_header(libraries)
-    descriptors, image_digest = page_descriptors(image, runs)
+    descriptors, image_digest = page_descriptors(image, runs, page_bytes)
     compression = compression_blocks(image)
     image_data = file_data(image, compression)
     assert expand(compression, image_data, len(image)) == image
 
-    inline = {
-        HEADER_ENTRY_POINT: entry,
-        HEADER_IMAGE_BASE_ADDRESS: IMAGE_BASE,
-        HEADER_DEFAULT_STACK_SIZE: args.stack_size,
-        HEADER_SYSTEM_FLAGS: SYSTEM_NO_FORCED_REBOOT | SYSTEM_HANDLE_GAMEPAD_DISCONNECT,
-    }
+    inline = {HEADER_ENTRY_POINT: entry, HEADER_IMAGE_BASE_ADDRESS: base}
     blocks = {
         HEADER_FILE_FORMAT_INFO: struct.pack(">IHH", 8 + 8 * len(compression), ENCRYPTION_NONE, COMPRESSION_BASIC)
             + b"".join(struct.pack(">II", *block) for block in compression),
-        HEADER_TLS_INFO: struct.pack(">IIII", TLS_SLOTS, 0, 0, 0),
-        HEADER_EXECUTION_INFO: struct.pack(">IIIIBBBBI", 0, args.version, 0, args.title_id, 0, 0, 1, 1, 0),
     }
+    # A DLL has no stack size, system flags, TLS or execution info, as SynthXEX's system-DLL patch leaves them out
+    # (xcn-bridge:toolchain/synthxex_dll_patch.py:4-8, 41-62).
+    if args.dll is None:
+        inline[HEADER_DEFAULT_STACK_SIZE] = args.stack_size
+        inline[HEADER_SYSTEM_FLAGS] = SYSTEM_NO_FORCED_REBOOT | SYSTEM_HANDLE_GAMEPAD_DISCONNECT
+        blocks[HEADER_TLS_INFO] = struct.pack(">IIII", TLS_SLOTS, 0, 0, 0)
+        blocks[HEADER_EXECUTION_INFO] = struct.pack(">IIIIBBBBI", 0, args.version, 0, args.title_id, 0, 0, 1, 1, 0)
     if resources:
         blocks[HEADER_RESOURCE_INFO] = resources
 
@@ -404,12 +413,14 @@ def build_xex(image, runs, entry, libraries, resources, args):
 
     security = bytearray(SECURITY_INFO_BYTES)
     struct.pack_into(">II", security, 0, security_bytes, len(image))
-    struct.pack_into(">III20sI20s", security, 0x108, IMAGE_INFO_BYTES, 0, IMAGE_BASE, image_digest, len(libraries),
+    image_flags = 0 if args.dll is None else IMAGE_PAGE_SIZE_4KB
+    struct.pack_into(">III20sI20s", security, 0x108, IMAGE_INFO_BYTES, image_flags, base, image_digest, len(libraries),
         import_digest)
     struct.pack_into(">III", security, 0x178, REGION_ALL, MEDIA_ALL, len(descriptors) // PAGE_DESCRIPTOR_BYTES)
 
     header = bytearray(header_size)
-    struct.pack_into(">4sIIIII", header, 0, b"XEX2", MODULE_TITLE, header_size, 0, security_offset, header_count)
+    module_flags = MODULE_TITLE if args.dll is None else MODULE_SYSTEM_DLL
+    struct.pack_into(">4sIIIII", header, 0, b"XEX2", module_flags, header_size, 0, security_offset, header_count)
     header[0x18:0x18 + len(table)] = table
     header[security_offset:security_offset + SECURITY_INFO_BYTES] = security
     header[security_offset + SECURITY_INFO_BYTES:security_offset + security_bytes] = descriptors
@@ -422,14 +433,14 @@ def build_xex(image, runs, entry, libraries, resources, args):
     return bytes(header) + image_data
 
 
-def patch_import_records(image, libraries):
+def patch_import_records(image, libraries, base):
     for index, imports in enumerate(libraries.values()):
         for entry in imports:
             records = [(entry["slot"], 0)]
             if entry["thunk"]:
                 records += [(entry["thunk"], RECORD_THUNK), (entry["thunk"] + 4, RECORD_THUNK_SECOND)]
             for address, kind in records:
-                struct.pack_into(">I", image, address - IMAGE_BASE, kind | index << 16 | entry["ordinal"])
+                struct.pack_into(">I", image, address - base, kind | index << 16 | entry["ordinal"])
 
 
 def main():
@@ -440,15 +451,23 @@ def main():
     parser.add_argument("--stack-size", type=lambda text: int(text, 0), default=1024 * 1024)
     parser.add_argument("--title-name", help="the name the dashboard shows")
     parser.add_argument("--version", type=parse_version, default=0, help="the title's version, as 1.2.300.4")
+    parser.add_argument("--dll", type=lambda text: int(text, 0), metavar="BASE",
+        help="make a system DLL, a plugin, loaded at BASE, which no other module's image may overlap")
     args = parser.parse_args()
+    if args.dll is not None and (args.title_name or args.version):
+        fail("a DLL has no name on the dashboard and no version")
 
+    base, page_bytes = (IMAGE_BASE, PAGE_BYTES) if args.dll is None else (args.dll, DLL_PAGE_BYTES)
     entry, sections = read_elf(args.elf.read_bytes())
-    image, runs = build_image(sections)
-    libraries = read_imports(sections, image)
-    patch_import_records(image, libraries)
-    headers_end = pe_headers(image, runs, entry, args.stack_size)
+    image, runs = build_image(sections, base, page_bytes)
+    end = base + len(image)
+    if args.dll is not None and (base % page_bytes or base not in DLL_REGION or end > DLL_REGION.stop):
+        fail(f"a DLL's image, {base:#010x}-{end:#010x}, must be on 4 KB pages within 0x90000000-0x9FFFFFFF")
+    libraries = read_imports(sections, image, base)
+    patch_import_records(image, libraries, base)
+    headers_end = pe_headers(image, runs, entry, args.stack_size, base)
     resources = add_title_name(image, headers_end, args.title_id, args.title_name) if args.title_name else b""
-    args.xex.write_bytes(build_xex(image, runs, entry, libraries, resources, args))
+    args.xex.write_bytes(build_xex(image, runs, entry, libraries, resources, args, base, page_bytes))
 
 
 if __name__ == "__main__":

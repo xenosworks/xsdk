@@ -41,6 +41,10 @@ XSC_VERSION := $(shell cat $(XSC_SOURCES) $(XSC_HEADERS) | tr -d '\r' | sha256su
 IMPORT_NAMES := $(shell $(PYTHON) tools/gen_imports.py --list imports/imports.txt)
 IMPORT_SOURCES := $(IMPORT_NAMES:%=$(BUILD)/imports/%.S)
 SDK_OBJECTS := $(patsubst src/%,$(BUILD)/sdk/%.o,$(basename $(SDK_SOURCES))) $(IMPORT_NAMES:%=$(BUILD)/imports/%.o)
+# A plugin's runtime and the kernel's imports, all a plugin links (cmake/xsdk.cmake, xsdk_add_plugin), with no floating
+# point or VMX: the kernel may run a plugin's code in a DPC, which saves neither (xcn:docs/INTERNALS.md:122-124).
+PLUGIN_CFLAGS := $(CFLAGS) -msoft-float -mno-altivec -fno-tree-loop-distribute-patterns
+PLUGIN_OBJECTS := $(BUILD)/plugin/plugin.o $(IMPORT_NAMES:%=$(BUILD)/imports/%.o)
 
 TEST_SOURCES := tests/main.c tests/test_image.c tests/test_memory.c tests/test_threads.c tests/test_placement.c \
 	tests/test_pthread.c tests/test_clocks.c tests/test_kernel_entry.c tests/kernel_entry_check.S tests/test_files.c \
@@ -96,7 +100,8 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 	instancing_probes cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe drive_probes system_probes launch_probes 	store_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
-all: $(BUILD)/m55_check.xex $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
+all: $(BUILD)/m55_check.xex $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/libxsdk_plugin.a \
+	$(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
 	$(BUILD)/guide_check.xex $(BUILD)/save_check.xex $(BUILD)/save_check_t2.xex $(BUILD)/terminate_check.xex \
 	$(BUILD)/launch_check.xex $(BUILD)/launch_target.xex $(PROBES:%=$(BUILD)/%.xex)
 
@@ -210,6 +215,14 @@ $(TILES_BREAKS:%=$(BUILD)/tests/probe_tiles_%.o): $(BUILD)/tests/probe_tiles_%.o
 $(BUILD)/libxsdk.a: $(SDK_OBJECTS) | $(BUILD)/check/doloop_check.o
 	rm -f $@
 	$(AR) rcs $@ $^
+
+$(BUILD)/libxsdk_plugin.a: $(PLUGIN_OBJECTS)
+	rm -f $@
+	$(AR) rcs $@ $^
+
+$(BUILD)/plugin/%.o: src/%.c
+	@mkdir -p $(@D)
+	$(CC) $(PLUGIN_CFLAGS) -c $< -o $@
 
 # Counted loops end in bdnz only with gcc-xsdk.patch's rs6000_preferred_doloop_mode (milestone 52).
 $(BUILD)/check/doloop_check.o: tests/doloop_check.c

@@ -32,6 +32,11 @@ Ethernet adapter, in the end as a plugin that DashLaunch loads, so FTP servers a
   `local/usbnet/ref`; no code taken from them. `r8152.c` lists `0x8156` (line 10382) and picks the adapter's
   vendor-specific configuration, noting it "is not always config #1" (line 10446): the adapter has more than one.
 - **Kernel exports** as Xenia names them (xenos-toolchain/reference, as in SCOPE.md).
+- **Plugins** (step 4), public sources whose facts, not code, we take: the same project's other files at commit
+  `6af5832`, its system DLL's build, loader and notes, cited as `xcn:<path>:<line>`;
+  Jacckii/Xbox360-Series-Controllers-Bridge's SynthXEX system-DLL patch at `ad6e4ba`, cited as
+  `xcn-bridge:<path>:<line>`; OpenXeChain/SynthXEX at `4bda05e`, cited as `SynthXEX 4bda05e <path>:<line>`; and
+  proferabg/pploader, a plugin loader that unloads itself (MIT), at `3568d92`, cited as `pploader:<path>:<line>`.
 
 ## Steps
 

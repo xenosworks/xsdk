@@ -95,6 +95,11 @@ xboxkrnl.exe  0x110  ObReferenceObjectByHandle
 # Milestone 58: audio.
 xboxkrnl.exe  0x09D  KeSetEvent
 xboxkrnl.exe  0x1FF  XAudioGetSpeakerConfig
+# Milestone 69: plugins.
+xboxkrnl.exe  0x14D  _vsnprintf
+xboxkrnl.exe  0x158  XboxKrnlVersion                     variable
+xboxkrnl.exe  0x193  XexExecutableModuleHandle           variable
+xboxkrnl.exe  0x1A2  XexUnloadImageAndExitThread
 xam.xex       0x001  NetDll_WSAStartup
 xam.xex       0x002  NetDll_WSACleanup
 xam.xex       0x003  NetDll_socket

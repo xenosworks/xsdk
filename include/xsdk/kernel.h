@@ -1,6 +1,7 @@
 #ifndef XSDK_KERNEL_H
 #define XSDK_KERNEL_H
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -608,6 +609,35 @@ NTSTATUS ObDereferenceObject(uint32_t object);
 // (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:151-178).
 NTSTATUS ObCreateSymbolicLink(const ANSI_STRING *link, const ANSI_STRING *target);
 NTSTATUS ObDeleteSymbolicLink(const ANSI_STRING *link);
+
+// Milestone 69: plugins (docs/scope/69-usb-ethernet.md).
+
+// What a module's handle points to, as far as load_count (xenia:src/xenia/kernel/xmodule.h:24-52).
+typedef struct {
+	uint32_t links[6];
+	uint32_t dll_base;
+	uint32_t image_base;
+	uint32_t image_size;
+	uint32_t full_dll_name[2];
+	uint32_t base_dll_name[2];
+	uint32_t flags;
+	uint32_t full_image_size;
+	uint32_t entry_point;
+	uint16_t load_count;
+	uint16_t module_index;
+} LDR_DATA_TABLE_ENTRY;
+
+// Formats as the kernel's printf does, with args 8-byte slots as xsdk's GCC passes them; returns the length it wanted,
+// writing count bytes at most and no terminator when it fills them (xenia:src/xenia/kernel/xboxkrnl/
+// xboxkrnl_strings.cc:703-720, 1001-1041). MSVC's returns -1 for that.
+int32_t _vsnprintf(char *buffer, uint32_t count, const char *format, va_list args);
+// Major, minor, build and fix, four 16-bit words (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_module.cc:206-217).
+extern const uint16_t *const XboxKrnlVersion;
+// The running title's module handle, which changes as titles do (xcn:xbox360/xa_plugin.c:90-94, 827-848).
+extern const volatile HANDLE *const XexExecutableModuleHandle;
+// Unloads a module from its own thread and ends the thread, not returning; exit_code 0, as pploader passes it
+// (pploader:pploader/Main.cpp:21-23, 358-369).
+void XexUnloadImageAndExitThread(HANDLE module, uint32_t exit_code);
 
 // XAM's sockets are Winsock's calls with the caller's type first, a title's XNCALLER_TITLE
 // (xenia:src/xenia/kernel/xam/xam_net.cc:42-47); their sockets are XAM's handles, and their errors Winsock's.

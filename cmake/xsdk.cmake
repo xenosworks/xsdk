@@ -94,3 +94,29 @@ function(xsdk_add_xex target)
 			"$<TARGET_FILE:${target}>" "$<TARGET_FILE_DIR:${target}>/${target}.xex"
 		VERBATIM)
 endfunction()
+
+# Links an OBJECT library into a plugin, <target>.xex in its build folder: a system DLL that stays loaded across titles
+# (docs/GUIDE.md, "Plugins"). xsdk_add_plugin(target BASE 0x91440000): BASE is where it loads, on 4 KB pages within
+# 0x90000000-0x9FFFFFFF, clear of every other module's image. It links libxsdk_plugin.a alone, so a call into newlib
+# or the rest of libxsdk fails the link, and tools/check_plugin.py fails it on a floating-point or VMX instruction.
+set(XSDK_PLUGIN_FLAGS -msoft-float -mno-altivec -fno-tree-loop-distribute-patterns)
+function(xsdk_add_plugin target)
+	cmake_parse_arguments(PARSE_ARGV 1 PLUGIN "" "BASE" "")
+	if(NOT DEFINED PLUGIN_BASE)
+		message(FATAL_ERROR "xsdk_add_plugin(${target}): BASE is required, as no two plugins may share one")
+	endif()
+	target_compile_options(${target} PRIVATE ${XSDK_PLUGIN_FLAGS})
+	set(elf "${CMAKE_CURRENT_BINARY_DIR}/${target}.elf")
+	set(xex "${CMAKE_CURRENT_BINARY_DIR}/${target}.xex")
+	set(runtime "${XSDK_ROOT}/build/libxsdk_plugin.a")
+	set(script "${XSDK_ROOT}/src/xsdk_plugin.ld")
+	add_custom_command(OUTPUT "${xex}" BYPRODUCTS "${elf}"
+		COMMAND "${CMAKE_C_COMPILER}" -static -nostdlib -T "${script}" "-Wl,--defsym=xsdk_plugin_base=${PLUGIN_BASE}"
+			"$<TARGET_OBJECTS:${target}>" "${runtime}" -o "${elf}"
+		COMMAND sh -c "'${CMAKE_OBJDUMP}' -d '${elf}' | python3 '${XSDK_ROOT}/tools/check_plugin.py'"
+		COMMAND python3 "${XSDK_ROOT}/tools/elf2xex.py" --dll "${PLUGIN_BASE}" "${elf}" "${xex}"
+		DEPENDS ${target} "$<TARGET_OBJECTS:${target}>" "${runtime}" "${script}" "${XSDK_ROOT}/tools/check_plugin.py"
+			"${XSDK_ROOT}/tools/elf2xex.py"
+		COMMAND_EXPAND_LISTS VERBATIM)
+	add_custom_target(${target}_xex ALL DEPENDS "${xex}")
+endfunction()

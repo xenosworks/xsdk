@@ -596,6 +596,33 @@ At start-up xsdk sets newlib's time zone, `TZ`, from XAM's `GetTimeZoneInformati
 US. A console set to US Eastern gives `TZ` as `<EST>5:00<EDT>4:00,M3.2.0/2:00:00,M11.1.0/2:00:00`; one with no time
 zone set gives UTC (docs/HARDWARE.md, "Drives, time zones and Xbox Home, milestone 54").
 
+## Plugins
+
+Through `plugin.h`; unverified until milestone 69 step 4 runs on the console (docs/scope/69-usb-ethernet.md)
+
+A plugin is a system DLL, which the kernel keeps loaded across titles, as DashLaunch loads its plugins from
+`launch.ini`. `xsdk_add_plugin(target BASE address)` (cmake/xsdk.cmake) links an `OBJECT` library of C into
+`<target>.xex`.
+
+| Call | Leaves set | Undone by | Threads |
+|---|---|---|---|
+| `plugin_main(module)`, the plugin's own | its code running on a system thread of its own, on hardware thread 2, once the kernel has loaded it; `module` is its handle | returning, which unloads the plugin and ends the thread | its own |
+| `xsdk_plugin_log_open(path)` | `xsdk_plugin_log`'s lines going to the end of the file at `path`, a device path in a folder that exists | | any |
+| `xsdk_plugin_log(format, ...)` | one more line, formatted by the kernel's `_vsnprintf`; the file is opened for each, so lines keep coming as titles change | | the plugin's |
+
+- **What a plugin links** is `libxsdk_plugin.a` alone: its entry, its log and the kernel's imports (`kernel.h`). The
+  rest of libxsdk and newlib, `malloc` and stdio among them, assume a title, so a call into them fails the link.
+- **No floating point or VMX:** the kernel may run a plugin's code in a DPC, which saves neither
+  (xcn:docs/INTERNALS.md:122-124). Plugins build with `-msoft-float -mno-altivec`, so floating point fails the link,
+  and `tools/check_plugin.py` fails a plugin whose code holds either kind of instruction. xsdk's GCC keeps r14-r31
+  whole (tools/toolchain/gcc-xsdk.patch:741), so the kernel calls a plugin's functions directly, with no thunks.
+- **The base:** a plugin loads only at its own, on 4 KB pages in 0x90000000-0x9FFFFFFF, clear of every other module.
+  On kernel 17559, 0x91429000-0x91680000, between `hud.xex` and `ximecore.xex`, holds no system module
+  (xcn:xbox360/build.sh:37-40).
+- **Loading one from a title:** `XexLoadImage(path, 8, 0, &module)`, ordinal 0x199 found with
+  `XexGetProcedureAddress`, with the thread's process type, byte 0x73 of its thread object, 2 for the call
+  (xcn:xbox360/loader.c:6-12).
+
 ## Porting: the C and POSIX calls
 
 A C17 or C++23 program builds with newlib, libstdc++ and xsdk's POSIX layer. What links, by a link of every name below
