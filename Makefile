@@ -101,8 +101,9 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 	instancing_probes cpu_probes xam_probes hiz_pass_probes msaa_probes skin_probe drive_probes system_probes launch_probes 	store_probes
 # Keep the ELFs and objects that pattern rules build on the way to a .xex.
 .SECONDARY:
-# Milestone 77: the titles that load and check the exFAT module (docs/scope/77-exfat.md, step 3).
-EXFAT_TITLES := exfat_load exfat_check exfat_corrupt
+# Milestone 77: the titles that load and check the exFAT module (docs/scope/77-exfat.md, step 3), and the formatter
+# (step 5, and milestone 78's drive).
+EXFAT_TITLES := exfat_load exfat_check exfat_corrupt exfat_format
 
 all: $(BUILD)/m55_check.xex $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/libxsdk_plugin.a \
 	$(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \

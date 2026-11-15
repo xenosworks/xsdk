@@ -1,0 +1,14 @@
+log: game:\exfat_format.log
+log: named after \Device\Harddisk0\Partition1\XSDK\m77\exfat_format.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 21970 us
+exfat_format: kernel 2.0.17559.0
+\Device\Mass0 (USB stick 0): device type 45, 120176640 sectors of 512, 61.5 GB, holds exFAT (MBR)
+\Device\Mass1: present, no media (geometry 0xC00002B6)
+\Device\Mass2: present, no media (geometry 0xC00002B6)
+\Device\Harddisk0\Partition1 (HDD content partition): device type 7, 302590256 sectors of 512, 154.9 GB, holds FATX
+\Device\Mass0: formatting exFAT, label "XSDK"
+\Device\Mass0: dismount 0xC000026E
+\Device\Mass0: Formatted exFAT: 469400 clusters of 128 KB, 469397 free
+exit: status 0

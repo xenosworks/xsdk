@@ -1,0 +1,43 @@
+chkdsk E: (read-only), PC, 2026-11-15, the stick exfat_format.xex formatted from the console
+The type of the file system is exFAT.
+Shadow copying the specified volume is not supported.
+
+Volume Serial Number is 0BB7-5C00
+Windows is verifying files and folders...
+0 percent completed.                  
+Volume label is XSDK.
+50 percent completed..                 
+File and folder verification is complete.
+
+Windows has scanned the file system and found no problems.
+No further action is required.
+
+    60083200 KB total disk space.
+         256 KB in 2 files.
+         256 KB in 2 indexes.
+           0 KB in bad sectors.
+         256 KB in use by the system.
+    60082432 KB available on disk.
+
+      131072 bytes in each allocation unit.
+      469400 total allocation units on disk.
+      469394 allocation units available on disk.
+---- fsutil fsinfo volumeinfo E:
+Volume Name : XSDK
+Volume Serial Number : 0xbb75c00
+Max Component Length : 255
+File System Name : exFAT
+Is ReadWrite
+Not Thinly-Provisioned
+Preserves Case of filenames
+Supports Unicode in filenames
+Returns Handle Close Result Information
+Supports Encrypted File System
+---- Get-Partition
+
+PartitionNumber : 1
+Offset          : 1048576
+Size            : 61528342528
+Type            : IFS
+MbrType         : 7
+
