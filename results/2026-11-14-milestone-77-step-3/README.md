@@ -16,6 +16,7 @@ the volume from sector 2048, 128 KB clusters, 469,400 clusters, label XSDK, seri
 | speed16 | probe_mass_speed.xex | 2 GiB through the module against 2 GiB raw, timed every 512 MiB | module 2048 MiB in 171.0 s (11 MiB/s), raw 204.0 s (10 MiB/s): the stick itself had slowed by then, after some 12 GB of writes in the hour; the module is not behind raw |
 | check_long | exfat_check.xex | the 132 checks plus 21 on the name and path limits (check_long_names), after the stick's PC visit | **153 passed, 0 failed, 362 s** |
 | check_long2 | exfat_check.xex | the same with xsdk's resolved path raised from 260 to 549 bytes (src/file_private.h) and 4 checks that FATX keeps its own limits: 157 checks | **157 passed, 0 failed, 380 s** |
+| ftp | Aurora FTP (the user) | a file over 4 GB uploaded to the stick by a client outside xsdk | GoW2Hollow.zip, 6,087,480,683 bytes, 9.7 MiB/s in the module; the pull-and-replug lines in ftp/exfat.log (below) |
 
 exfat.log in each folder is the module's log (hdd:\XSDK\exfat\exfat.log) as fetched after that run.
 
@@ -62,9 +63,19 @@ So what the module wrote is what a PC reads, and the structure it left is one Wi
 
 ## Left for the user, per the scope
 
-- Pull the stick while mounted and plug it back: exfat.log should show "dismounted (media gone)" and then "mounted".
+- Pull the stick while mounted and plug it back. Done by the stick's trip to the PC (ftp/exfat.log, after
+  check_final): the kernel noticed the removal before the module's poll did and asked the dismount, "dismounted (asked
+  by the kernel), 0 file objects were open", and the module mounted the stick again when it came back, with Windows's
+  three clusters taken (436,616 free). Not yet seen: a pull with a file open.
 - Aurora's file manager lists the stick and copies to and from it.
-- Aurora's FTP uploads and downloads a file over 4 GB, the speed logged against FATX on the same stick.
+- Aurora's FTP uploads and downloads a file over 4 GB, the speed logged against FATX on the same stick. The upload is
+  done (ftp/): GoW2Hollow.zip, 6,087,480,683 bytes, on the stick's root. The module's summary for it: 5,806 writes,
+  5,805 MiB in 600.7 s of module time, 9.7 MiB/s, the stick's pace by then (speed16's raw 10); every buffer counted as
+  unaligned, as Aurora's aren't 4 KB aligned, but they meet the device's own alignment, so they went direct in 6,582
+  IRPs of up to 1 MiB rather than through the bounce buffer. The FATX comparison is dropped (the user, 2026-11-14):
+  both file systems sit at the USB 2.0 path's limit, and speed15 already put the module at the raw device's pace in
+  the same run. The download is dropped too (the user, 2026-11-14): the PC read the module's writes byte for byte and
+  exfat_check read past 4 GB through the kernel, so it would only repeat the read path with Aurora's buffers.
 - The dashboard with the exFAT stick in (left from step 1): does it offer to format.
 
 ## Known limits
