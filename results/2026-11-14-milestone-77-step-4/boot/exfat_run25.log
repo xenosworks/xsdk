@@ -1,0 +1,269 @@
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: raw volume dismounted: 0x00000000
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 469397 of 469400 free, volume device 3A1282B8
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: exFAT volume refused: not exFAT
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A0D2D38
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A131CD8
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A1282B8
+\Device\Mass0: 256 reads and writes, 256 MiB: 24778 ms in the module, 28637 ms of it in 4364 device IRPs
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A130378
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 22683 ms in the module, 28706 ms in 4343 device IRPs
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A1282B8
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24968 ms in the module, 26256 ms in 4148 device IRPs
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 37881 ms in the module, 39087 ms in 4129 device IRPs
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24997 ms in the module, 26236 ms in 4126 device IRPs
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A156E98
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24995 ms in the module, 26534 ms in 4148 device IRPs; full IRPs by ms: 2829 under 4.5, 7 under 5.5, 904 under 7, 264 under 10, 18 under 30, 74 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A14BD58
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24567 ms in the module, 26090 ms in 310 device IRPs; full IRPs against a title's raw: 76 under 1.1x, 120 under 1.35x, 20 under 1.7x, 21 under 2.5x, 17 under 7.5x, 0 over
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24951 ms in the module, 26003 ms in 289 device IRPs; full IRPs against a title's raw: 41 under 1.1x, 155 under 1.35x, 16 under 1.7x, 24 under 2.5x, 20 under 7.5x, 0 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A12A1D8
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 25581 ms in the module, 26777 ms in 310 device IRPs; full IRPs against a title's raw: 51 under 1.1x, 137 under 1.35x, 18 under 1.7x, 25 under 2.5x, 23 under 7.5x, 0 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A1282B8
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 17846 ms in the module, 18186 ms in 286 device IRPs; full IRPs against a title's raw: 209 under 1.1x, 19 under 1.35x, 21 under 1.7x, 1 under 2.5x, 3 under 7.5x, 1 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A128618
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 24869 ms in the module, 26129 ms in 310 device IRPs; full IRPs against a title's raw: 49 under 1.1x, 142 under 1.35x, 18 under 1.7x, 28 under 2.5x, 17 under 7.5x, 0 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A128638
+\Device\Mass0: 256 reads and writes (0 with unaligned buffers), 256 MiB: 16502 ms in the module, 16843 ms in 286 device IRPs; full IRPs against a title's raw: 225 under 1.1x, 1 under 1.35x, 28 under 1.7x, 0 under 2.5x, 0 under 7.5x, 0 over
+\Device\Mass0: dismounted (unloading), 0 file objects were open
+exfat: exfat_unload.txt found, removed: 0x00000000; unloading
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436619 of 469400 free, volume device 3A14BD58
+\Device\Mass0: 4188 reads and writes (37 with unaligned buffers), 4103 MiB: 354364 ms in the module, 355252 ms in 4681 device IRPs
+\Device\Mass0: 2056 reads and writes (0 with unaligned buffers), 2049 MiB: 169596 ms in the module, 170222 ms in 2098 device IRPs
+\Device\Mass0: dismounted (asked by the kernel), 0 file objects were open
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 436616 of 469400 free, volume device 3A1304F8
+\Device\Mass0: 5806 reads and writes (5806 with unaligned buffers), 5805 MiB: 600660 ms in the module, 611778 ms in 6582 device IRPs
+\Device\Mass0: 4192 reads and writes (40 with unaligned buffers), 4103 MiB: 354485 ms in the module, 355140 ms in 4889 device IRPs
+\Device\Mass0: 4200 reads and writes (40 with unaligned buffers), 4104 MiB: 373279 ms in the module, 374311 ms in 4930 device IRPs
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 390172 of 469400 free, volume device 3A0BE3D8
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 390172 of 469400 free, volume device 3A0BE3D8
+\Device\Mass0: dismounted (media gone), 0 file objects were open
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 390172 of 469400 free, volume device 3A0BE3D8
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, 269 KB a volume, 3 volumes
+exfat: recorder loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, process type 2
+exfat: +0 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex
+exfat: +1319 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +5189 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +10328 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +15483 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +20622 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +25777 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +30931 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +36071 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +41225 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +46364 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +51519 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +56658 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +61813 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +66967 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +72107 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: +77261 ms exe 00000000 "-" started 0 usb 1; cache title 0/0 pinned 0 waiting, system 0/64 pinned 0 waiting; loaded: xam.xex launch.xex
+exfat: recorder 2 loaded, kernel 2.0.17559.0, image 0x91580000-0x9167B000, process type 2
+exfat: recorder 3 loaded, kernel 2.0.17559.0, image 0x91580000-0x9158A000, stack 0x7A03FC20
+exfat: +0 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +2246 ms exe 00000000 started 0 launch 00000000; modules:
+exfat: +3027 ms exe 3000AF48 started 0 launch 00000000; modules:
+exfat: +3295 ms exe 3000AF48 started 1 launch 00000000; modules:
+exfat: +5598 ms exe 3000AF48 started 1 launch 00000000; modules:
+exfat: +10719 ms exe 3000AF48 started 1 launch 00000000; modules:
+exfat: +12771 ms exe 00000000 started 1 launch 00000000; modules:
+exfat: +13022 ms exe 00000000 started 0 launch 00000000; modules:
+exfat: +13549 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +15885 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +21234 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +26389 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +31544 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +36683 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +41838 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +46977 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +52132 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +57303 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +62458 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +67613 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +72769 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +77924 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +83079 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +88218 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +93373 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +98512 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +103666 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +108821 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +113960 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +119115 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +124253 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +129408 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +134548 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +139702 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +144857 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +150012 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +155151 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +160290 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +165444 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +170584 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +175738 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +180877 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +186016 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +191187 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +196326 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +201481 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +206620 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +211775 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +216946 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +222085 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +227240 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +232395 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +237534 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +242688 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +247843 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +252982 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +258121 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +263276 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +268415 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +273570 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +278724 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +283879 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +289018 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +294223 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +299378 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +304517 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +309672 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +314811 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +319965 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +325121 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +330259 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +335414 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +340569 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +345709 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +350880 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +356035 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +361190 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +366329 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +371484 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +376623 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +381778 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +386949 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +392104 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +397259 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +402398 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +407537 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +412692 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +417831 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +422985 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +428140 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +433295 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +438434 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +443573 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +448728 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +453866 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +459021 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +464176 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +469331 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +474487 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +479642 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +484781 ms exe 30000EE8 started 1 launch 00000000; modules:
+exfat: +488144 ms exe 30000EC8 started 1 launch 00000000; modules:
+exfat: +489979 ms exe 30000EC8 started 1 launch 00000000; modules:
+exfat: +0 ms exe 00000000 started 0 launch 12345678
+exfat: +5082 ms exe 00000000 started 0 launch 12345678
+exfat: +10137 ms exe 00000000 started 0 launch 12345678
+exfat: +15192 ms exe 00000000 started 0 launch 12345678
+exfat: +20248 ms exe 00000000 started 0 launch 12345678
+exfat: +25303 ms exe 00000000 started 0 launch 12345678
+exfat: +30358 ms exe 00000000 started 0 launch 12345678
+exfat: +35413 ms exe 00000000 started 0 launch 12345678
+exfat: +40468 ms exe 00000000 started 0 launch 12345678
+exfat: +45523 ms exe 00000000 started 0 launch 12345678
+exfat: recorder 4 loaded, kernel 2.0.17559.0, image 0x91580000-0x915B2000, stack 0x7A03FC20, pad 1
+exfat: +0 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +5152 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +10291 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +15445 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +20600 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +25739 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +30894 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +36033 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +41188 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +46327 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +51481 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +56636 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +61775 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +66930 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +72069 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +77224 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +82363 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +87517 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +92672 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +97811 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +102966 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +108105 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +113260 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +118399 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +123553 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +128708 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +133847 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +139002 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +144141 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +149296 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +154435 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +159589 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +164744 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +169883 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +175038 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +180177 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +185332 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +190471 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +195625 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +200780 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +205919 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +211074 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +216213 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +221368 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +226507 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +231661 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +236816 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +241955 ms exe 00000000 started 0 launch 12345678; modules:
+exfat: +247110 ms exe 00000000 started 0 launch 12345678; modules:

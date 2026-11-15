@@ -122,7 +122,9 @@ struct Volume {
 };
 
 static const char *const device_names[VOLUMES_MAX] = { "\\Device\\Mass0", "\\Device\\Mass1", "\\Device\\Mass2" };
-static _Alignas(4096) Volume volumes[VOLUMES_MAX];
+// Allocated once the thread starts: in the image, the three 269 KB structs made it 1 MB, and a module that size
+// loaded at boot hung the dash where a 40 KB one booted (results/2026-11-14-milestone-77-step-4/README.md, run 22).
+static Volume *volumes;
 static File files[FILES_MAX];
 static Search searches[SEARCHES_MAX];
 // One lock over every volume: the core is not reentrant, and the poll thread mounts under it too.
@@ -1542,6 +1544,13 @@ static void sleep_ms(uint32_t milliseconds)
 
 void plugin_main(HANDLE module)
 {
+	// Loaded at boot by the kernel's init thread, the module starts a second before xam, whose storage thread then
+	// dismounts and remounts each storage device as it registers it, the HDD's content partition and the sticks alike,
+	// and the dash loads only once that pass is over. A log line or a mount during that pass hangs the boot
+	// (results/2026-11-14-milestone-77-step-4/README.md, "xam's storage start-up"), so everything waits for the
+	// executable, set when xam loads the dash or DashLaunch's lhelper.xex.
+	while (!*XexExecutableModuleHandle)
+		sleep_ms(POLL_MS);
 	make_log_folder();
 	xsdk_plugin_log_open(LOG_PATH);
 	RtlInitializeCriticalSection(&lock);
@@ -1550,6 +1559,12 @@ void plugin_main(HANDLE module)
 		(unsigned)XboxKrnlVersion->major, (unsigned)XboxKrnlVersion->minor, (unsigned)XboxKrnlVersion->build,
 		(unsigned)XboxKrnlVersion->qfe, (unsigned)entry->image_base, (unsigned)(entry->image_base + entry->image_size),
 		(unsigned)(sizeof(Volume) >> 10), VOLUMES_MAX);
+	volumes = MmAllocatePhysicalMemoryEx(0, sizeof(Volume) * VOLUMES_MAX, PAGE_READWRITE, 0, 0xFFFFFFFF, 4096);
+	if (!volumes) {
+		xsdk_plugin_log("exfat: no memory for the volumes, unloading");
+		return;
+	}
+	memset(volumes, 0, sizeof(Volume) * VOLUMES_MAX);
 	for (unsigned i = 0; i < VOLUMES_MAX; i++) {
 		volumes[i].device_name = device_names[i];
 		list_init(&volumes[i].files);

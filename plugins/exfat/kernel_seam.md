@@ -337,14 +337,31 @@ ExpSystemInitThread (0x800610e8) ends with `li r3, 0x79; bl 0x80061000` (boot ma
 major << 28 | minor << 24 | build << 8 | qfe), KeBugCheck 74319 if it fails. AniStartBootAnimation (0x80061730,
 ordinal 678) loads `\Device\Flash\bootanim.xex` with 0x40000009: the kernel names a flash file by its full
 `\Device\Flash\` path, and bit 0 marks an executable, so a DLL takes xam's 0x40000008. 0x40000000's meaning is
-not pinned; both kernel loads carry it, so the stub does too.
+not pinned; both kernel loads carry it. XexLoadImage's entry (0x8007d7c0) tests bit 8 and bit 0x80 alone and answers
+0xC0000022 without either; the load itself (0x8007d6e8) checks the version argument only for a module whose header
+flags hold 0x1000, which ours don't. So the stub passes what step 3's loader title proved from a title, 8 and 0.
 
-The load stub replaces the `bl` at 0x80061388 with a `bl` into the padding: save LR in a frame,
-`XexLoadImage("\Device\Flash\exfat.xex", 0x40000008, 0x20449700, NULL)`, restore, `b ExpCheckSystemUpdate`, so the
-update check's status still returns to its caller. r31 holds 0x80170000 there and XexLoadImage keeps it, as every
-kernel call keeps r14-r31. The module imports xboxkrnl only (xam.xex is not loaded yet) and must find the slots
-empty: Usbd is up but no stick need be in. The words at 0x80061380 are `38600079 4bfffc7d 48006121 7c7e1b79`.
-xeBuild carries both stubs and the file in its flash file-system list; its patch format is the user's ground.
+After xam's load the thread goes `cmpwi cr6, r30, 0; bge cr6, 0x800613dc` (a fatal error otherwise), then at
+**0x800613dc `bl sub_800C8260`** (no arguments: a hardware register write for two processor revisions), then
+KeSetAffinityThread and KeSetPriorityThread on itself. xeBuild's DashLaunch patch turns the `bge` at 0x800613cc into
+`bl 0x8010bf40`, a stub that loads `\Device\Flash\launch.xex` when the status allows, clears its spin word
+0x8010bfec and jumps to 0x800613dc.
+
+The load stub (step 4, plugins/exfat/kernel_patch.S, built by tools/exfat_patch.py) replaces the `bl` at 0x800613dc
+with `bl 0x80163000`: LR kept at -8(r1) and a 0x20 frame, `XexLoadImage("\Device\Flash\exfat.xex", 8, 0, NULL)`,
+restore, `b sub_800C8260` with the original return address. r31 holds 0x80170000 there and XexLoadImage keeps it, as
+every kernel call keeps r14-r31. The hook sat at the `bl ExpCheckSystemUpdate` at 0x80061388 first, before xam and
+launch.xex: a system image of the module's size loaded there stops the init thread inside DashLaunch's XexHook as
+launch.xex starts, and the same image loaded after launch.xex boots (results/2026-11-14-milestone-77-step-4, runs 24
+to 28), so the hook moved behind xeBuild's stub. The module imports xboxkrnl only and must find the slots empty: Usbd
+is up but no stick need be in. The words at 0x800613c8 are `2f1e0000 40980010 3c600001 6063224f 4805c969 48066e85`.
+
+xeBuild's patch format (xeBuild/about_patches.S): records of the address without its top bit, the word count and
+the words, 0xFFFFFFFF between the bootloader, CD and kernel/HV sets; an add-on file in the firmware's bin folder,
+named with `-a`, is appended to the kernel/HV set without an end marker. nohdd.bin shows the address form: 0x15dd30
+for the `bl` at 0x8015dd30. Its XeLL add-ons (xl_both, xl_hdd, xl_usb) put code in the padding from 0x801616c8 to
+0x801621e8, and no 17559 set of its reaches higher, so the stub sits at 0x80163000. The module goes in the flash
+file-system list as `exfat.xex`.
 
 ## 8. Unknowns, and what the probe records
 

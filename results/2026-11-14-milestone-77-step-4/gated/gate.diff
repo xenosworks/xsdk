@@ -1,0 +1,18 @@
+diff --git a/plugins/exfat/exfat_module.c b/plugins/exfat/exfat_module.c
+index bd8f228..03585e0 100644
+--- a/plugins/exfat/exfat_module.c
++++ b/plugins/exfat/exfat_module.c
+@@ -1542,6 +1542,13 @@ static void sleep_ms(uint32_t milliseconds)
+ 
+ void plugin_main(HANDLE module)
+ {
++	// Loaded at boot by the kernel's init thread, the module starts a second before xam, whose storage thread then
++	// dismounts and remounts each storage device as it registers it, the HDD's content partition and the sticks alike,
++	// and the dash loads only once that pass is over. A log line or a mount during that pass hangs the boot
++	// (results/2026-11-14-milestone-77-step-4/README.md, "xam's storage start-up"), so everything waits for the
++	// executable, set when xam loads the dash or DashLaunch's lhelper.xex.
++	while (!*XexExecutableModuleHandle)
++		sleep_ms(POLL_MS);
+ 	make_log_folder();
+ 	xsdk_plugin_log_open(LOG_PATH);
+ 	RtlInitializeCriticalSection(&lock);

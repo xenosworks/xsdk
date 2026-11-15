@@ -136,7 +136,8 @@ Added on 2026-11-14, agreed: the console formats a stick exFAT itself (step 2's 
    again. A stick with its boot sector corrupted on purpose is refused with an error, not mounted. Breaks: a build
    with the name hash wrong fails `fsck.exfat`; one that skips the dirty flag fails the clean-after-dismount check.
 4. **Loaded by the kernel from the NAND.** The module as a file in xeBuild's flash file system list and a kernel
-   patch set in xeBuild's format: at step 1's boot point, a stub that calls `XexLoadImage` on the module's flash
+   patch set in xeBuild's format: at the boot point (step 1's, moved behind xam's and launch.xex's loads on
+   2026-11-15, plugins/exfat/kernel_seam.md section 7), a stub that calls `XexLoadImage` on the module's flash
    path as a system DLL and carries on when that fails, so a NAND without the file still boots. xsdk's tools build
    the patch (the toolchain's assembler, a script that emits the format) and check the patched words against the
    kernel image's bytes at those addresses. The user builds the NAND with xeBuild and flashes it.

@@ -1,0 +1,2 @@
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x915B1000, 269 KB a volume, 3 volumes
+\Device\Mass0: mounted exFAT "XSDK" serial 643FC9ED: 120172544 sectors of 512 from sector 2048, 128 KB clusters, 390172 of 469400 free, volume device 3A14DD58

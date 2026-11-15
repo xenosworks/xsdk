@@ -1,0 +1,28 @@
+
+build/patch/kernel_patch.elf:     file format elf32-powerpc
+
+
+Disassembly of section .text:
+
+80163000 <stub>:
+80163000:	7d 88 02 a6 	mflr    r12
+80163004:	91 81 ff f8 	stw     r12,-8(r1)
+80163008:	94 21 ff e0 	stwu    r1,-32(r1)
+8016300c:	3c 60 80 16 	lis     r3,-32746
+80163010:	38 63 30 34 	addi    r3,r3,12340
+80163014:	38 80 00 08 	li      r4,8
+80163018:	38 a0 00 00 	li      r5,0
+8016301c:	38 c0 00 00 	li      r6,0
+80163020:	4b f1 a7 a1 	bl      8007d7c0 <XexLoadImage>
+80163024:	81 81 00 18 	lwz     r12,24(r1)
+80163028:	38 21 00 20 	addi    r1,r1,32
+8016302c:	7d 88 03 a6 	mtlr    r12
+80163030:	4b f0 44 78 	b       800674a8 <ExpCheckSystemUpdate>
+
+80163034 <name>:
+80163034:	5c 44 65 76 	rlwnm   r4,r2,r12,21,27
+80163038:	69 63 65 5c 	xori    r3,r11,25948
+8016303c:	46 6c 61 73 	.long 0x466c6173
+80163040:	68 5c 65 78 	xori    r28,r2,25976
+80163044:	66 61 74 2e 	oris    r1,r19,29742
+80163048:	78 65 78 00 	rotldi  r5,r3,15

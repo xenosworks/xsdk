@@ -1,0 +1,2 @@
+exfat: boot loader: exfat_fs.xex load 0x00000000, handle 3A129DE8
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x915B1000, 269 KB a volume, 3 volumes

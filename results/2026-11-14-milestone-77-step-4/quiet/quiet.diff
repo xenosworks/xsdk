@@ -1,0 +1,38 @@
+diff --git a/plugins/exfat/exfat_module.c b/plugins/exfat/exfat_module.c
+index bd8f228..e020afd 100644
+--- a/plugins/exfat/exfat_module.c
++++ b/plugins/exfat/exfat_module.c
+@@ -17,6 +17,9 @@
+ // addresses in the comments are its handlers in kernel 17559.
+ 
+ #define LOG_FOLDER "\\Device\\Harddisk0\\Partition1\\XSDK\\exfat"
++// Diagnostic for results/2026-11-14-milestone-77-step-4, "quiet/": no HDD access at all, so a boot with the stick in
++// shows whether the mount alone passes the boot that the log line hangs.
++#define QUIET 1
+ static const char LOG_PATH[] = LOG_FOLDER "\\exfat.log";
+ // Their presence beside the log unloads the module and logs every request.
+ static const char UNLOAD_PATH[] = LOG_FOLDER "\\exfat_unload.txt";
+@@ -1542,8 +1545,10 @@ static void sleep_ms(uint32_t milliseconds)
+ 
+ void plugin_main(HANDLE module)
+ {
+-	make_log_folder();
+-	xsdk_plugin_log_open(LOG_PATH);
++	if (!QUIET)
++		make_log_folder();
++	if (!QUIET)
++		xsdk_plugin_log_open(LOG_PATH);
+ 	RtlInitializeCriticalSection(&lock);
+ 	const LDR_DATA_TABLE_ENTRY *const entry = (const LDR_DATA_TABLE_ENTRY *)(uintptr_t)module;
+ 	xsdk_plugin_log("exfat: loaded, kernel %u.%u.%u.%u, image 0x%08X-0x%08X, %u KB a volume, %u volumes",
+@@ -1554,8 +1559,8 @@ void plugin_main(HANDLE module)
+ 		volumes[i].device_name = device_names[i];
+ 		list_init(&volumes[i].files);
+ 	}
+-	while (!file_exists(UNLOAD_PATH)) {
+-		trace = file_exists(TRACE_PATH);
++	while (QUIET || !file_exists(UNLOAD_PATH)) {
++		trace = !QUIET && file_exists(TRACE_PATH);
+ 		for (unsigned i = 0; i < VOLUMES_MAX; i++)
+ 			poll(&volumes[i]);
+ 		sleep_ms(POLL_MS);

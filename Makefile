@@ -84,7 +84,7 @@ PROBES := probe_spin probe_print probe_cp probe_ring probe_interrupt probe_expor
 	probe_display probe_guide probe_resolve probe_triangle probe_vblank probe_720p probe_constants probe_mip_tail \
 	probe_draw_after_resolve probe_pixel_rate probe_unroll probe_hiz probe_net probe_texel_rate probe_draw_cost \
 	probe_gpu_draw_cost probe_fault probe_depth_export probe_queries probe_occlusion probe_objects probe_exec probe_query_memory \
-	probe_audio probe_byterev probe_exfat_seam probe_exfat_write probe_mass_speed
+	probe_audio probe_byterev probe_exfat_seam probe_exfat_write probe_mass_speed probe_dump_launch
 # vulkan4xenon milestone 28's tries at the sample counts, a probe_occlusion_<try>.xex each, in the order to run them
 # (results/2026-10-16-vulkan4xenon-milestone-28/builds.sh); outside all.
 OCCLUSION_TRIES := registers viz_query reset reset_copy reset_event flush resolve no_counters group_all group_clock \
@@ -252,6 +252,15 @@ $(BUILD)/exfat.elf: $(EXFAT_MODULE_OBJECTS) $(BUILD)/libxsdk_plugin.a src/xsdk_p
 
 $(BUILD)/exfat.xex: $(BUILD)/exfat.elf tools/elf2xex.py
 	$(PYTHON) tools/elf2xex.py --dll $(EXFAT_MODULE_BASE) $< $@
+
+# Milestone 77 step 4: the kernel patch that loads the module at boot, an xeBuild add-on for its 17559/bin
+# (tools/exfat_patch.py). It checks every patched word against the 17559 kernel image, so it needs one and stays out
+# of all: `make exfat_patch KERNEL_IMAGE=<path>`.
+KERNEL_IMAGE ?= /mnt/z/networking-xbox/xboxkrnl.17559.exe
+$(BUILD)/exfat.bin: plugins/exfat/kernel_patch.S tools/exfat_patch.py
+	$(PYTHON) tools/exfat_patch.py --toolchain $(TOOLCHAIN) --kernel $(KERNEL_IMAGE) --build $(BUILD)/patch $< $@
+.PHONY: exfat_patch
+exfat_patch: $(BUILD)/exfat.bin
 
 $(BUILD)/exfat_%.elf: $(BUILD)/tests/exfat_%.o $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/exfat_$*.o $(LIBS)
