@@ -1367,16 +1367,18 @@ static void try_mount(Volume *v)
 		.sectors = v->sectors,
 	};
 	ExfatDevice device = found;
+	// Under the device's mount lock from the first read, as the kernel's own mounts run (IopMountDevice, section 3):
+	// a title formatting the device holds it (tests/exfat_format.c), and sector 0 is read once it has let go.
+	KeWaitForSingleObject(&v->device->mount_lock, 0, KERNEL_MODE, 0, NULL);
 	ExfatStatus status = xsdk_exfat_locate(&device);
 	if (status != EXFAT_OK) {
 		// FATX and FAT32 sticks are the kernel's; anything else stays unmounted and is said once.
 		if (status != EXFAT_NOT_EXFAT)
 			xsdk_plugin_log("%s: not mounted: %s", v->device_name, xsdk_exfat_status_name(status));
 		v->refused = true;
+		KeSetEvent(&v->device->mount_lock, 0, 0);
 		return;
 	}
-	// Under the device's mount lock, as the kernel's own mounts run (IopMountDevice, section 3).
-	KeWaitForSingleObject(&v->device->mount_lock, 0, KERNEL_MODE, 0, NULL);
 	DEVICE_OBJECT *mounted = v->device->mounted_or_self_device;
 	if (mounted && mounted->driver_object == (const DRIVER_OBJECT *)(uintptr_t)KERNEL_RAW_DRIVER) {
 		const NTSTATUS dismounted = IoDismountVolume(v->device);
@@ -1484,7 +1486,8 @@ static void poll(Volume *v)
 			release_device(v);
 		else if (mounted && !raw)
 			v->refused = false;
-		else if (!v->refused)
+		// A device nothing has mounted is read every poll: a dismount, the formatter's among them, leaves it so.
+		else if (!mounted || !v->refused)
 			try_mount(v);
 	}
 	unlock_module();
