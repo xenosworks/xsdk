@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -15,15 +16,27 @@
 // routes every open under the device to IRP_MJ_CREATE here and the calls on the handles it hands out to the other
 // major functions (section 4). The answers follow the kernel's own FAT driver's, read from its disassembly: the
 // addresses in the comments are its handlers in kernel 17559.
+// Milestone 78, step 1 (docs/scope/78-exfat-hdd.md): the drive's content partition, \Device\Harddisk0\Partition1, is
+// a fourth device, mounted the same way when exfat_format.xex has formatted it and left alone while it is FATX. What
+// its device holds from the gate on is sampled at every poll and logged once the log can be written, which on an
+// exFAT partition is after the mount: that timeline is the record the partition's mount point is chosen from.
 
-#define LOG_FOLDER "\\Device\\Harddisk0\\Partition1\\XSDK\\exfat"
+#define PARTITION_DEVICE "\\Device\\Harddisk0\\Partition1"
+#define XSDK_FOLDER      PARTITION_DEVICE "\\XSDK"
+#define LOG_FOLDER       XSDK_FOLDER "\\exfat"
 static const char LOG_PATH[] = LOG_FOLDER "\\exfat.log";
 // Their presence beside the log unloads the module and logs every request.
 static const char UNLOAD_PATH[] = LOG_FOLDER "\\exfat_unload.txt";
 static const char TRACE_PATH[] = LOG_FOLDER "\\exfat_trace.txt";
+// The same two under the volume, as the module looks them up itself (flag_present).
+static const char UNLOAD_NAME[] = "XSDK\\exfat\\exfat_unload.txt";
+static const char TRACE_NAME[] = "XSDK\\exfat\\exfat_trace.txt";
 
 enum {
-	VOLUMES_MAX = 3,
+	VOLUMES_MAX = 4,
+	PARTITION = 3,
+	// The boot timeline keeps this many changes of what the partition's device holds.
+	TIMELINE_MAX = 32,
 	FILES_MAX = 64,
 	SEARCHES_MAX = 32,
 	// A volume-relative path, components separated by '\', with its terminator.
@@ -42,6 +55,23 @@ enum {
 	// The kernel's raw file system, which a device open attaches when no file system takes the device
 	// (kernel_seam.md, section 3).
 	KERNEL_RAW_DRIVER = 0x80043224,
+	// The kernel's storage announcement to xam (0x8012bca8: links a StorageRecord into its list, calls xam's callback;
+	// xam's DrvGetContentStorageNotification copies the record's six words out; the BuiltInMuMmc driver announces its
+	// storage so, sub_8008FF90), the arrival action, and xam's type for the hard drive (its own entry at 0x8167ed90; a
+	// stick is 16, a memory unit 2: results/2026-11-15-milestone-78-step-1/probe_storage_state_run11).
+	KERNEL_ANNOUNCE_STORAGE = 0x8012bca8,
+	STORAGE_ARRIVAL = 1,
+	STORAGE_TYPE_HDD = 1,
+	// xam dismounts a drive it listed as formatted before it looks at it again (announce_partition): declined for this
+	// long.
+	XAM_SHIELD_100NS = 2 * 10000000,
+	// xam numbers content devices from this counter, handing its value out and advancing it to the next free number
+	// (xam 0x8167b3c8); the drive, registered first at xam's load, is 1 on a stock console and titles take it so (Xenia
+	// gives its drive 1, xenia:src/xenia/kernel/xam/xam_content_device.h:19-27). Registered again it would get the next
+	// free number (results/2026-11-15-milestone-78-step-1, probe_storage_state_after_signin: 3), so announce_partition
+	// sets the counter back first.
+	XAM_DEVICE_ID_COUNTER = 0x81a81328,
+	STORAGE_ID_HDD = 1,
 	// FILE_FS_VOLUME_INFORMATION's fixed part: creation time, serial, label length, a BOOLEAN; FAT answers 17 bytes
 	// with no label (0x800a2d18), so the label follows the BOOLEAN unpadded.
 	FS_VOLUME_INFORMATION_BYTES = 17,
@@ -91,6 +121,8 @@ typedef struct {
 
 struct Volume {
 	const char *device_name;
+	// The device object's type, mass storage for a stick and disk for the partition; another is left alone.
+	uint8_t device_type;
 	// Referenced by name while media is looked at or mounted, released when it goes: the kernel may create the device
 	// anew at a replug.
 	DEVICE_OBJECT *device;
@@ -121,7 +153,10 @@ struct Volume {
 	ExfatVolume fs;
 };
 
-static const char *const device_names[VOLUMES_MAX] = { "\\Device\\Mass0", "\\Device\\Mass1", "\\Device\\Mass2" };
+static const char *const device_names[VOLUMES_MAX] = { "\\Device\\Mass0", "\\Device\\Mass1", "\\Device\\Mass2",
+	PARTITION_DEVICE };
+static const uint8_t device_types[VOLUMES_MAX] = { DEVICE_TYPE_MASS_STORAGE, DEVICE_TYPE_MASS_STORAGE,
+	DEVICE_TYPE_MASS_STORAGE, DEVICE_TYPE_DISK };
 // Allocated once the thread starts: in the image, the three 269 KB structs made it 1 MB, and a module that size
 // loaded at boot hung the dash where a 40 KB one booted (results/2026-11-14-milestone-77-step-4/README.md, run 22).
 static Volume *volumes;
@@ -130,17 +165,108 @@ static Search searches[SEARCHES_MAX];
 // One lock over every volume: the core is not reentrant, and the poll thread mounts under it too.
 static RTL_CRITICAL_SECTION lock;
 static bool trace;
+// Whether the log's folder exists: on an exFAT partition only once the partition is mounted.
+static bool log_ready;
+// A storage announcement's record, as the BuiltInMuMmc driver keeps its own at 0x801a608c: the kernel's list links,
+// the device's name, the action, the type. It stays in the kernel's list until xam takes it, so it is static.
+typedef struct {
+	uint32_t flink;
+	uint32_t blink;
+	ANSI_STRING name;
+	uint32_t action;
+	uint32_t type;
+} StorageRecord;
+static StorageRecord partition_record;
+// Set by the partition's mount: the thread announces the drive to xam again (announce_partition).
+static bool announce_pending;
+// Until when a dismount of the partition is xam's look after that announcement, and declined.
+static uint64_t xam_shield_until;
 // For a caller's buffer the device's alignment requirement refuses (Mass0's is 1: odd addresses); every transfer runs
 // under the module's lock.
 static _Alignas(4096) uint8_t bounce[BOUNCE_BYTES];
 
-#define TRACE(...)                        \
-	do {                                  \
-		if (trace)                        \
-			xsdk_plugin_log(__VA_ARGS__); \
+#define TRACE(...)                 \
+	do {                           \
+		if (trace)                 \
+			log_line(__VA_ARGS__); \
+	} while (0)
+// A request on the module's own folder is left out: its log's writes and its polls of the flag files.
+#define TRACE_FILE(path, ...)         \
+	do {                              \
+		if (trace && !own_file(path)) \
+			log_line(__VA_ARGS__);    \
 	} while (0)
 
-// The critical region keeps a thread from being suspended while it holds the lock, as NT's file systems hold theirs.
+static bool own_file(const char *path)
+{
+	return strncmp(path, LOG_FOLDER + sizeof PARTITION_DEVICE, sizeof LOG_FOLDER - sizeof PARTITION_DEVICE - 1) == 0;
+}
+
+// Lines wait here for the thread, which writes them outside the module's lock: xsdk_plugin_log writes through the
+// kernel, and on the partition that is this module's volume a line logged under its lock would re-enter the module
+// while the thread, writing a line of its own, waits for that lock with the logger's held (the trace froze the console
+// at every boot it was on, results/2026-11-15-milestone-78-step-1, the sign-in checks).
+enum { QUEUED_LINES = 128, QUEUED_LINE_BYTES = 192, MODULE_PRIORITY = 16 };
+static char queued[QUEUED_LINES][QUEUED_LINE_BYTES];
+static uint32_t queued_first, queued_count, queued_dropped;
+static RTL_CRITICAL_SECTION queue_lock;
+
+static void log_line(const char *format, ...) __attribute__((format(printf, 1, 2)));
+static void log_line(const char *format, ...)
+{
+	char line[QUEUED_LINE_BYTES];
+	va_list args;
+	va_start(args, format);
+	(void)_vsnprintf(line, sizeof line - 1, format, args);
+	va_end(args);
+	line[sizeof line - 1] = 0;
+	KeEnterCriticalRegion();
+	RtlEnterCriticalSection(&queue_lock);
+	if (queued_count < QUEUED_LINES)
+		memcpy(queued[(queued_first + queued_count++) % QUEUED_LINES], line, sizeof line);
+	else
+		queued_dropped++;
+	RtlLeaveCriticalSection(&queue_lock);
+	KeLeaveCriticalRegion();
+}
+
+// The PCR (r13) keeps the running thread's KTHREAD at 0x100.
+enum { PCR_THREAD = 0x100 };
+
+static const uint8_t *pcr(void)
+{
+	const uint8_t *p;
+	__asm__ volatile("mr %0, 13" : "=r"(p));
+	return p;
+}
+
+// The thread writes the queued lines, holding no lock while it writes.
+static void write_queued(void)
+{
+	for (;;) {
+		char line[QUEUED_LINE_BYTES];
+		KeEnterCriticalRegion();
+		RtlEnterCriticalSection(&queue_lock);
+		const bool any = queued_count != 0;
+		if (any) {
+			memcpy(line, queued[queued_first], sizeof line);
+			queued_first = (queued_first + 1) % QUEUED_LINES;
+			queued_count--;
+		}
+		const uint32_t dropped = any ? 0 : queued_dropped;
+		if (!any)
+			queued_dropped = 0;
+		RtlLeaveCriticalSection(&queue_lock);
+		KeLeaveCriticalRegion();
+		if (!any) {
+			if (dropped)
+				xsdk_plugin_log("exfat: %u lines dropped, the queue was full", (unsigned)dropped);
+			return;
+		}
+		xsdk_plugin_log("%s", line);
+	}
+}
+
 static void lock_module(void)
 {
 	KeEnterCriticalRegion();
@@ -224,8 +350,8 @@ static NTSTATUS transfer(Volume *v, uint32_t major, uint64_t sector, uint32_t co
 		left -= chunk;
 	}
 	if (!NT_SUCCESS(status))
-		xsdk_plugin_log("%s: %s of %u sectors at %u failed: 0x%08X", v->device_name,
-			major == IRP_MJ_READ ? "read" : "write", (unsigned)count, (unsigned)sector, (unsigned)status);
+		log_line("%s: %s of %u sectors at %u failed: 0x%08X", v->device_name, major == IRP_MJ_READ ? "read" : "write",
+			(unsigned)count, (unsigned)sector, (unsigned)status);
 	return status;
 }
 
@@ -657,7 +783,7 @@ static NTSTATUS create_locked(Open *o)
 	const NTSTATUS path_status = build_path(o, name);
 	if (!NT_SUCCESS(path_status))
 		return path_status;
-	TRACE("create: \"%s\" access 0x%08X disposition %u options 0x%06X share %u flags 0x%02X", o->path,
+	TRACE_FILE(o->path, "create: \"%s\" access 0x%08X disposition %u options 0x%06X share %u flags 0x%02X", o->path,
 		(unsigned)o->access, (unsigned)o->disposition, (unsigned)o->options, (unsigned)o->share, sp->flags);
 	if (!o->fo->related_file_object && name->length == 0)
 		return open_volume(o);
@@ -709,7 +835,7 @@ static NTSTATUS dispatch_create(DEVICE_OBJECT *device, IRP *irp)
 	// A success completed the request itself, with its information.
 	if (NT_SUCCESS(status))
 		return status;
-	TRACE("create: \"%s\" failed 0x%08X", o.path, (unsigned)status);
+	TRACE_FILE(o.path, "create: \"%s\" failed 0x%08X", o.path, (unsigned)status);
 	return complete(irp, status, 0);
 }
 
@@ -721,7 +847,7 @@ static void sync_volume(Volume *v)
 		return;
 	const ExfatStatus status = xsdk_exfat_sync(&v->fs);
 	if (status != EXFAT_OK)
-		xsdk_plugin_log("%s: sync failed: %s", v->device_name, xsdk_exfat_status_name(status));
+		log_line("%s: sync failed: %s", v->device_name, xsdk_exfat_status_name(status));
 }
 
 static NTSTATUS dispatch_cleanup(DEVICE_OBJECT *device, IRP *irp)
@@ -731,9 +857,9 @@ static NTSTATUS dispatch_cleanup(DEVICE_OBJECT *device, IRP *irp)
 	lock_module();
 	touch(device);
 	File *const f = fo->fs_context;
-	TRACE("cleanup: \"%s\"", f ? f->path : "(volume)");
+	TRACE_FILE(f ? f->path : "", "cleanup: \"%s\"", f ? f->path : "(volume)");
 	if (v->rw_bytes >= (uint64_t)SUMMARY_BYTES_MIB << 20) {
-		xsdk_plugin_log(
+		log_line(
 			"%s: %u reads and writes (%u with unaligned buffers), %u MiB: %u ms in the module, %u ms in %u "
 			"device IRPs",
 			v->device_name, (unsigned)v->rw_requests, (unsigned)v->unaligned_requests, (unsigned)(v->rw_bytes >> 20),
@@ -753,7 +879,7 @@ static NTSTATUS dispatch_cleanup(DEVICE_OBJECT *device, IRP *irp)
 			if (status == EXFAT_OK)
 				f->deleted = true;
 			else
-				xsdk_plugin_log("%s: deleting \"%s\" at its close failed: %s", v->device_name, f->path,
+				log_line("%s: deleting \"%s\" at its close failed: %s", v->device_name, f->path,
 					xsdk_exfat_status_name(status));
 		}
 		if (!f->orphan)
@@ -773,7 +899,7 @@ static NTSTATUS dispatch_close(DEVICE_OBJECT *device, IRP *irp)
 	lock_module();
 	touch(device);
 	File *const f = fo->fs_context;
-	TRACE("close: \"%s\"", f ? f->path : "(volume)");
+	TRACE_FILE(f ? f->path : "", "close: \"%s\"", f ? f->path : "(volume)");
 	list_remove(&fo->fs_link);
 	if (f && --f->references == 0)
 		f->volume = NULL;
@@ -800,7 +926,8 @@ static NTSTATUS read_write_locked(Volume *v, IRP *irp, uint32_t *information)
 	if (!f || is_directory(f))
 		return STATUS_INVALID_DEVICE_REQUEST;
 	uint64_t offset = sp->read.byte_offset;
-	TRACE("%s: \"%s\" %u bytes at %u", write ? "write" : "read", f->path, (unsigned)sp->read.length, (unsigned)offset);
+	TRACE_FILE(f->path, "%s: \"%s\" %u bytes at %u", write ? "write" : "read", f->path, (unsigned)sp->read.length,
+		(unsigned)offset);
 	if (write) {
 		// -1 appends (kernel_seam.md, section 4).
 		if (offset == UINT64_MAX)
@@ -852,7 +979,7 @@ static NTSTATUS query_information_locked(Volume *v, IRP *irp, uint32_t *informat
 	if (!NT_SUCCESS(status))
 		return status;
 	const uint32_t class = sp->information.information_class;
-	TRACE("query_information: \"%s\" class %u", f ? f->path : "(volume)", (unsigned)class);
+	TRACE_FILE(f ? f->path : "", "query_information: \"%s\" class %u", f ? f->path : "(volume)", (unsigned)class);
 	if (!f && class != FILE_POSITION_INFORMATION_CLASS)
 		return STATUS_INVALID_PARAMETER;
 	uint8_t *const out = irp->user_buffer;
@@ -1025,7 +1152,7 @@ static NTSTATUS set_information_locked(Volume *v, IRP *irp)
 	if (!NT_SUCCESS(status))
 		return status;
 	const uint32_t class = sp->information.information_class;
-	TRACE("set_information: \"%s\" class %u", f ? f->path : "(volume)", (unsigned)class);
+	TRACE_FILE(f ? f->path : "", "set_information: \"%s\" class %u", f ? f->path : "(volume)", (unsigned)class);
 	const void *const in = irp->user_buffer;
 	if (class == FILE_POSITION_INFORMATION_CLASS) {
 		// Only an asynchronous file's reaches a file system; the kernel moves a synchronous one's itself.
@@ -1251,20 +1378,26 @@ static NTSTATUS dispatch_directory_control(DEVICE_OBJECT *device, IRP *irp)
 	return complete(irp, status, NT_SUCCESS(status) || status == STATUS_BUFFER_OVERFLOW ? information : 0);
 }
 
-// IRP_MJ_FLUSH_BUFFERS: what is cached goes to the stick. shortcut: FAT passes the flush on to the device too, whose
-// handler is the kernel's stub; pass it on if a device ever needs it.
+// IRP_MJ_FLUSH_BUFFERS: what is cached goes to the device, then the flush goes down to the device as FAT sends it
+// (kernel_seam.md, 0x800a2750), so a drive's own write cache is flushed too; a stick's handler is the kernel's stub.
 static NTSTATUS dispatch_flush_buffers(DEVICE_OBJECT *device, IRP *irp)
 {
 	Volume *const v = volume_of(device);
+	IO_STACK_LOCATION *const sp = irp->current_stack_location;
 	lock_module();
 	touch(device);
-	NTSTATUS status = file_object_usable(v, irp->current_stack_location->file_object);
+	NTSTATUS status = file_object_usable(v, sp->file_object);
 	if (NT_SUCCESS(status)) {
 		TRACE("flush_buffers");
 		status = v->fs.dirty_blocks || v->fs.dirtied ? status_of(xsdk_exfat_sync(&v->fs)) : STATUS_SUCCESS;
 	}
 	unlock_module();
-	return complete(irp, status, 0);
+	if (!NT_SUCCESS(status))
+		return complete(irp, status, 0);
+	IO_STACK_LOCATION *const next = sp - 1;
+	memcpy(next, sp, offsetof(IO_STACK_LOCATION, completion_routine));
+	next->control = 0;
+	return IoCallDriver(v->device, irp);
 }
 
 // IRP_MJ_DEVICE_CONTROL goes down to the device as FAT sends it (0x800a2750): the parameters copied to the next
@@ -1328,7 +1461,7 @@ static void dismount_locked(Volume *v, const char *why)
 		if (files[i].volume == v)
 			files[i].orphan = true;
 	}
-	xsdk_plugin_log("%s: dismounted (%s), %u file objects were open", v->device_name, why, (unsigned)open_files);
+	log_line("%s: dismounted (%s), %u file objects were open", v->device_name, why, (unsigned)open_files);
 	v->pending_deletes++;
 	IoDeleteDevice(v->volume_device);
 	v->volume_device = NULL;
@@ -1337,8 +1470,12 @@ static void dismount_locked(Volume *v, const char *why)
 static void dismount_volume(DEVICE_OBJECT *volume_device)
 {
 	Volume *const v = volume_of(volume_device);
+	uint64_t now;
+	KeQuerySystemTime(&now);
 	lock_module();
-	if (v->mounted && v->volume_device == volume_device) {
+	if (v == &volumes[PARTITION] && now < xam_shield_until)
+		log_line("%s: dismount declined, xam's look after the announcement", v->device_name);
+	else if (v->mounted && v->volume_device == volume_device) {
 		sync_volume(v);
 		dismount_locked(v, "asked by the kernel");
 	}
@@ -1353,6 +1490,37 @@ static void delete_device(DEVICE_OBJECT *volume_device)
 	e->volume->pending_deletes--;
 	ObDereferenceObject(address_of(e->device));
 	ObDereferenceObject(address_of(volume_device));
+}
+
+static void log_mounted(const Volume *v)
+{
+	log_line(
+		"%s: mounted exFAT \"%s\" serial %08X: %u sectors of %u from sector %u, %u KB clusters, %u of %u "
+		"free, volume device %08X",
+		v->device_name, v->fs.label, (unsigned)v->fs.serial, (unsigned)v->fs.device.sectors, (unsigned)v->sector_bytes,
+		(unsigned)v->fs.device.first_sector, (unsigned)(1u << v->fs.cluster_shift >> 10), (unsigned)v->fs.free_clusters,
+		(unsigned)v->fs.cluster_count, address_of(v->volume_device));
+}
+
+// xam lists the drive from one look: as it loads it enters the content partition itself (xam 2.0.17559.0, 0x8167ed90,
+// when the hardware has a drive) and marks it unformatted when NtQueryFullAttributesFile on the partition's root
+// fails (the look 0x8167e5b8, the test 0x816e0540). xam loads at 0x800613b0, before this module's hook at 0x800613dc
+// (kernel_seam.md, section 7), so that look never finds our volume, and the dash's storage settings called the exFAT
+// drive unformatted (results/2026-11-15-milestone-78-step-1, runs 9 to 11). Announcing the partition again once our
+// volume is on it, as the kernel announces a stick, makes xam look again (its worker 0x8167eb60). When xam drops a
+// drive it listed as formatted it dismounts the drive first (0x8167e760), so dismount_volume declines the partition's
+// dismounts for the next two seconds, and the look finds our volume.
+static void announce_partition(void)
+{
+	partition_record.name = ansi(volumes[PARTITION].device_name);
+	partition_record.type = STORAGE_TYPE_HDD;
+	uint64_t now;
+	KeQuerySystemTime(&now);
+	xam_shield_until = now + XAM_SHIELD_100NS;
+	*(volatile uint16_t *)(uintptr_t)XAM_DEVICE_ID_COUNTER = STORAGE_ID_HDD;
+	log_line("%s: announced to xam again, type %u, as device %u", volumes[PARTITION].device_name, STORAGE_TYPE_HDD,
+		STORAGE_ID_HDD);
+	((void (*)(StorageRecord *, uint32_t))(uintptr_t)KERNEL_ANNOUNCE_STORAGE)(&partition_record, STORAGE_ARRIVAL);
 }
 
 static void try_mount(Volume *v)
@@ -1374,7 +1542,7 @@ static void try_mount(Volume *v)
 	if (status != EXFAT_OK) {
 		// FATX and FAT32 sticks are the kernel's; anything else stays unmounted and is said once.
 		if (status != EXFAT_NOT_EXFAT)
-			xsdk_plugin_log("%s: not mounted: %s", v->device_name, xsdk_exfat_status_name(status));
+			log_line("%s: not mounted: %s", v->device_name, xsdk_exfat_status_name(status));
 		v->refused = true;
 		KeSetEvent(&v->device->mount_lock, 0, 0);
 		return;
@@ -1382,7 +1550,7 @@ static void try_mount(Volume *v)
 	DEVICE_OBJECT *mounted = v->device->mounted_or_self_device;
 	if (mounted && mounted->driver_object == (const DRIVER_OBJECT *)(uintptr_t)KERNEL_RAW_DRIVER) {
 		const NTSTATUS dismounted = IoDismountVolume(v->device);
-		xsdk_plugin_log("%s: raw volume dismounted: 0x%08X", v->device_name, (unsigned)dismounted);
+		log_line("%s: raw volume dismounted: 0x%08X", v->device_name, (unsigned)dismounted);
 		mounted = v->device->mounted_or_self_device;
 	}
 	if (mounted) {
@@ -1391,7 +1559,7 @@ static void try_mount(Volume *v)
 	}
 	status = xsdk_exfat_mount(&v->fs, &device);
 	if (status != EXFAT_OK) {
-		xsdk_plugin_log("%s: exFAT volume refused: %s", v->device_name, xsdk_exfat_status_name(status));
+		log_line("%s: exFAT volume refused: %s", v->device_name, xsdk_exfat_status_name(status));
 		v->refused = true;
 		KeSetEvent(&v->device->mount_lock, 0, 0);
 		return;
@@ -1400,7 +1568,7 @@ static void try_mount(Volume *v)
 	const NTSTATUS created =
 		IoCreateDevice(&driver, sizeof(Extension), NULL, DEVICE_TYPE_VOLUME, 0, (void **)&volume_device);
 	if (!NT_SUCCESS(created)) {
-		xsdk_plugin_log("%s: IoCreateDevice failed: 0x%08X", v->device_name, (unsigned)created);
+		log_line("%s: IoCreateDevice failed: 0x%08X", v->device_name, (unsigned)created);
 		v->refused = true;
 		KeSetEvent(&v->device->mount_lock, 0, 0);
 		return;
@@ -1421,12 +1589,15 @@ static void try_mount(Volume *v)
 	volume_device->flags &= ~(uint32_t)DEVICE_FLAG_NOT_READY;
 	v->device->mounted_or_self_device = volume_device;
 	KeSetEvent(&v->device->mount_lock, 0, 0);
-	xsdk_plugin_log(
-		"%s: mounted exFAT \"%s\" serial %08X: %u sectors of %u from sector %u, %u KB clusters, %u of %u "
-		"free, volume device %08X",
-		v->device_name, v->fs.label, (unsigned)v->fs.serial, (unsigned)device.sectors, (unsigned)v->sector_bytes,
-		(unsigned)device.first_sector, (unsigned)(1u << v->fs.cluster_shift >> 10), (unsigned)v->fs.free_clusters,
-		(unsigned)v->fs.cluster_count, address_of(volume_device));
+	// The log lives on the partition: a mount of it is a fresh or a formatted volume, so the thread remakes the log's
+	// folder and logs again (results/2026-11-15-milestone-78-step-1, the format's boot logged nothing).
+	if (v == &volumes[PARTITION]) {
+		log_ready = false;
+		announce_pending = true;
+	}
+	// Before the log's folder exists the line would be dropped; the thread logs every mounted volume once it does.
+	if (log_ready)
+		log_mounted(v);
 }
 
 static bool reference_device(Volume *v)
@@ -1436,9 +1607,9 @@ static bool reference_device(Volume *v)
 	if (!NT_SUCCESS(ObReferenceObjectByName(&name, 0, IoDeviceObjectType, NULL, &object)) || !object)
 		return false;
 	v->device = (DEVICE_OBJECT *)(uintptr_t)object;
-	if (v->device->device_type != DEVICE_TYPE_MASS_STORAGE) {
-		xsdk_plugin_log("%s: device type %u, not %u; left alone", v->device_name, (unsigned)v->device->device_type,
-			DEVICE_TYPE_MASS_STORAGE);
+	if (v->device->device_type != v->device_type) {
+		log_line("%s: device type %u, not %u; left alone", v->device_name, (unsigned)v->device->device_type,
+			(unsigned)v->device_type);
 		ObDereferenceObject(object);
 		v->device = NULL;
 		return false;
@@ -1509,6 +1680,28 @@ static bool file_exists(const char *path)
 	return NT_SUCCESS(NtQueryFullAttributesFile(&attributes, &information));
 }
 
+// Whether a flag file is on the partition. Looked up in the volume itself under a lock the thread only tries, as a
+// look through the kernel would wait for the module's lock and be handed it while the thread is starved of its
+// hardware thread: xam's UI pump runs above a plugin's base priority through a pending task, and run 33's profile
+// creation waited 36 s on a lock the thread owned but could not run to release
+// (results/2026-11-15-milestone-78-step-1). A busy module keeps the flag as it was. A partition that is not ours,
+// FATX, is asked through the kernel, whose own driver serves it.
+static bool flag_present(const char *name, const char *path, bool while_busy)
+{
+	Volume *const v = &volumes[PARTITION];
+	if (!v->mounted)
+		return file_exists(path);
+	KeEnterCriticalRegion();
+	if (!RtlTryEnterCriticalSection(&lock)) {
+		KeLeaveCriticalRegion();
+		return while_busy;
+	}
+	ExfatNode node;
+	const bool present = v->mounted && xsdk_exfat_lookup(&v->fs, name, &node) == EXFAT_OK;
+	unlock_module();
+	return present;
+}
+
 // Deleted at its close, as src/path.c's unlink does, so the next load doesn't unload at once.
 static NTSTATUS remove_file(const char *path)
 {
@@ -1527,16 +1720,25 @@ static NTSTATUS remove_file(const char *path)
 	return NT_SUCCESS(status) ? close_status : status;
 }
 
-static void make_log_folder(void)
+// Opens or makes a folder; false where its volume cannot be written, as the partition is before its mount.
+static bool make_folder(const char *path)
 {
-	const ANSI_STRING name = ansi(LOG_FOLDER);
+	const ANSI_STRING name = ansi(path);
 	const OBJECT_ATTRIBUTES attributes = { .name = &name };
 	HANDLE folder;
 	IO_STATUS_BLOCK io_status;
-	if (NT_SUCCESS(
+	if (!NT_SUCCESS(
 			NtCreateFile(&folder, GENERIC_READ | SYNCHRONIZE, &attributes, &io_status, NULL, FILE_ATTRIBUTE_NORMAL,
 				FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN_IF, FILE_SYNCHRONOUS_IO_NONALERT | FILE_DIRECTORY_FILE)))
-		(void)NtClose(folder);
+		return false;
+	(void)NtClose(folder);
+	return true;
+}
+
+// The log's folder and the one above it: a freshly formatted partition has neither.
+static bool make_log_folder(void)
+{
+	return make_folder(XSDK_FOLDER) && make_folder(LOG_FOLDER);
 }
 
 static void sleep_ms(uint32_t milliseconds)
@@ -1545,39 +1747,146 @@ static void sleep_ms(uint32_t milliseconds)
 	(void)KeDelayExecutionThread(KERNEL_MODE, 0, &interval);
 }
 
+// The boot timeline (milestone 78 step 1): what the partition's device holds, each change, timed from the module's
+// start.
+
+enum { STATE_ABSENT, STATE_NONE, STATE_RAW, STATE_OTHER, STATE_OURS, STATE_GATE };
+static const char *const state_names[] = { "no device", "no volume", "the kernel's raw volume",
+	"another file system's volume", "our volume", "the executable set, the gate open" };
+typedef struct {
+	uint32_t ms;
+	uint8_t state;
+} Sample;
+static Sample timeline[TIMELINE_MAX];
+static unsigned timeline_count;
+static uint64_t started;
+// The partition's device, referenced for the sampling; its volume takes a reference of its own.
+static DEVICE_OBJECT *partition;
+
+static void record(uint8_t state)
+{
+	if (timeline_count && timeline[timeline_count - 1].state == state)
+		return;
+	uint64_t now;
+	KeQuerySystemTime(&now);
+	if (timeline_count < TIMELINE_MAX)
+		timeline[timeline_count++] = (Sample){ (uint32_t)((now - started) / 10000), state };
+}
+
+// Reads the device object alone: no IRP, no open, nothing the boot's storage pass can collide with.
+static void sample_partition(void)
+{
+	if (!partition) {
+		const ANSI_STRING name = ansi(device_names[PARTITION]);
+		uint32_t object = 0;
+		if (!NT_SUCCESS(ObReferenceObjectByName(&name, 0, IoDeviceObjectType, NULL, &object)) || !object) {
+			record(STATE_ABSENT);
+			return;
+		}
+		partition = (DEVICE_OBJECT *)(uintptr_t)object;
+	}
+	const DEVICE_OBJECT *const mounted = partition->mounted_or_self_device;
+	if (!mounted)
+		record(STATE_NONE);
+	else if (mounted->driver_object == (const DRIVER_OBJECT *)(uintptr_t)KERNEL_RAW_DRIVER)
+		record(STATE_RAW);
+	else if (volumes && mounted == volumes[PARTITION].volume_device)
+		record(STATE_OURS);
+	else
+		record(STATE_OTHER);
+}
+
+static void log_timeline(void)
+{
+	for (unsigned i = 0; i < timeline_count; i++) {
+		if (timeline[i].state == STATE_GATE)
+			log_line("boot: +%u ms, %s", timeline[i].ms, state_names[STATE_GATE]);
+		else
+			log_line("boot: +%u ms, %s: %s", timeline[i].ms, device_names[PARTITION], state_names[timeline[i].state]);
+	}
+	if (timeline_count == TIMELINE_MAX)
+		log_line("boot: the timeline is full");
+}
+
 void plugin_main(HANDLE module)
 {
+	KeQuerySystemTime(&started);
+	RtlInitializeCriticalSection(&lock);
+	RtlInitializeCriticalSection(&queue_lock);
+	// This thread is handed the module's lock whenever it waited for it behind the dash's I/O (RtlEnterCriticalSection
+	// wakes one waiter, the owner before it runs). Starved of its hardware thread by xam's UI task at a higher
+	// priority, it kept the lock 36 s and the dash's profile creation timed out
+	// (results/2026-11-15-milestone-78-step-1, run 33). It runs at the highest base priority the kernel allows a system
+	// thread, which the kernel clamps the request to.
+	const uintptr_t self = *(const volatile uint32_t *)(pcr() + PCR_THREAD);
+	const int32_t previous = KeSetBasePriorityThread((void *)self, MODULE_PRIORITY);
+	log_line("exfat: thread priority %d -> %d", (int)previous, (int)KeQueryBasePriorityThread((void *)self));
+	volumes = MmAllocatePhysicalMemoryEx(0, sizeof(Volume) * VOLUMES_MAX, PAGE_READWRITE, 0, 0xFFFFFFFF, 4096);
+	if (volumes) {
+		memset(volumes, 0, sizeof(Volume) * VOLUMES_MAX);
+		for (unsigned i = 0; i < VOLUMES_MAX; i++) {
+			volumes[i].device_name = device_names[i];
+			volumes[i].device_type = device_types[i];
+			list_init(&volumes[i].files);
+		}
+	}
 	// Loaded at boot by the kernel's init thread, the module starts a second before xam, whose storage thread then
 	// dismounts and remounts each storage device as it registers it, the HDD's content partition and the sticks alike,
-	// and the dash loads only once that pass is over. A log line or a mount during that pass hangs the boot
-	// (results/2026-11-14-milestone-77-step-4/README.md, "xam's storage start-up"), so everything waits for the
-	// executable, set when xam loads the dash or DashLaunch's lhelper.xex.
-	while (!*XexExecutableModuleHandle)
+	// and the dash loads only once that pass is over. A log line or a stick's mount during that pass hangs the boot
+	// (results/2026-11-14-milestone-77-step-4/README.md, "xam's storage start-up"), so the sticks and the log wait for
+	// the executable, set when xam loads the dash or DashLaunch's lhelper.xex. An empty content partition gets one
+	// mount attempt at once, ahead of the pass, where a FATX drive's kernel volume already is; the timeline samples
+	// what the pass does to it (results/2026-11-15-milestone-78-step-1, run 9).
+	bool tried = false;
+	while (!*XexExecutableModuleHandle) {
+		sample_partition();
+		if (volumes && !tried && partition && !partition->mounted_or_self_device) {
+			poll(&volumes[PARTITION]);
+			tried = true;
+		}
 		sleep_ms(POLL_MS);
-	make_log_folder();
+	}
+	record(STATE_GATE);
 	xsdk_plugin_log_open(LOG_PATH);
-	RtlInitializeCriticalSection(&lock);
-	const LDR_DATA_TABLE_ENTRY *const entry = (const LDR_DATA_TABLE_ENTRY *)(uintptr_t)module;
-	xsdk_plugin_log("exfat: loaded, kernel %u.%u.%u.%u, image 0x%08X-0x%08X, %u KB a volume, %u volumes",
-		(unsigned)XboxKrnlVersion->major, (unsigned)XboxKrnlVersion->minor, (unsigned)XboxKrnlVersion->build,
-		(unsigned)XboxKrnlVersion->qfe, (unsigned)entry->image_base, (unsigned)(entry->image_base + entry->image_size),
-		(unsigned)(sizeof(Volume) >> 10), VOLUMES_MAX);
-	volumes = MmAllocatePhysicalMemoryEx(0, sizeof(Volume) * VOLUMES_MAX, PAGE_READWRITE, 0, 0xFFFFFFFF, 4096);
 	if (!volumes) {
-		xsdk_plugin_log("exfat: no memory for the volumes, unloading");
+		(void)make_log_folder();
+		log_line("exfat: no memory for the volumes, unloading");
+		write_queued();
 		return;
 	}
-	memset(volumes, 0, sizeof(Volume) * VOLUMES_MAX);
-	for (unsigned i = 0; i < VOLUMES_MAX; i++) {
-		volumes[i].device_name = device_names[i];
-		list_init(&volumes[i].files);
-	}
-	while (!file_exists(UNLOAD_PATH)) {
-		trace = file_exists(TRACE_PATH);
+	// The log lives on the partition, so on an exFAT one it can be written only once the poll has mounted it: the
+	// loaded line, the boot timeline and the mounted volumes' lines wait for its folder.
+	while (!flag_present(UNLOAD_NAME, UNLOAD_PATH, false)) {
+		sample_partition();
+		if (!log_ready && make_log_folder()) {
+			log_ready = true;
+			const LDR_DATA_TABLE_ENTRY *const entry = (const LDR_DATA_TABLE_ENTRY *)(uintptr_t)module;
+			log_line("exfat: loaded, kernel %u.%u.%u.%u, image 0x%08X-0x%08X, %u KB a volume, %u volumes",
+				(unsigned)XboxKrnlVersion->major, (unsigned)XboxKrnlVersion->minor, (unsigned)XboxKrnlVersion->build,
+				(unsigned)XboxKrnlVersion->qfe, (unsigned)entry->image_base,
+				(unsigned)(entry->image_base + entry->image_size), (unsigned)(sizeof(Volume) >> 10), VOLUMES_MAX);
+			log_timeline();
+			for (unsigned i = 0; i < VOLUMES_MAX; i++) {
+				if (volumes[i].mounted)
+					log_mounted(&volumes[i]);
+			}
+		}
+		if (announce_pending) {
+			announce_pending = false;
+			announce_partition();
+		}
+		if (log_ready)
+			write_queued();
+		const bool tracing = flag_present(TRACE_NAME, TRACE_PATH, trace);
+		if (tracing != trace) {
+			trace = tracing;
+			log_line("exfat: trace %s", tracing ? "on" : "off");
+		}
 		for (unsigned i = 0; i < VOLUMES_MAX; i++)
 			poll(&volumes[i]);
 		sleep_ms(POLL_MS);
 	}
+	write_queued();
 	lock_module();
 	for (unsigned i = 0; i < VOLUMES_MAX; i++) {
 		Volume *const v = &volumes[i];
@@ -1598,10 +1907,13 @@ void plugin_main(HANDLE module)
 		if (!pending)
 			break;
 		if (waited % 10000 == 0)
-			xsdk_plugin_log(
-				"exfat: %u volume devices still referenced by open handles; waiting to unload", (unsigned)pending);
+			log_line("exfat: %u volume devices still referenced by open handles; waiting to unload", (unsigned)pending);
+		write_queued();
 		sleep_ms(POLL_MS);
 	}
+	if (partition)
+		ObDereferenceObject(address_of(partition));
 	const NTSTATUS removed = remove_file(UNLOAD_PATH);
-	xsdk_plugin_log("exfat: exfat_unload.txt found, removed: 0x%08X; unloading", (unsigned)removed);
+	log_line("exfat: exfat_unload.txt found, removed: 0x%08X; unloading", (unsigned)removed);
+	write_queued();
 }

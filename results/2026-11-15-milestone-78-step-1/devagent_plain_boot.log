@@ -1,0 +1,6 @@
+[4.950] devagent 6 started
+[4.950] loaded from \Device\Harddisk0\Partition1\XSDK\devagent.xex
+[4.951] no xacfg:\devagent.ini (2); no token, port 7360
+[4.968] network up after 0 s
+[5.017] listening on port 7360
+[52.875] error 00000651: can't list usb0:\

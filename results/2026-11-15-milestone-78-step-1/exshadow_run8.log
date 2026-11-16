@@ -1,0 +1,9 @@
+ExShadowBoot start, thread 0
+Loaded HvxShadowBoot.bin at 0x1fc40000 size 0x7c0
+  HvxShadowBoot = 0x10
+  HvxQuiesceProcessor = 0x3f4
+Loaded xboxromw2d.bin at 0x1601000 size 0x200000
+syscall 0: wrong key -> 0x44970000, right key with action 9 -> 0x2 (2 = backdoor)
+Display: surface 0x1f698000 pitch 1280 control 0x2
+Frame at 0x1f698000, the payload paints its bands there (0 = none)
+USB power down

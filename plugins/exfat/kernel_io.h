@@ -214,6 +214,9 @@ enum {
 	DEVICE_FLAG_LOCK_PAGES = 0x04,
 	DEVICE_FLAG_NOT_READY = 0x10,
 	DEVICE_TYPE_MASS_STORAGE = 45,
+	// The drive's partition devices, read from \Device\Harddisk0\Partition1 on the console
+	// (results/2026-11-15-milestone-78-step-2/exfat_format_list.log).
+	DEVICE_TYPE_DISK = 7,
 	DEVICE_TYPE_VOLUME = 8,
 
 	// FILE_OBJECT.flags

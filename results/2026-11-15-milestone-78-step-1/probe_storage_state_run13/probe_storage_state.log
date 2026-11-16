@@ -1,0 +1,29 @@
+log: game:\probe_storage_state.log
+log: named after \Device\Harddisk0\Partition1\XSDK\run\probe_storage_state.xex
+log: no net_log.txt beside the .xex, so not over the network
+probe_storage_state: kernel 2.0.17559.0
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 16360 us
+RESULT kernel record 0x801A608C: 00000000 00000000 00000000 00000000 00000000 00000000, name ""
+RESULT kernel notification list head: 80172A20 80172A20
+hdd block +000: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +010: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +020: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +030: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +040: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +050: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +060: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +070: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +080: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +090: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +0A0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +0B0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +0C0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +0D0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +0E0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +0F0: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+hdd block +100: 00 00 00 00 00 00 00 00 00 1C 90 00 00 00 00 00 
+hdd block +110: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+RESULT xam entry 0: "\Device\Harddisk0\Partition1\" id 1 type 1 state 3
+RESULT xam entry 1: "\Device\Mass0\" id 3 type 16 state 3
+exit: status 0

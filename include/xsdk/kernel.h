@@ -612,6 +612,8 @@ NTSTATUS NtQueryVirtualMemory(uint32_t base_address, MEMORY_BASIC_INFORMATION *i
 // Use MmQueryAddressProtect for image pages: NtQueryVirtualMemory refuses them with STATUS_INVALID_PARAMETER.
 // Returns the pages' protection, 0 if none (xboxkrnl_memory.cc:413-423).
 uint32_t MmQueryAddressProtect(uint32_t base_address);
+// Whether the address is mapped; the kernel's BOOLEAN.
+uint8_t MmIsAddressValid(const void *address);
 void MmSetAddressProtect(void *base_address, uint32_t region_size, uint32_t protect);
 // The singly-linked list operations return a guest address: the old head, the popped entry, or the first flushed
 // (xboxkrnl_threading.cc:1320-1392). Commonly inlined, so a title may use lwarx/stwcx. instead.
@@ -625,8 +627,8 @@ NTSTATUS ObDereferenceObject(uint32_t object);
 // A device object by name, "\\Device\\Mass0" for the first USB stick; object_type is IoDeviceObjectType. The
 // kernel runs the device type's parse procedure (plugins/exfat/kernel_seam.md, section 3); Xenia looks the name up
 // in its object table (xenia:src/xenia/kernel/xboxkrnl/xboxkrnl_ob.cc:118-134). ObDereferenceObject releases it.
-NTSTATUS ObReferenceObjectByName(const ANSI_STRING *name, uint32_t attributes, const void *object_type,
-	void *parse_context, uint32_t *out_object);
+NTSTATUS ObReferenceObjectByName(
+	const ANSI_STRING *name, uint32_t attributes, const void *object_type, void *parse_context, uint32_t *out_object);
 // The kernel's device object type, as ObReferenceObjectByName takes it (xboxkrnl_table.inc:72, a variable).
 extern const void *const IoDeviceObjectType;
 // A device control request sent to a device object and waited for; returned_bytes may be null. Not in Xenia
@@ -635,8 +637,8 @@ NTSTATUS IoSynchronousDeviceIoControlRequest(uint32_t control_code, uint32_t dev
 	uint32_t input_bytes, void *output, uint32_t output_bytes, uint32_t *returned_bytes);
 // A read (major function 2) or write (3) of bytes at offset, sent to a device object and waited for. Not in Xenia
 // (plugins/exfat/kernel_seam.md, section 2).
-NTSTATUS IoSynchronousFsdRequest(uint32_t major_function, uint32_t device, void *buffer, uint32_t bytes,
-	const uint64_t *offset);
+NTSTATUS IoSynchronousFsdRequest(
+	uint32_t major_function, uint32_t device, void *buffer, uint32_t bytes, const uint64_t *offset);
 // Dismounts the volume the kernel has on the named device, "\\Device\\Mass0": the file system dismounts and
 // its volume device is deleted, so the next open mounts afresh (plugins/exfat/kernel_seam.md, section 5).
 NTSTATUS IoDismountVolumeByName(const ANSI_STRING *name);

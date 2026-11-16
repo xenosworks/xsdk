@@ -90,7 +90,7 @@ typedef enum { LISTING, CONFIRM_DRIVE, DONE } Screen;
 static uint8_t *bounce;
 static _Alignas(4096) uint8_t sector[SECTOR_BYTES_MAX];
 static ExfatVolume volume;
-// Off once the drive's partition is dismounted: the log lives on it.
+// Off once the partition the log lives on is dismounted.
 static bool log_open = true;
 static uint32_t width;
 static uint32_t height;
@@ -261,8 +261,8 @@ static bool take_device(Device *d, char *report, size_t report_bytes)
 static bool format(Device *d, const char *label, char *report, size_t report_bytes)
 {
 	say("%s: formatting exFAT, label \"%s\"", d->path, label);
-	if (d->drive) {
-		// The log lives on the partition.
+	// The log lives beside the title: closed before the dismount when the title runs from the partition it formats.
+	if (d->drive && ExLoadedImageName && strncmp(ExLoadedImageName, d->path, strlen(d->path)) == 0) {
 		xsdk_log_close();
 		log_open = false;
 	}

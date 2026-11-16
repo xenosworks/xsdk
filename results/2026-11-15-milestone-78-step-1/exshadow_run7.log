@@ -1,0 +1,7 @@
+ExShadowBoot start, thread 0
+Loaded HvxShadowBoot.bin at 0x1fc40000 size 0x65c
+  HvxShadowBoot = 0xc
+  HvxQuiesceProcessor = 0x2f0
+Loaded xboxromw2d.bin at 0x1601000 size 0x200000
+syscall 0: wrong key -> 0x44970000, right key with action 9 -> 0x2 (2 = backdoor)
+USB power down

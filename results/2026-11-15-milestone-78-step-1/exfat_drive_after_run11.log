@@ -1,0 +1,37 @@
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x915B1000, 269 KB a volume, 4 volumes
+boot: +1 ms, \Device\Harddisk0\Partition1: no volume
+boot: +3188 ms, the executable set, the gate open
+boot: +3204 ms, \Device\Harddisk0\Partition1: no volume
+boot: +4606 ms, \Device\Harddisk0\Partition1: our volume
+\Device\Harddisk0\Partition1: mounted exFAT "" serial F46F5E10: 302585856 sectors of 512 from sector 2048, 128 KB clusters, 1181921 of 1181928 free, volume device 3A129958
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x915B1000, 269 KB a volume, 4 volumes
+boot: +0 ms, \Device\Harddisk0\Partition1: no volume
+boot: +3204 ms, the executable set, the gate open
+boot: +3205 ms, \Device\Harddisk0\Partition1: no volume
+boot: +4622 ms, \Device\Harddisk0\Partition1: our volume
+\Device\Harddisk0\Partition1: mounted exFAT "" serial F46F5E10: 302585856 sectors of 512 from sector 2048, 128 KB clusters, 1181921 of 1181928 free, volume device 3A13AF98
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x915B1000, 269 KB a volume, 4 volumes
+boot: +0 ms, \Device\Harddisk0\Partition1: no volume
+boot: +2387 ms, the executable set, the gate open
+boot: +2403 ms, \Device\Harddisk0\Partition1: no volume
+boot: +3838 ms, \Device\Harddisk0\Partition1: our volume
+\Device\Harddisk0\Partition1: mounted exFAT "" serial F46F5E10: 302585856 sectors of 512 from sector 2048, 128 KB clusters, 1181921 of 1181928 free, volume device 3A13AF98
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x915B1000, 269 KB a volume, 4 volumes
+boot: +1 ms, \Device\Harddisk0\Partition1: no volume
+boot: +1653 ms, \Device\Harddisk0\Partition1: our volume
+boot: +2153 ms, the executable set, the gate open
+boot: +2153 ms, \Device\Harddisk0\Partition1: our volume
+\Device\Harddisk0\Partition1: mounted exFAT "" serial F46F5E10: 302585856 sectors of 512 from sector 2048, 128 KB clusters, 1181921 of 1181928 free, volume device 3A129ED8
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x915B1000, 269 KB a volume, 4 volumes
+boot: +1 ms, \Device\Harddisk0\Partition1: no volume
+boot: +1652 ms, \Device\Harddisk0\Partition1: our volume
+boot: +2653 ms, the executable set, the gate open
+boot: +2653 ms, \Device\Harddisk0\Partition1: our volume
+\Device\Harddisk0\Partition1: mounted exFAT "" serial F46F5E10: 302585856 sectors of 512 from sector 2048, 128 KB clusters, 1181684 of 1181928 free, volume device 3A129D98
+exfat: loaded, kernel 2.0.17559.0, image 0x91580000-0x915B1000, 269 KB a volume, 4 volumes
+boot: +1 ms, \Device\Harddisk0\Partition1: no volume
+boot: +1653 ms, \Device\Harddisk0\Partition1: our volume
+boot: +2154 ms, the executable set, the gate open
+boot: +2169 ms, \Device\Harddisk0\Partition1: our volume
+\Device\Harddisk0\Partition1: mounted exFAT "" serial F46F5E10: 302585856 sectors of 512 from sector 2048, 128 KB clusters, 1181684 of 1181928 free, volume device 3A128B98
+\Device\Harddisk0\Partition1: announced to xam again (the kernel's record names "", type 0)

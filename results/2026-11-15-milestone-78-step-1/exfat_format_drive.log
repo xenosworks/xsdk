@@ -1,0 +1,14 @@
+log: game:\exfat_format.log
+log: named after \Device\Mass0\XSDK\exfat_format.xex
+log: no net_log.txt beside the .xex, so not over the network
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 29159 us
+exfat_format: kernel 2.0.17559.0
+\Device\Mass0 (USB stick 0): device type 45, 244284927 sectors of 512, 125.0 GB, holds MBR, partition type 0C
+\Device\Mass1: present, no media (geometry 0xC00002B6)
+\Device\Mass2: present, no media (geometry 0xC00002B6)
+\Device\Harddisk0\Partition1 (HDD content partition): device type 7, 302590256 sectors of 512, 154.9 GB, holds FATX
+open: NtCreateFile(game:\exfat_format.txt) failed: 0xC0000034
+display: 1280x720 scaled to the 1920x1080 output
+display: the line counter reached 720 after 24215 us
+\Device\Harddisk0\Partition1: formatting exFAT, label ""
