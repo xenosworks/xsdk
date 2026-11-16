@@ -333,8 +333,7 @@ The user: "it appears in settings". The stick's launch.ini is back to the NXE de
 ## The NAND flash and the plain boot after it
 
 The user flashed the 18:22 image (the run 12 module, the exfat patches, hvFixKeys; the patch set otherwise the one of
-the image flashed before) with Simple 360 NAND Flasher from `hdd:\XSDK\flasher`: `nand_flasher_1822.log` is its log
-with the CPU key masked (0x1080000 bytes written in 22 s, then the reboot). The plain boot (`exfat_drive_after_flash.log`,
+the image flashed before). The plain boot (`exfat_drive_after_flash.log`,
 last block): our volume at +1452 ms, the gate at +3237 ms, "announced to xam again, type 1", no dismount. The shadow
 ROMs (`local/shadowboot/out/hdd|usb/xboxromw2d.bin`, the stick's copy) are rebuilt from that image. Copied to the
 drive with the console agent, one connection, folder by folder: Aurora 0.7b.2 at `hdd:\Aurora` (167 files, 40566796
@@ -407,6 +406,14 @@ and `trace_run35_spin.log`. What the runs established, in order:
   creations signed in, twelve in a row since run 36. The module logged nothing through them: no errors, no dropped
   lines.
 
+## The plain boot with the run 38 module from the NAND (2026-11-16)
+
+The user rebuilt the NAND with `exfat.xex` the run 38 build and `bin\exfat.bin` unchanged (96 bytes, the same as a
+fresh `make exfat_patch`); step 4's `verify_image.py` read the image first: our two patch records byte-identical to
+`build/exfat.bin`, no record at 0x61388, the module's 61440 bytes in four contiguous blocks from 0xe2c000. The plain
+boot: the module loaded from the NAND at 0x91580000-0x915B8000, the partition mounted at +1.4 s, the gate at +3.0 s,
+the drive announced to xam, the dash up.
+
 ## Step 1 checks so far
 
 - [x] The module with the fourth device boots through the shadow loop on a FATX drive (run 6).
@@ -430,3 +437,5 @@ and `trace_run35_spin.log`. What the runs established, in order:
 - [ ] exfat_check on the drive; profiles and saves.
 - [x] A profile created from the dash signs in every time: twelve in a row on runs 36 to 38 with the fixes of runs 34
   and 35, the last three on the clean module, against four spins in the seven attempts before (runs 13 to 38 above).
+- [x] The NAND reflashed with the run 38 module: the plain boot mounts the partition and announces it (the section
+  above).
