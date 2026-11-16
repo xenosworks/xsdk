@@ -5432,3 +5432,16 @@ six malloc checks and `mallopt` refusing maps on top of those two.
 - **Free pages alone don't tell the two apart:** without maps the 1 MB came from the heap's top, at 0x000734F8, took
   256 pages (118612 free while held) and gave them back as the top was trimmed (118884 after its free,
   `run2-break/`). So xsdk_test only logs those counts.
+
+## malloc's blocks are 16-byte aligned (2026-11-16)
+
+`build/xsdk_test.xex` with newlib built at a `MALLOC_ALIGNMENT` of 16 and an 8-byte lead before each mapped chunk
+(newlib-xsdk.patch), and main's build with the 8-byte newlib before it, `~/xsdk-gcc-pre-malloc16`, run from the same
+folder on the same boot (logs: `results/2026-11-16-malloc-16/`: `xsdk_test.log` with it, `baseline/` without).
+- **1 MB went to a map at 0x1D0F0010,** a page and 16 bytes; without it, at 0x1D0F0008, 8 bytes off 16, as every
+  mapped block was since 2026-11-06. A VMX store there lands 8 bytes low, with no fault: gamecube-xenon's thp_check
+  wrote its planes so (its 781bca9).
+- **With it 663 checks passed and 22 failed; without, 662 and the same 22.** The one more is the 16-byte check of 48
+  small sizes, calloc's, mapped blocks and realloc's. Of the 22, 4 file checks failed on an exFAT drive, 16 network
+  checks on a socket refused 10013 at boot, and 2 controller checks with no pad connected (0x48F). The map, realloc,
+  memalign, calloc and fragmentation checks passed in both.

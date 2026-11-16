@@ -98,7 +98,10 @@ a widescreen one (docs/HARDWARE.md, "Letterboxing, milestone 54 step 5").
 - **Reading it back is slow,** as the CPU doesn't cache it; read only what's needed.
 
 Memory only the CPU uses comes from `malloc`, whose heap can grow into all the memory the title has free
-(docs/HARDWARE.md, "The heap reserves the title's free memory").
+(docs/HARDWARE.md, "The heap reserves the title's free memory"). Every block `malloc`, `calloc`, `realloc` and `new`
+return is 16-byte aligned, as VMX loads and stores need: `lvx` and `stvx` drop an address's low 4 bits, so a vector
+8 bytes off lands 8 bytes low, with no fault (tools/toolchain/newlib-xsdk.patch; tests/test_memory.c). For more,
+ask `aligned_alloc`, `posix_memalign` or `memalign`, which `free` takes back.
 
 ## Shaders and their constants
 

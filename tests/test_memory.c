@@ -20,6 +20,8 @@ enum {
 	// Not a power of two, and a power of two below a pointer's size.
 	ODD_ALIGNMENT = 24,
 	SHORT_ALIGNMENT = 2,
+	// Sizes 1 to 48: at 8-byte alignment their chunks, 16 to 56 bytes, put some blocks 8 bytes off 16.
+	SMALL_RUN = 48,
 	// newlib maps blocks of 256 KB and more apart from its heap (newlib-xsdk.patch).
 	MAP_THRESHOLD_BYTES = 256 * 1024,
 	SMALL_BYTES = 64 * 1024,
@@ -53,6 +55,46 @@ static bool aligned_allocations(void)
 	void *memory = NULL;
 	return all && posix_memalign(&memory, ODD_ALIGNMENT, ALIGNED_BYTES) == EINVAL &&
 		posix_memalign(&memory, SHORT_ALIGNMENT, ALIGNED_BYTES) == EINVAL;
+}
+
+static bool at_16(const void *block, const char *call, size_t size_bytes)
+{
+	const bool aligned = block && ((uintptr_t)block & 15) == 0;
+	if (!aligned)
+		xsdk_log_write("memory: %s(%u) gave 0x%08X", call, (unsigned)size_bytes, (unsigned)(uintptr_t)block);
+	return aligned;
+}
+
+// VMX loads and stores drop an address's low 4 bits, so every block is 16-byte aligned (newlib-xsdk.patch): a run of
+// small sizes, calloc's, mapped ones, and realloc's within the heap and into a map.
+static bool sixteen_byte_blocks(void)
+{
+	void *small[SMALL_RUN] = { 0 };
+	bool all = true;
+	for (size_t i = 0; i < SMALL_RUN; i++) {
+		small[i] = malloc(i + 1);
+		all &= at_16(small[i], "malloc", i + 1);
+	}
+	void *const zeroed = calloc(SMALL_RUN, 1);
+	all &= at_16(zeroed, "calloc", SMALL_RUN);
+	void *const mapped = malloc(MAP_THRESHOLD_BYTES);
+	all &= at_16(mapped, "malloc", MAP_THRESHOLD_BYTES);
+	void *const zeroed_mapped = calloc(LARGE_BYTES, 1);
+	all &= at_16(zeroed_mapped, "calloc", LARGE_BYTES);
+	void *const in_heap = realloc(small[0], 2 * SMALL_RUN);
+	all &= at_16(in_heap, "realloc", 2 * SMALL_RUN);
+	if (in_heap)
+		small[0] = in_heap;
+	void *const into_map = realloc(small[1], LARGE_BYTES);
+	all &= at_16(into_map, "realloc", LARGE_BYTES);
+	if (into_map)
+		small[1] = into_map;
+	for (size_t i = 0; i < SMALL_RUN; i++)
+		free(small[i]);
+	free(zeroed);
+	free(mapped);
+	free(zeroed_mapped);
+	return all;
 }
 
 static NTSTATUS query(MM_QUERY_STATISTICS_RESULT *statistics, uint32_t size_bytes)
@@ -302,6 +344,8 @@ void test_memory(void)
 	check("MmQueryStatistics: heap growth takes free pages",
 		after != 0 && after < before && before - after >= GROWTH_BYTES / PAGE_BYTES);
 	check("posix_memalign: memory at alignments up to 64 KB, and EINVAL for 24 and 2", aligned_allocations());
+	check("malloc, calloc and realloc: 16-byte aligned, small, mapped, and moved within the heap and into a map",
+		sixteen_byte_blocks());
 	large_block();
 	realloc_across();
 	aligned_large_block();

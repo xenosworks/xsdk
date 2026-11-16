@@ -182,7 +182,7 @@
  	lvx	21,0,3		# offset 272
 --- a/newlib/libc/stdlib/_mallocr.c
 +++ b/newlib/libc/stdlib/_mallocr.c
-@@ -308,7 +308,20 @@
+@@ -308,7 +308,26 @@
  
  #define POINTER_UINT unsigned _POINTER_INT
  #define SEPARATE_OBJECTS
@@ -197,13 +197,19 @@
 +#define DEFAULT_MMAP_MAX 4096
 +extern void *__xsdk_heap_map(size_t);
 +extern int __xsdk_heap_unmap(void *);
++/* Every block is 16-byte aligned, as VMX loads and stores need: they drop an
++   address's low 4 bits.  A mapped chunk starts MMAP_LEAD bytes into its
++   pages for that, the lead kept in prev_size as memalign keeps its own.  */
++#define MALLOC_ALIGNMENT 16
++#define MMAP_LEAD (MALLOC_ALIGNMENT - 2 * SIZE_SZ)
 +#else
  #define HAVE_MMAP 0
++#define MMAP_LEAD 0
 +#endif
  #define MORECORE(size) _sbrk_r(reent_ptr, (size))
  #define MORECORE_CLEARS 0
  #define MALLOC_LOCK __malloc_lock(reent_ptr)
-@@ -632,7 +645,7 @@
+@@ -632,7 +651,7 @@
  #endif
  #endif
  
@@ -212,7 +218,7 @@
  
  #include <unistd.h>
  #include <fcntl.h>
-@@ -1992,7 +2005,7 @@
+@@ -1992,7 +2011,7 @@
    size_t page_mask = malloc_getpagesize - 1;
    mchunkptr p;
  
@@ -221,19 +227,38 @@
    static int fd = -1;
  #endif
  
-@@ -2003,7 +2016,10 @@
+@@ -2001,9 +2020,13 @@
+   /* For mmapped chunks, the overhead is one SIZE_SZ unit larger, because
+    * there is no following chunk whose prev_size field could be used.
     */
-   size = (size + SIZE_SZ + page_mask) & ~page_mask;
+-  size = (size + SIZE_SZ + page_mask) & ~page_mask;
++  size = (size + SIZE_SZ + MMAP_LEAD + page_mask) & ~page_mask;
  
 -#ifdef MAP_ANONYMOUS
 +#ifdef __XSDK__
 +  p = (mchunkptr)__xsdk_heap_map(size);
 +  if(p == 0) return 0;
++  p = (mchunkptr)((char *)p + MMAP_LEAD);
 +#elif defined(MAP_ANONYMOUS)
    p = (mchunkptr)mmap(0, size, PROT_READ|PROT_WRITE,
  		      MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
  #else /* !MAP_ANONYMOUS */
-@@ -2063,7 +2079,11 @@
+@@ -2024,11 +2047,11 @@
+   assert(aligned_OK(chunk2mem(p)));
+ 
+   /* The offset to the start of the mmapped region is stored
+-   * in the prev_size field of the chunk; normally it is zero,
++   * in the prev_size field of the chunk; normally it is MMAP_LEAD,
+    * but that can be changed in memalign().
+    */
+-  p->prev_size = 0;
+-  set_head(p, size|IS_MMAPPED);
++  p->prev_size = MMAP_LEAD;
++  set_head(p, (size - MMAP_LEAD)|IS_MMAPPED);
+   
+   mmapped_mem += size;
+   if ((unsigned long)mmapped_mem > (unsigned long)max_mmapped_mem) 
+@@ -2063,7 +2086,11 @@
    n_mmaps--;
    mmapped_mem -= (size + p->prev_size);
  

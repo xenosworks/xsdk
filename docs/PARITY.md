@@ -52,6 +52,7 @@ which implements what the games it runs need:
 | Virtual region queries | Yes | `NtQueryVirtualMemory(address, information, 0)` for `NtAllocateVirtualMemory`/`mmap` regions | [Console query log](../results/2026-10-20-milestone-55/probe_query_memory.log): committed, reserved, free | Image pages return C000000D; use `MmQueryAddressProtect` for image protection |
 | Physical page protection | Yes | `MmSetAddressProtect`, `MmQueryAddressProtect` | M55 probe | |
 | Syncing and locking mappings | Yes | `msync`, `mlock`, `munlock` (`src/mman.c`): mappings are private and anonymous, so `msync` checks its flags and range and has no file to write back; committed pages stay in memory, so the locks have nothing to do | `tests/test_pages.c`, on the console (`results/2026-10-31-milestone-70`) | Shared and file mappings, as for `mmap` |
+| 16-byte-aligned `malloc` | Yes | `malloc`, `calloc`, `realloc` and `new` give 16-byte-aligned blocks, as VMX needs: newlib's `MALLOC_ALIGNMENT` is 16, and a mapped block starts 8 bytes into its pages (`tools/toolchain/newlib-xsdk.patch`) | `tests/test_memory.c`, on the console (`results/2026-11-16-malloc-16`) | |
 | Aligned allocations and the page size | Yes | `posix_memalign` (`src/memalign.c`) on newlib's `memalign`, freed with `free`; `getpagesize`, 4096, as `sysconf(_SC_PAGESIZE)` | `tests/test_memory.c`, on the console (`results/2026-10-31-milestone-70`) | |
 | Memory statistics | Partial | `MmQueryStatistics` (`kernel.h`), raw | `tests/test_memory.c` | Xenia's statistics are estimates |
 
