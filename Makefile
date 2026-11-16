@@ -103,7 +103,7 @@ UNROLL_LOOPS_OBJECTS := $(BUILD)/tests/unroll_loops_o2.o $(BUILD)/tests/unroll_l
 .SECONDARY:
 # Milestone 77: the titles that load and check the exFAT module (docs/scope/77-exfat.md, step 3), and the formatter
 # (step 5, and milestone 78's drive).
-EXFAT_TITLES := exfat_load exfat_check exfat_corrupt exfat_format
+EXFAT_TITLES := exfat_load exfat_check exfat_check_hdd exfat_corrupt exfat_format
 
 all: $(BUILD)/m55_check.xex $(BUILD)/xsdk_test.xex $(BUILD)/host/libxsc.so $(BUILD)/libxsdk_plugin.a \
 	$(BUILD)/audio_check.xex $(BUILD)/pacing_test.xex \
@@ -265,6 +265,11 @@ exfat_patch: $(BUILD)/exfat.bin
 
 $(BUILD)/exfat_%.elf: $(BUILD)/tests/exfat_%.o $(BUILD)/libxsdk.a src/xsdk.ld
 	$(CC) $(LDFLAGS) -o $@ $(BUILD)/tests/exfat_$*.o $(LIBS)
+
+# Milestone 78: the same checks on the drive's content partition, hdd:, which the NAND's module mounts.
+$(BUILD)/tests/exfat_check_hdd.o: tests/exfat_check.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -DVOL='"hdd:"' -DDEV='"\\Device\\Harddisk0\\Partition1"' -c $< -o $@
 
 # Counted loops end in bdnz only with gcc-xsdk.patch's rs6000_preferred_doloop_mode (milestone 52).
 $(BUILD)/check/doloop_check.o: tests/doloop_check.c

@@ -18,11 +18,13 @@
 
 // Milestone 77 step 3 (docs/scope/77-exfat.md): the exFAT module (plugins/exfat/exfat_module.c) checked through xsdk's
 // file calls on the first USB stick, usb0:, which holds an exFAT volume made on the PC; exfat_load.xex has loaded the
-// module. Each check can fail: a stick the kernel's own drivers mount fails the file system's name and the run stops
-// there; a request the module gets wrong fails its check. What xsdk's calls can't reach goes through the kernel's
-// directly: share access, offsets the kernel keeps, a directory entry's fields, and everything past 2 GB, as off_t is
-// 32 bits in this toolchain. Leaves exfat_check\verify.bin and exfat_check\big.bin on the stick for the PC's byte
-// checks (results/2026-11-14-milestone-77-step-3/README.md); everything else it made is removed.
+// module. Built as exfat_check_hdd.xex (the Makefile), the same checks run on the drive's content partition, hdd:,
+// which the NAND's module mounts (milestone 78 step 1). Each check can fail: a stick the kernel's own drivers mount
+// fails the file system's name and the run stops there; a request the module gets wrong fails its check. What xsdk's
+// calls can't reach goes through the kernel's directly: share access, offsets the kernel keeps, a directory entry's
+// fields, and everything past 2 GB, as off_t is 32 bits in this toolchain. Leaves exfat_check\verify.bin and
+// exfat_check\big.bin on the stick for the PC's byte checks (results/2026-11-14-milestone-77-step-3/README.md);
+// everything else it made is removed.
 
 enum {
 	KERNEL_BUILD = 17559,
@@ -53,13 +55,20 @@ enum {
 static const uint64_t FOUR_GIB = (uint64_t)4096 << 20;
 static const uint64_t BIG_BYTES = (uint64_t)BIG_CHUNKS << 20;
 static const uint64_t BIG_CUT_BYTES = ((uint64_t)4096 << 20) + 4096;
-static const char ROOT[] = "usb0:/";
-static const char FOLDER[] = "usb0:/exfat_check";
-static const char DEVICE_ROOT[] = "\\Device\\Mass0\\";
-static const char PATTERN[] = "usb0:/exfat_check/pattern.bin";
-static const char DEVICE_PATTERN[] = "\\Device\\Mass0\\exfat_check\\pattern.bin";
-static const char BIG[] = "usb0:/exfat_check/big.bin";
-static const char DEVICE_BIG[] = "\\Device\\Mass0\\exfat_check\\big.bin";
+// The volume checked, as xsdk's drive and as the kernel's device: the stick unless the build names the drive. The stick
+// build's game:, the title's folder on the FATX drive, is the FATX to compare with; the drive build runs from exFAT.
+#ifndef VOL
+#define VOL  "usb0:"
+#define DEV  "\\Device\\Mass0"
+#define FATX "game:"
+#endif
+static const char ROOT[] = VOL "/";
+static const char FOLDER[] = VOL "/exfat_check";
+static const char DEVICE_ROOT[] = DEV "\\";
+static const char PATTERN[] = VOL "/exfat_check/pattern.bin";
+static const char DEVICE_PATTERN[] = DEV "\\exfat_check\\pattern.bin";
+static const char BIG[] = VOL "/exfat_check/big.bin";
+static const char DEVICE_BIG[] = DEV "\\exfat_check\\big.bin";
 
 static unsigned passed_count;
 static unsigned failed_count;
@@ -257,10 +266,10 @@ static bool mounted_exfat(void)
 	int result;
 	while ((result = statvfs(ROOT, &space)) != 0 && now_ms() - start < MOUNT_WAIT_MS)
 		(void)xsdk_thread_sleep(MOUNT_POLL_MS);
-	check("usb0: answers statvfs within 5 s", result == 0);
+	check(VOL " answers statvfs within 5 s", result == 0);
 	if (result != 0)
 		return false;
-	xsdk_log_write("usb0: %lu clusters of %lu bytes, %lu free", (unsigned long)space.f_blocks,
+	xsdk_log_write(VOL " %lu clusters of %lu bytes, %lu free", (unsigned long)space.f_blocks,
 		(unsigned long)space.f_frsize, (unsigned long)space.f_bfree);
 	HANDLE volume;
 	NTSTATUS status =
@@ -358,53 +367,52 @@ static void check_pattern_file(void)
 static void check_names(void)
 {
 	struct stat info;
-	check("a.txt written", write_small("usb0:/exfat_check/a.txt", "AAAA", 4));
-	check_ok("rename a.txt to b.txt", rename("usb0:/exfat_check/a.txt", "usb0:/exfat_check/b.txt"));
-	check_errno("stat a.txt after the rename: ENOENT", stat("usb0:/exfat_check/a.txt", &info), ENOENT);
-	check("b.txt holds a.txt's bytes", holds("usb0:/exfat_check/b.txt", "AAAA", 4));
-	check_ok("mkdir sub", mkdir("usb0:/exfat_check/sub", 0777));
-	check_ok("rename b.txt into sub", rename("usb0:/exfat_check/b.txt", "usb0:/exfat_check/sub/b.txt"));
-	check("sub/b.txt is there", stat("usb0:/exfat_check/sub/b.txt", &info) == 0 && info.st_size == 4);
-	check_ok("rename sub to sub2", rename("usb0:/exfat_check/sub", "usb0:/exfat_check/sub2"));
-	check("sub2/b.txt is there after the directory's rename", stat("usb0:/exfat_check/sub2/b.txt", &info) == 0);
-	check_errno("stat sub/b.txt: ENOENT", stat("usb0:/exfat_check/sub/b.txt", &info), ENOENT);
-	check_ok("rename b.txt to B.TXT, the case alone",
-		rename("usb0:/exfat_check/sub2/b.txt", "usb0:/exfat_check/sub2/B.TXT"));
+	check("a.txt written", write_small(VOL "/exfat_check/a.txt", "AAAA", 4));
+	check_ok("rename a.txt to b.txt", rename(VOL "/exfat_check/a.txt", VOL "/exfat_check/b.txt"));
+	check_errno("stat a.txt after the rename: ENOENT", stat(VOL "/exfat_check/a.txt", &info), ENOENT);
+	check("b.txt holds a.txt's bytes", holds(VOL "/exfat_check/b.txt", "AAAA", 4));
+	check_ok("mkdir sub", mkdir(VOL "/exfat_check/sub", 0777));
+	check_ok("rename b.txt into sub", rename(VOL "/exfat_check/b.txt", VOL "/exfat_check/sub/b.txt"));
+	check("sub/b.txt is there", stat(VOL "/exfat_check/sub/b.txt", &info) == 0 && info.st_size == 4);
+	check_ok("rename sub to sub2", rename(VOL "/exfat_check/sub", VOL "/exfat_check/sub2"));
+	check("sub2/b.txt is there after the directory's rename", stat(VOL "/exfat_check/sub2/b.txt", &info) == 0);
+	check_errno("stat sub/b.txt: ENOENT", stat(VOL "/exfat_check/sub/b.txt", &info), ENOENT);
+	check_ok(
+		"rename b.txt to B.TXT, the case alone", rename(VOL "/exfat_check/sub2/b.txt", VOL "/exfat_check/sub2/B.TXT"));
 	check("sub2 lists B.TXT alone",
-		list_sorted("usb0:/exfat_check/sub2", 0) == 1 && strcmp(names[0][0], "B.TXT") == 0 && types[0][0] == DT_REG);
+		list_sorted(VOL "/exfat_check/sub2", 0) == 1 && strcmp(names[0][0], "B.TXT") == 0 && types[0][0] == DT_REG);
 	check("c.txt and d.txt written",
-		write_small("usb0:/exfat_check/c.txt", "CC", 2) && write_small("usb0:/exfat_check/d.txt", "DDDD", 4));
-	check_ok("rename c.txt over d.txt", rename("usb0:/exfat_check/c.txt", "usb0:/exfat_check/d.txt"));
-	check("d.txt holds c.txt's bytes", holds("usb0:/exfat_check/d.txt", "CC", 2));
-	check_errno("stat c.txt: ENOENT", stat("usb0:/exfat_check/c.txt", &info), ENOENT);
-	const int held = open("usb0:/exfat_check/d.txt", O_RDONLY);
-	check("e.txt written", write_small("usb0:/exfat_check/e.txt", "E", 1));
-	check_errno(
-		"rename over an open file: EACCES", rename("usb0:/exfat_check/e.txt", "usb0:/exfat_check/d.txt"), EACCES);
+		write_small(VOL "/exfat_check/c.txt", "CC", 2) && write_small(VOL "/exfat_check/d.txt", "DDDD", 4));
+	check_ok("rename c.txt over d.txt", rename(VOL "/exfat_check/c.txt", VOL "/exfat_check/d.txt"));
+	check("d.txt holds c.txt's bytes", holds(VOL "/exfat_check/d.txt", "CC", 2));
+	check_errno("stat c.txt: ENOENT", stat(VOL "/exfat_check/c.txt", &info), ENOENT);
+	const int held = open(VOL "/exfat_check/d.txt", O_RDONLY);
+	check("e.txt written", write_small(VOL "/exfat_check/e.txt", "E", 1));
+	check_errno("rename over an open file: EACCES", rename(VOL "/exfat_check/e.txt", VOL "/exfat_check/d.txt"), EACCES);
 	(void)close(held);
-	check_ok("rename e.txt over d.txt once closed", rename("usb0:/exfat_check/e.txt", "usb0:/exfat_check/d.txt"));
-	check("d.txt holds e.txt's byte", holds("usb0:/exfat_check/d.txt", "E", 1));
+	check_ok("rename e.txt over d.txt once closed", rename(VOL "/exfat_check/e.txt", VOL "/exfat_check/d.txt"));
+	check("d.txt holds e.txt's byte", holds(VOL "/exfat_check/d.txt", "E", 1));
 
-	check_ok("unlink d.txt", unlink("usb0:/exfat_check/d.txt"));
-	check_errno("unlink d.txt again: ENOENT", unlink("usb0:/exfat_check/d.txt"), ENOENT);
-	check_errno("rmdir sub2 with B.TXT inside: ENOTEMPTY", rmdir("usb0:/exfat_check/sub2"), ENOTEMPTY);
-	check_errno("rmdir of a file: ENOTDIR", rmdir("usb0:/exfat_check/sub2/B.TXT"), ENOTDIR);
-	check_ok("unlink sub2/B.TXT", unlink("usb0:/exfat_check/sub2/B.TXT"));
-	check_ok("rmdir sub2", rmdir("usb0:/exfat_check/sub2"));
-	check_errno("stat sub2: ENOENT", stat("usb0:/exfat_check/sub2", &info), ENOENT);
+	check_ok("unlink d.txt", unlink(VOL "/exfat_check/d.txt"));
+	check_errno("unlink d.txt again: ENOENT", unlink(VOL "/exfat_check/d.txt"), ENOENT);
+	check_errno("rmdir sub2 with B.TXT inside: ENOTEMPTY", rmdir(VOL "/exfat_check/sub2"), ENOTEMPTY);
+	check_errno("rmdir of a file: ENOTDIR", rmdir(VOL "/exfat_check/sub2/B.TXT"), ENOTDIR);
+	check_ok("unlink sub2/B.TXT", unlink(VOL "/exfat_check/sub2/B.TXT"));
+	check_ok("rmdir sub2", rmdir(VOL "/exfat_check/sub2"));
+	check_errno("stat sub2: ENOENT", stat(VOL "/exfat_check/sub2", &info), ENOENT);
 
-	check_ok("mkdir listing", mkdir("usb0:/exfat_check/listing", 0777));
+	check_ok("mkdir listing", mkdir(VOL "/exfat_check/listing", 0777));
 	check("listing/a1.txt and b2.txt written",
-		write_small("usb0:/exfat_check/listing/a1.txt", "1", 1) &&
-			write_small("usb0:/exfat_check/listing/b2.txt", "22", 2));
-	check_ok("mkdir listing/dir1", mkdir("usb0:/exfat_check/listing/dir1", 0777));
-	const int count = list_sorted("usb0:/exfat_check/listing", 0);
+		write_small(VOL "/exfat_check/listing/a1.txt", "1", 1) &&
+			write_small(VOL "/exfat_check/listing/b2.txt", "22", 2));
+	check_ok("mkdir listing/dir1", mkdir(VOL "/exfat_check/listing/dir1", 0777));
+	const int count = list_sorted(VOL "/exfat_check/listing", 0);
 	check("listing holds a1.txt, b2.txt and dir1, nothing else",
 		count == 3 && strcmp(names[0][0], "a1.txt") == 0 && strcmp(names[0][1], "b2.txt") == 0 &&
 			strcmp(names[0][2], "dir1") == 0);
 	check("two files and a directory by d_type",
 		count == 3 && types[0][0] == DT_REG && types[0][1] == DT_REG && types[0][2] == DT_DIR);
-	DIR *const empty = opendir("usb0:/exfat_check/listing/dir1");
+	DIR *const empty = opendir(VOL "/exfat_check/listing/dir1");
 	errno = 0;
 	check("an empty directory lists nothing, errno untouched", empty && readdir(empty) == NULL && errno == 0);
 	if (empty)
@@ -413,8 +421,8 @@ static void check_names(void)
 
 	// The kernel's own call: every field of the entry written, the pattern honoured, the end's statuses.
 	HANDLE dir;
-	NTSTATUS status = open_nt("\\Device\\Mass0\\exfat_check\\listing", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-		FILE_OPEN, FILE_DIRECTORY_FILE, &dir);
+	NTSTATUS status = open_nt(DEV "\\exfat_check\\listing", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN,
+		FILE_DIRECTORY_FILE, &dir);
 	check("NtCreateFile of listing as a directory", NT_SUCCESS(status));
 	_Alignas(8) uint8_t entry[512];
 	memset(entry, 0xFF, sizeof entry);
@@ -437,8 +445,8 @@ static void check_names(void)
 	status = NtQueryDirectoryFile(dir, 0, NULL, NULL, &io, d, sizeof entry, NULL, 0);
 	check("then STATUS_NO_MORE_FILES", status == STATUS_NO_MORE_FILES);
 	(void)NtClose(dir);
-	status = open_nt("\\Device\\Mass0\\exfat_check\\listing\\dir1", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
-		FILE_OPEN, FILE_DIRECTORY_FILE, &dir);
+	status = open_nt(DEV "\\exfat_check\\listing\\dir1", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_OPEN,
+		FILE_DIRECTORY_FILE, &dir);
 	NTSTATUS first = STATUS_SUCCESS;
 	if (NT_SUCCESS(status)) {
 		first = NtQueryDirectoryFile(dir, 0, NULL, NULL, &io, d, sizeof entry, &star, 1);
@@ -447,12 +455,12 @@ static void check_names(void)
 	check("an empty directory's first query: STATUS_NO_SUCH_FILE", NT_SUCCESS(status) && first == STATUS_NO_SUCH_FILE);
 
 	open_fails("open a file with O_DIRECTORY: ENOTDIR", PATTERN, O_RDONLY | O_DIRECTORY, ENOTDIR);
-	open_fails("open a directory as a file: EISDIR", "usb0:/exfat_check/listing", O_RDONLY, EISDIR);
+	open_fails("open a directory as a file: EISDIR", VOL "/exfat_check/listing", O_RDONLY, EISDIR);
 	// STATUS_OBJECT_PATH_NOT_FOUND for both, as the kernel's FAT answers (plugins/exfat/kernel_seam.md, section 4).
-	open_fails("open under a file: ENOENT", "usb0:/exfat_check/pattern.bin/x", O_RDONLY, ENOENT);
-	open_fails("open under a missing directory: ENOENT", "usb0:/exfat_check/nowhere/x", O_RDONLY, ENOENT);
+	open_fails("open under a file: ENOENT", VOL "/exfat_check/pattern.bin/x", O_RDONLY, ENOENT);
+	open_fails("open under a missing directory: ENOENT", VOL "/exfat_check/nowhere/x", O_RDONLY, ENOENT);
 
-	static const char latin[] = "usb0:/exfat_check/caf\xe9.txt";
+	static const char latin[] = VOL "/exfat_check/caf\xe9.txt";
 	check("a Latin-1 name written", write_small(latin, "cafe", 4));
 	check("stat of the Latin-1 name", stat(latin, &info) == 0 && info.st_size == 4);
 	check("the Latin-1 name lists with the same bytes", listed(FOLDER, 0, "caf\xe9.txt"));
@@ -475,8 +483,9 @@ static NTSTATUS delete_nt(const char *device_path, uint32_t options)
 
 // The limits FATX's 42-character names never reached: exFAT's 255 characters a name and the module's 519 bytes of
 // path under the volume (plugins/exfat/exfat_module.c, PATH_BYTES), through the kernel and through xsdk's own calls,
-// whose resolved path holds 548 (src/file_private.h, XSDK_PATH_BYTES). The same names on game:, the title's folder on
-// the FATX hdd, tell the file systems apart: FATX refuses them itself, so the room in xsdk gives it nothing.
+// whose resolved path holds 548 (src/file_private.h, XSDK_PATH_BYTES). In the stick build the same names on game:, the
+// title's folder on the FATX hdd, tell the file systems apart: FATX refuses them itself, so the room in xsdk gives it
+// nothing.
 static void check_long_names(void)
 {
 	struct stat info;
@@ -487,7 +496,7 @@ static void check_long_names(void)
 	char path[LONG_PATH_BYTES];
 	char device_path[LONG_PATH_BYTES];
 
-	// Through xsdk: a 255-character name on the stick works; on FATX, 42 works and 255 is FATX's own refusal,
+	// Through xsdk: a 255-character name on the volume works; on FATX, 42 works and 255 is FATX's own refusal,
 	// STATUS_OBJECT_NAME_INVALID as EINVAL, not xsdk's ENAMETOOLONG.
 	memset(name, 'x', 255);
 	name[255] = 0;
@@ -496,7 +505,8 @@ static void check_long_names(void)
 	check("it lists with its 255 characters", listed(FOLDER, 0, name));
 	check("stat of the 255-character name", stat(path, &info) == 0 && info.st_size == 4);
 	check_ok("unlink the 255-character name", unlink(path));
-	snprintf(path, sizeof path, "game:/%s", name);
+#ifdef FATX
+	snprintf(path, sizeof path, FATX "/%s", name);
 	const int fd = open(path, O_WRONLY | O_CREAT, 0666);
 	if (fd >= 0) {
 		(void)close(fd);
@@ -504,9 +514,10 @@ static void check_long_names(void)
 	}
 	check_errno("the 255-character name on FATX: EINVAL, its own refusal", fd, EINVAL);
 	name[42] = 0;
-	snprintf(path, sizeof path, "game:/%s", name);
+	snprintf(path, sizeof path, FATX "/%s", name);
 	check("a 42-character name on FATX written", write_small(path, "FATX", 4));
 	check_ok("unlink the 42-character name", unlink(path));
+#endif
 
 	// Through the kernel: 255 characters, exFAT's longest name, created, written, listed and deleted; 256 refused.
 	memset(name, 'y', 255);
@@ -574,14 +585,20 @@ static void check_long_names(void)
 	if (NT_SUCCESS(status))
 		(void)NtClose(handle);
 	check("a 520-byte path: STATUS_OBJECT_NAME_INVALID", status == STATUS_OBJECT_NAME_INVALID);
-	// Through xsdk, which takes either separator: the directories' path works, the 520-byte file path meets the
-	// module's refusal, and a 40-character name below them, 536 under the volume, passes xsdk's 548 resolved.
+	// Through xsdk, which takes either separator: the directories' path works; the 520-byte file path meets the
+	// module's refusal from the stick, whose 14-byte device name leaves it within xsdk's 548 characters, and xsdk's own
+	// from the drive, whose 29-byte name takes it to 549; and a 40-character name below them, 536 under the volume,
+	// passes xsdk's limit either way.
 	device_path[deep_length] = 0;
 	snprintf(path, sizeof path, "%s%s", FOLDER, device_path + strlen(DEVICE_ROOT) + strlen("exfat_check"));
 	check("the deep path through xsdk: a directory", stat(path, &info) == 0 && S_ISDIR(info.st_mode));
 	const size_t deep_path_length = strlen(path);
 	snprintf(path + deep_path_length, sizeof path - deep_path_length, "/%s", name);
-	open_fails("the 520-byte path through xsdk: EINVAL, the module's refusal", path, O_RDONLY, EINVAL);
+	const bool reaches_module = sizeof DEVICE_ROOT - 1 + 520 <= 548;
+	open_fails(reaches_module
+			? "the 520-byte path through xsdk: EINVAL, the module's refusal"
+			: "the 520-byte path through xsdk: ENAMETOOLONG, xsdk's own behind the drive's device name",
+		path, O_RDONLY, reaches_module ? EINVAL : ENAMETOOLONG);
 	memset(name, 'f', 40);
 	name[40] = 0;
 	snprintf(path + deep_path_length, sizeof path - deep_path_length, "/%s", name);
@@ -602,7 +619,7 @@ static void check_long_names(void)
 static void check_attributes(void)
 {
 	struct stat info;
-	static const char ro[] = "usb0:/exfat_check/ro.txt";
+	static const char ro[] = VOL "/exfat_check/ro.txt";
 	check("ro.txt written", write_small(ro, "RO", 2));
 	check_ok("chmod 0444", chmod(ro, 0444));
 	check("stat shows no owner write bit", stat(ro, &info) == 0 && !(info.st_mode & S_IWUSR));
@@ -622,7 +639,7 @@ static void check_free_space(void)
 	struct statvfs before;
 	struct statvfs after;
 	check_ok("statvfs before a 4 MiB file", statvfs(ROOT, &before));
-	int fd = open("usb0:/exfat_check/four.bin", O_WRONLY | O_CREAT | O_EXCL, 0666);
+	int fd = open(VOL "/exfat_check/four.bin", O_WRONLY | O_CREAT | O_EXCL, 0666);
 	bool written = fd >= 0;
 	for (unsigned k = 0; written && k < FOUR_MIB_CHUNKS; k++) {
 		fill_chunk(scratch, k);
@@ -634,7 +651,7 @@ static void check_free_space(void)
 	xsdk_log_write("  free clusters %lu -> %lu, %lu bytes each", (unsigned long)before.f_bfree,
 		(unsigned long)after.f_bfree, (unsigned long)before.f_frsize);
 	check("4 MiB took 4 MiB of free space", taken == (uint64_t)FOUR_MIB_CHUNKS << 20);
-	check_ok("unlink four.bin", unlink("usb0:/exfat_check/four.bin"));
+	check_ok("unlink four.bin", unlink(VOL "/exfat_check/four.bin"));
 	check("the free space came back", statvfs(ROOT, &after) == 0 && after.f_bfree == before.f_bfree);
 }
 
@@ -769,7 +786,7 @@ int main(void)
 	check_errno("exfat_check gone before the run", stat(FOLDER, &info), ENOENT);
 	check_ok("mkdir exfat_check", mkdir(FOLDER, 0777));
 	check_errno("mkdir exfat_check again: EEXIST", mkdir(FOLDER, 0777), EEXIST);
-	check_errno("mkdir under a missing parent: ENOENT", mkdir("usb0:/exfat_check/missing/sub", 0777), ENOENT);
+	check_errno("mkdir under a missing parent: ENOENT", mkdir(VOL "/exfat_check/missing/sub", 0777), ENOENT);
 	check("stat exfat_check: a directory", stat(FOLDER, &info) == 0 && S_ISDIR(info.st_mode));
 	check_pattern_file();
 	check_names();
@@ -781,10 +798,10 @@ int main(void)
 
 	// verify.bin for the PC, then what the PC needn't see goes.
 	fill_chunk(scratch, VERIFY_CHUNK);
-	check("verify.bin written", write_small("usb0:/exfat_check/verify.bin", scratch, CHUNK_BYTES));
+	check("verify.bin written", write_small(VOL "/exfat_check/verify.bin", scratch, CHUNK_BYTES));
 	check_ok("unlink pattern.bin", unlink(PATTERN));
-	remove_tree("usb0:/exfat_check/listing", 0);
-	check_ok("rmdir listing", rmdir("usb0:/exfat_check/listing"));
+	remove_tree(VOL "/exfat_check/listing", 0);
+	check_ok("rmdir listing", rmdir(VOL "/exfat_check/listing"));
 	check("exfat_check holds big.bin and verify.bin alone",
 		list_sorted(FOLDER, 0) == 2 && strcmp(names[0][0], "big.bin") == 0 && strcmp(names[0][1], "verify.bin") == 0);
 	summary();

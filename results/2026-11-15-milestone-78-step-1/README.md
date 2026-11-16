@@ -414,6 +414,19 @@ fresh `make exfat_patch`); step 4's `verify_image.py` read the image first: our 
 boot: the module loaded from the NAND at 0x91580000-0x915B8000, the partition mounted at +1.4 s, the gate at +3.0 s,
 the drive announced to xam, the dash up.
 
+## exfat_check on the drive (2026-11-16)
+
+`exfat_check_hdd.xex`, step 3's check title built for the drive (`tests/exfat_check.c` with `VOL` `hdd:` and `DEV`
+`\Device\Harddisk0\Partition1`, the Makefile), run from `hdd:\XSDK\exfat_check` on the plain boot with the run 38
+module from the NAND: **154 passed, 0 failed, 77 s**; big.bin's 4097 MiB written at 55 MiB/s (`exfat_check_hdd.log`;
+the stick's 157 checks took 380 s, results/2026-11-14-milestone-77-step-3). The drive build has three checks fewer: the
+stick build's FATX comparison uses game:, the title's folder on the FATX drive, and a drive that is exFAT itself has no
+FATX to compare with. The first run failed two checks, both the test's stick assumptions: that comparison, whose
+255-character name game: now took, and the 520-byte path through xsdk, which the drive's 29-byte device name takes past
+xsdk's 548-character resolved path before the module sees it, so xsdk's ENAMETOOLONG, not the module's EINVAL. The
+test now leaves the comparison to the stick build and expects the refusal the device name's length gives; the stick
+build's bytes are unchanged. The test's big.bin and verify.bin were deleted from `hdd:\exfat_check` afterwards.
+
 ## Step 1 checks so far
 
 - [x] The module with the fourth device boots through the shadow loop on a FATX drive (run 6).
@@ -434,7 +447,8 @@ the drive announced to xam, the dash up.
 - [x] launch.ini, a plugin and the Default from the exFAT drive: with the stick out, DashLaunch read `hdd:\launch.ini`
   (Default `Hdd:\Aurora\Aurora.xex`, plugin1 `Hdd:\XSDK\devagent.xex`), the agent answered at +41 s with Aurora as
   the title (`devagent_plain_boot.log`, 2026-11-15 evening).
-- [ ] exfat_check on the drive; profiles and saves.
+- [x] exfat_check on the drive: 154 passed, 0 failed (the section above); profiles sign in (the item below).
+- [ ] A game's save written to the drive.
 - [x] A profile created from the dash signs in every time: twelve in a row on runs 36 to 38 with the fixes of runs 34
   and 35, the last three on the clean module, against four spins in the seven attempts before (runs 13 to 38 above).
 - [x] The NAND reflashed with the run 38 module: the plain boot mounts the partition and announces it (the section
