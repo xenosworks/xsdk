@@ -88,6 +88,7 @@ enum {
 	SLOT_FREE,
 	SLOT_CLAIMED,
 	SLOT_OPEN,
+	SLOT_CLOSING,
 };
 
 typedef struct {
@@ -260,6 +261,20 @@ static SocketSlot *open_slot_of(int fd)
 	return __atomic_load_n(&slot->state, __ATOMIC_ACQUIRE) == SLOT_OPEN ? slot : NULL;
 }
 
+static SocketSlot *begin_close_slot(int fd)
+{
+	if (fd < XSDK_FIRST_SOCKET_FD || fd >= XSDK_FIRST_SOCKET_FD + SOCKET_SLOTS) {
+		errno = (fd >= 0 && fd < CONSOLE_FDS) || xsdk_file_handle(fd) ? ENOTSOCK : EBADF;
+		return NULL;
+	}
+	SocketSlot *slot = &sockets[fd - XSDK_FIRST_SOCKET_FD];
+	uint32_t expected = SLOT_OPEN;
+	if (__atomic_compare_exchange_n(&slot->state, &expected, SLOT_CLOSING, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED))
+		return slot;
+	errno = EBADF;
+	return NULL;
+}
+
 // The socket behind fd, or NULL with errno ENOTSOCK for another open descriptor and EBADF otherwise.
 static SocketSlot *find_socket(int fd)
 {
@@ -310,12 +325,18 @@ int socket(int domain, int type, int protocol)
 
 int xsdk_socket_close(int fd)
 {
-	SocketSlot *slot = find_socket(fd);
+	SocketSlot *slot = begin_close_slot(fd);
 	if (!slot)
 		return -1;
 	const int32_t handle = slot->handle;
+	const int32_t closed = NetDll_closesocket(XNCALLER_TITLE, handle);
+	const int32_t error = closed == 0 ? 0 : NetDll_WSAGetLastError();
 	release_slot(slot);
-	return NetDll_closesocket(XNCALLER_TITLE, handle) == 0 ? 0 : fail_from_xam();
+	if (closed != 0) {
+		errno = errno_from_winsock(error);
+		return -1;
+	}
+	return 0;
 }
 
 int bind(int fd, const struct sockaddr *address, socklen_t length)
