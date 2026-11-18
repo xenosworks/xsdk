@@ -120,7 +120,6 @@ static int look_up(const char *name, uint32_t addresses[XNET_DNS_ADDRESSES], uin
 	}
 	const int64_t timeout = -(int64_t)DNS_TIMEOUT_MS * HUNDRED_NANOSECONDS_PER_MILLISECOND;
 	status = NtWaitForSingleObjectEx(done, USER_MODE, 0, &timeout);
-	(void)NtClose(done);
 	int outcome = 0;
 	if (status == STATUS_TIMEOUT) {
 		xsdk_log_write("getaddrinfo: no answer for %s in %u ms", name, (unsigned)DNS_TIMEOUT_MS);
@@ -131,7 +130,9 @@ static int look_up(const char *name, uint32_t addresses[XNET_DNS_ADDRESSES], uin
 		*count = result->count < XNET_DNS_ADDRESSES ? result->count : XNET_DNS_ADDRESSES;
 		memcpy(addresses, result->addresses, *count * sizeof(addresses[0]));
 	}
+	// Release the lookup before closing the event XAM signals (xenia:src/xenia/kernel/xam/xam_net.cc:542-575).
 	(void)NetDll_XNetDnsRelease(XNCALLER_TITLE, result);
+	(void)NtClose(done);
 	return outcome;
 }
 

@@ -25,10 +25,15 @@ enum {
 	ZERO_CHUNK_BYTES = 4096,
 };
 
-// A slot whose handle is being opened.
-static const HANDLE SLOT_CLAIMED = 0xFFFFFFFF;
+enum {
+	SLOT_FREE,
+	SLOT_CLAIMED,
+	SLOT_OPEN,
+	SLOT_CLOSING,
+};
 
 typedef struct {
+	uint32_t state;
 	HANDLE handle;
 	uint64_t position;
 	bool append;
@@ -93,9 +98,9 @@ static int fail_with_status(const char *call, int fd, NTSTATUS status)
 static FileSlot *claim_slot(int *fd)
 {
 	for (int i = 0; i < FILE_SLOTS; i++) {
-		HANDLE expected = 0;
+		uint32_t expected = SLOT_FREE;
 		if (__atomic_compare_exchange_n(
-				&files[i].handle, &expected, SLOT_CLAIMED, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
+				&files[i].state, &expected, SLOT_CLAIMED, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
 			*fd = FIRST_FILE_FD + i;
 			return &files[i];
 		}
@@ -105,7 +110,8 @@ static FileSlot *claim_slot(int *fd)
 
 static void release_slot(FileSlot *file)
 {
-	__atomic_store_n(&file->handle, 0, __ATOMIC_RELEASE);
+	file->handle = 0;
+	__atomic_store_n(&file->state, SLOT_FREE, __ATOMIC_RELEASE);
 }
 
 static FileSlot *find_slot(int fd)
@@ -113,8 +119,18 @@ static FileSlot *find_slot(int fd)
 	if (fd < FIRST_FILE_FD || fd >= FIRST_FILE_FD + FILE_SLOTS)
 		return NULL;
 	FileSlot *file = &files[fd - FIRST_FILE_FD];
-	const HANDLE handle = __atomic_load_n(&file->handle, __ATOMIC_ACQUIRE);
-	return handle && handle != SLOT_CLAIMED ? file : NULL;
+	return __atomic_load_n(&file->state, __ATOMIC_ACQUIRE) == SLOT_OPEN ? file : NULL;
+}
+
+static FileSlot *begin_close_slot(int fd)
+{
+	if (fd < FIRST_FILE_FD || fd >= FIRST_FILE_FD + FILE_SLOTS)
+		return NULL;
+	FileSlot *file = &files[fd - FIRST_FILE_FD];
+	uint32_t expected = SLOT_OPEN;
+	return __atomic_compare_exchange_n(&file->state, &expected, SLOT_CLOSING, false, __ATOMIC_ACQ_REL, __ATOMIC_RELAXED)
+		? file
+		: NULL;
 }
 
 static bool is_console(int fd)
@@ -312,12 +328,13 @@ int openat(int dir_fd, const char *path, int flags, ...)
 		errno = xsdk_file_errno(status);
 		return -1;
 	}
+	file->handle = handle;
 	file->position = 0;
 	file->past_end = false;
 	file->append = (flags & O_APPEND) != 0;
 	file->directory = directory;
 	memcpy(file->path, resolved, sizeof(resolved));
-	__atomic_store_n(&file->handle, handle, __ATOMIC_RELEASE);
+	__atomic_store_n(&file->state, SLOT_OPEN, __ATOMIC_RELEASE);
 	return fd;
 }
 
@@ -332,12 +349,13 @@ int close(int fd)
 		return 0;
 	if (xsdk_socket_fd(fd))
 		return xsdk_socket_close(fd);
-	FileSlot *file = find_slot(fd);
+	FileSlot *file = begin_close_slot(fd);
 	if (!file) {
 		errno = EBADF;
 		return -1;
 	}
-	const NTSTATUS status = NtClose(file->handle);
+	const HANDLE handle = file->handle;
+	const NTSTATUS status = NtClose(handle);
 	release_slot(file);
 	return NT_SUCCESS(status) ? 0 : fail_with_status("close", fd, status);
 }
@@ -500,9 +518,8 @@ int fdatasync(int fd)
 void sync(void)
 {
 	for (int i = 0; i < FILE_SLOTS; i++) {
-		const HANDLE handle = __atomic_load_n(&files[i].handle, __ATOMIC_ACQUIRE);
-		if (handle && handle != SLOT_CLAIMED && !files[i].directory)
-			(void)flush(handle);
+		if (__atomic_load_n(&files[i].state, __ATOMIC_ACQUIRE) == SLOT_OPEN && !files[i].directory)
+			(void)flush(files[i].handle);
 	}
 }
 
